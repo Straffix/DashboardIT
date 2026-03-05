@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Management Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Sekcja Wsparcia IT</h1>
+            <p>Wybierz moduł operacyjny</p>
+        </header>
+
+        <nav class="menu-grid">
+            <a href="nowe_zatrudnienia.html" class="menu-item nowe-zatrudnienia">
+                <div class="circle">
+                    <div class="circle-img"></div>
+                    <span>Nowe Zatrudnienia</span>
+                    <small>Onboarding IT</small>
+                </div>
+            </a>
+
+            <a href="monitor_laptopow.html" class="menu-item monitor-laptopow">
+                <div class="circle">
+                    <div class="circle-img"></div>
+                    <span>Monitor Laptopów</span>
+                    <small>Status domeny</small>
+                </div>
+            </a>
+
+            <a href="wymiana_sprzetu.html" class="menu-item wymiana-sprzetu">
+                <div class="circle">
+                    <div class="circle-img"></div>
+                    <span>Wymiana Sprzętu</span>
+                    <small>Cykl 3-letni</small>
+                </div>
+            </a>
+
+        </nav>
+        </nav>
+        <footer class="main-footer">
+            <div class="footer-content">
+                <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
+                <div class="footer-separator"></div>
+                <p class="footer-status">
+                    <span class="status-dot"></span>
+                    arkadiusz-lisiecki.pl
+                </p>
+            </div>
+        </footer>
+
+        <script>
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+        </script>
+</body>
+</div>
+</body>
+
+</html>

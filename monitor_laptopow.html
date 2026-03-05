@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor laptopów w domenie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+    <div class="wrapper">
+        <header class="header">
+            <a href="index.html"
+                style="text-decoration:none; color:inherit; font-size: 1.2rem; margin-bottom: 10px; display: inline-block;">
+                <i class="fas fa-arrow-left"></i> Powrót do menu
+            </a>
+            <div class="logo-section">
+                <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
+                <div>
+                    <h1>Monitor Laptopów w Domenie</h1>
+                    <p>Projekt i wykonanie: <span>Arkadiusz Lisiecki</span></p>
+                </div>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div>
+                    <p>WSZYSTKIE</p>
+                    <h2 id="stats-all">0</h2>
+                </div><i class="fas fa-desktop"></i>
+            </div>
+            <div class="stat-card active">
+                <div>
+                    <p>AKTYWNE</p>
+                    <h2 id="stats-active">0</h2>
+                </div><i class="fas fa-check"></i>
+            </div>
+            <div class="stat-card warning">
+                <div>
+                    <p>WYGASAJĄCE</p>
+                    <h2 id="stats-warn">0</h2>
+                </div><i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-card danger">
+                <div>
+                    <p>WYPADŁY</p>
+                    <h2 id="stats-danger">0</h2>
+                </div><i class="fas fa-times-circle"></i>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <section>
+                <h2>Lista urządzeń</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>NAZWA</th>
+                            <th>RU</th>
+                            <th>SN</th>
+                            <th>W DOMENIE DO</th>
+                            <th style="text-align:center">AKCJA</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </section>
+
+            <aside>
+                <h2>Dodaj urządzenie</h2>
+                <form id="device-form">
+                    <div class="input-group"><label>Nazwa komputera</label><input type="text" id="name" required
+                            placeholder="np. REKRUTACJA746"></div>
+                    <div class="input-group"><label>Numer RU</label><input type="text" id="ru" required
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="Tylko cyfry"></div>
+                    <div class="input-group"><label>SN</label><input type="text" id="sn" required
+                            placeholder="np. PF928402"></div>
+
+                    <div class="input-group">
+                        <label>Typ dodawanego urządzenia</label>
+                        <div class="radio-group">
+                            <label class="radio-item"><input type="radio" name="device-type" id="new-device" value="new"
+                                    checked><span>Nowe</span></label>
+                            <label class="radio-item"><input type="radio" name="device-type" id="old-device"
+                                    value="old"><span>Stare</span></label>
+                        </div>
+                    </div>
+
+                    <div class="input-group" id="date-group"><label>W domenie do</label><input type="date" id="date">
+                    </div>
+                    <button type="submit" class="btn-submit">Dodaj urządzenie</button>
+                </form>
+            </aside>
+
+            <section class="backup_section">
+                <h3>Kopia zapasowa</h3>
+                <div class="backup-btns">
+                    <button onclick="exportJSON()" class="btn-export"><i class="fa-solid fa-file-export"></i> Eksport
+                        JSON</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+                    <button onclick="document.getElementById('importFile').click()" class="btn-import"><i
+                            class="fa-solid fa-file-import"></i> Import JSON</button>
+                </div>
+            </section>
+        </div>
+    </div>
+    <script src="./js/script_monitor.js"></script>
+</body>
+
+</html>
