@@ -358,7 +358,7 @@ body {
 }
 
 .wrapper {
-  min-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
@@ -488,6 +488,28 @@ table td {
 table tr:last-child td {
   border-bottom: none;
 }
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+table th:nth-child(1) {
+  width: 25%;
+}
+table th:nth-child(2) {
+  width: 25%;
+}
+table th:nth-child(3) {
+  width: 15%;
+}
+table th:nth-child(4) {
+  width: 15%;
+}
+table th:nth-child(5) {
+  width: 15%;
+}
+table th:nth-child(6) {
+  width: 5%;
+}
 
 .extend-btn {
   background: #f1f5f9;
@@ -579,38 +601,60 @@ table tr:last-child td {
 }
 
 .backup_section {
-  grid-column: 1/span 2;
-  background: white;
-  padding: 25px;
-  border-radius: 15px;
-  margin-top: 20px;
+  background-color: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 30px;
+  border: 1px solid #e2e8f0;
+  border-top: 10px solid rgba(112, 112, 112, 0.322);
+  border-bottom: 7px solid rgba(112, 112, 112, 0.233);
 }
 .backup_section h3 {
   font-size: 1.6rem;
   margin-bottom: 20px;
   color: #1e293b;
 }
-.backup_section .backup-btns {
+.backup_section .backup-container {
   display: flex;
-  gap: 20px;
+  flex-direction: column;
+  gap: 10px;
 }
-.backup_section .backup-btns button {
+.backup_section .backup-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.backup_section .backup-row .btn-backup-item {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   padding: 15px;
-  background: #f1f5f9;
-  border: none;
-  border-radius: 10px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   font-weight: 600;
   color: #1e293b;
+  font-size: 1.3rem;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease-in-out;
 }
-.backup_section .backup-btns button:hover {
+.backup_section .backup-row .btn-backup-item:hover {
   background: #e2e8f0;
+  transform: translateY(-2px);
+}
+.backup_section .backup-row .btn-backup-item i {
+  font-size: 2rem;
+}
+.backup_section .backup-row .btn-excel-green {
+  background: #107c41;
+  color: white;
+  border: none;
+}
+.backup_section .backup-row .btn-excel-green:hover {
+  background: #0e6b38;
+  filter: brightness(1.1);
 }
 
 .accessory-picker {
@@ -776,6 +820,20 @@ table tr:last-child td {
     opacity: 1;
   }
 }
+@keyframes fadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.fade-in {
+  animation: fadeSlide 0.3s ease-out;
+}
+
 #table-body {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }

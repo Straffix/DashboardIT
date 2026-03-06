@@ -31,13 +31,14 @@ function autoBackup() {
 	localStorage.setItem(BACKUP_KEY, JSON.stringify(devices))
 }
 
+// --- EKSPORT/IMPORT JSON ---
 function exportJSON() {
 	if (devices.length === 0) return alert('Brak danych do eksportu.')
 	const data = JSON.stringify(devices, null, 2)
 	const blob = new Blob([data], { type: 'application/json' })
 	const link = document.createElement('a')
 	link.href = URL.createObjectURL(blob)
-	link.download = 'urzadzenia.json'
+	link.download = `monitor_backup_${new Date().toISOString().slice(0, 10)}.json`
 	link.click()
 }
 
@@ -50,10 +51,10 @@ function importJSON(event) {
 		try {
 			const imported = JSON.parse(e.target.result)
 			if (!Array.isArray(imported)) throw new Error()
-			if (confirm('Czy na pewno chcesz nadpisać obecne dane zaimportowanym plikiem?')) {
+			if (confirm(`Zaimportować ${imported.length} urządzeń? Obecne dane zostaną nadpisane.`)) {
 				devices = imported
 				saveData()
-				alert('Import zakończony sukcesem.')
+				alert('Import JSON zakończony sukcesem.')
 			}
 		} catch (err) {
 			alert('Błąd: Niepoprawny format pliku JSON.')
@@ -61,6 +62,50 @@ function importJSON(event) {
 		event.target.value = ''
 	}
 	reader.readAsText(file)
+}
+
+// --- EKSPORT/IMPORT EXCEL ---
+function exportExcel() {
+	if (devices.length === 0) return alert('Brak danych do eksportu!')
+
+	const dataToExport = devices.map(d => ({
+		'Nazwa użytkownika': d.name,
+		'Dział / RU': d.ru,
+		'Numer Seryjny': d.sn,
+		'Data ważności domeny': d.date,
+	}))
+
+	const worksheet = XLSX.utils.json_to_sheet(dataToExport)
+	const workbook = XLSX.utils.book_new()
+	XLSX.utils.book_append_sheet(workbook, worksheet, 'Urządzenia')
+	XLSX.writeFile(workbook, `monitor_laptopow_${new Date().toISOString().slice(0, 10)}.xlsx`)
+}
+
+function importExcel(event) {
+	const file = event.target.files[0]
+	if (!file) return
+
+	const reader = new FileReader()
+	reader.onload = function (e) {
+		const data = new Uint8Array(e.target.result)
+		const workbook = XLSX.read(data, { type: 'array' })
+		const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+		const jsonData = XLSX.utils.sheet_to_json(worksheet)
+
+		const imported = jsonData.map(row => ({
+			name: (row['Nazwa użytkownika'] || '').toString().toUpperCase(),
+			ru: row['Dział / RU'] || '',
+			sn: (row['Numer Seryjny'] || '').toString().toUpperCase(),
+			date: row['Data ważności domeny'] || '',
+		}))
+
+		if (confirm(`Zaimportować ${imported.length} urządzeń z Excela?`)) {
+			devices = [...devices, ...imported] // Tutaj dodajemy do istniejących
+			saveData()
+		}
+		event.target.value = ''
+	}
+	reader.readAsArrayBuffer(file)
 }
 
 function normalizeSN(sn) {
@@ -79,18 +124,11 @@ function extendDomain(index) {
 	let currentExpiry = new Date(devices[index].date)
 	currentExpiry.setHours(0, 0, 0, 0)
 
-	let baseDate
-	if (currentExpiry < today || isNaN(currentExpiry.getTime())) {
-		baseDate = today
-	} else {
-		baseDate = currentExpiry
-	}
+	let baseDate = currentExpiry < today || isNaN(currentExpiry.getTime()) ? today : currentExpiry
 
 	baseDate.setDate(baseDate.getDate() + 60)
 	devices[index].date = formatDate(baseDate)
 	saveData()
-
-	console.log(`Przedłużono ${devices[index].name}. Nowa data: ${devices[index].date}`)
 }
 
 function removeItem(index) {
@@ -112,7 +150,6 @@ function renderTable() {
 	devices.forEach((d, index) => {
 		const expiryDate = new Date(d.date)
 		expiryDate.setHours(0, 0, 0, 0)
-
 		const diff = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24))
 
 		let statusClass = 'ok'
@@ -124,7 +161,6 @@ function renderTable() {
 			stats.dead++
 		} else if (diff <= 14) {
 			statusClass = 'near'
-			statusText = d.date
 			stats.warn++
 		} else {
 			stats.ok++
@@ -145,62 +181,62 @@ function renderTable() {
                 <span class="delete-btn" onclick="removeItem(${index})">
                     <i class="fa-solid fa-trash"></i>
                 </span>
-            </td>
-        `
+            </td>`
 		tbody.appendChild(row)
 	})
 
-	if (document.getElementById('stats-all')) document.getElementById('stats-all').innerText = stats.all
-	if (document.getElementById('stats-active')) document.getElementById('stats-active').innerText = stats.ok
-	if (document.getElementById('stats-warn')) document.getElementById('stats-warn').innerText = stats.warn
-	if (document.getElementById('stats-danger')) document.getElementById('stats-danger').innerText = stats.dead
+	const updateStat = (id, val) => {
+		if (document.getElementById(id)) document.getElementById(id).innerText = val
+	}
+	updateStat('stats-all', stats.all)
+	updateStat('stats-active', stats.ok)
+	updateStat('stats-warn', stats.warn)
+	updateStat('stats-danger', stats.dead)
 }
 
 const toggleDateInput = () => {
 	if (!dateGroup) return
-	if (newRadio.checked) {
-		dateGroup.style.display = 'none'
-		dateInput.required = false
-	} else {
-		dateGroup.style.display = 'block'
-		dateInput.required = true
-	}
+	const isNew = newRadio.checked
+	dateGroup.style.display = isNew ? 'none' : 'block'
+	dateInput.required = !isNew
 }
 
 if (newRadio) newRadio.addEventListener('change', toggleDateInput)
 if (oldRadio) oldRadio.addEventListener('change', toggleDateInput)
 
-deviceForm.addEventListener('submit', e => {
-	e.preventDefault()
+if (deviceForm) {
+	deviceForm.addEventListener('submit', e => {
+		e.preventDefault()
+		const name = document.getElementById('name').value.toUpperCase()
+		const ru = document.getElementById('ru').value
+		const sn = document.getElementById('sn').value.toUpperCase()
+		let date
 
-	const name = document.getElementById('name').value.toUpperCase()
-	const ru = document.getElementById('ru').value
-	const sn = document.getElementById('sn').value.toUpperCase()
-	let date
-
-	if (newRadio.checked) {
-		let d = new Date()
-		d.setDate(d.getDate() + 60)
-		date = formatDate(d)
-	} else {
-		date = dateInput.value
-		if (!date) return alert('Wybierz datę dla starego urządzenia.')
-	}
-
-	const duplicateIndex = findDuplicate(ru, sn)
-	if (duplicateIndex !== -1) {
-		if (confirm('Urządzenie już istnieje. Odświeżyć o 60 dni od dziś?')) {
-			extendDomain(duplicateIndex)
-			deviceForm.reset()
-			toggleDateInput()
+		if (newRadio.checked) {
+			let d = new Date()
+			d.setDate(d.getDate() + 60)
+			date = formatDate(d)
+		} else {
+			date = dateInput.value
+			if (!date) return alert('Wybierz datę dla starego urządzenia.')
 		}
-		return
-	}
 
-	devices.push({ name, ru, sn, date })
-	deviceForm.reset()
-	toggleDateInput()
-	saveData()
-})
+		const duplicateIndex = findDuplicate(ru, sn)
+		if (duplicateIndex !== -1) {
+			if (confirm('Urządzenie już istnieje. Odświeżyć o 60 dni od dziś?')) {
+				extendDomain(duplicateIndex)
+				deviceForm.reset()
+				toggleDateInput()
+			}
+			return
+		}
+
+		devices.push({ name, ru, sn, date })
+		deviceForm.reset()
+		toggleDateInput()
+		saveData()
+	})
+}
+
 loadData()
 toggleDateInput()

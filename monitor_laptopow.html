@@ -8,7 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
+
     <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
     <link rel="stylesheet" href="./css/style.css">
 </head>
 
@@ -97,18 +100,37 @@
                     </div>
                     <button type="submit" class="btn-submit">Dodaj urządzenie</button>
                 </form>
-            </aside>
+                <section class="backup_section">
+                    <h3>Kopia zapasowa</h3>
+                    <div class="backup-container">
+                        <div class="backup-row">
+                            <button onclick="exportExcel()" class="btn-backup-item btn-excel-green">
+                                <i class="fa-solid fa-file-excel"></i> Eksport EXCEL
+                            </button>
 
-            <section class="backup_section">
-                <h3>Kopia zapasowa</h3>
-                <div class="backup-btns">
-                    <button onclick="exportJSON()" class="btn-export"><i class="fa-solid fa-file-export"></i> Eksport
-                        JSON</button>
-                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
-                    <button onclick="document.getElementById('importFile').click()" class="btn-import"><i
-                            class="fa-solid fa-file-import"></i> Import JSON</button>
-                </div>
-            </section>
+                            <input type="file" id="importExcelFile" accept=".xlsx, .xls" style="display:none"
+                                onchange="importExcel(event)">
+
+                            <button onclick="document.getElementById('importExcelFile').click()"
+                                class="btn-backup-item">
+                                <i class="fa-solid fa-file-import"></i> Import EXCEL
+                            </button>
+                        </div>
+                        <div class="backup-row">
+                            <button onclick="exportJSON()" class="btn-backup-item">
+                                <i class="fa-solid fa-file-export"></i> Eksport JSON
+                            </button>
+
+                            <input type="file" id="importFile" accept=".json" style="display:none"
+                                onchange="importJSON(event)">
+
+                            <button onclick="document.getElementById('importFile').click()" class="btn-backup-item">
+                                <i class="fa-solid fa-file-import"></i> Import JSON
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </aside>
         </div>
     </div>
     <script src="./js/script_monitor.js"></script>
