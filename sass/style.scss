@@ -273,13 +273,13 @@ table {
 }
 
 .backup_section {
-	background-color: #f8fafc;
 	padding: 20px;
 	border-radius: 12px;
-	margin-top: 30px;
+	margin-top: 35px;
 	border: 1px solid $border;
 	border-top: 10px solid rgba(112, 112, 112, 0.322);
 	border-bottom: 7px solid rgba(112, 112, 112, 0.233);
+	background-color: #f8fafc;
 
 	h3 {
 		font-size: 1.6rem;
@@ -316,7 +316,7 @@ table {
 
 			&:hover {
 				background: #e2e8f0;
-				transform: translateY(-2px);
+				font-size: 1.4rem;
 			}
 
 			i {
@@ -325,15 +325,32 @@ table {
 		}
 
 		.btn-excel-green {
-			background: #107c41;
+			background-color: #107c41ab;
 			color: white;
 			border: none;
 
 			&:hover {
-				background: #0e6b38;
+				background-color: #0e6b38;
 				filter: brightness(1.1);
 			}
 		}
+
+		.btn-json-yellow {
+			background-color: #363636c0;
+			color: white;
+			border: none;
+
+			&:hover {
+				background-color: #da5e0bad;
+				filter: brightness(1.1);
+			}
+		}
+	}
+}
+
+button {
+	p {
+		color: #94a3b8;
 	}
 }
 

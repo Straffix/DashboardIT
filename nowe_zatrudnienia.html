@@ -51,10 +51,10 @@
                     <thead>
                         <tr>
                             <th>IMIĘ I NAZWISKO</th>
-                            <th>STANOWISKO</th>
+                            <th>SEKCJA</th>
                             <th>SPRZĘT (SN)</th>
                             <th>DATA STARTU</th>
-                            <th style="text-align:center">STATUS IT</th>
+                            <th style="text-align:center">AKCESORIA</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -105,30 +105,16 @@
                         <input type="date" id="date" required>
                     </div>
 
-                    <button type="submit" class="btn-submit" style="background: #6366f1;">Dodaj do listy</button>
+                    <button type="submit" class="btn-submit" style="background-color: #f16363cc;">Dodaj do
+                        listy</button>
                 </form>
-
 
                 <section class="backup_section">
                     <h3>Kopia zapasowa</h3>
                     <div class="backup-container">
-
-                        <div class="backup-row">
-                            <button onclick="exportJSON()" class="btn-backup-item">
-                                <i class="fa-solid fa-file-export"></i> Eksport JSON
-                            </button>
-
-                            <input type="file" id="importFile" accept=".json" style="display:none"
-                                onchange="importJSON(event)">
-
-                            <button onclick="document.getElementById('importFile').click()" class="btn-backup-item">
-                                <i class="fa-solid fa-file-import"></i> Import JSON
-                            </button>
-                        </div>
-
                         <div class="backup-row">
                             <button onclick="exportExcel()" class="btn-backup-item btn-excel-green">
-                                <i class="fa-solid fa-file-excel"></i> Eksport EXCEL
+                                <i class="fa-solid fa-file-excel"></i>
                             </button>
 
                             <input type="file" id="importExcelFile" accept=".xlsx, .xls" style="display:none"
@@ -136,10 +122,22 @@
 
                             <button onclick="document.getElementById('importExcelFile').click()"
                                 class="btn-backup-item">
-                                <i class="fa-solid fa-file-import"></i> Import EXCEL
+                                <p>Import Excel</p>
                             </button>
                         </div>
 
+                        <div class="backup-row">
+                            <button onclick="exportJSON()" class="btn-backup-item btn-json-yellow">
+                                <i class="fa-solid fa-download"></i>
+                            </button>
+
+                            <input type="file" id="importFile" accept=".json" style="display:none"
+                                onchange="importJSON(event)">
+
+                            <button onclick="document.getElementById('importFile').click()" class="btn-backup-item">
+                                <p>Import JSON</p>
+                            </button>
+                        </div>
                     </div>
                 </section>
             </aside>

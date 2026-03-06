@@ -601,13 +601,13 @@ table th:nth-child(6) {
 }
 
 .backup_section {
-  background-color: #f8fafc;
   padding: 20px;
   border-radius: 12px;
-  margin-top: 30px;
+  margin-top: 35px;
   border: 1px solid #e2e8f0;
   border-top: 10px solid rgba(112, 112, 112, 0.322);
   border-bottom: 7px solid rgba(112, 112, 112, 0.233);
+  background-color: #f8fafc;
 }
 .backup_section h3 {
   font-size: 1.6rem;
@@ -642,19 +642,32 @@ table th:nth-child(6) {
 }
 .backup_section .backup-row .btn-backup-item:hover {
   background: #e2e8f0;
-  transform: translateY(-2px);
+  font-size: 1.4rem;
 }
 .backup_section .backup-row .btn-backup-item i {
   font-size: 2rem;
 }
 .backup_section .backup-row .btn-excel-green {
-  background: #107c41;
+  background-color: rgba(16, 124, 65, 0.6705882353);
   color: white;
   border: none;
 }
 .backup_section .backup-row .btn-excel-green:hover {
-  background: #0e6b38;
+  background-color: #0e6b38;
   filter: brightness(1.1);
+}
+.backup_section .backup-row .btn-json-yellow {
+  background-color: rgba(54, 54, 54, 0.7529411765);
+  color: white;
+  border: none;
+}
+.backup_section .backup-row .btn-json-yellow:hover {
+  background-color: rgba(218, 94, 11, 0.6784313725);
+  filter: brightness(1.1);
+}
+
+button p {
+  color: #94a3b8;
 }
 
 .accessory-picker {
