@@ -9,45 +9,69 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
 
-    <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
 
     <link rel="stylesheet" href="./css/style.css">
 </head>
 
 <body>
+
     <div class="wrapper">
+
         <header class="header">
+
             <a href="index.html"
-                style="text-decoration:none; color:inherit; font-size: 1.2rem; margin-bottom: 10px; display: inline-block;">
+                style="text-decoration:none; color:inherit; font-size:1.2rem; margin-bottom:10px; display:inline-block;">
                 <i class="fas fa-arrow-left"></i> Powrót do menu
             </a>
+
             <div class="logo-section">
-                <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
+
+                <div class="icon-box">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+
                 <div>
                     <h1>Nowe Zatrudnienia</h1>
                     <p>Projekt i wykonanie: <span>Arkadiusz Lisiecki</span></p>
                 </div>
+
             </div>
+
         </header>
 
         <div class="main-content">
-            <section>
-                <div class="table-header">
-                    <button onclick="changeMonth(-1)" class="month-nav-btn"><i class="fas fa-chevron-left"></i></button>
 
-                    <div class="month-picker-container" style="position: relative; cursor: pointer;"
+            <section>
+
+                <div class="table-header">
+
+                    <button onclick="changeMonth(-1)" class="month-nav-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+
+                    <div class="month-picker-container" style="position:relative; cursor:pointer;"
                         onclick="document.getElementById('hidden-month-input').showPicker()">
+
                         <h2 id="current-month-display">STYCZEŃ 2024</h2>
+
                         <input type="month" id="hidden-month-input"
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                            style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;">
+
                     </div>
 
-                    <button onclick="changeMonth(1)" class="month-nav-btn"><i class="fas fa-chevron-right"></i></button>
+                    <button onclick="changeMonth(1)" class="month-nav-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
                 </div>
+
                 <table>
+
                     <thead>
                         <tr>
                             <th>IMIĘ I NAZWISKO</th>
@@ -58,12 +82,19 @@
                             <th></th>
                         </tr>
                     </thead>
+
                     <tbody id="table-body"></tbody>
+
                 </table>
+
             </section>
+
             <aside>
+
                 <h2>Dodaj pracownika</h2>
+
                 <form id="device-form">
+
                     <div class="input-group">
                         <label>Imię i Nazwisko</label>
                         <input type="text" id="name" required placeholder="np. Jan Kowalski">
@@ -80,24 +111,33 @@
                     </div>
 
                     <div class="input-group">
+
                         <label>Akcesoria do wydania</label>
+
                         <div class="accessory-picker" id="accessory-picker">
+
                             <div class="accessory-item" data-item="mouse" title="Myszka">
                                 <i class="fas fa-mouse"></i>
                             </div>
+
                             <div class="accessory-item" data-item="keyboard" title="Klawiatura">
                                 <i class="fas fa-keyboard"></i>
                             </div>
+
                             <div class="accessory-item" data-item="headset" title="Słuchawki">
                                 <i class="fas fa-headset"></i>
                             </div>
+
                             <div class="accessory-item" data-item="monitor" title="Monitor">
                                 <i class="fas fa-desktop"></i>
                             </div>
+
                             <div class="accessory-item" data-item="bag" title="Torba">
                                 <i class="fas fa-briefcase"></i>
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="input-group" id="date-group">
@@ -105,14 +145,20 @@
                         <input type="date" id="date" required>
                     </div>
 
-                    <button type="submit" class="btn-submit" style="background-color: #f16363cc;">Dodaj do
-                        listy</button>
+                    <button type="submit" class="btn-submit" style="background-color:#f16363cc;">
+                        Dodaj do listy
+                    </button>
+
                 </form>
 
                 <section class="backup_section">
+
                     <h3>Kopia zapasowa</h3>
+
                     <div class="backup-container">
+
                         <div class="backup-row">
+
                             <button onclick="exportExcel()" class="btn-backup-item btn-excel-green">
                                 <i class="fa-solid fa-file-excel"></i>
                             </button>
@@ -122,11 +168,13 @@
 
                             <button onclick="document.getElementById('importExcelFile').click()"
                                 class="btn-backup-item">
-                                <p>Import Excel</p>
+                                Import Excel
                             </button>
+
                         </div>
 
                         <div class="backup-row">
+
                             <button onclick="exportJSON()" class="btn-backup-item btn-json-yellow">
                                 <i class="fa-solid fa-download"></i>
                             </button>
@@ -135,15 +183,23 @@
                                 onchange="importJSON(event)">
 
                             <button onclick="document.getElementById('importFile').click()" class="btn-backup-item">
-                                <p>Import JSON</p>
+                                Import JSON
                             </button>
+
                         </div>
+
                     </div>
+
                 </section>
+
             </aside>
+
         </div>
+
     </div>
+
     <script src="./js/script_zatrudnienia.js"></script>
+
 </body>
 
 </html>

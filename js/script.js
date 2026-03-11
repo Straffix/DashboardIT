@@ -1,12 +1,27 @@
+document.addEventListener("DOMContentLoaded", () => {
+
 let devices = []
 
 const STORAGE_KEY = 'monitor_laptopow_dane'
 const BACKUP_KEY = 'monitor_laptopow_backup'
+
 const deviceForm = document.getElementById('device-form')
 const newRadio = document.getElementById('new-device')
 const oldRadio = document.getElementById('old-device')
 const dateGroup = document.getElementById('date-group')
 const dateInput = document.getElementById('date')
+
+/* ======= AUTOMATYCZNY ROK W FOOTERZE ======= */
+
+document.querySelectorAll("#current-year").forEach(el => {
+	el.textContent = new Date().getFullYear()
+})
+
+/* ======= JEŚLI STRONA NIE MA FORMULARZA — ZATRZYMAJ SKRYPT ======= */
+
+if (!deviceForm) return
+
+/* ======= DANE ======= */
 
 function loadData() {
 	const saved = localStorage.getItem(STORAGE_KEY)
@@ -26,6 +41,8 @@ function autoBackup() {
 	localStorage.setItem(BACKUP_KEY, JSON.stringify(devices))
 }
 
+/* ======= EXPORT / IMPORT ======= */
+
 function exportJSON() {
 	if (devices.length === 0) return alert('Brak danych do eksportu.')
 
@@ -36,9 +53,12 @@ function exportJSON() {
 function downloadFile(content, filename) {
 	const blob = new Blob([content], { type: 'application/json' })
 	const link = document.createElement('a')
+
 	link.href = URL.createObjectURL(blob)
 	link.download = filename
 	link.click()
+
+	URL.revokeObjectURL(link.href)
 }
 
 function importJSON(event) {
@@ -61,11 +81,14 @@ function importJSON(event) {
 		} catch (err) {
 			alert('Błąd: Niepoprawny format pliku JSON.')
 		}
+
 		event.target.value = ''
 	}
 
 	reader.readAsText(file)
 }
+
+/* ======= LOGIKA ======= */
 
 function normalizeSN(sn) {
 	return sn.trim().replace(/-/g, '').toUpperCase()
@@ -97,15 +120,21 @@ function removeItem(index) {
 	}
 }
 
+/* ======= RENDER TABELI ======= */
+
 function renderTable() {
 	const tbody = document.getElementById('table-body')
+	if (!tbody) return
+
 	tbody.innerHTML = ''
 
 	let stats = { all: devices.length, ok: 0, warn: 0, dead: 0 }
+
 	const dzisiaj = new Date()
 	dzisiaj.setHours(0, 0, 0, 0)
 
 	devices.forEach((d, index) => {
+
 		const dataWygasniecia = new Date(d.date)
 		const dniDoKonca = Math.ceil((dataWygasniecia - dzisiaj) / (1000 * 60 * 60 * 24))
 
@@ -124,30 +153,42 @@ function renderTable() {
 		}
 
 		const row = document.createElement('tr')
+
 		row.innerHTML = `
-            <td><b>${d.name.toUpperCase()}</b></td>
-            <td>${d.ru}</td>
-            <td>${d.sn}</td>
-            <td><span class="status-pill ${statusClass}">${statusText}</span></td>
-            <td style="text-align:center">
-                <button class="extend-btn" onclick="extendDomain(${index})">
-                    <i class="fa-solid fa-plus"></i> 60 dni
-                </button>
-            </td>
-            <td style="text-align:right">
-                <span class="delete-btn" onclick="removeItem(${index})"><i class="fa-solid fa-trash"></i></span>
-            </td>
-        `
+		<td><b>${d.name.toUpperCase()}</b></td>
+		<td>${d.ru}</td>
+		<td>${d.sn}</td>
+		<td><span class="status-pill ${statusClass}">${statusText}</span></td>
+		<td style="text-align:center">
+			<button class="extend-btn" onclick="extendDomain(${index})">
+				<i class="fa-solid fa-plus"></i> 60 dni
+			</button>
+		</td>
+		<td style="text-align:right">
+			<span class="delete-btn" onclick="removeItem(${index})">
+				<i class="fa-solid fa-trash"></i>
+			</span>
+		</td>
+		`
+
 		tbody.appendChild(row)
 	})
 
-	document.getElementById('stats-all').innerText = stats.all
-	document.getElementById('stats-active').innerText = stats.ok
-	document.getElementById('stats-warn').innerText = stats.warn
-	document.getElementById('stats-danger').innerText = stats.dead
+	const statsAll = document.getElementById('stats-all')
+	const statsActive = document.getElementById('stats-active')
+	const statsWarn = document.getElementById('stats-warn')
+	const statsDanger = document.getElementById('stats-danger')
+
+	if (statsAll) statsAll.innerText = stats.all
+	if (statsActive) statsActive.innerText = stats.ok
+	if (statsWarn) statsWarn.innerText = stats.warn
+	if (statsDanger) statsDanger.innerText = stats.dead
 }
 
+/* ======= FORMULARZ ======= */
+
 const toggleDateInput = () => {
+
 	if (newRadio.checked) {
 		dateGroup.style.display = 'none'
 		dateInput.required = false
@@ -161,6 +202,7 @@ newRadio.addEventListener('change', toggleDateInput)
 oldRadio.addEventListener('change', toggleDateInput)
 
 deviceForm.addEventListener('submit', function (e) {
+
 	e.preventDefault()
 
 	const name = document.getElementById('name').value.toUpperCase()
@@ -168,31 +210,54 @@ deviceForm.addEventListener('submit', function (e) {
 	const sn = document.getElementById('sn').value.toUpperCase()
 
 	let date
+
 	if (newRadio.checked) {
+
 		const today = new Date()
 		today.setDate(today.getDate() + 60)
 		date = today.toISOString().split('T')[0]
+
 	} else {
+
 		date = dateInput.value
 		if (!date) return alert('Proszę wybrać datę dla starego urządzenia.')
+
 	}
 
 	const duplicateIndex = findDuplicate(ru, sn)
 
 	if (duplicateIndex !== -1) {
+
 		if (confirm('Urządzenie o tym numerze RU i SN już istnieje. Czy chcesz przedłużyć mu ważność o kolejne 60 dni?')) {
+
 			extendDomain(duplicateIndex)
 			this.reset()
 			toggleDateInput()
+
 		}
+
 		return
 	}
 
 	devices.push({ name, ru, sn, date })
+
 	this.reset()
 	toggleDateInput()
+
 	saveData()
+
 })
+
+/* ======= START ======= */
 
 loadData()
 toggleDateInput()
+
+/* ======= GLOBAL (dla onclick) ======= */
+
+window.extendDomain = extendDomain
+window.removeItem = removeItem
+window.exportJSON = exportJSON
+window.importJSON = importJSON
+
+})
