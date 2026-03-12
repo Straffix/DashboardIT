@@ -1,5 +1,6 @@
 @use 'colors' as *;
 @use 'wymiany' as *;
+@use 'monitor' as *;
 
 *::after,
 *::before,
@@ -17,15 +18,10 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 20px;
+	height: 100vh;
 	font-family: 'Poppins', 'Segoe UI', sans-serif;
 	background-color: $bg-color;
 	color: $text-main;
-}
-
-.wrapper {
-	max-width: 1600px;
-	margin: 0 auto;
 }
 
 // ..:: Główny DASHBOARD ::..
@@ -34,32 +30,31 @@ body {
 	text-align: center;
 	width: 100%;
 	max-width: 1200px;
-	padding: 40px 20px;
 
 	header {
-		margin-bottom: 80px;
+		margin-bottom: 100px;
 
 		h1 {
 			font-family: 'Audiowide', sans-serif;
 			font-size: clamp(2.5rem, 5vw, 4rem);
 			color: $text-main;
 			text-transform: uppercase;
-			letter-spacing: 2px;
+			letter-spacing: 10px;
 		}
 
 		p {
 			color: $text-muted;
-			font-size: 1.4rem;
-			margin-top: 10px;
+			font-size: 1.8rem;
+			margin-top: 20px;
 		}
 	}
 
 	.menu-grid {
 		display: flex;
-		justify-content: center;
 		align-items: center;
-		gap: 60px;
+		justify-content: center;
 		flex-wrap: wrap;
+		gap: 90px;
 	}
 
 	.menu-item {
@@ -85,39 +80,39 @@ body {
 		}
 
 		.circle {
-			width: 280px;
-			height: 280px;
-			background: $text-main;
-			border: 5px solid $text-main;
-			border-radius: 50%;
+			position: relative;
 			display: flex;
-			flex-direction: column;
 			align-items: center;
 			justify-content: center;
+			flex-direction: column;
+			width: 280px;
+			height: 280px;
 			padding: 40px;
-			box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+			border: 5px solid $text-main;
+			border-radius: 50%;
+			background-color: $text-main;
+			box-shadow: 0 8px 15px rgba(253, 253, 253, 0.1);
 			transition: all 0.3s ease;
-			position: relative;
 			overflow: hidden;
 			z-index: 1;
 
 			span {
-				font-size: 1.8rem;
-				font-weight: 700;
+				position: relative;
 				text-align: center;
 				line-height: 1.2;
-				position: relative;
-				z-index: 10;
+				font-weight: 700;
+				font-size: 1.8rem;
 				text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+				z-index: 10;
 			}
 
 			small {
+				position: relative;
 				display: block;
 				margin-top: 10px;
-				font-size: 1rem;
+				font-size: 1.5rem;
 				font-weight: 400;
 				color: rgba(255, 255, 255, 0.8);
-				position: relative;
 				z-index: 10;
 			}
 		}
@@ -175,19 +170,24 @@ body {
 	}
 }
 
+// ..:: ALL PAGES HEADER ::..
+
 .logo-section {
 	display: flex;
 	align-items: center;
 	gap: 15px;
+
 	h1 {
 		font-size: 2.4rem;
 		font-family: 'Audiowide', sans-serif;
 		text-transform: uppercase;
 	}
+
 	p {
 		font-size: 1.2rem;
 		color: $text-muted;
 	}
+
 	span {
 		color: $text-main;
 		font-weight: bold;
@@ -200,49 +200,6 @@ body {
 	padding: 12px;
 	border-radius: 10px;
 	font-size: 2rem;
-}
-
-.stats-grid {
-	display: flex;
-	gap: 20px;
-	margin-bottom: 30px;
-	flex-wrap: wrap;
-}
-
-.stat-card {
-	flex: 1;
-	min-width: 200px;
-	background: white;
-	padding: 20px;
-	border-radius: 15px;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-
-	p {
-		font-size: 1.1rem;
-		color: $text-muted;
-		font-weight: bold;
-		margin-bottom: 5px;
-	}
-	h2 {
-		font-size: 2.8rem;
-	}
-	i {
-		font-size: 3rem;
-		opacity: 0.2;
-	}
-
-	&.active {
-		border-bottom: 4px solid $success;
-	}
-	&.warning {
-		border-bottom: 4px solid $warning;
-	}
-	&.danger {
-		border-bottom: 4px solid $danger;
-	}
 }
 
 .main-content {
@@ -316,6 +273,8 @@ table {
 	}
 }
 
+// ..:: JavaScript Class ::..
+
 .extend-btn {
 	background: #f1f5f9;
 	border: 1px solid #e2e8f0;
@@ -361,6 +320,8 @@ table {
 	}
 }
 
+// ..:: ASIDE PAGES ::..
+
 .input-group {
 	margin-bottom: 15px;
 	label {
@@ -381,17 +342,6 @@ table {
 	}
 }
 
-.radio-group {
-	display: flex;
-	gap: 15px;
-	.radio-item {
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		font-size: 1.3rem;
-	}
-}
-
 .btn-submit {
 	width: 100%;
 	padding: 15px;
@@ -406,6 +356,8 @@ table {
 		filter: brightness(0.9);
 	}
 }
+
+// ..:: BACKUP SECTION ::..
 
 .backup_section {
 	padding: 20px;
@@ -489,6 +441,8 @@ button {
 	}
 }
 
+// ..:: ACCESSORY PICKER ::..
+
 .accessory-picker {
 	display: flex;
 	gap: 10px;
@@ -523,6 +477,8 @@ button {
 	}
 }
 
+// ..:: Nagłowek kalendarza w głównym headerze ::..
+
 .table-header {
 	display: flex;
 	align-items: center;
@@ -530,25 +486,6 @@ button {
 	margin-bottom: 30px;
 	position: relative;
 	min-height: 60px;
-
-	.month-picker-wrapper {
-		position: relative;
-		cursor: pointer;
-		z-index: 10;
-
-		h2 {
-			margin: 0;
-			text-align: center;
-			font-family: 'Audiowide', sans-serif;
-			color: $primary;
-			transition: all 0.3s ease;
-
-			&:hover {
-				transform: scale(1.05);
-				text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
-			}
-		}
-	}
 
 	.month-nav-btn {
 		position: absolute;
@@ -582,71 +519,23 @@ button {
 		}
 	}
 
-	.custom-month-grid {
-		display: none;
+	.month-picker-container {
+		position: relative;
+		cursor: pointer;
+	}
+
+	.hidden-month-input {
 		position: absolute;
-		top: 100%;
-		left: 50%;
-		transform: translateX(-50%);
-		background: rgba(255, 255, 255, 0.95);
-		backdrop-filter: blur(10px);
-		border: 1px solid $border;
-		border-radius: 15px;
-		box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-		padding: 15px;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 8px;
-		z-index: 1000;
-		width: 260px;
-		margin-top: 10px;
-
-		&.active {
-			display: grid;
-		}
-
-		.m-item {
-			padding: 10px;
-			text-align: center;
-			font-size: 1.2rem;
-			font-weight: 600;
-			border-radius: 8px;
-			transition: all 0.2s;
-			color: $text-muted;
-			cursor: pointer;
-
-			&:hover {
-				background: $primary;
-				color: white;
-			}
-
-			&.current {
-				background: rgba(99, 102, 241, 0.1);
-				color: $primary;
-				border: 1px solid $primary;
-			}
-		}
-
-		.year-selector {
-			grid-column: span 3;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			padding: 5px 10px 10px;
-			border-bottom: 1px solid $border;
-			margin-bottom: 5px;
-			font-weight: bold;
-			font-size: 1.4rem;
-
-			i {
-				cursor: pointer;
-				padding: 5px;
-				&:hover {
-					color: $primary;
-				}
-			}
-		}
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		opacity: 0;
+		cursor: pointer;
 	}
 }
+
+// ..:: FOOTER SECTION ::..
 
 .main-footer {
 	margin-top: 100px; // Zwiększony margines od menu
@@ -694,6 +583,8 @@ button {
 		}
 	}
 }
+
+//  ..:: ANIMATION AND OTHERS ::..
 
 @keyframes slideOutLeft {
 	0% {
@@ -758,6 +649,8 @@ button {
 		animation: slideInRight 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); // Lekki efekt sprężynowania na końcu
 	}
 }
+
+//RWD - Finalnie przenieść do innego pliku.
 
 @media (max-width: 768px) {
 	.menu-item .circle {
