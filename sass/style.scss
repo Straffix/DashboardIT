@@ -215,6 +215,28 @@ body {
 		padding: 25px;
 		border-radius: 15px;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+		#exchange-form {
+			hr {
+				border: 0;
+				border-top: 1px dashed #cbd5e1;
+				margin: 20px 0;
+			}
+
+			.input-group label {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-weight: 600;
+				font-size: 1.2rem;
+				margin-bottom: 6px;
+				color: #475569;
+
+				i {
+					font-size: 1rem;
+				}
+			}
+		}
 	}
 }
 
