@@ -147,6 +147,48 @@ body {
   color: #1e293b;
 }
 
+.wrapper {
+  width: min(1280px, 100% - 48px);
+  margin-inline: auto;
+}
+
+.menu-btn {
+  text-decoration: none;
+  color: inherit;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 0 20px;
+}
+.logo-section h1 {
+  font-size: 2.4rem;
+  font-family: "Audiowide", sans-serif;
+  text-transform: uppercase;
+}
+.logo-section p {
+  font-size: 1.2rem;
+  color: #64748b;
+  margin-top: 0.3rem;
+}
+.logo-section span {
+  color: #1e293b;
+  font-weight: bold;
+}
+
+.icon-box {
+  background: #1e293b;
+  color: white;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 2rem;
+}
+
 .dashboard-container {
   text-align: center;
   width: 100%;
@@ -270,33 +312,6 @@ body {
 }
 .dashboard-container .menu-item.upcoming .circle span {
   text-shadow: none;
-}
-
-.logo-section {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-.logo-section h1 {
-  font-size: 2.4rem;
-  font-family: "Audiowide", sans-serif;
-  text-transform: uppercase;
-}
-.logo-section p {
-  font-size: 1.2rem;
-  color: #64748b;
-}
-.logo-section span {
-  color: #1e293b;
-  font-weight: bold;
-}
-
-.icon-box {
-  background: #1e293b;
-  color: white;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 2rem;
 }
 
 .main-content {
@@ -656,6 +671,46 @@ button p {
   border-radius: 50%;
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
   animation: pulseStatus 2.5s infinite;
+}
+
+.fullscreen-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+.fullscreen-btn:hover {
+  background: #6366f1;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* FULLSCREEN LAYOUT */
+body.fullscreen-mode .wrapper {
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 40px;
+}
+
+body.fullscreen-mode .dashboard-container {
+  max-width: 100%;
+}
+
+body.fullscreen-mode .main-content {
+  grid-template-columns: 3fr 1fr;
 }
 
 @keyframes slideOutLeft {

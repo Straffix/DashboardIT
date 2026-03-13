@@ -20,6 +20,10 @@
 
 <body>
 
+    <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pełnoekranowy">
+        <i class="fa-solid fa-expand"></i>
+    </button>
+
     <div class="wrapper">
 
         <header class="header">
@@ -37,7 +41,7 @@
 
                 <div>
                     <h1>Nowe Zatrudnienia</h1>
-                    <p>Projekt i wykonanie: <span>Arkadiusz Lisiecki</span></p>
+                    <p>Lista przygotowania sprzętu dla nowego pracownika - <span>Onboarding</span></p>
                 </div>
 
             </div>
@@ -101,7 +105,7 @@
                     </div>
 
                     <div class="input-group">
-                        <label>Dział / Stanowisko</label>
+                        <label>Dział / Sekcja</label>
                         <input type="text" id="ru" required placeholder="np. Administracja">
                     </div>
 
@@ -187,9 +191,7 @@
                             </button>
 
                         </div>
-
                     </div>
-
                 </section>
 
             </aside>
@@ -197,12 +199,20 @@
         </div>
 
         <footer class="main-footer">
-            <p>&copy; <span id="current-year"></span> IT Support Dashboard</p>
+            <div class="footer-content">
+                <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
+                <div class="footer-separator"></div>
+                <p class="footer-status">
+                    <span class="status-dot"></span>
+                    arkadiusz-lisiecki.pl
+                </p>
+            </div>
         </footer>
 
     </div>
 
     <script src="./js/script_zatrudnienia.js"></script>
+    <script src="./js/script.js"></script>
 
 </body>
 

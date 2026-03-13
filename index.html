@@ -12,57 +12,64 @@
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;600;700&display=swap"
         rel="stylesheet">
 
+    <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous"></script>
+
     <link rel="stylesheet" href="./css/style.css">
 </head>
 
 <body>
 
-    <div class="dashboard-container">
+    <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pełnoekranowy">
+        <i class="fa-solid fa-expand"></i>
+    </button>
 
-        <header>
-            <h1>IT Management Dashboard</h1>
-            <p>wybierz moduł operacyjny</p>
-        </header>
+    <div class="wrapper">
+        <div class="dashboard-container">
 
-        <nav class="menu-grid">
+            <header>
+                <h1>IT Management Dashboard</h1>
+                <p>--- wybierz moduł operacyjny ---</p>
+            </header>
 
-            <a href="nowe_zatrudnienia.html" target="_blank" class="menu-item nowe-zatrudnienia">
-                <div class="circle">
-                    <div class="circle-img"></div>
-                    <span>Nowe Zatrudnienia</span>
-                    <small>Onboarding IT</small>
+            <nav class="menu-grid">
+
+                <a href="nowe_zatrudnienia.html" target="_blank" class="menu-item nowe-zatrudnienia">
+                    <div class="circle">
+                        <div class="circle-img"></div>
+                        <span>Nowe Zatrudnienia</span>
+                        <small>Onboarding IT</small>
+                    </div>
+                </a>
+
+                <a href="monitor_laptopow.html" target="_blank" class="menu-item monitor-laptopow">
+                    <div class="circle">
+                        <div class="circle-img"></div>
+                        <span>Monitor Laptopów</span>
+                        <small>Status domeny</small>
+                    </div>
+                </a>
+
+                <a href="wymiana_sprzetu.html" target="_blank" class="menu-item wymiana-sprzetu">
+                    <div class="circle">
+                        <div class="circle-img"></div>
+                        <span>Wymiana Sprzętu</span>
+                        <small>Cykl 3-letni</small>
+                    </div>
+                </a>
+
+            </nav>
+
+            <footer class="main-footer">
+                <div class="footer-content">
+                    <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
+                    <div class="footer-separator"></div>
+                    <p class="footer-status">
+                        <span class="status-dot"></span>
+                        arkadiusz-lisiecki.pl
+                    </p>
                 </div>
-            </a>
-
-            <a href="monitor_laptopow.html" target="_blank" class="menu-item monitor-laptopow">
-                <div class="circle">
-                    <div class="circle-img"></div>
-                    <span>Monitor Laptopów</span>
-                    <small>Status domeny</small>
-                </div>
-            </a>
-
-            <a href="wymiana_sprzetu.html" target="_blank" class="menu-item wymiana-sprzetu">
-                <div class="circle">
-                    <div class="circle-img"></div>
-                    <span>Wymiana Sprzętu</span>
-                    <small>Cykl 3-letni</small>
-                </div>
-            </a>
-
-        </nav>
-
-        <footer class="main-footer">
-            <div class="footer-content">
-                <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
-                <div class="footer-separator"></div>
-                <p class="footer-status">
-                    <span class="status-dot"></span>
-                    arkadiusz-lisiecki.pl
-                </p>
-            </div>
-        </footer>
-
+            </footer>
+        </div>
     </div>
 
     <script src="./js/script.js"></script>

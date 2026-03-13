@@ -24,6 +24,51 @@ body {
 	color: $text-main;
 }
 
+.wrapper {
+	width: min(1280px, 100% - 48px);
+	margin-inline: auto;
+}
+
+.menu-btn {
+	text-decoration: none;
+	color: inherit;
+	font-size: 1.2rem;
+	margin-bottom: 10px;
+	display: inline-block;
+}
+
+.logo-section {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	padding: 10px 0 20px;
+
+	h1 {
+		font-size: 2.4rem;
+		font-family: 'Audiowide', sans-serif;
+		text-transform: uppercase;
+	}
+
+	p {
+		font-size: 1.2rem;
+		color: $text-muted;
+		margin-top: 0.3rem;
+	}
+
+	span {
+		color: $text-main;
+		font-weight: bold;
+	}
+}
+
+.icon-box {
+	background: $text-main;
+	color: white;
+	padding: 12px;
+	border-radius: 10px;
+	font-size: 2rem;
+}
+
 // ..:: Główny DASHBOARD ::..
 
 .dashboard-container {
@@ -170,43 +215,11 @@ body {
 	}
 }
 
-// ..:: ALL PAGES HEADER ::..
-
-.logo-section {
-	display: flex;
-	align-items: center;
-	gap: 15px;
-
-	h1 {
-		font-size: 2.4rem;
-		font-family: 'Audiowide', sans-serif;
-		text-transform: uppercase;
-	}
-
-	p {
-		font-size: 1.2rem;
-		color: $text-muted;
-	}
-
-	span {
-		color: $text-main;
-		font-weight: bold;
-	}
-}
-
-.icon-box {
-	background: $text-main;
-	color: white;
-	padding: 12px;
-	border-radius: 10px;
-	font-size: 2rem;
-}
-
 .main-content {
 	display: grid;
 	grid-template-columns: 2fr 1fr;
 	gap: 30px;
-	min-width: 1400px;
+	min-width: 1400px; //zweryfikować wartość! ZMIEŃ
 	align-items: start;
 
 	section,
@@ -604,6 +617,50 @@ button {
 			animation: pulseStatus 2.5s infinite;
 		}
 	}
+}
+
+// ..:: FULLSCREEN BUTTON ::..
+
+.fullscreen-btn {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	width: 45px;
+	height: 45px;
+	border-radius: 50%;
+	border: 1px solid $border;
+	background: white;
+	color: $text-main;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.6rem;
+	cursor: pointer;
+	z-index: 9999;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	transition: all 0.2s ease;
+
+	&:hover {
+		background: $primary;
+		color: white;
+		transform: scale(1.1);
+	}
+}
+
+/* FULLSCREEN LAYOUT */
+
+body.fullscreen-mode .wrapper {
+	width: 100%;
+	max-width: 100%;
+	padding-inline: 40px;
+}
+
+body.fullscreen-mode .dashboard-container {
+	max-width: 100%;
+}
+
+body.fullscreen-mode .main-content {
+	grid-template-columns: 3fr 1fr;
 }
 
 //  ..:: ANIMATION AND OTHERS ::..
