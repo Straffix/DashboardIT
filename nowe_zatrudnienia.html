@@ -176,21 +176,6 @@
                             </button>
 
                         </div>
-
-                        <div class="backup-row">
-
-                            <button onclick="exportJSON()" class="btn-backup-item btn-json-yellow">
-                                <i class="fa-solid fa-download"></i>
-                            </button>
-
-                            <input type="file" id="importFile" accept=".json" style="display:none"
-                                onchange="importJSON(event)">
-
-                            <button onclick="document.getElementById('importFile').click()" class="btn-backup-item">
-                                Import JSON
-                            </button>
-
-                        </div>
                     </div>
                 </section>
 
@@ -211,6 +196,8 @@
 
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="./js/utils.js"></script>
     <script src="./js/script_zatrudnienia.js"></script>
     <script src="./js/script.js"></script>
 

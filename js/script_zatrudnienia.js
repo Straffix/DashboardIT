@@ -1,65 +1,9 @@
 let hires = []
-const STORAGE_KEY = 'nowe_zatrudnienia_dane'
+const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.HIRES
 
 let currentViewDate = new Date()
-const monthNames = [
-	'Styczeń',
-	'Luty',
-	'Marzec',
-	'Kwiecień',
-	'Maj',
-	'Czerwiec',
-	'Lipiec',
-	'Sierpień',
-	'Wrzesień',
-	'Październik',
-	'Listopad',
-	'Grudzień',
-]
 
-const iconMap = {
-	mouse: 'fa-mouse',
-	keyboard: 'fa-keyboard',
-	headset: 'fa-headset',
-	monitor: 'fa-desktop',
-	bag: 'fa-briefcase',
-}
-
-function updateMonthDisplay() {
-	const display = document.getElementById('current-month-display')
-	if (display) {
-		display.innerText = `${monthNames[currentViewDate.getMonth()].toUpperCase()} ${currentViewDate.getFullYear()}`
-	}
-}
-
-function changeMonth(delta) {
-	const table = document.querySelector('table') // Zmiana z tbody na table
-
-	// Dodaj efekt zanikania
-	table.style.opacity = '0'
-
-	setTimeout(() => {
-		currentViewDate.setMonth(currentViewDate.getMonth() + delta)
-		renderTable()
-
-		// Przywróć widoczność i dodaj efekt wejścia
-		table.style.opacity = '1'
-		table.classList.add('fade-in')
-
-		setTimeout(() => {
-			table.classList.remove('fade-in')
-		}, 300)
-	}, 200)
-}
-
-//==============================
-
-document.addEventListener('click', e => {
-	const item = e.target.closest('.accessory-item')
-	if (item) {
-		item.classList.toggle('active')
-	}
-})
+/* ======= DANE (LocalStorage) ======= */
 
 function loadData() {
 	const saved = localStorage.getItem(STORAGE_KEY)
@@ -71,6 +15,49 @@ function saveData() {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(hires))
 	renderTable()
 }
+
+/* ======= WIDOK I KALENDARZ ======= */
+
+function updateMonthDisplay() {
+	const display = document.getElementById('current-month-display')
+	if (display) {
+		const monthName = AppUtils.config.MONTH_NAMES[currentViewDate.getMonth()].toUpperCase()
+		display.innerText = `${monthName} ${currentViewDate.getFullYear()}`
+	}
+}
+
+function changeMonth(delta) {
+    const tbody = document.getElementById('table-body');
+    if (!tbody) return;
+
+    tbody.classList.remove('slide-in');
+    tbody.classList.add('slide-out');
+
+    setTimeout(() => {
+        currentViewDate.setMonth(currentViewDate.getMonth() + delta);
+        renderTable();
+
+        tbody.style.visibility = 'hidden';
+        tbody.classList.remove('slide-out');
+
+        requestAnimationFrame(() => {
+            tbody.style.visibility = 'visible';
+            tbody.classList.add('slide-in');
+        });
+
+    }, 250);
+}
+
+/* ======= LOGIKA AKCESORIÓW ======= */
+
+document.addEventListener('click', e => {
+	const item = e.target.closest('.accessory-item')
+	if (item) {
+		item.classList.toggle('active')
+	}
+})
+
+/* ======= RENDER TABELI ======= */
 
 function renderTable() {
 	const tbody = document.getElementById('table-body')
@@ -94,7 +81,6 @@ function renderTable() {
 
 	filteredHires.forEach(h => {
 		const originalIndex = hires.findIndex(original => original === h)
-
 		const startDate = new Date(h.date)
 		const diff = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24))
 
@@ -108,12 +94,7 @@ function renderTable() {
 			statusClass = 'near'
 		}
 
-		const accessoriesHTML = (h.accessories || [])
-			.map(
-				acc =>
-					`<i class="fas ${iconMap[acc]}" style="margin: 0 4px; color: #64748b; font-size: 1.2rem;" title="${acc}"></i>`,
-			)
-			.join('')
+		const accessoriesHTML = AppUtils.renderAccessoryIcons(h.accessories, '1.2rem')
 
 		const row = document.createElement('tr')
 		row.innerHTML = `
@@ -121,7 +102,7 @@ function renderTable() {
             <td>${h.ru}</td>
             <td>${h.sn}</td>
             <td><span class="status-pill ${statusClass}">${statusText}</span></td>
-            <td style="text-align:center">${accessoriesHTML || '<small style="color:#ccc">brak</small>'}</td>
+            <td style="text-align:center">${accessoriesHTML}</td>
             <td style="text-align:right">
                 <span class="delete-btn" onclick="removeItem(${originalIndex})">
                     <i class="fas fa-trash"></i>
@@ -139,56 +120,39 @@ function removeItem(index) {
 	}
 }
 
-// --- FORMULARZ ---
-document.getElementById('device-form').addEventListener('submit', e => {
-	e.preventDefault()
+/* ======= FORMULARZ ======= */
 
-	const selectedAcc = []
-	document.querySelectorAll('.accessory-item.active').forEach(item => {
-		selectedAcc.push(item.dataset.item)
-	})
+const deviceForm = document.getElementById('device-form')
+if (deviceForm) {
+	deviceForm.addEventListener('submit', e => {
+		e.preventDefault()
 
-	const newHireDate = document.getElementById('date').value
+		const selectedAcc = []
+		document.querySelectorAll('.accessory-item.active').forEach(item => {
+			selectedAcc.push(item.dataset.item)
+		})
 
-	hires.push({
-		name: document.getElementById('name').value.toUpperCase(),
-		ru: document.getElementById('ru').value,
-		sn: document.getElementById('sn').value.toUpperCase(),
-		date: newHireDate,
-		accessories: selectedAcc,
-	})
+		const newHireDate = document.getElementById('date').value
 
-	currentViewDate = new Date(newHireDate)
+		hires.push({
+			name: document.getElementById('name').value.toUpperCase(),
+			ru: document.getElementById('ru').value,
+			sn: AppUtils.normalizeSN(document.getElementById('sn').value),
+			date: newHireDate,
+			accessories: selectedAcc,
+		})
 
-	e.target.reset()
-	document.querySelectorAll('.accessory-item').forEach(i => i.classList.remove('active'))
-
-	saveData()
-})
-
-const hiddenMonthInput = document.getElementById('hidden-month-input')
-
-if (hiddenMonthInput) {
-	hiddenMonthInput.addEventListener('change', e => {
-		const selectedValue = e.target.value
-		if (selectedValue) {
-			const [year, month] = selectedValue.split('-')
-
-			currentViewDate = new Date(year, month - 1, 1)
-
-			renderTable()
-		}
+		currentViewDate = new Date(newHireDate)
+		e.target.reset()
+		document.querySelectorAll('.accessory-item').forEach(i => i.classList.remove('active'))
+		saveData()
 	})
 }
 
-// --- EKSPORT DO EXCELA ---
-function exportExcel() {
-	if (hires.length === 0) {
-		alert('Brak danych do eksportu!')
-		return
-	}
+/* ======= EKSPORT / IMPORT EXCEL ======= */
 
-	// Mapujemy dane, aby nagłówki w Excelu były czytelne
+function exportExcel() {
+	if (hires.length === 0) return alert('Brak danych!')
 	const dataToExport = hires.map(h => ({
 		'Imię i Nazwisko': h.name,
 		'Dział / Stanowisko': h.ru,
@@ -196,95 +160,44 @@ function exportExcel() {
 		'Data rozpoczęcia': h.date,
 		Akcesoria: h.accessories ? h.accessories.join(', ') : '',
 	}))
-
 	const worksheet = XLSX.utils.json_to_sheet(dataToExport)
 	const workbook = XLSX.utils.book_new()
 	XLSX.utils.book_append_sheet(workbook, worksheet, 'Zatrudnienia')
-
-	// Generowanie nazwy pliku z aktualną datą
-	const fileName = `zatrudnienia_backup_${new Date().toISOString().slice(0, 10)}.xlsx`
-
-	XLSX.writeFile(workbook, fileName)
+	XLSX.writeFile(workbook, `zatrudnienia_${AppUtils.formatDate(new Date())}.xlsx`)
 }
 
-// --- IMPORT Z EXCELA ---
 function importExcel(event) {
 	const file = event.target.files[0]
 	if (!file) return
-
 	const reader = new FileReader()
 	reader.onload = function (e) {
 		const data = new Uint8Array(e.target.result)
 		const workbook = XLSX.read(data, { type: 'array' })
+		const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
 
-		// Pobieramy pierwszy arkusz
-		const firstSheetName = workbook.SheetNames[0]
-		const worksheet = workbook.Sheets[firstSheetName]
-
-		// Konwersja na JSON
-		const jsonData = XLSX.utils.sheet_to_json(worksheet)
-
-		// Mapowanie z formatu Excelowego z powrotem na Twój format obiektów
 		const importedHires = jsonData.map(row => ({
 			name: (row['Imię i Nazwisko'] || '').toString().toUpperCase(),
 			ru: row['Dział / Stanowisko'] || '',
-			sn: (row['SN Sprzętu'] || '').toString().toUpperCase(),
+			sn: AppUtils.normalizeSN(row['SN Sprzętu']),
 			date: row['Data rozpoczęcia'] || '',
 			accessories: row['Akcesoria'] ? row['Akcesoria'].split(', ').filter(a => a) : [],
 		}))
 
-		if (confirm(`Czy zaimportować ${importedHires.length} wpisów? (Istniejące dane pozostaną)`)) {
+		if (confirm(`Zaimportować ${importedHires.length} wpisów?`)) {
 			hires = [...hires, ...importedHires]
 			saveData()
-			event.target.value = '' // Reset inputa
 		}
+		event.target.value = ''
 	}
 	reader.readAsArrayBuffer(file)
 }
 
-// --- EKSPORT DO JSON ---
-function exportJSON() {
-	if (hires.length === 0) {
-		alert('Brak danych do eksportu!')
-		return
-	}
-	const dataStr = JSON.stringify(hires, null, 2)
-	const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+/* ======= START I GLOBALIZACJA ======= */
 
-	const exportFileDefaultName = `backup_zatrudnienia_${new Date().toISOString().slice(0, 10)}.json`
-
-	const linkElement = document.createElement('a')
-	linkElement.setAttribute('href', dataUri)
-	linkElement.setAttribute('download', exportFileDefaultName)
-	linkElement.click()
-}
-
-// --- IMPORT Z JSON ---
-function importJSON(event) {
-	const file = event.target.files[0]
-	if (!file) return
-
-	const reader = new FileReader()
-	reader.onload = function (e) {
-		try {
-			const importedData = JSON.parse(e.target.result)
-
-			if (Array.isArray(importedData)) {
-				if (confirm(`Czy zaimportować ${importedData.length} wpisów z pliku JSON?`)) {
-					hires = [...hires, ...importedData]
-					saveData()
-					alert('Dane zostały zaimportowane!')
-				}
-			} else {
-				alert('Nieprawidłowy format pliku JSON.')
-			}
-		} catch (err) {
-			alert('Błąd podczas odczytu pliku JSON.')
-			console.error(err)
-		}
-		event.target.value = '' // Reset inputa
-	}
-	reader.readAsText(file)
-}
+window.changeMonth = changeMonth
+window.removeItem = removeItem
+window.exportExcel = exportExcel
+window.importExcel = importExcel
 
 loadData()
+

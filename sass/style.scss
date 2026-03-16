@@ -671,16 +671,17 @@ body.fullscreen-mode .main-content {
 		opacity: 1;
 	}
 	100% {
-		transform: translateX(-30px);
+		transform: translateX(-100px);
 		opacity: 0;
 	}
 }
 
 @keyframes slideInRight {
 	0% {
-		transform: translateX(30px);
+		transform: translateX(100px);
 		opacity: 0;
 	}
+
 	100% {
 		transform: translateX(0);
 		opacity: 1;
@@ -718,14 +719,14 @@ body.fullscreen-mode .main-content {
 }
 
 #table-body {
-	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	will-change: transform, opacity;
 
 	&.slide-out {
-		animation: slideOutLeft 0.2s forwards ease-in;
+		animation: slideOutLeft 0.25s forwards ease-in;
 	}
 
 	&.slide-in {
-		animation: slideInRight 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); // Lekki efekt sprężynowania na końcu
+		animation: slideInRight 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	}
 }
 

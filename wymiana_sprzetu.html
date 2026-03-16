@@ -187,6 +187,8 @@
                             <input type="file" id="importExcelFile" accept=".xlsx, .xls" style="display:none"
                                 onchange="importExcel(event)">
 
+
+
                             <button onclick="document.getElementById('importExcelFile').click()"
                                 class="btn-backup-item">
                                 Import Excel
@@ -227,7 +229,9 @@
         </footer>
     </div>
 
-    <script src="./js/script_wymiana.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/script_wymiana.js"></script>
     <script src="./js/script.js"></script>
 </body>
 

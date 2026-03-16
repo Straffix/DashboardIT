@@ -1,80 +1,35 @@
 let devices = []
-const STORAGE_KEY = 'monitor_laptopow_dane'
-const BACKUP_KEY = 'monitor_laptopow_backup'
+const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.MONITOR
+
 const deviceForm = document.getElementById('device-form')
 const newRadio = document.getElementById('new-device')
 const oldRadio = document.getElementById('old-device')
 const dateGroup = document.getElementById('date-group')
 const dateInput = document.getElementById('date')
 
-function formatDate(date) {
-	const year = date.getFullYear()
-	const month = String(date.getMonth() + 1).padStart(2, '0')
-	const day = String(date.getDate()).padStart(2, '0')
-	return `${year}-${month}-${day}`
-}
+/* ======= DANE ======= */
 
 function loadData() {
 	const saved = localStorage.getItem(STORAGE_KEY)
 	devices = saved ? JSON.parse(saved) : []
-	autoBackup()
 	renderTable()
 }
 
 function saveData() {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(devices))
-	autoBackup()
 	renderTable()
 }
 
-function autoBackup() {
-	localStorage.setItem(BACKUP_KEY, JSON.stringify(devices))
-}
+/* ======= EXPORT / IMPORT EXCEL ======= */
 
-// --- EKSPORT/IMPORT JSON ---
-function exportJSON() {
-	if (devices.length === 0) return alert('Brak danych do eksportu.')
-	const data = JSON.stringify(devices, null, 2)
-	const blob = new Blob([data], { type: 'application/json' })
-	const link = document.createElement('a')
-	link.href = URL.createObjectURL(blob)
-	link.download = `monitor_backup_${new Date().toISOString().slice(0, 10)}.json`
-	link.click()
-}
-
-function importJSON(event) {
-	const file = event.target.files[0]
-	if (!file) return
-
-	const reader = new FileReader()
-	reader.onload = function (e) {
-		try {
-			const imported = JSON.parse(e.target.result)
-			if (!Array.isArray(imported)) throw new Error()
-			if (confirm(`Zaimportować ${imported.length} urządzeń? Obecne dane zostaną nadpisane.`)) {
-				devices = imported
-				saveData()
-				alert('Import JSON zakończony sukcesem.')
-			}
-		} catch (err) {
-			alert('Błąd: Niepoprawny format pliku JSON.')
-		}
-		event.target.value = ''
-	}
-	reader.readAsText(file)
-}
-
-// --- EKSPORT/IMPORT EXCEL ---
 function exportExcel() {
 	if (devices.length === 0) return alert('Brak danych do eksportu!')
-
 	const dataToExport = devices.map(d => ({
 		'Nazwa użytkownika': d.name,
 		'Dział / RU': d.ru,
 		'Numer Seryjny': d.sn,
 		'Data ważności domeny': d.date,
 	}))
-
 	const worksheet = XLSX.utils.json_to_sheet(dataToExport)
 	const workbook = XLSX.utils.book_new()
 	XLSX.utils.book_append_sheet(workbook, worksheet, 'Urządzenia')
@@ -95,12 +50,12 @@ function importExcel(event) {
 		const imported = jsonData.map(row => ({
 			name: (row['Nazwa użytkownika'] || '').toString().toUpperCase(),
 			ru: row['Dział / RU'] || '',
-			sn: (row['Numer Seryjny'] || '').toString().toUpperCase(),
+			sn: AppUtils.normalizeSN(row['Numer Seryjny']),
 			date: row['Data ważności domeny'] || '',
 		}))
 
 		if (confirm(`Zaimportować ${imported.length} urządzeń z Excela?`)) {
-			devices = [...devices, ...imported] // Tutaj dodajemy do istniejących
+			devices = [...devices, ...imported]
 			saveData()
 		}
 		event.target.value = ''
@@ -108,13 +63,11 @@ function importExcel(event) {
 	reader.readAsArrayBuffer(file)
 }
 
-function normalizeSN(sn) {
-	return sn.trim().replace(/-/g, '').toUpperCase()
-}
+/* ======= LOGIKA ======= */
 
 function findDuplicate(ru, sn) {
-	const normalizedSn = normalizeSN(sn)
-	return devices.findIndex(d => d.ru === ru && normalizeSN(d.sn) === normalizedSn)
+	const normalizedSn = AppUtils.normalizeSN(sn)
+	return devices.findIndex(d => d.ru === ru && AppUtils.normalizeSN(d.sn) === normalizedSn)
 }
 
 function extendDomain(index) {
@@ -122,12 +75,10 @@ function extendDomain(index) {
 	today.setHours(0, 0, 0, 0)
 
 	let currentExpiry = new Date(devices[index].date)
-	currentExpiry.setHours(0, 0, 0, 0)
-
-	let baseDate = currentExpiry < today || isNaN(currentExpiry.getTime()) ? today : currentExpiry
+	let baseDate = isNaN(currentExpiry.getTime()) || currentExpiry < today ? today : currentExpiry
 
 	baseDate.setDate(baseDate.getDate() + 60)
-	devices[index].date = formatDate(baseDate)
+	devices[index].date = AppUtils.formatDate(baseDate)
 	saveData()
 }
 
@@ -137,6 +88,8 @@ function removeItem(index) {
 		saveData()
 	}
 }
+
+/* ======= RENDER TABELI ======= */
 
 function renderTable() {
 	const tbody = document.getElementById('table-body')
@@ -186,13 +139,16 @@ function renderTable() {
 	})
 
 	const updateStat = (id, val) => {
-		if (document.getElementById(id)) document.getElementById(id).innerText = val
+		const el = document.getElementById(id)
+		if (el) el.innerText = val
 	}
 	updateStat('stats-all', stats.all)
 	updateStat('stats-active', stats.ok)
 	updateStat('stats-warn', stats.warn)
 	updateStat('stats-danger', stats.dead)
 }
+
+/* ======= FORMULARZ ======= */
 
 const toggleDateInput = () => {
 	if (!dateGroup) return
@@ -209,13 +165,13 @@ if (deviceForm) {
 		e.preventDefault()
 		const name = document.getElementById('name').value.toUpperCase()
 		const ru = document.getElementById('ru').value
-		const sn = document.getElementById('sn').value.toUpperCase()
+		const sn = AppUtils.normalizeSN(document.getElementById('sn').value)
 		let date
 
 		if (newRadio.checked) {
 			let d = new Date()
 			d.setDate(d.getDate() + 60)
-			date = formatDate(d)
+			date = AppUtils.formatDate(d)
 		} else {
 			date = dateInput.value
 			if (!date) return alert('Wybierz datę dla starego urządzenia.')
@@ -238,5 +194,12 @@ if (deviceForm) {
 	})
 }
 
+// Globalizacja funkcji
+window.extendDomain = extendDomain
+window.removeItem = removeItem
+window.exportExcel = exportExcel
+window.importExcel = importExcel
+
+// Start
 loadData()
 toggleDateInput()
