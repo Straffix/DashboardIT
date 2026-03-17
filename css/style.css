@@ -1,3 +1,4 @@
+@charset "UTF-8";
 .col-info-narrow {
   width: 20px !important;
   min-width: 20px !important;
@@ -254,6 +255,7 @@ aside.editing-active {
   font-size: 1.3rem;
 }
 
+/* ======= RESET I PODSTAWY ======= */
 *::after,
 *::before,
 * {
@@ -270,17 +272,22 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
   font-family: "Poppins", "Segoe UI", sans-serif;
   background-color: #f1f5f9;
   color: #1e293b;
+  transition: background-color 0.3s ease;
+  overflow-x: hidden;
+  padding: 40px 0;
 }
 
 .wrapper {
   width: min(1280px, 100% - 48px);
   margin-inline: auto;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ======= NAWIGACJA I LOGO ======= */
 .menu-btn {
   text-decoration: none;
   color: inherit;
@@ -318,6 +325,7 @@ body {
   font-size: 2rem;
 }
 
+/* ======= GŁÓWNY DASHBOARD (MENU KOŁOWE) ======= */
 .dashboard-container {
   text-align: center;
   width: 100%;
@@ -443,11 +451,12 @@ body {
   text-shadow: none;
 }
 
+/* ======= GŁÓWNA ZAWARTOŚĆ (TABELA + ASIDE) ======= */
 .main-content {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 30px;
-  min-width: 1400px;
+  width: 100%;
   align-items: start;
 }
 .main-content section,
@@ -473,10 +482,6 @@ body {
   margin-bottom: 6px;
   color: #475569;
 }
-.main-content section #exchange-form .input-group label i,
-.main-content aside #exchange-form .input-group label i {
-  font-size: 1rem;
-}
 
 h2 {
   font-size: 1.8rem;
@@ -488,6 +493,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  table-layout: fixed;
 }
 table th {
   text-align: left;
@@ -506,10 +512,6 @@ table td {
 }
 table tr:last-child td {
   border-bottom: none;
-}
-table {
-  table-layout: fixed;
-  width: 100%;
 }
 table th:nth-child(1) {
   width: 25%;
@@ -530,6 +532,7 @@ table th:nth-child(6) {
   width: 5%;
 }
 
+/* ======= ELEMENTY INTERAKTYWNE ======= */
 .extend-btn {
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
@@ -608,6 +611,7 @@ table th:nth-child(6) {
   filter: brightness(0.9);
 }
 
+/* ======= SEKCJA BACKUP ======= */
 .backup_section {
   padding: 20px;
   border-radius: 12px;
@@ -674,10 +678,7 @@ table th:nth-child(6) {
   filter: brightness(1.1);
 }
 
-button p {
-  color: #94a3b8;
-}
-
+/* ======= AKCESORIA I KALENDARZ ======= */
 .accessory-picker {
   display: flex;
   gap: 10px;
@@ -746,20 +747,8 @@ button p {
 .table-header .month-nav-btn:last-of-type {
   right: 0;
 }
-.table-header .month-picker-container {
-  position: relative;
-  cursor: pointer;
-}
-.table-header .hidden-month-input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
 
+/* ======= FOOTER ======= */
 .main-footer {
   margin-top: 100px;
   padding-bottom: 40px;
@@ -771,18 +760,7 @@ button p {
   align-items: center;
   gap: 12px;
   color: rgba(148, 163, 184, 0.6);
-  font-family: "Poppins", sans-serif;
   font-size: 0.85rem;
-}
-.main-footer .footer-content p {
-  margin: 0;
-  letter-spacing: 0.5px;
-}
-.main-footer .footer-separator {
-  width: 30px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
-  opacity: 0.5;
 }
 .main-footer .footer-status {
   display: flex;
@@ -798,10 +776,10 @@ button p {
   height: 6px;
   background-color: #22c55e;
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
   animation: pulseStatus 2.5s infinite;
 }
 
+/* ======= PRZYCISK TRYBU SZEROKIEGO ======= */
 .fullscreen-btn {
   position: fixed;
   top: 20px;
@@ -817,7 +795,7 @@ button p {
   justify-content: center;
   font-size: 1.6rem;
   cursor: pointer;
-  z-index: 9999;
+  z-index: 1000;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 }
@@ -827,21 +805,27 @@ button p {
   transform: scale(1.1);
 }
 
-/* FULLSCREEN LAYOUT */
-body.fullscreen-mode .wrapper {
-  width: 100%;
-  max-width: 100%;
-  padding-inline: 40px;
+/* ======= TRYB SZEROKI (WIDE MODE) - NA DOLE BY NADPISYWAĆ ======= */
+body.wide-mode {
+  display: block;
+}
+body.wide-mode .wrapper {
+  max-width: 96% !important;
+  width: 96% !important;
+}
+body.wide-mode .main-content {
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+}
+body.wide-mode table td {
+  font-size: 1.4rem;
+  padding: 22px 15px;
+}
+body.wide-mode .logo-section h1 {
+  font-size: 3rem;
 }
 
-body.fullscreen-mode .dashboard-container {
-  max-width: 100%;
-}
-
-body.fullscreen-mode .main-content {
-  grid-template-columns: 3fr 1fr;
-}
-
+/* ======= ANIMACJE ======= */
 @keyframes slideOutLeft {
   0% {
     transform: translateX(0);
@@ -900,6 +884,7 @@ body.fullscreen-mode .main-content {
   animation: slideInRight 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* ======= RWD ======= */
 @media (max-width: 768px) {
   .menu-item .circle {
     width: 220px;

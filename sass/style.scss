@@ -2,6 +2,7 @@
 @use 'wymiany' as *;
 @use 'monitor' as *;
 
+/* ======= RESET I PODSTAWY ======= */
 *::after,
 *::before,
 * {
@@ -18,17 +19,22 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 100vh;
+	min-height: 100vh;
 	font-family: 'Poppins', 'Segoe UI', sans-serif;
 	background-color: $bg-color;
 	color: $text-main;
+	transition: background-color 0.3s ease;
+	overflow-x: hidden;
+	padding: 40px 0; // Oddech dla zawartości
 }
 
 .wrapper {
 	width: min(1280px, 100% - 48px);
 	margin-inline: auto;
+	transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ======= NAWIGACJA I LOGO ======= */
 .menu-btn {
 	text-decoration: none;
 	color: inherit;
@@ -69,8 +75,7 @@ body {
 	font-size: 2rem;
 }
 
-// ..:: Główny DASHBOARD ::..
-
+/* ======= GŁÓWNY DASHBOARD (MENU KOŁOWE) ======= */
 .dashboard-container {
 	text-align: center;
 	width: 100%;
@@ -110,12 +115,10 @@ body {
 
 		&:hover {
 			transform: scale(1.05);
-
 			.circle {
 				box-shadow: 0 2px 10px rgba(131, 7, 7, 0.589);
 				border-color: $danger;
 			}
-
 			.circle-img {
 				transform: scale(1.1);
 				&::after {
@@ -188,7 +191,6 @@ body {
 		&.nowe-zatrudnienia .circle-img {
 			background-image: url('../img/onboarding.jpg');
 		}
-
 		&.monitor-laptopow .circle-img {
 			background-image: url('../img/monit.jpg');
 		}
@@ -196,17 +198,14 @@ body {
 		&.upcoming {
 			cursor: default;
 			opacity: 0.6;
-
 			&:hover {
 				transform: none;
 			}
-
 			.circle {
 				border-style: dashed;
 				border-color: $text-muted;
 				background: transparent;
 				color: $text-muted;
-
 				span {
 					text-shadow: none;
 				}
@@ -215,11 +214,12 @@ body {
 	}
 }
 
+/* ======= GŁÓWNA ZAWARTOŚĆ (TABELA + ASIDE) ======= */
 .main-content {
 	display: grid;
 	grid-template-columns: 2fr 1fr;
 	gap: 30px;
-	min-width: 1400px; //zweryfikować wartość! ZMIEŃ
+	width: 100%;
 	align-items: start;
 
 	section,
@@ -235,7 +235,6 @@ body {
 				border-top: 1px dashed #cbd5e1;
 				margin: 20px 0;
 			}
-
 			.input-group label {
 				display: flex;
 				align-items: center;
@@ -244,10 +243,6 @@ body {
 				font-size: 1.2rem;
 				margin-bottom: 6px;
 				color: #475569;
-
-				i {
-					font-size: 1rem;
-				}
 			}
 		}
 	}
@@ -263,6 +258,7 @@ table {
 	width: 100%;
 	border-collapse: collapse;
 	margin-top: 10px;
+	table-layout: fixed;
 
 	th {
 		text-align: left;
@@ -285,9 +281,6 @@ table {
 		border-bottom: none;
 	}
 
-	table-layout: fixed;
-	width: 100%;
-
 	th:nth-child(1) {
 		width: 25%;
 	}
@@ -308,8 +301,7 @@ table {
 	}
 }
 
-// ..:: JavaScript Class ::..
-
+/* ======= ELEMENTY INTERAKTYWNE ======= */
 .extend-btn {
 	background: #f1f5f9;
 	border: 1px solid #e2e8f0;
@@ -319,7 +311,6 @@ table {
 	color: $text-main;
 	cursor: pointer;
 	transition: all 0.2s;
-
 	&:hover {
 		background: #e2e8f0;
 	}
@@ -331,7 +322,6 @@ table {
 	cursor: pointer;
 	padding: 5px;
 	transition: color 0.2s;
-
 	&:hover {
 		color: $danger;
 	}
@@ -354,8 +344,6 @@ table {
 		color: $danger;
 	}
 }
-
-// ..:: ASIDE PAGES ::..
 
 .input-group {
 	margin-bottom: 15px;
@@ -392,8 +380,7 @@ table {
 	}
 }
 
-// ..:: BACKUP SECTION ::..
-
+/* ======= SEKCJA BACKUP ======= */
 .backup_section {
 	padding: 20px;
 	border-radius: 12px;
@@ -408,18 +395,15 @@ table {
 		margin-bottom: 20px;
 		color: $text-main;
 	}
-
 	.backup-container {
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
 	}
-
 	.backup-row {
 		display: flex;
 		gap: 10px;
 		width: 100%;
-
 		.btn-backup-item {
 			flex: 1;
 			display: flex;
@@ -435,33 +419,27 @@ table {
 			font-size: 1.3rem;
 			cursor: pointer;
 			transition: all 0.2s ease-in-out;
-
 			&:hover {
 				background: #e2e8f0;
 				font-size: 1.4rem;
 			}
-
 			i {
 				font-size: 2rem;
 			}
 		}
-
 		.btn-excel-green {
 			background-color: #107c41ab;
 			color: white;
 			border: none;
-
 			&:hover {
 				background-color: #0e6b38;
 				filter: brightness(1.1);
 			}
 		}
-
 		.btn-json-yellow {
 			background-color: #363636c0;
 			color: white;
 			border: none;
-
 			&:hover {
 				background-color: #da5e0bad;
 				filter: brightness(1.1);
@@ -470,14 +448,7 @@ table {
 	}
 }
 
-button {
-	p {
-		color: #94a3b8;
-	}
-}
-
-// ..:: ACCESSORY PICKER ::..
-
+/* ======= AKCESORIA I KALENDARZ ======= */
 .accessory-picker {
 	display: flex;
 	gap: 10px;
@@ -498,12 +469,10 @@ button {
 		cursor: pointer;
 		transition: all 0.2s ease;
 		border-radius: 6px;
-
 		&:hover {
 			background: #e2e8f0;
 			color: $text-main;
 		}
-
 		&.active {
 			background: $primary;
 			color: white;
@@ -511,8 +480,6 @@ button {
 		}
 	}
 }
-
-// ..:: Nagłowek kalendarza w głównym headerze ::..
 
 .table-header {
 	display: flex;
@@ -539,13 +506,11 @@ button {
 		color: $primary;
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 		z-index: 5;
-
 		&:hover {
 			background: $primary;
 			color: white;
 			transform: translateY(-50%) scale(1.1);
 		}
-
 		&:first-of-type {
 			left: 0;
 		}
@@ -553,52 +518,21 @@ button {
 			right: 0;
 		}
 	}
-
-	.month-picker-container {
-		position: relative;
-		cursor: pointer;
-	}
-
-	.hidden-month-input {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		opacity: 0;
-		cursor: pointer;
-	}
 }
 
-// ..:: FOOTER SECTION ::..
-
+/* ======= FOOTER ======= */
 .main-footer {
-	margin-top: 100px; // Zwiększony margines od menu
-	padding-bottom: 40px; // Oddech od krawędzi przeglądarki
+	margin-top: 100px;
+	padding-bottom: 40px;
 	width: 100%;
-
 	.footer-content {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 12px;
-		color: rgba(148, 163, 184, 0.6); // Bardziej subtelny kolor
-		font-family: 'Poppins', sans-serif;
+		color: rgba(148, 163, 184, 0.6);
 		font-size: 0.85rem;
-
-		p {
-			margin: 0;
-			letter-spacing: 0.5px;
-		}
 	}
-
-	.footer-separator {
-		width: 30px;
-		height: 1px;
-		background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
-		opacity: 0.5;
-	}
-
 	.footer-status {
 		display: flex;
 		align-items: center;
@@ -607,20 +541,17 @@ button {
 		text-transform: uppercase;
 		font-weight: 600;
 		color: #94a3b8;
-
 		.status-dot {
 			width: 6px;
 			height: 6px;
 			background-color: #22c55e;
 			border-radius: 50%;
-			box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
 			animation: pulseStatus 2.5s infinite;
 		}
 	}
 }
 
-// ..:: FULLSCREEN BUTTON ::..
-
+/* ======= PRZYCISK TRYBU SZEROKIEGO ======= */
 .fullscreen-btn {
 	position: fixed;
 	top: 20px;
@@ -636,10 +567,9 @@ button {
 	justify-content: center;
 	font-size: 1.6rem;
 	cursor: pointer;
-	z-index: 9999;
+	z-index: 1000;
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 	transition: all 0.2s ease;
-
 	&:hover {
 		background: $primary;
 		color: white;
@@ -647,24 +577,31 @@ button {
 	}
 }
 
-/* FULLSCREEN LAYOUT */
+/* ======= TRYB SZEROKI (WIDE MODE) - NA DOLE BY NADPISYWAĆ ======= */
+body.wide-mode {
+	display: block; // Naprawia ucinanie góry (wyłącza centering)
 
-body.fullscreen-mode .wrapper {
-	width: 100%;
-	max-width: 100%;
-	padding-inline: 40px;
+	.wrapper {
+		max-width: 96% !important;
+		width: 96% !important;
+	}
+
+	.main-content {
+		grid-template-columns: 1fr 380px;
+		gap: 40px;
+	}
+
+	table td {
+		font-size: 1.4rem;
+		padding: 22px 15px;
+	}
+
+	.logo-section h1 {
+		font-size: 3rem;
+	}
 }
 
-body.fullscreen-mode .dashboard-container {
-	max-width: 100%;
-}
-
-body.fullscreen-mode .main-content {
-	grid-template-columns: 3fr 1fr;
-}
-
-//  ..:: ANIMATION AND OTHERS ::..
-
+/* ======= ANIMACJE ======= */
 @keyframes slideOutLeft {
 	0% {
 		transform: translateX(0);
@@ -681,7 +618,6 @@ body.fullscreen-mode .main-content {
 		transform: translateX(100px);
 		opacity: 0;
 	}
-
 	100% {
 		transform: translateX(0);
 		opacity: 1;
@@ -720,18 +656,15 @@ body.fullscreen-mode .main-content {
 
 #table-body {
 	will-change: transform, opacity;
-
 	&.slide-out {
 		animation: slideOutLeft 0.25s forwards ease-in;
 	}
-
 	&.slide-in {
 		animation: slideInRight 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	}
 }
 
-//RWD - Finalnie przenieść do innego pliku.
-
+/* ======= RWD ======= */
 @media (max-width: 768px) {
 	.menu-item .circle {
 		width: 220px;

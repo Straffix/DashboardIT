@@ -157,24 +157,28 @@ function renderTable() {
 
 /* ======= LOGIKA PROCESU ======= */
 
+let editIndex = null // Dodaj to na górze pliku script_wymiana.js
+
 function editExchange(index) {
 	const ex = exchanges[index]
 	if (!ex) return
 
-	// 1. Wypełnienie formularza
+	editIndex = index // Zapamiętujemy, który element edytujemy
+
+	// Wypełnianie formularza
 	document.getElementById('emp-name').value = ex.name
 	document.getElementById('exchange-date').value = ex.plannedDate
 	document.getElementById('old-sn').value = ex.oldSn
 	document.getElementById('new-sn').value = ex.newSn
 	document.getElementById('notes').value = ex.notes || ''
 
-	// 2. Akcesoria
+	// Akcesoria
 	document.querySelectorAll('.accessory-item').forEach(item => {
 		const itemName = item.dataset.item
 		item.classList.toggle('active', ex.accessories && ex.accessories.includes(itemName))
 	})
 
-	// 3. Interfejs edycji
+	// Interfejs edycji
 	const submitBtn = document.getElementById('submit-btn')
 	if (submitBtn) {
 		submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Zapisz zmiany'
@@ -190,13 +194,52 @@ function editExchange(index) {
 	}
 
 	document.querySelector('aside').classList.add('editing-active')
-
-	// 4. Usuwamy stary, by dodać "nowy" po zapisie
-	exchanges.splice(index, 1)
-
 	window.scrollTo({ top: 0, behavior: 'smooth' })
+
+	// NIE robimy już splice tutaj!
 	renderTable()
 }
+
+// function editExchange(index) {
+// 	const ex = exchanges[index]
+// 	if (!ex) return
+
+// 	// 1. Wypełnienie formularza
+// 	document.getElementById('emp-name').value = ex.name
+// 	document.getElementById('exchange-date').value = ex.plannedDate
+// 	document.getElementById('old-sn').value = ex.oldSn
+// 	document.getElementById('new-sn').value = ex.newSn
+// 	document.getElementById('notes').value = ex.notes || ''
+
+// 	// 2. Akcesoria
+// 	document.querySelectorAll('.accessory-item').forEach(item => {
+// 		const itemName = item.dataset.item
+// 		item.classList.toggle('active', ex.accessories && ex.accessories.includes(itemName))
+// 	})
+
+// 	// 3. Interfejs edycji
+// 	const submitBtn = document.getElementById('submit-btn')
+// 	if (submitBtn) {
+// 		submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Zapisz zmiany'
+// 		submitBtn.style.background = '#6366f1'
+// 	}
+
+// 	const cancelContainer = document.getElementById('cancel-edit-container')
+// 	if (cancelContainer) {
+// 		cancelContainer.innerHTML = `
+//             <button type="button" class="btn-submit" style="background:#94a3b8; margin-top:10px;" onclick="cancelEdit()">
+//                 <i class="fa-solid fa-times"></i> Anuluj edycję
+//             </button>`
+// 	}
+
+// 	document.querySelector('aside').classList.add('editing-active')
+
+// 	// 4. Usuwamy stary, by dodać "nowy" po zapisie
+// 	exchanges.splice(index, 1)
+
+// 	window.scrollTo({ top: 0, behavior: 'smooth' })
+// 	renderTable()
+// }
 
 function cancelEdit() {
 	if (confirm('Anulować edycję? Zmiany nie zostaną zapisane.')) {
@@ -244,6 +287,7 @@ function removeItem(index) {
 /* ======= FORMULARZ ======= */
 
 const exchangeForm = document.getElementById('exchange-form')
+
 if (exchangeForm) {
 	exchangeForm.addEventListener('submit', e => {
 		e.preventDefault()
@@ -253,31 +297,77 @@ if (exchangeForm) {
 			selectedAccessories.push(item.dataset.item)
 		})
 
-		const newExchange = {
+		const exchangeData = {
 			name: document.getElementById('emp-name').value.toUpperCase(),
 			plannedDate: document.getElementById('exchange-date').value,
 			oldSn: document.getElementById('old-sn').value,
 			newSn: document.getElementById('new-sn').value,
 			notes: document.getElementById('notes').value,
 			accessories: selectedAccessories,
-			status: 'pending',
-			createdAt: new Date(),
+			status: editIndex !== null ? exchanges[editIndex].status : 'pending', // Zachowaj status przy edycji
+			createdAt: editIndex !== null ? exchanges[editIndex].createdAt : new Date(),
 		}
 
-		exchanges.push(newExchange)
-
-		// Jeśli byliśmy w trybie edycji, po zapisie odświeżamy stronę by zresetować UI
-		const isEditing = document.querySelector('aside').classList.contains('editing-active')
-		if (isEditing) {
-			saveData()
-			location.reload()
+		if (editIndex !== null) {
+			// TRYB EDYCJI: Podmieniamy dane w konkretnym miejscu
+			exchanges[editIndex] = exchangeData
+			editIndex = null // Resetujemy indeks po zapisie
+			alert('Zmiany zostały zapisane.')
 		} else {
-			e.target.reset()
-			document.querySelectorAll('.accessory-item').forEach(item => item.classList.remove('active'))
-			saveData()
+			// TRYB DODAWANIA: Standardowe push
+			exchanges.push(exchangeData)
 		}
+
+		saveData()
+
+		// Reset formularza i UI
+		e.target.reset()
+		document.querySelectorAll('.accessory-item').forEach(item => item.classList.remove('active'))
+		document.querySelector('aside').classList.remove('editing-active')
+
+		const submitBtn = document.getElementById('submit-btn')
+		submitBtn.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Zatwierdź i zaplanuj'
+		submitBtn.style.background = '#f59e0b'
+		document.getElementById('cancel-edit-container').innerHTML = ''
+
+		// Jeśli chcesz uniknąć location.reload(), renderTable() wystarczy
+		renderTable()
 	})
 }
+// if (exchangeForm) {
+// 	exchangeForm.addEventListener('submit', e => {
+// 		e.preventDefault()
+
+// 		const selectedAccessories = []
+// 		document.querySelectorAll('.accessory-item.active').forEach(item => {
+// 			selectedAccessories.push(item.dataset.item)
+// 		})
+
+// 		const newExchange = {
+// 			name: document.getElementById('emp-name').value.toUpperCase(),
+// 			plannedDate: document.getElementById('exchange-date').value,
+// 			oldSn: document.getElementById('old-sn').value,
+// 			newSn: document.getElementById('new-sn').value,
+// 			notes: document.getElementById('notes').value,
+// 			accessories: selectedAccessories,
+// 			status: 'pending',
+// 			createdAt: new Date(),
+// 		}
+
+// 		exchanges.push(newExchange)
+
+// 		// Jeśli byliśmy w trybie edycji, po zapisie odświeżamy stronę by zresetować UI
+// 		const isEditing = document.querySelector('aside').classList.contains('editing-active')
+// 		if (isEditing) {
+// 			saveData()
+// 			location.reload()
+// 		} else {
+// 			e.target.reset()
+// 			document.querySelectorAll('.accessory-item').forEach(item => item.classList.remove('active'))
+// 			saveData()
+// 		}
+// 	})
+// }
 
 /* ======= EXPORT / IMPORT ======= */
 
