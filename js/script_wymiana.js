@@ -62,7 +62,7 @@ function changeMonth(delta) {
 		currentViewDate.setMonth(currentViewDate.getMonth() + delta)
 		renderTable()
 
-		// 3. Przygotowanie do wejścia (sprężynka)
+		// 3. Przygotowanie do wejścia
 		tbody.style.visibility = 'hidden'
 		tbody.classList.remove('slide-out')
 
@@ -70,7 +70,6 @@ function changeMonth(delta) {
 			tbody.style.visibility = 'visible'
 			tbody.classList.add('slide-in')
 
-			// Odblokowanie klikania po zakończeniu animacji
 			setTimeout(() => {
 				isAnimating = false
 			}, 500)
@@ -87,18 +86,16 @@ function renderTable() {
 
 	updateMonthDisplay()
 
-	// Filtrowanie wymian po miesiącu (na podstawie planowanej daty)
 	const filteredExchanges = exchanges.filter(ex => {
 		const exDate = new Date(ex.plannedDate)
 		return exDate.getMonth() === currentViewDate.getMonth() && exDate.getFullYear() === currentViewDate.getFullYear()
 	})
 
 	if (filteredExchanges.length === 0) {
-		tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 50px; color: #94a3b8;">Brak planowanych wymian w tym miesiącu.</td></tr>`
+		tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="text-align:center; padding: 40px; color: #94a3b8;">Brak planowanych wymian w tym miesiącu.</td></tr>`
 		return
 	}
 
-	// Mapowanie nazw akcesoriów na ikonki FontAwesome
 	const accessoryIcons = {
 		mouse: 'fa-mouse',
 		keyboard: 'fa-keyboard',
@@ -113,30 +110,45 @@ function renderTable() {
 		const row = document.createElement('tr')
 		if (isDone) row.classList.add('is-done')
 
-		// Generowanie HTML dla wybranych ikonek
+		// INFO - Tooltip (Poprawiony zgodnie z nowym SCSS)
+		const infoHtml =
+			ex.notes && ex.notes.trim() !== ''
+				? `<div class="notes-tooltip-container">
+                 <i class="fas fa-info-circle notes-icon"></i>
+                 <span class="notes-tooltip-text">${ex.notes}</span>
+               </div>`
+				: ''
+
+		// AKCESORIA
 		const accHtml = (ex.accessories || [])
-			.map(
-				acc =>
-					`<i class="fas ${accessoryIcons[acc]}" style="margin: 0 4px; color: #6366f1; font-size: 1.2rem;" title="${acc}"></i>`,
-			)
+			.map(acc => `<i class="fas ${accessoryIcons[acc]} acc-icon" title="${acc}"></i>`)
 			.join('')
 
 		row.innerHTML = `
-            <td><b>${ex.name}</b><br><small style="color: #94a3b8;">${ex.plannedDate}</small></td>
-            <td><span class="sn-badge out">STARY:</span> ${AppUtils.normalizeSN(ex.oldSn)}</td>
-            <td><span class="sn-badge in">NOWY:</span> ${AppUtils.normalizeSN(ex.newSn)}</td>
-            <td style="text-align:center">${accHtml}</td>
-            <td style="text-align:center">
-                ${
-									isDone
-										? '<span class="status-pill ok"><i class="fas fa-check"></i> GOTOWE</span>'
-										: `<button class="btn-finish" onclick="completeExchange(${originalIndex})"><i class="fas fa-play"></i> OK</button>`
-								}
+            <td class="col-info-narrow">
+                <div class="td-info-center">${infoHtml}</div>
             </td>
-            <td>
-                <span class="delete-btn" onclick="removeItem(${originalIndex})">
-                    <i class="fas fa-trash"></i>
-                </span>
+            <td class="col-worker">
+                <span class="worker-name">${ex.name}</span>
+            </td>
+            <td class="col-date">
+                <span class="date-text">${ex.plannedDate}</span>
+            </td>
+            <td class="col-laptop">
+                <span class="sn-badge out">RU: ${ex.oldSn || '---'}</span>
+            </td>
+            <td class="col-laptop">
+                <span class="sn-badge in">RU: ${ex.newSn || '---'}</span>
+            </td>
+            <td class="col-acc">
+                <div class="acc-wrapper">${accHtml}</div>
+            </td>
+            <td class="col-actions">
+                <div class="action-wrapper">
+                    ${!isDone ? `<button class="btn-table btn-ok" onclick="completeExchange(${originalIndex})" title="Finalizuj"><i class="fas fa-check"></i></button>` : ''}
+                    <button class="btn-table btn-edit" onclick="editExchange(${originalIndex})" title="Edytuj"><i class="fas fa-edit"></i></button>
+                    <button class="btn-table btn-delete" onclick="removeItem(${originalIndex})" title="Usuń"><i class="fas fa-trash"></i></button>
+                </div>
             </td>
         `
 		tbody.appendChild(row)
@@ -145,26 +157,70 @@ function renderTable() {
 
 /* ======= LOGIKA PROCESU ======= */
 
+function editExchange(index) {
+	const ex = exchanges[index]
+	if (!ex) return
+
+	// 1. Wypełnienie formularza
+	document.getElementById('emp-name').value = ex.name
+	document.getElementById('exchange-date').value = ex.plannedDate
+	document.getElementById('old-sn').value = ex.oldSn
+	document.getElementById('new-sn').value = ex.newSn
+	document.getElementById('notes').value = ex.notes || ''
+
+	// 2. Akcesoria
+	document.querySelectorAll('.accessory-item').forEach(item => {
+		const itemName = item.dataset.item
+		item.classList.toggle('active', ex.accessories && ex.accessories.includes(itemName))
+	})
+
+	// 3. Interfejs edycji
+	const submitBtn = document.getElementById('submit-btn')
+	if (submitBtn) {
+		submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Zapisz zmiany'
+		submitBtn.style.background = '#6366f1'
+	}
+
+	const cancelContainer = document.getElementById('cancel-edit-container')
+	if (cancelContainer) {
+		cancelContainer.innerHTML = `
+            <button type="button" class="btn-submit" style="background:#94a3b8; margin-top:10px;" onclick="cancelEdit()">
+                <i class="fa-solid fa-times"></i> Anuluj edycję
+            </button>`
+	}
+
+	document.querySelector('aside').classList.add('editing-active')
+
+	// 4. Usuwamy stary, by dodać "nowy" po zapisie
+	exchanges.splice(index, 1)
+
+	window.scrollTo({ top: 0, behavior: 'smooth' })
+	renderTable()
+}
+
+function cancelEdit() {
+	if (confirm('Anulować edycję? Zmiany nie zostaną zapisane.')) {
+		location.reload()
+	}
+}
+
 function completeExchange(index) {
 	const ex = exchanges[index]
-	if (ex.status === 'done') return
+	if (!ex || ex.status === 'done') return
 
 	if (!confirm(`Sfinalizować wymianę dla: ${ex.name}?`)) return
 
 	const monitorKey = AppUtils.config.STORAGE_KEYS.MONITOR
 	let monitorData = JSON.parse(localStorage.getItem(monitorKey)) || []
 
-	// 1. Usuń stary laptop z monitoringu
 	if (ex.oldSn) {
 		const cleanOldSn = AppUtils.normalizeSN(ex.oldSn)
 		monitorData = monitorData.filter(d => AppUtils.normalizeSN(d.sn) !== cleanOldSn)
 	}
 
-	// 2. Dodaj nowy laptop do monitoringu (+60 dni)
 	if (ex.newSn) {
 		let d = new Date()
 		d.setDate(d.getDate() + 60)
-
 		monitorData.push({
 			name: ex.name,
 			ru: 'WYMIANA',
@@ -192,7 +248,6 @@ if (exchangeForm) {
 	exchangeForm.addEventListener('submit', e => {
 		e.preventDefault()
 
-		// Pobieranie aktywnych akcesoriów
 		const selectedAccessories = []
 		document.querySelectorAll('.accessory-item.active').forEach(item => {
 			selectedAccessories.push(item.dataset.item)
@@ -211,15 +266,20 @@ if (exchangeForm) {
 
 		exchanges.push(newExchange)
 
-		// Reset formularza i ikonek
-		e.target.reset()
-		document.querySelectorAll('.accessory-item').forEach(item => item.classList.remove('active'))
-
-		saveData()
+		// Jeśli byliśmy w trybie edycji, po zapisie odświeżamy stronę by zresetować UI
+		const isEditing = document.querySelector('aside').classList.contains('editing-active')
+		if (isEditing) {
+			saveData()
+			location.reload()
+		} else {
+			e.target.reset()
+			document.querySelectorAll('.accessory-item').forEach(item => item.classList.remove('active'))
+			saveData()
+		}
 	})
 }
 
-/* ======= EXPORT / IMPORT (EXCEL & JSON) ======= */
+/* ======= EXPORT / IMPORT ======= */
 
 function exportExcel() {
 	if (exchanges.length === 0) return alert('Brak danych do eksportu!')
@@ -237,34 +297,17 @@ function exportExcel() {
 	XLSX.writeFile(wb, `wymiany_${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
-function exportJSON() {
-	const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exchanges))
-	const downloadAnchorNode = document.createElement('a')
-	downloadAnchorNode.setAttribute('href', dataStr)
-	downloadAnchorNode.setAttribute('download', 'wymiany_backup.json')
-	document.body.appendChild(downloadAnchorNode)
-	downloadAnchorNode.click()
-	downloadAnchorNode.remove()
-}
-
 function importExcel(event) {
 	const file = event.target.files[0]
 	if (!file) return
-
 	const reader = new FileReader()
 	reader.onload = function (e) {
 		try {
 			const data = new Uint8Array(e.target.result)
 			const workbook = XLSX.read(data, { type: 'array' })
-
-			// Pobieramy pierwszy arkusz
-			const firstSheetName = workbook.SheetNames[0]
-			const worksheet = workbook.Sheets[firstSheetName]
-
-			// Konwertujemy na JSON
+			const worksheet = workbook.Sheets[workbook.SheetNames[0]]
 			const jsonData = XLSX.utils.sheet_to_json(worksheet)
 
-			// Mapujemy dane z Excela na format Twojej aplikacji
 			const imported = jsonData.map(row => ({
 				name: (row['Pracownik'] || row['Użytkownik'] || '').toString().toUpperCase(),
 				plannedDate: row['Data'] || row['Data planowanej wymiany'] || new Date().toISOString().split('T')[0],
@@ -276,30 +319,23 @@ function importExcel(event) {
 				createdAt: new Date(),
 			}))
 
-			if (imported.length === 0) {
-				alert('Nie znaleziono poprawnych danych w pliku.')
-				return
-			}
-
-			if (confirm(`Czy chcesz zaimportować ${imported.length} rekordów?`)) {
+			if (imported.length > 0 && confirm(`Zaimportować ${imported.length} rekordów?`)) {
 				exchanges = [...exchanges, ...imported]
-				saveData() // To automatycznie wywoła renderTable()
-				alert('Import zakończony sukcesem!')
+				saveData()
+				alert('Import zakończony!')
 			}
 		} catch (err) {
-			console.error(err)
-			alert('Błąd podczas odczytu pliku Excel. Upewnij się, że format jest poprawny.')
+			alert('Błąd importu pliku Excel.')
 		}
-
-		// Resetujemy input, żeby można było wybrać ten sam plik ponownie
 		event.target.value = ''
 	}
 	reader.readAsArrayBuffer(file)
 }
 
-// Globalizacja funkcji dla onclick w HTML
+// Globalizacja
 window.changeMonth = changeMonth
+window.editExchange = editExchange
+window.cancelEdit = cancelEdit
 window.completeExchange = completeExchange
 window.removeItem = removeItem
 window.exportExcel = exportExcel
-window.exportJSON = exportJSON

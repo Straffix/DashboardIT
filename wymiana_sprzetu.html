@@ -77,12 +77,13 @@
 
                         <thead>
                             <tr>
-                                <th>Pracownik</th>
-                                <th>Data Wymiany</th>
-                                <th>Zwrot (Stary)</th>
-                                <th>Wydanie (Nowy)</th>
-                                <th style="text-align:center">Akcesoria</th>
-                                <th>Akcja</th>
+                                <th class="col-info-narrow"></th>
+                                <th class="col-worker">PRACOWNIK</th>
+                                <th class="col-date">DATA WYMIANY</th>
+                                <th class="col-laptop">OLD LAPTOP (RU)</th>
+                                <th class="col-laptop">NEW LAPTOP (RU)</th>
+                                <th class="col-acc">AKCESORIA</th>
+                                <th class="col-actions">AKCJE</th>
                             </tr>
                         </thead>
 
@@ -161,12 +162,13 @@
                         <input type="text" id="notes" placeholder="Opcjonalne notatki...">
                     </div>
 
-                    <button type="submit" class="btn-submit" style="background:#f59e0b; margin-top:20px;">
-
+                    <button type="submit" id="submit-btn" class="btn-submit"
+                        style="background:#f59e0b; margin-top:20px;">
                         <i class="fa-solid fa-calendar-check"></i>
                         Zatwierdź i zaplanuj
-
                     </button>
+
+                    <div id="cancel-edit-container"></div>
 
                 </form>
 
@@ -192,21 +194,6 @@
                             <button onclick="document.getElementById('importExcelFile').click()"
                                 class="btn-backup-item">
                                 Import Excel
-                            </button>
-
-                        </div>
-
-                        <div class="backup-row">
-
-                            <button onclick="exportJSON()" class="btn-backup-item btn-json-yellow">
-                                <i class="fa-solid fa-download"></i>
-                            </button>
-
-                            <input type="file" id="importFile" accept=".json" style="display:none"
-                                onchange="importJSON(event)">
-
-                            <button onclick="document.getElementById('importFile').click()" class="btn-backup-item">
-                                Import JSON
                             </button>
 
                         </div>
