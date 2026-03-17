@@ -175,24 +175,24 @@ tr.is-done {
 
 // --- STYL DLA TRYBU EDYCJI (ASIDE) ---
 aside.editing-active {
-	border: 2px solid #6366f1; // Fioletowy kolor pasujący do btn-edit
-	background-color: #f8fafc; // Delikatne tło, by odróżnić od trybu dodawania
-	border-radius: 8px;
-	transition: all 0.3s ease;
+    border: 2px solid #6366f1; // Fioletowy kolor pasujący do btn-edit
+    background-color: #f8fafc; // Delikatne tło, by odróżnić od trybu dodawania
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
 // --- ODSTĘPY DLA IKONEK AKCESORIÓW W TABELI ---
 .acc-wrapper {
-	display: flex;
-	justify-content: center;
-	gap: 8px;
-
-	.acc-icon {
-		color: #64748b;
-		font-size: 1.1rem;
-		// Opcjonalnie tooltip systemowy dla ikonek
-		cursor: default;
-	}
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    
+    .acc-icon {
+        color: #64748b;
+        font-size: 1.1rem;
+        // Opcjonalnie tooltip systemowy dla ikonek
+        cursor: default;
+    }
 }
 
 // --- ANIMACJE TABELI ---
