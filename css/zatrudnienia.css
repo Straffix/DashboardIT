@@ -1,0 +1,23 @@
+.hires-table th:nth-child(1) {
+  width: 24%;
+}
+
+.hires-table th:nth-child(2) {
+  width: 22%;
+}
+
+.hires-table th:nth-child(3) {
+  width: 16%;
+}
+
+.hires-table th:nth-child(4) {
+  width: 20%;
+}
+
+.hires-table th:nth-child(5) {
+  width: 13%;
+}
+
+.hires-table th:nth-child(6) {
+  width: 5%;
+}

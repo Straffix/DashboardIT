@@ -15,6 +15,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
 
     <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/monitor.css">
 </head>
 
 <body>
@@ -88,7 +89,7 @@
                             <th>RU</th>
                             <th>SN</th>
                             <th>W DOMENIE DO</th>
-                            <th style="text-align:center">AKCJA</th>
+                            <th class="table-head-cell-center">AKCJA</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -108,8 +109,7 @@
 
                     <div class="input-group">
                         <label>Numer RU</label>
-                        <input type="text" id="ru" required oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                            placeholder="Tylko cyfry">
+                        <input type="text" id="ru" required placeholder="Tylko cyfry">
                     </div>
 
                     <div class="input-group">
@@ -154,15 +154,13 @@
 
                         <div class="backup-row">
 
-                            <button onclick="exportExcel()" class="btn-backup-item btn-excel-green">
+                            <button id="export-excel-btn" class="btn-backup-item btn-excel-green" type="button">
                                 <i class="fa-solid fa-file-excel"></i>
                             </button>
 
-                            <input type="file" id="importExcelFile" accept=".xlsx, .xls" style="display:none"
-                                onchange="importExcel(event)">
+                            <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
 
-                            <button onclick="document.getElementById('importExcelFile').click()"
-                                class="btn-backup-item">
+                            <button id="import-excel-trigger" class="btn-backup-item" type="button">
                                 Import Excel
                             </button>
 
@@ -170,14 +168,13 @@
 
                         <div class="backup-row">
 
-                            <button onclick="exportJSON()" class="btn-backup-item btn-json-yellow">
+                            <button id="export-json-btn" class="btn-backup-item btn-json-yellow" type="button">
                                 <i class="fa-solid fa-download"></i>
                             </button>
 
-                            <input type="file" id="importFile" accept=".json" style="display:none"
-                                onchange="importJSON(event)">
+                            <input type="file" id="importFile" class="visually-hidden-file-input" accept=".json">
 
-                            <button onclick="document.getElementById('importFile').click()" class="btn-backup-item">
+                            <button id="import-json-trigger" class="btn-backup-item" type="button">
                                 Import JSON
                             </button>
 
@@ -200,9 +197,8 @@
         </footer>
     </div>
 
-    <script src="./js/utils.js"></script>
-    <script src="./js/script_monitor.js"></script>
     <script src="./js/script.js"></script>
+    <script src="./js/monitor.js"></script>
 
 </body>
 

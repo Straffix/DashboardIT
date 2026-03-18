@@ -16,6 +16,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
 
     <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/zatrudnienia.css">
 </head>
 
 <body>
@@ -28,8 +29,7 @@
 
         <header class="header">
 
-            <a href="index.html"
-                style="text-decoration:none; color:inherit; font-size:1.2rem; margin-bottom:10px; display:inline-block;">
+            <a href="index.html" class="menu-btn">
                 <i class="fas fa-arrow-left"></i> Powrót do menu
             </a>
 
@@ -53,18 +53,18 @@
             <section>
 
                 <div class="table-header">
-                    <button onclick="changeMonth(-1)" class="month-nav-btn" type="button" aria-label="Poprzedni miesiąc">
+                    <button class="month-nav-btn" type="button" data-month-delta="-1" aria-label="Poprzedni miesiąc">
                         <i class="fas fa-chevron-left"></i>
                     </button>
 
-                    <div class="month-picker-container" id="month-trigger" onclick="openMonthPicker()" role="button"
-                        tabindex="0" aria-label="Wybierz miesiąc">
+                    <div class="month-picker-container" id="month-trigger" role="button" tabindex="0"
+                        aria-label="Wybierz miesiąc">
                         <h2 id="current-month-display">MARZEC 2026</h2>
                         <input type="month" id="hidden-month-input" class="hidden-month-input" aria-hidden="true">
                     </div>
 
 
-                    <button onclick="changeMonth(1)" class="month-nav-btn" type="button" aria-label="Następny miesiąc">
+                    <button class="month-nav-btn" type="button" data-month-delta="1" aria-label="Następny miesiąc">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
@@ -77,7 +77,7 @@
                             <th>SEKCJA</th>
                             <th>SPRZĘT (SN)</th>
                             <th>DATA STARTU</th>
-                            <th style="text-align:center">AKCESORIA</th>
+                            <th class="table-head-cell-center">AKCESORIA</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -144,7 +144,7 @@
                         <input type="date" id="date" required>
                     </div>
 
-                    <button type="submit" class="btn-submit" style="background-color:#f16363cc;">
+                    <button type="submit" class="btn-submit btn-submit-soft-danger">
                         Dodaj do listy
                     </button>
 
@@ -158,15 +158,13 @@
 
                         <div class="backup-row">
 
-                            <button onclick="exportExcel()" class="btn-backup-item btn-excel-green">
+                            <button id="export-excel-btn" class="btn-backup-item btn-excel-green" type="button">
                                 <i class="fa-solid fa-file-excel"></i>
                             </button>
 
-                            <input type="file" id="importExcelFile" accept=".xlsx, .xls" style="display:none"
-                                onchange="importExcel(event)">
+                            <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
 
-                            <button onclick="document.getElementById('importExcelFile').click()"
-                                class="btn-backup-item">
+                            <button id="import-excel-trigger" class="btn-backup-item" type="button">
                                 Import Excel
                             </button>
 
@@ -191,10 +189,8 @@
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script src="./js/utils.js"></script>
-    <script src="./js/script_zatrudnienia.js"></script>
     <script src="./js/script.js"></script>
+    <script src="./js/zatrudnienia.js"></script>
 
 </body>
 

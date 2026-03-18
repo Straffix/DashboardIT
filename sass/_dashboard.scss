@@ -1,0 +1,151 @@
+@use 'colors' as *;
+
+.dashboard-container {
+	text-align: center;
+	width: 100%;
+	max-width: 1200px;
+
+	header {
+		margin-bottom: 100px;
+
+		h1 {
+			font-family: 'Audiowide', sans-serif;
+			font-size: clamp(2.5rem, 5vw, 4rem);
+			color: $text-main;
+			text-transform: uppercase;
+			letter-spacing: 10px;
+		}
+
+		p {
+			margin-top: 20px;
+			font-size: 1.8rem;
+			color: $text-muted;
+		}
+	}
+}
+
+.menu-grid {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 90px;
+}
+
+.menu-item {
+	position: relative;
+	color: #ffffff;
+	text-decoration: none;
+	transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+	&:hover {
+		transform: scale(1.05);
+
+		.circle {
+			box-shadow: 0 2px 10px rgba(131, 7, 7, 0.589);
+			border-color: $danger;
+		}
+
+		.circle-img {
+			transform: scale(1.1);
+
+			&::after {
+				background-color: rgba(0, 0, 0, 0.4);
+			}
+		}
+	}
+
+	.circle {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+		width: 280px;
+		height: 280px;
+		padding: 40px;
+		overflow: hidden;
+		border: 5px solid $text-main;
+		border-radius: 50%;
+		background-color: $text-main;
+		box-shadow: 0 8px 15px rgba(253, 253, 253, 0.1);
+		transition: all 0.3s ease;
+
+		span {
+			position: relative;
+			z-index: 10;
+			font-size: 1.8rem;
+			font-weight: 700;
+			line-height: 1.2;
+			text-align: center;
+			text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+		}
+
+		small {
+			position: relative;
+			z-index: 10;
+			display: block;
+			margin-top: 10px;
+			font-size: 1.5rem;
+			font-weight: 400;
+			color: rgba(255, 255, 255, 0.8);
+		}
+	}
+
+	.circle-img {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		background-position: center;
+		background-size: cover;
+		transition: transform 0.5s ease;
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background-color: rgba(0, 0, 0, 0.6);
+			transition: background-color 0.3s ease;
+		}
+	}
+
+	&.nowe-zatrudnienia .circle-img {
+		background-image: url('../img/onboarding.jpg');
+	}
+
+	&.monitor-laptopow .circle-img {
+		background-image: url('../img/monit.jpg');
+	}
+
+	&.upcoming {
+		cursor: default;
+		opacity: 0.6;
+
+		&:hover {
+			transform: none;
+		}
+
+		.circle {
+			border-style: dashed;
+			border-color: $text-muted;
+			background: transparent;
+			color: $text-muted;
+
+			span {
+				text-shadow: none;
+			}
+		}
+	}
+}
+
+@media (max-width: 768px) {
+	.menu-item .circle {
+		width: 220px;
+		height: 220px;
+
+		span {
+			font-size: 1.4rem;
+		}
+	}
+}
