@@ -1,3 +1,4 @@
+/* === Hires State And References: Start === */
 let hires = []
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.HIRES
 
@@ -11,7 +12,9 @@ const importExcelTrigger = document.getElementById('import-excel-trigger')
 const monthPicker = AppUtils.createMonthPicker({
 	onChange: () => renderTable(),
 })
+/* === Hires State And References: End === */
 
+/* === Hires Storage: Start === */
 function loadData() {
 	const saved = localStorage.getItem(STORAGE_KEY)
 	hires = saved ? JSON.parse(saved) : []
@@ -22,7 +25,9 @@ function saveData() {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(hires))
 	renderTable()
 }
+/* === Hires Storage: End === */
 
+/* === Hires Table Rendering: Start === */
 function renderTable() {
 	if (!tableBody) return
 	tableBody.innerHTML = ''
@@ -81,14 +86,18 @@ function renderTable() {
 		tableBody.appendChild(row)
 	})
 }
+/* === Hires Table Rendering: End === */
 
+/* === Hires Actions: Start === */
 function removeItem(index) {
 	if (!confirm('Usunąć wpis?')) return
 
 	hires.splice(index, 1)
 	saveData()
 }
+/* === Hires Actions: End === */
 
+/* === Hires Excel Backup: Start === */
 function exportExcel() {
 	if (hires.length === 0) return alert('Brak danych!')
 
@@ -133,7 +142,9 @@ function importExcel(event) {
 
 	reader.readAsArrayBuffer(file)
 }
+/* === Hires Excel Backup: End === */
 
+/* === Hires Init: Start === */
 document.addEventListener('DOMContentLoaded', () => {
 	monthPicker.init()
 
@@ -191,3 +202,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	loadData()
 })
+/* === Hires Init: End === */

@@ -1,3 +1,4 @@
+/* === Monitor State And References: Start === */
 let devices = []
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.MONITOR
 
@@ -11,10 +12,9 @@ const ruInput = document.getElementById('ru')
 const exportExcelBtn = document.getElementById('export-excel-btn')
 const importExcelInput = document.getElementById('importExcelFile')
 const importExcelTrigger = document.getElementById('import-excel-trigger')
-const exportJsonBtn = document.getElementById('export-json-btn')
-const importJsonInput = document.getElementById('importFile')
-const importJsonTrigger = document.getElementById('import-json-trigger')
+/* === Monitor State And References: End === */
 
+/* === Monitor Storage: Start === */
 function loadData() {
 	const saved = localStorage.getItem(STORAGE_KEY)
 	devices = saved ? JSON.parse(saved) : []
@@ -25,7 +25,9 @@ function saveData() {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(devices))
 	renderTable()
 }
+/* === Monitor Storage: End === */
 
+/* === Monitor Excel Backup: Start === */
 function exportExcel() {
 	if (devices.length === 0) return alert('Brak danych do eksportu!')
 
@@ -69,45 +71,9 @@ function importExcel(event) {
 
 	reader.readAsArrayBuffer(file)
 }
+/* === Monitor Excel Backup: End === */
 
-function exportJSON() {
-	if (devices.length === 0) return alert('Brak danych do eksportu!')
-
-	const blob = new Blob([JSON.stringify(devices, null, 2)], { type: 'application/json' })
-	const url = URL.createObjectURL(blob)
-	const link = document.createElement('a')
-	link.href = url
-	link.download = `monitor_laptopow_${new Date().toISOString().slice(0, 10)}.json`
-	link.click()
-	URL.revokeObjectURL(url)
-}
-
-function importJSON(event) {
-	const file = event.target.files[0]
-	if (!file) return
-
-	const reader = new FileReader()
-	reader.onload = loadEvent => {
-		try {
-			const imported = JSON.parse(loadEvent.target.result)
-			if (!Array.isArray(imported)) {
-				throw new Error('Niepoprawny format')
-			}
-
-			if (confirm(`Zaimportować ${imported.length} urządzeń z pliku JSON?`)) {
-				devices = [...devices, ...imported]
-				saveData()
-			}
-		} catch (error) {
-			alert('Nie udało się odczytać pliku JSON.')
-		}
-
-		event.target.value = ''
-	}
-
-	reader.readAsText(file)
-}
-
+/* === Monitor Device Actions: Start === */
 function findDuplicate(ru, sn) {
 	const normalizedSn = AppUtils.normalizeSN(sn)
 	return devices.findIndex(device => device.ru === ru && AppUtils.normalizeSN(device.sn) === normalizedSn)
@@ -131,7 +97,9 @@ function removeItem(index) {
 	devices.splice(index, 1)
 	saveData()
 }
+/* === Monitor Device Actions: End === */
 
+/* === Monitor Table Rendering: Start === */
 function renderTable() {
 	if (!tableBody) return
 	tableBody.innerHTML = ''
@@ -189,7 +157,9 @@ function renderTable() {
 	updateStat('stats-warn', stats.warn)
 	updateStat('stats-danger', stats.dead)
 }
+/* === Monitor Table Rendering: End === */
 
+/* === Monitor Form State: Start === */
 function toggleDateInput() {
 	if (!dateGroup) return
 
@@ -197,7 +167,9 @@ function toggleDateInput() {
 	dateGroup.classList.toggle('is-hidden', isNew)
 	dateInput.required = !isNew
 }
+/* === Monitor Form State: End === */
 
+/* === Monitor Init: Start === */
 document.addEventListener('DOMContentLoaded', () => {
 	if (ruInput) {
 		ruInput.addEventListener('input', () => {
@@ -260,12 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		importExcelInput.addEventListener('change', importExcel)
 	}
 
-	if (exportJsonBtn) exportJsonBtn.addEventListener('click', exportJSON)
-	if (importJsonTrigger && importJsonInput) {
-		importJsonTrigger.addEventListener('click', () => importJsonInput.click())
-		importJsonInput.addEventListener('change', importJSON)
-	}
-
 	loadData()
 	toggleDateInput()
 })
+/* === Monitor Init: End === */

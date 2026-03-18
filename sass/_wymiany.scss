@@ -1,6 +1,6 @@
 @use 'colors' as *;
 
-// --- KLASY KOLUMN (KONTROLA SZEROKOŚCI) ---
+/* === Exchanges Table Layout: Start === */
 .col-info-narrow {
 	width: 20px;
 	min-width: 20px;
@@ -34,8 +34,9 @@
 	min-width: 150px;
 	text-align: center;
 }
+/* === Exchanges Table Layout: End === */
 
-// --- PICKER MIESIĄCA ---
+/* === Exchanges Month Picker: Start === */
 .month-picker-container {
 	position: relative;
 	display: inline-flex;
@@ -142,8 +143,9 @@
 		color: #fff;
 	}
 }
+/* === Exchanges Month Picker: End === */
 
-// --- ELEMENTY KOMÓREK ---
+/* === Exchanges Table Cells: Start === */
 .td-info-center {
 	display: flex;
 	justify-content: flex-start;
@@ -186,8 +188,9 @@
 		border: 1px solid #bbf7d0;
 	}
 }
+/* === Exchanges Table Cells: End === */
 
-// --- PRZYCISKI ---
+/* === Exchanges Action Buttons: Start === */
 .btn-table {
 	border: none;
 	border-radius: 6px;
@@ -228,8 +231,9 @@ tr.is-done {
 		pointer-events: auto;
 	}
 }
+/* === Exchanges Action Buttons: End === */
 
-// --- SYSTEM TOOLTIPA (INFO) ---
+/* === Exchanges Tooltip: Start === */
 .notes-tooltip-container {
 	position: relative;
 	display: inline-flex;
@@ -285,16 +289,18 @@ tr.is-done {
 		bottom: 140%;
 	}
 }
+/* === Exchanges Tooltip: End === */
 
-// --- STYL DLA TRYBU EDYCJI (ASIDE) ---
+/* === Exchanges Edit Mode: Start === */
 aside.editing-active {
 	border: 2px solid #6366f1;
 	background-color: #f8fafc;
 	border-radius: 8px;
 	transition: all 0.3s ease;
 }
+/* === Exchanges Edit Mode: End === */
 
-// --- ODSTĘPY DLA IKONEK AKCESORIÓW W TABELI ---
+/* === Exchanges Accessory Icons: Start === */
 .acc-wrapper {
 	display: flex;
 	justify-content: center;
@@ -316,8 +322,9 @@ aside.editing-active {
 		cursor: default;
 	}
 }
+/* === Exchanges Accessory Icons: End === */
 
-// --- ANIMACJE TABELI ---
+/* === Exchanges Table Animation: Start === */
 @keyframes slideOutLeft {
 	from {
 		transform: translateX(0);
@@ -329,6 +336,7 @@ aside.editing-active {
 		opacity: 0;
 	}
 }
+/* === Exchanges Table Animation: End === */
 
 @keyframes slideInRight {
 	from {

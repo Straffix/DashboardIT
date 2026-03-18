@@ -386,15 +386,6 @@ table tr:last-child td {
   background-color: #0e6b38;
   filter: brightness(1.1);
 }
-.backup_section .backup-row .btn-json-yellow {
-  background-color: rgba(54, 54, 54, 0.7529411765);
-  color: white;
-  border: none;
-}
-.backup_section .backup-row .btn-json-yellow:hover {
-  background-color: rgba(218, 94, 11, 0.6784313725);
-  filter: brightness(1.1);
-}
 
 /* ======= AKCESORIA I KALENDARZ ======= */
 .accessory-picker {

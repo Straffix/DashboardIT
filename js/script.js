@@ -1,3 +1,4 @@
+/* === Shared Config: Start === */
 const APP_CONFIG = {
 	MONTH_NAMES: [
 		'Stycze\u0144',
@@ -33,7 +34,9 @@ const APP_CONFIG = {
 		EXCHANGES: 'wymiana_sprzetu_dane',
 	},
 }
+/* === Shared Config: End === */
 
+/* === Shared Formatters: Start === */
 const formatDate = date => {
 	const parsedDate = new Date(date)
 	if (Number.isNaN(parsedDate.getTime())) return ''
@@ -46,7 +49,9 @@ const formatDate = date => {
 }
 
 const normalizeSN = sn => (sn ? sn.toString().trim().replace(/-/g, '').toUpperCase() : '')
+/* === Shared Formatters: End === */
 
+/* === Shared Accessory Rendering: Start === */
 const getAccessorySizeClass = size => {
 	if (size === '1rem') return 'acc-size-sm'
 	return 'acc-size-md'
@@ -97,7 +102,9 @@ const renderAccessoryIcons = (accessories, options = {}) => {
 
 	return `<span class="${wrapperClasses.join(' ')}">${items}${hiddenBadge}</span>`
 }
+/* === Shared Accessory Rendering: End === */
 
+/* === Shared Month Picker Utilities: Start === */
 const supportsMonthInput = () => {
 	const input = document.createElement('input')
 	input.setAttribute('type', 'month')
@@ -116,7 +123,9 @@ const parseYearMonth = value => {
 
 	return { year, month }
 }
+/* === Shared Month Picker Utilities: End === */
 
+/* === Shared Month Picker Factory: Start === */
 const createMonthPicker = ({
 	initialDate = new Date(),
 	onChange,
@@ -286,7 +295,6 @@ const createMonthPicker = ({
 				return
 			}
 		} catch (error) {
-			// Native picker unavailable, fall back to focus and click.
 		}
 
 		input.focus()
@@ -371,7 +379,9 @@ const createMonthPicker = ({
 		closePopover,
 	}
 }
+/* === Shared Month Picker Factory: End === */
 
+/* === Shared Global UI: Start === */
 document.addEventListener('DOMContentLoaded', () => {
 	document.querySelectorAll('#current-year').forEach(element => {
 		element.textContent = new Date().getFullYear()
@@ -393,7 +403,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		updateWideMode(localStorage.getItem('dashboard-wide-mode') === 'true')
 	}
 })
+/* === Shared Global UI: End === */
 
+/* === Shared Public API: Start === */
 window.AppUtils = {
 	config: APP_CONFIG,
 	formatDate,
@@ -401,3 +413,4 @@ window.AppUtils = {
 	renderAccessoryIcons,
 	createMonthPicker,
 }
+/* === Shared Public API: End === */

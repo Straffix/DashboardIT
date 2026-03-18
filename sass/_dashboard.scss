@@ -1,3 +1,4 @@
+/* === Dashboard Layout: Start === */
 @use 'colors' as *;
 
 .dashboard-container {
@@ -23,7 +24,9 @@
 		}
 	}
 }
+/* === Dashboard Layout: End === */
 
+/* === Dashboard Navigation Tiles: Start === */
 .menu-grid {
 	display: flex;
 	align-items: center;
@@ -138,7 +141,9 @@
 		}
 	}
 }
+/* === Dashboard Navigation Tiles: End === */
 
+/* === Dashboard Responsive: Start === */
 @media (max-width: 768px) {
 	.menu-item .circle {
 		width: 220px;
@@ -149,3 +154,4 @@
 		}
 	}
 }
+/* === Dashboard Responsive: End === */

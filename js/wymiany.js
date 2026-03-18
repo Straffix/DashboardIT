@@ -1,3 +1,4 @@
+/* === Exchanges State And References: Start === */
 let exchanges = []
 let editIndex = null
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.EXCHANGES
@@ -15,7 +16,9 @@ const importExcelTrigger = document.getElementById('import-excel-trigger')
 const monthPicker = AppUtils.createMonthPicker({
 	onChange: () => renderTable(),
 })
+/* === Exchanges State And References: End === */
 
+/* === Exchanges Storage: Start === */
 function loadData() {
 	const saved = localStorage.getItem(STORAGE_KEY)
 	exchanges = saved ? JSON.parse(saved) : []
@@ -26,7 +29,9 @@ function saveData() {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(exchanges))
 	renderTable()
 }
+/* === Exchanges Storage: End === */
 
+/* === Exchanges Form State: Start === */
 function getSelectedAccessories() {
 	return Array.from(document.querySelectorAll('.accessory-item.active')).map(item => item.dataset.item)
 }
@@ -56,7 +61,9 @@ function resetFormState() {
 		exchangeAside.classList.remove('editing-active')
 	}
 }
+/* === Exchanges Form State: End === */
 
+/* === Exchanges Table Rendering: Start === */
 function renderTable() {
 	if (!tableBody) return
 	tableBody.innerHTML = ''
@@ -133,7 +140,9 @@ function renderTable() {
 		tableBody.appendChild(row)
 	})
 }
+/* === Exchanges Table Rendering: End === */
 
+/* === Exchanges Actions: Start === */
 function editExchange(index) {
 	const exchange = exchanges[index]
 	if (!exchange) return
@@ -211,7 +220,9 @@ function removeItem(index) {
 	exchanges.splice(index, 1)
 	saveData()
 }
+/* === Exchanges Actions: End === */
 
+/* === Exchanges Excel Backup: Start === */
 function exportExcel() {
 	if (exchanges.length === 0) {
 		alert('Brak danych do eksportu!')
@@ -270,7 +281,9 @@ function importExcel(event) {
 
 	reader.readAsArrayBuffer(file)
 }
+/* === Exchanges Excel Backup: End === */
 
+/* === Exchanges Init: Start === */
 document.addEventListener('DOMContentLoaded', () => {
 	monthPicker.init()
 
@@ -348,3 +361,4 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadData()
 	resetFormState()
 })
+/* === Exchanges Init: End === */

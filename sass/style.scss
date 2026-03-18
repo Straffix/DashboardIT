@@ -1,6 +1,6 @@
 @use 'colors' as *;
 
-/* ======= RESET I PODSTAWY ======= */
+/* === Base Reset: Start === */
 *::after,
 *::before,
 * {
@@ -23,7 +23,7 @@ body {
 	color: $text-main;
 	transition: background-color 0.3s ease;
 	overflow-x: hidden;
-	padding: 40px 0; // Oddech dla zawartości
+	padding: 40px 0;
 }
 
 .wrapper {
@@ -31,8 +31,9 @@ body {
 	margin-inline: auto;
 	transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
+/* === Base Reset: End === */
 
-/* ======= NAWIGACJA I LOGO ======= */
+/* === Shared Header: Start === */
 .menu-btn {
 	text-decoration: none;
 	color: inherit;
@@ -72,9 +73,9 @@ body {
 	border-radius: 10px;
 	font-size: 2rem;
 }
+/* === Shared Header: End === */
 
-/* ======= GŁÓWNY DASHBOARD (MENU KOŁOWE) ======= */
-/* ======= GŁÓWNA ZAWARTOŚĆ (TABELA + ASIDE) ======= */
+/* === Shared Page Layout: Start === */
 .main-content {
 	display: grid;
 	grid-template-columns: 2fr 1fr;
@@ -152,8 +153,9 @@ table {
 .visually-hidden-file-input {
 	display: none;
 }
+/* === Shared Page Layout: End === */
 
-/* ======= ELEMENTY INTERAKTYWNE ======= */
+/* === Shared Interactive Elements: Start === */
 .extend-btn {
 	background: #f1f5f9;
 	border: 1px solid #e2e8f0;
@@ -339,8 +341,9 @@ table {
 .btn-submit-tight {
 	margin-top: 10px;
 }
+/* === Shared Interactive Elements: End === */
 
-/* ======= SEKCJA BACKUP ======= */
+/* === Shared Backup Panel: Start === */
 .backup_section {
 	padding: 20px;
 	border-radius: 12px;
@@ -396,20 +399,11 @@ table {
 				filter: brightness(1.1);
 			}
 		}
-		.btn-json-yellow {
-			background-color: #363636c0;
-			color: white;
-			border: none;
-			&:hover {
-				background-color: #da5e0bad;
-				filter: brightness(1.1);
-			}
-		}
 	}
 }
+/* === Shared Backup Panel: End === */
 
-/* ======= AKCESORIA I KALENDARZ ======= */
-
+/* === Shared Accessories And Calendar: Start === */
 .accessory-picker {
 	display: flex;
 	gap: 10px;
@@ -478,7 +472,7 @@ table {
 
 		h2 {
 			margin: 0;
-			pointer-events: none; // Napis nie blokuje kliknięcia
+			pointer-events: none;
 			z-index: 1;
 		}
 
@@ -512,7 +506,7 @@ table {
 		justify-content: center;
 		color: $primary;
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-		z-index: 15; // Zwiększone: żeby strzałki były nad inputem kalendarza
+		z-index: 15;
 
 		&:hover {
 			background: $primary;
@@ -599,8 +593,9 @@ table {
 		color: #fff;
 	}
 }
+/* === Shared Accessories And Calendar: End === */
 
-/* ======= FOOTER ======= */
+/* === Shared Footer: Start === */
 .main-footer {
 	margin-top: 100px;
 	padding-bottom: 40px;
@@ -630,8 +625,9 @@ table {
 		}
 	}
 }
+/* === Shared Footer: End === */
 
-/* ======= PRZYCISK TRYBU SZEROKIEGO ======= */
+/* === Shared Fullscreen Button: Start === */
 .fullscreen-btn {
 	position: fixed;
 	top: 20px;
@@ -656,10 +652,11 @@ table {
 		transform: scale(1.1);
 	}
 }
+/* === Shared Fullscreen Button: End === */
 
-/* ======= TRYB SZEROKI (WIDE MODE) - NA DOLE BY NADPISYWAĆ ======= */
+/* === Shared Wide Mode: Start === */
 body.wide-mode {
-	display: block; // Naprawia ucinanie góry (wyłącza centering)
+	display: block;
 
 	.wrapper {
 		max-width: 96%;
@@ -680,8 +677,9 @@ body.wide-mode {
 		font-size: 3rem;
 	}
 }
+/* === Shared Wide Mode: End === */
 
-/* ======= ANIMACJE ======= */
+/* === Shared Motion: Start === */
 @keyframes slideOutLeft {
 	0% {
 		transform: translateX(0);
@@ -748,8 +746,9 @@ body.wide-mode {
 		animation: slideInRight 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	}
 }
+/* === Shared Motion: End === */
 
-/* ======= RWD ======= */
+/* === Shared Responsive Rules: Start === */
 @media (max-width: 1024px) {
 	.main-content {
 		grid-template-columns: 1fr;
@@ -769,3 +768,4 @@ body.wide-mode {
 		align-items: flex-start;
 	}
 }
+/* === Shared Responsive Rules: End === */

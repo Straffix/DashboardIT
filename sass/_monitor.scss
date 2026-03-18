@@ -1,5 +1,6 @@
 @use 'colors' as *;
 
+/* === Monitor Statistics: Start === */
 .stats-grid {
 	display: flex;
 	gap: 20px;
@@ -42,7 +43,9 @@
 		border-bottom: 4px solid $danger;
 	}
 }
+/* === Monitor Statistics: End === */
 
+/* === Monitor Device Type Selector: Start === */
 .radio-group {
 	display: flex;
 	gap: 15px;
@@ -107,7 +110,9 @@
 		}
 	}
 }
+/* === Monitor Device Type Selector: End === */
 
+/* === Monitor Table Layout: Start === */
 .monitor-table {
 	th:nth-child(1) {
 		width: 23%;
@@ -133,3 +138,4 @@
 		width: 7%;
 	}
 }
+/* === Monitor Table Layout: End === */
