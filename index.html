@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pl">
 
 <head>
@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;600;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
     <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous"></script>
@@ -18,41 +18,107 @@
     <link rel="stylesheet" href="./css/dashboard.css">
 </head>
 
-<body>
+<body class="dashboard-page">
     <div class="wrapper">
         <div class="dashboard-container">
+            <div class="dashboard-orb dashboard-orb-left" aria-hidden="true"></div>
+            <div class="dashboard-orb dashboard-orb-right" aria-hidden="true"></div>
+            <div class="dashboard-grid-glow" aria-hidden="true"></div>
 
-            <header>
+            <section class="dashboard-topbar" aria-label="Panel informacji">
+                <article class="dashboard-widget weather-widget" aria-live="polite">
+                    <div class="widget-kicker">Pogoda</div>
+                    <form class="weather-search" id="weather-search-form">
+                        <input type="text" id="weather-location-input" placeholder="Wpisz miasto" value="Warszawa"
+                            autocomplete="off">
+                        <button type="submit" id="weather-search-btn" aria-label="Pobierz pogodę">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </form>
+                    <div class="weather-main">
+                        <div class="weather-icon" id="weather-icon">
+                            <i class="fa-solid fa-cloud-sun"></i>
+                        </div>
+                        <div>
+                            <div class="weather-temp" id="weather-temp">--°C</div>
+                            <div class="weather-location" id="weather-location">Warszawa</div>
+                        </div>
+                    </div>
+                    <div class="weather-meta">
+                        <span id="weather-description">Ładowanie danych...</span>
+                        <span id="weather-wind">Wiatr -- km/h</span>
+                    </div>
+                </article>
+
+                <article class="dashboard-widget clock-widget" aria-label="Zegar lokalny">
+                    <div class="widget-kicker">Czas lokalny</div>
+                    <div class="clock-face" aria-hidden="true">
+                        <span class="clock-hand hour-hand" id="clock-hour"></span>
+                        <span class="clock-hand minute-hand" id="clock-minute"></span>
+                        <span class="clock-hand second-hand" id="clock-second"></span>
+                        <span class="clock-center-dot"></span>
+                    </div>
+                    <div class="clock-meta">
+                        <div class="clock-time" id="clock-digital">--:--</div>
+                        <div class="clock-date" id="clock-date">--</div>
+                    </div>
+                </article>
+            </section>
+
+            <header class="dashboard-header">
+                <p class="dashboard-kicker">Centrum operacyjne IT</p>
                 <h1>IT Management Dashboard</h1>
-                <p>--- wybierz moduł operacyjny ---</p>
+                <p class="dashboard-subtitle">Wybierz moduł operacyjny i przejdź do pracy w odpowiednim obszarze.</p>
             </header>
 
-            <nav class="menu-grid">
-
+            <nav class="menu-grid" aria-label="Moduły dashboardu">
                 <a href="nowe_zatrudnienia.html" target="_blank" class="menu-item nowe-zatrudnienia">
-                    <div class="circle">
-                        <div class="circle-img"></div>
-                        <span>Nowe Zatrudnienia</span>
-                        <small>Onboarding IT</small>
-                    </div>
+                    <article class="dashboard-card">
+                        <div class="card-icon-shell">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <div class="card-copy">
+                            <span>Nowe Zatrudnienia</span>
+                            <small>Onboarding IT i przygotowanie sprzętu dla nowych pracowników.</small>
+                        </div>
+                        <div class="card-meta">
+                            <strong>Onboarding</strong>
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </article>
                 </a>
 
                 <a href="monitor_laptopow.html" target="_blank" class="menu-item monitor-laptopow">
-                    <div class="circle">
-                        <div class="circle-img"></div>
-                        <span>Monitor Laptopów</span>
-                        <small>Status domeny</small>
-                    </div>
+                    <article class="dashboard-card">
+                        <div class="card-icon-shell">
+                            <i class="fa-solid fa-laptop"></i>
+                        </div>
+                        <div class="card-copy">
+                            <span>Monitor Laptopów</span>
+                            <small>Status urządzeń w domenie i kontrola terminów aktywności.</small>
+                        </div>
+                        <div class="card-meta">
+                            <strong>Domena</strong>
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </article>
                 </a>
 
                 <a href="wymiana_sprzetu.html" target="_blank" class="menu-item wymiana-sprzetu">
-                    <div class="circle">
-                        <div class="circle-img"></div>
-                        <span>Wymiana Sprzętu</span>
-                        <small>Cykl 3-letni</small>
-                    </div>
+                    <article class="dashboard-card">
+                        <div class="card-icon-shell">
+                            <i class="fa-solid fa-right-left"></i>
+                        </div>
+                        <div class="card-copy">
+                            <span>Wymiana Sprzętu</span>
+                            <small>Planowanie cyklu wymian i obsługa rotacji urządzeń w firmie.</small>
+                        </div>
+                        <div class="card-meta">
+                            <strong>Cykl 3-letni</strong>
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </article>
                 </a>
-
             </nav>
 
             <footer class="main-footer">

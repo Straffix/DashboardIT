@@ -14,9 +14,7 @@ html {
 }
 
 body {
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	display: block;
 	min-height: 100vh;
 	font-family: 'Poppins', 'Segoe UI', sans-serif;
 	background-color: $bg-color;
@@ -35,11 +33,54 @@ body {
 
 /* === Shared Header: Start === */
 .menu-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 14px 10px 10px;
+	margin-bottom: 12px;
+	border: 1px solid rgba(148, 163, 184, 0.28);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.78);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 	text-decoration: none;
 	color: inherit;
 	font-size: 1.2rem;
-	margin-bottom: 10px;
-	display: inline-block;
+	font-weight: 600;
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease,
+		border-color 0.2s ease,
+		color 0.2s ease;
+
+	i {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: #e2e8f0;
+		color: $text-main;
+		font-size: 1.1rem;
+		transition:
+			transform 0.2s ease,
+			background-color 0.2s ease,
+			color 0.2s ease;
+	}
+
+	&:hover {
+		color: $primary;
+		border-color: rgba(99, 102, 241, 0.35);
+		box-shadow: 0 14px 28px rgba(99, 102, 241, 0.12);
+		transform: translateY(-1px);
+
+		i {
+			background: $primary;
+			color: #ffffff;
+			transform: translateX(-2px);
+		}
+	}
 }
 
 .logo-section {
@@ -47,11 +88,13 @@ body {
 	align-items: center;
 	gap: 15px;
 	padding: 10px 0 20px;
+	transition: gap 0.35s ease;
 
 	h1 {
 		font-size: 2.4rem;
 		font-family: 'Audiowide', sans-serif;
 		text-transform: uppercase;
+		transition: font-size 0.35s ease;
 	}
 
 	p {
@@ -78,10 +121,13 @@ body {
 /* === Shared Page Layout: Start === */
 .main-content {
 	display: grid;
-	grid-template-columns: 2fr 1fr;
+	grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
 	gap: 30px;
 	width: 100%;
 	align-items: start;
+	transition:
+		grid-template-columns 0.35s ease,
+		gap 0.35s ease;
 
 	section,
 	aside {
@@ -89,6 +135,12 @@ body {
 		padding: 25px;
 		border-radius: 15px;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+		transition: padding 0.35s ease;
+	}
+
+	aside {
+		width: min(100%, 380px);
+		max-width: 100%;
 	}
 }
 
@@ -96,6 +148,7 @@ h2 {
 	font-size: 1.8rem;
 	margin-bottom: 25px;
 	color: $text-main;
+	transition: font-size 0.35s ease;
 }
 
 table {
@@ -112,6 +165,10 @@ table {
 		text-transform: uppercase;
 		letter-spacing: 1px;
 		border-bottom: 1px solid $border;
+		transition:
+			width 0.35s ease,
+			padding 0.35s ease,
+			font-size 0.35s ease;
 	}
 
 	td {
@@ -119,6 +176,9 @@ table {
 		font-size: 1.3rem;
 		vertical-align: middle;
 		border-bottom: 1px solid #f1f5f9;
+		transition:
+			padding 0.35s ease,
+			font-size 0.35s ease;
 	}
 
 	tr:last-child td {
@@ -211,6 +271,7 @@ table {
 	white-space: nowrap;
 	align-items: center;
 	max-width: 100%;
+	transition: gap 0.35s ease;
 }
 
 .acc-wrapper {
@@ -230,6 +291,15 @@ table {
 	background: #f8fafc;
 	color: #64748b;
 	cursor: default;
+	transition:
+		width 0.35s ease,
+		height 0.35s ease,
+		min-width 0.35s ease,
+		font-size 0.35s ease,
+		transform 0.2s ease,
+		background-color 0.2s ease,
+		color 0.2s ease,
+		border-color 0.2s ease;
 }
 
 .inline-accessories .acc-inline-icon {
@@ -257,6 +327,12 @@ table {
 	color: #64748b;
 	font-size: 0.85rem;
 	font-weight: 700;
+	transition:
+		width 0.35s ease,
+		height 0.35s ease,
+		min-width 0.35s ease,
+		padding 0.35s ease,
+		font-size 0.35s ease;
 }
 
 .acc-empty {
@@ -273,6 +349,7 @@ table {
 	width: max-content;
 	margin: 0 auto;
 	white-space: normal;
+	transition: gap 0.35s ease;
 }
 
 .accessories-table .acc-more-badge {
@@ -464,14 +541,15 @@ table {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 10px 25px;
+		padding: 11px 28px;
 		background: #f1f5f9;
 		border-radius: 12px;
-		min-width: 220px;
+		min-width: 240px;
 		overflow: visible;
 
 		h2 {
 			margin: 0;
+			font-size: 1.9rem;
 			pointer-events: none;
 			z-index: 1;
 		}
@@ -527,8 +605,8 @@ table {
 	top: calc(100% + 8px);
 	left: 50%;
 	z-index: 2000;
-	width: 320px;
-	padding: 18px;
+	width: 375px;
+	padding: 23px;
 	background: #ffffff;
 	border: 1px solid #e2e8f0;
 	border-radius: 12px;
@@ -537,9 +615,9 @@ table {
 }
 
 .month-fallback-title {
-	margin-bottom: 14px;
+	margin-bottom: 17px;
 	font-weight: 700;
-	font-size: 1.3rem;
+	font-size: 1.7rem;
 	color: #0f172a;
 	text-transform: uppercase;
 }
@@ -547,34 +625,57 @@ table {
 .month-fallback-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 12px;
+	gap: 15px;
 }
 
 .month-fallback-field {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: 8px;
 
 	span {
-		font-size: 0.8rem;
+		font-size: 1.15rem;
+		font-weight: 600;
 		color: #64748b;
 	}
 
 	select {
 		border: 1px solid #cbd5e1;
 		border-radius: 8px;
-		padding: 10px 12px;
-		font-size: 0.95rem;
-		background: #fff;
+		padding: 12px 15px;
+		font-size: 1.35rem;
+		background: #f8fafc;
 		color: #0f172a;
+		transition:
+			border-color 0.2s ease,
+			box-shadow 0.2s ease,
+			background-color 0.2s ease;
+
+		&:focus {
+			outline: none;
+			border-color: #818cf8;
+			box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+			background: #eef2ff;
+		}
+
+		option {
+			background: #ffffff;
+			color: #0f172a;
+		}
+
+		option:checked {
+			background: #eef2ff;
+			color: #312e81;
+			font-weight: 600;
+		}
 	}
 }
 
 .month-fallback-actions {
 	display: flex;
 	justify-content: flex-end;
-	gap: 8px;
-	margin-top: 16px;
+	gap: 11px;
+	margin-top: 19px;
 }
 
 .month-fallback-btn {
@@ -582,8 +683,8 @@ table {
 	background: #fff;
 	color: #334155;
 	border-radius: 8px;
-	padding: 8px 14px;
-	font-size: 0.9rem;
+	padding: 10px 17px;
+	font-size: 1.25rem;
 	font-weight: 600;
 	cursor: pointer;
 
@@ -656,15 +757,13 @@ table {
 
 /* === Shared Wide Mode: Start === */
 body.wide-mode {
-	display: block;
-
 	.wrapper {
 		max-width: 96%;
 		width: 96%;
 	}
 
 	.main-content {
-		grid-template-columns: 1fr 380px;
+		grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
 		gap: 40px;
 	}
 
@@ -675,6 +774,83 @@ body.wide-mode {
 
 	.logo-section h1 {
 		font-size: 3rem;
+	}
+
+	.hires-table th:nth-child(4) {
+		width: 18%;
+	}
+
+	.hires-table th:nth-child(5) {
+		width: 15%;
+	}
+
+	.inline-accessories,
+	.acc-wrapper,
+	.accessories-table {
+		gap: 8px;
+	}
+
+	.inline-accessories .acc-inline-icon,
+	.acc-wrapper .acc-inline-icon,
+	.acc-wrapper .acc-icon,
+	.acc-more-badge {
+		width: 36px;
+		height: 36px;
+		min-width: 36px;
+	}
+
+	.inline-accessories .acc-inline-icon,
+	.acc-wrapper .acc-inline-icon,
+	.acc-wrapper .acc-icon {
+		font-size: 1.45rem;
+	}
+
+	.acc-more-badge {
+		padding: 0 10px;
+		font-size: 0.95rem;
+	}
+
+	.col-acc {
+		width: 220px;
+		min-width: 220px;
+	}
+
+	.table-header .month-picker-container {
+		padding: 13px 32px;
+		min-width: 280px;
+	}
+
+	.table-header .month-picker-container h2 {
+		font-size: 2.1rem;
+	}
+
+	.month-fallback-popover {
+		width: 420px;
+		padding: 26px;
+	}
+
+	.month-fallback-title {
+		font-size: 1.95rem;
+	}
+
+	.month-fallback-grid {
+		gap: 17px;
+	}
+
+	.month-fallback-field {
+		span {
+			font-size: 1.28rem;
+		}
+
+		select {
+			padding: 14px 16px;
+			font-size: 1.48rem;
+		}
+	}
+
+	.month-fallback-btn {
+		padding: 12px 19px;
+		font-size: 1.38rem;
 	}
 }
 /* === Shared Wide Mode: End === */
@@ -752,6 +928,10 @@ body.wide-mode {
 @media (max-width: 1024px) {
 	.main-content {
 		grid-template-columns: 1fr;
+
+		aside {
+			width: 100%;
+		}
 	}
 }
 

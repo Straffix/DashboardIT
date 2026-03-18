@@ -241,6 +241,9 @@ const createMonthPicker = ({
 		const yearSelect = popover.querySelector('#fallback-year-select')
 		const applyBtn = popover.querySelector('#fallback-month-apply')
 		const cancelBtn = popover.querySelector('#fallback-month-cancel')
+		const stopPopoverEvent = event => {
+			event.stopPropagation()
+		}
 
 		const apply = () => {
 			const year = Number(yearSelect.value)
@@ -264,6 +267,8 @@ const createMonthPicker = ({
 			}
 		}
 
+		popover.addEventListener('click', stopPopoverEvent)
+		popover.addEventListener('mousedown', stopPopoverEvent)
 		applyBtn.addEventListener('click', apply)
 		cancelBtn.addEventListener('click', closePopover)
 		window.addEventListener('keydown', onKeyDown)
@@ -273,18 +278,34 @@ const createMonthPicker = ({
 		}, 0)
 
 		monthPopoverCleanup = () => {
+			popover.removeEventListener('click', stopPopoverEvent)
+			popover.removeEventListener('mousedown', stopPopoverEvent)
 			window.removeEventListener('keydown', onKeyDown)
 			document.removeEventListener('click', onDocumentClick)
 		}
 	}
 
-	const openPicker = () => {
+	const openPicker = event => {
+		if (event) {
+			event.preventDefault()
+			event.stopPropagation()
+
+			if (event.target.closest('.month-fallback-popover')) {
+				return
+			}
+		}
+
 		const input = document.getElementById(inputId)
 		if (!input) return
 
 		syncInput()
 
 		if (useCustomPicker || input.type !== 'month') {
+			if (monthPopover) {
+				closePopover()
+				return
+			}
+
 			openFallbackMonthPopover()
 			return
 		}
@@ -362,8 +383,7 @@ const createMonthPicker = ({
 			trigger.addEventListener('click', openPicker)
 			trigger.addEventListener('keydown', event => {
 				if (event.key === 'Enter' || event.key === ' ') {
-					event.preventDefault()
-					openPicker()
+					openPicker(event)
 				}
 			})
 		}
@@ -385,6 +405,26 @@ const createMonthPicker = ({
 document.addEventListener('DOMContentLoaded', () => {
 	document.querySelectorAll('#current-year').forEach(element => {
 		element.textContent = new Date().getFullYear()
+	})
+
+	const returnMenuLinks = document.querySelectorAll('.menu-btn[href="index.html"]')
+	returnMenuLinks.forEach(link => {
+		link.addEventListener('click', event => {
+			if (window.opener && !window.opener.closed) {
+				event.preventDefault()
+
+				try {
+					window.opener.focus()
+				} catch (error) {
+					// Browser may block focusing the opener tab.
+				}
+
+				window.close()
+				return
+			}
+
+			window.location.href = link.href
+		})
 	})
 
 	const fullscreenBtn = document.getElementById('fullscreen-btn')
