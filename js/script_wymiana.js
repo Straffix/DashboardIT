@@ -7,6 +7,7 @@ let isAnimating = false
 let editIndex = null
 let monthPopover = null
 let monthPopoverCleanup = null
+const USE_CUSTOM_MONTH_PICKER = true
 
 function supportsMonthInput() {
 	const input = document.createElement('input')
@@ -152,8 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Obsługa wyboru miesiąca
 	const mInput = document.getElementById('hidden-month-input')
 	if (mInput) {
-		if (!supportsMonthInput()) {
-			// Safari fallback: trzymamy tylko wybór miesiąca (bez dni).
+		if (USE_CUSTOM_MONTH_PICKER || !supportsMonthInput()) {
+			// Spójny UX: własny picker miesięcy we wszystkich przeglądarkach.
 			mInput.type = 'text'
 			mInput.readOnly = true
 			mInput.inputMode = 'none'
@@ -227,7 +228,7 @@ function openMonthPicker() {
 
 	syncMonthInputWithView()
 
-	if (input.type !== 'month') {
+	if (USE_CUSTOM_MONTH_PICKER || input.type !== 'month') {
 		openFallbackMonthPopover()
 		return
 	}
@@ -297,14 +298,6 @@ function renderTable() {
 		return
 	}
 
-	const accessoryIcons = {
-		mouse: 'fa-mouse',
-		keyboard: 'fa-keyboard',
-		headset: 'fa-headset',
-		monitor: 'fa-desktop',
-		bag: 'fa-briefcase',
-	}
-
 	filteredExchanges.forEach(ex => {
 		const originalIndex = exchanges.findIndex(original => original === ex)
 		const isDone = ex.status === 'done'
@@ -320,9 +313,12 @@ function renderTable() {
 				</div>`
 				: ''
 
-		const accHtml = (ex.accessories || [])
-			.map(acc => `<i class="fas ${accessoryIcons[acc] || ''} acc-icon" title="${acc}"></i>`)
-			.join('')
+		const accHtml = AppUtils.renderAccessoryIcons(ex.accessories, {
+			size: '1rem',
+			maxVisible: 9,
+			columns: 3,
+			wrapperClass: 'inline-accessories accessories-table',
+		})
 
 		row.innerHTML = `
 			<td class="col-info-narrow">
@@ -340,9 +336,7 @@ function renderTable() {
 			<td class="col-laptop">
 				<span class="sn-badge in">RU: ${ex.newSn || '---'}</span>
 			</td>
-			<td class="col-acc">
-				<div class="acc-wrapper">${accHtml}</div>
-			</td>
+				<td class="col-acc">${accHtml}</td>
 			<td class="col-actions">
 				<div class="action-wrapper">
 					${

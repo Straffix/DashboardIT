@@ -301,6 +301,48 @@ table {
 	}
 }
 
+table.hires-table {
+	th:nth-child(1) {
+		width: 24%;
+	}
+	th:nth-child(2) {
+		width: 22%;
+	}
+	th:nth-child(3) {
+		width: 16%;
+	}
+	th:nth-child(4) {
+		width: 20%;
+	}
+	th:nth-child(5) {
+		width: 13%;
+	}
+	th:nth-child(6) {
+		width: 5%;
+	}
+}
+
+table.monitor-table {
+	th:nth-child(1) {
+		width: 23%;
+	}
+	th:nth-child(2) {
+		width: 14%;
+	}
+	th:nth-child(3) {
+		width: 17%;
+	}
+	th:nth-child(4) {
+		width: 22%;
+	}
+	th:nth-child(5) {
+		width: 17%;
+	}
+	th:nth-child(6) {
+		width: 7%;
+	}
+}
+
 /* ======= ELEMENTY INTERAKTYWNE ======= */
 .extend-btn {
 	background: #f1f5f9;
@@ -328,6 +370,8 @@ table {
 }
 
 .status-pill {
+	display: inline-block;
+	white-space: nowrap;
 	padding: 6px 12px;
 	border-radius: 20px;
 	font-weight: 600;
@@ -345,6 +389,69 @@ table {
 	}
 }
 
+.inline-accessories {
+	display: flex;
+	justify-content: center;
+	gap: 6px;
+	flex-wrap: nowrap;
+	white-space: nowrap;
+	align-items: center;
+	max-width: 100%;
+}
+
+.acc-wrapper {
+	@extend .inline-accessories;
+}
+
+.inline-accessories .acc-inline-icon,
+.acc-wrapper .acc-inline-icon,
+.acc-wrapper .acc-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 999px;
+	border: 1px solid $border;
+	background: #f8fafc;
+	color: #64748b;
+	cursor: default;
+}
+
+.inline-accessories .acc-inline-icon {
+	font-size: var(--acc-icon-size, 1.2rem);
+}
+
+.acc-more-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	height: 28px;
+	padding: 0 8px;
+	border-radius: 999px;
+	border: 1px solid #cbd5e1;
+	background: #ffffff;
+	color: #64748b;
+	font-size: 0.85rem;
+	font-weight: 700;
+}
+
+.accessories-table {
+	display: grid;
+	grid-template-columns: repeat(var(--acc-columns, 3), minmax(28px, 1fr));
+	gap: 6px;
+	justify-items: center;
+	align-items: center;
+	width: max-content;
+	margin: 0 auto;
+	white-space: normal;
+}
+
+.accessories-table .acc-more-badge {
+	min-width: 28px;
+}
+
 .input-group {
 	margin-bottom: 15px;
 	label {
@@ -353,7 +460,7 @@ table {
 		margin-bottom: 8px;
 		font-weight: 600;
 	}
-	input {
+	input:not([type='radio']):not([type='checkbox']) {
 		width: 100%;
 		padding: 12px;
 		border: 1px solid $border;
@@ -453,31 +560,40 @@ table {
 .accessory-picker {
 	display: flex;
 	gap: 10px;
+	flex-wrap: nowrap;
+	overflow-x: auto;
 	background: #f8fafc;
 	padding: 10px;
 	border-radius: 8px;
 	border: 1px solid $border;
-	justify-content: space-between;
+	justify-content: flex-start;
 
 	.accessory-item {
-		width: 40px;
-		height: 40px;
+		flex: 0 0 44px;
+		width: 44px;
+		height: 44px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 1.8rem;
-		color: #cbd5e1;
+		font-size: 1.55rem;
+		color: #94a3b8;
 		cursor: pointer;
 		transition: all 0.2s ease;
-		border-radius: 6px;
+		border-radius: 10px;
+		border: 1px solid #cbd5e1;
+		background: #ffffff;
+
 		&:hover {
-			background: #e2e8f0;
+			background: #f1f5f9;
+			border-color: #94a3b8;
 			color: $text-main;
+			transform: translateY(-1px);
 		}
 		&.active {
 			background: $primary;
 			color: white;
-			box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+			border-color: $primary;
+			box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
 		}
 	}
 }

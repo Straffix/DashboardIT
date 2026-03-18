@@ -24,6 +24,13 @@ const APP_CONFIG = {
 		monitor: 'fa-desktop',
 		bag: 'fa-briefcase',
 	},
+	ACCESSORY_LABELS: {
+		mouse: 'Myszka',
+		keyboard: 'Klawiatura',
+		headset: 'Słuchawki',
+		monitor: 'Monitor',
+		bag: 'Torba / Etui',
+	},
 	STORAGE_KEYS: {
 		MONITOR: 'monitor_laptopow_dane',
 		HIRES: 'nowe_zatrudnienia_dane',
@@ -47,16 +54,46 @@ const normalizeSN = sn => {
 }
 
 // --- GENEROWANIE IKON AKCESORIÓW ---
-const renderAccessoryIcons = (accessories, size = '1.2rem') => {
+const renderAccessoryIcons = (accessories, options = {}) => {
+	const legacyMode = typeof options === 'string'
+	const defaults = {
+		size: '1.2rem',
+		maxVisible: Number.POSITIVE_INFINITY,
+		wrapperClass: 'inline-accessories',
+		columns: null,
+	}
+	const config = legacyMode
+		? { ...defaults, size: options }
+		: {
+				size: options.size || defaults.size,
+				maxVisible: Number.isFinite(options.maxVisible) ? options.maxVisible : defaults.maxVisible,
+				wrapperClass: options.wrapperClass || defaults.wrapperClass,
+				columns: Number.isFinite(options.columns) ? options.columns : null,
+		  }
+
 	if (!accessories || accessories.length === 0) {
 		return '<small style="color:#ccc">brak</small>'
 	}
-	return accessories
+	const normalized = accessories.filter(Boolean)
+	const visibleItems = normalized.slice(0, config.maxVisible)
+	const hiddenItems = normalized.slice(config.maxVisible)
+
+	const items = visibleItems
 		.map(acc => {
 			const icon = APP_CONFIG.ICON_MAP[acc] || 'fa-box'
-			return `<i class="fas ${icon}" style="margin: 0 4px; color: #64748b; font-size: ${size};" title="${acc}"></i>`
+			const label = APP_CONFIG.ACCESSORY_LABELS[acc] || acc
+			return `<i class="fas ${icon} acc-inline-icon" style="--acc-icon-size:${config.size}" title="${label}"></i>`
 		})
 		.join('')
+
+	const hiddenBadge = hiddenItems.length
+		? `<span class="acc-more-badge" title="${hiddenItems
+				.map(acc => APP_CONFIG.ACCESSORY_LABELS[acc] || acc)
+				.join(', ')}">+${hiddenItems.length}</span>`
+		: ''
+
+	const wrapperStyle = config.columns ? ` style="--acc-columns:${config.columns}"` : ''
+	return `<span class="${config.wrapperClass}"${wrapperStyle}>${items}${hiddenBadge}</span>`
 }
 
 // --- EXPORT DO GLOBALNEGO OKNA ---

@@ -24,12 +24,14 @@
 }
 
 .col-acc {
-	width: 150px;
+	width: 180px;
+	min-width: 180px;
 	text-align: center;
 }
 
 .col-actions {
 	width: 150px;
+	min-width: 150px;
 	text-align: center;
 }
 
@@ -159,6 +161,7 @@
 	display: flex;
 	gap: 8px;
 	justify-content: center;
+	flex-wrap: nowrap;
 }
 
 .sn-badge {
@@ -294,11 +297,21 @@ aside.editing-active {
 .acc-wrapper {
 	display: flex;
 	justify-content: center;
-	gap: 8px;
+	gap: 6px;
+	flex-wrap: nowrap;
+	white-space: nowrap;
 
 	.acc-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 999px;
+		border: 1px solid #e2e8f0;
+		background: #f8fafc;
 		color: #64748b;
-		font-size: 1.1rem;
+		font-size: 1.15rem;
 		cursor: default;
 	}
 }

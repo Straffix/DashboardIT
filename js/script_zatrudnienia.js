@@ -5,6 +5,7 @@ let currentViewDate = new Date()
 let isAnimating = false
 let monthPopover = null
 let monthPopoverCleanup = null
+const USE_CUSTOM_MONTH_PICKER = true
 
 function supportsMonthInput() {
 	const input = document.createElement('input')
@@ -177,7 +178,7 @@ function openMonthPicker() {
 
 	syncMonthInputWithView()
 
-	if (input.type !== 'month') {
+	if (USE_CUSTOM_MONTH_PICKER || input.type !== 'month') {
 		openFallbackMonthPopover()
 		return
 	}
@@ -272,7 +273,12 @@ function renderTable() {
 			statusClass = 'near'
 		}
 
-		const accessoriesHTML = AppUtils.renderAccessoryIcons(h.accessories, '1.2rem')
+			const accessoriesHTML = AppUtils.renderAccessoryIcons(h.accessories, {
+				size: '1rem',
+				maxVisible: 9,
+				columns: 3,
+				wrapperClass: 'inline-accessories accessories-table',
+			})
 
 		const row = document.createElement('tr')
 		row.innerHTML = `
@@ -280,7 +286,7 @@ function renderTable() {
             <td>${h.ru}</td>
             <td>${h.sn}</td>
             <td><span class="status-pill ${statusClass}">${statusText}</span></td>
-            <td style="text-align:center">${accessoriesHTML}</td>
+	            <td style="text-align:center;">${accessoriesHTML}</td>
             <td style="text-align:right">
                 <span class="delete-btn" onclick="removeItem(${originalIndex})">
                     <i class="fas fa-trash"></i>
@@ -373,8 +379,8 @@ function importExcel(event) {
 document.addEventListener('DOMContentLoaded', () => {
 	const mInput = document.getElementById('hidden-month-input')
 	if (mInput) {
-		if (!supportsMonthInput()) {
-			// Safari fallback: trzymamy tylko wybór miesiąca (bez dni).
+		if (USE_CUSTOM_MONTH_PICKER || !supportsMonthInput()) {
+			// Spójny UX: własny picker miesięcy we wszystkich przeglądarkach.
 			mInput.type = 'text'
 			mInput.readOnly = true
 			mInput.inputMode = 'none'
