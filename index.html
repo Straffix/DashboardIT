@@ -132,6 +132,54 @@
                 </div>
             </footer>
         </div>
+
+        <aside class="bookmark-drawer" id="bookmark-drawer" aria-label="Skróty WWW">
+            <button type="button" class="bookmark-drawer-toggle" id="bookmark-drawer-toggle"
+                aria-expanded="false" aria-controls="bookmark-drawer-panel">
+                <span class="bookmark-toggle-arrow">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </span>
+            </button>
+
+            <div class="bookmark-drawer-panel" id="bookmark-drawer-panel">
+                <div class="bookmark-drawer-head">
+                    <div>
+                        <p class="bookmark-kicker">Skróty WWW</p>
+                        <h2>Panel zakładek</h2>
+                    </div>
+                    <div class="bookmark-head-actions">
+                        <button type="button" class="bookmark-mode-btn" id="bookmark-settings-toggle"
+                            aria-pressed="false" aria-label="Pokaż opcje zarządzania zakładkami">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                        <button type="button" class="bookmark-add-btn" id="bookmark-add-btn" aria-label="Dodaj zakładkę">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <form class="bookmark-form" id="bookmark-form" hidden>
+                    <input type="hidden" id="bookmark-id">
+
+                    <label class="bookmark-field">
+                        <span>Nazwa</span>
+                        <input type="text" id="bookmark-title" placeholder="np. SharePoint" maxlength="32" required>
+                    </label>
+
+                    <label class="bookmark-field">
+                        <span>Adres URL</span>
+                        <input type="url" id="bookmark-url" placeholder="https://..." required>
+                    </label>
+
+                    <div class="bookmark-form-actions">
+                        <button type="button" class="bookmark-secondary-btn" id="bookmark-cancel-btn">Anuluj</button>
+                        <button type="submit" class="bookmark-primary-btn">Zapisz</button>
+                    </div>
+                </form>
+
+                <ul class="bookmark-list" id="bookmark-list"></ul>
+            </div>
+        </aside>
     </div>
 
     <script src="./js/script.js"></script>

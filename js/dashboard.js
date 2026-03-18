@@ -43,6 +43,20 @@ document.addEventListener('DOMContentLoaded', () => {
 	const clockDate = document.getElementById('clock-date')
 	const weatherSearchForm = document.getElementById('weather-search-form')
 	const weatherLocationInput = document.getElementById('weather-location-input')
+	const bookmarkDrawer = document.getElementById('bookmark-drawer')
+	const bookmarkDrawerToggle = document.getElementById('bookmark-drawer-toggle')
+	const bookmarkSettingsToggle = document.getElementById('bookmark-settings-toggle')
+	const bookmarkList = document.getElementById('bookmark-list')
+	const bookmarkForm = document.getElementById('bookmark-form')
+	const bookmarkIdInput = document.getElementById('bookmark-id')
+	const bookmarkTitleInput = document.getElementById('bookmark-title')
+	const bookmarkUrlInput = document.getElementById('bookmark-url')
+	const bookmarkAddButton = document.getElementById('bookmark-add-btn')
+	const bookmarkCancelButton = document.getElementById('bookmark-cancel-btn')
+
+	const bookmarkConfig = {
+		storageKey: 'dashboard-bookmarks',
+	}
 
 	const updateClock = () => {
 		if (!clockHour || !clockMinute || !clockSecond || !clockDigital || !clockDate) return
@@ -181,9 +195,186 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const normalizeUrl = value => {
+		const trimmedValue = value.trim()
+		if (!trimmedValue) return ''
+		if (/^https?:\/\//i.test(trimmedValue)) return trimmedValue
+		return `https://${trimmedValue}`
+	}
+
+	const createBookmarkId = () => `bookmark-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
+
+	const getBookmarkHostname = url => {
+		try {
+			return new URL(url).hostname
+		} catch (error) {
+			return ''
+		}
+	}
+
+	const getBookmarkInitials = title =>
+		title
+			.trim()
+			.split(/\s+/)
+			.slice(0, 2)
+			.map(part => part[0]?.toUpperCase() ?? '')
+			.join('') || 'WW'
+
+	const loadBookmarks = () => {
+		try {
+			const storedBookmarks = JSON.parse(localStorage.getItem(bookmarkConfig.storageKey) || '[]')
+			return Array.isArray(storedBookmarks) ? storedBookmarks : []
+		} catch (error) {
+			return []
+		}
+	}
+
+	let bookmarks = loadBookmarks()
+
+	const saveBookmarks = () => {
+		localStorage.setItem(bookmarkConfig.storageKey, JSON.stringify(bookmarks))
+	}
+
+	const closeBookmarkForm = () => {
+		if (!bookmarkForm) return
+		bookmarkForm.hidden = true
+		bookmarkForm.reset()
+		if (bookmarkIdInput) {
+			bookmarkIdInput.value = ''
+		}
+	}
+
+	const openBookmarkForm = bookmark => {
+		if (!bookmarkForm || !bookmarkTitleInput || !bookmarkUrlInput || !bookmarkIdInput) return
+
+		bookmarkForm.hidden = false
+		bookmarkIdInput.value = bookmark?.id || ''
+		bookmarkTitleInput.value = bookmark?.title || ''
+		bookmarkUrlInput.value = bookmark?.url || ''
+		bookmarkTitleInput.focus()
+		if (bookmarkDrawer && !bookmarkDrawer.classList.contains('is-open')) {
+			bookmarkDrawer.classList.add('is-open')
+		}
+	}
+
+	const renderBookmarks = () => {
+		if (!bookmarkList) return
+
+		bookmarkList.innerHTML = ''
+
+		bookmarks.forEach(bookmark => {
+			const hostname = getBookmarkHostname(bookmark.url)
+			const item = document.createElement('li')
+			item.className = 'bookmark-item'
+			item.dataset.id = bookmark.id
+			item.dataset.url = bookmark.url
+			item.innerHTML = `
+				<div class="bookmark-item-badge">
+					<img class="bookmark-item-favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(bookmark.url)}&sz=64" alt="" loading="lazy">
+				</div>
+				<div class="bookmark-item-main">
+					<div class="bookmark-item-link">${bookmark.title}</div>
+					<div class="bookmark-item-url">${hostname || bookmark.url}</div>
+				</div>
+				<div class="bookmark-item-actions">
+					<button type="button" class="bookmark-item-action" data-action="edit" aria-label="Edytuj zakładkę">
+						<i class="fa-solid fa-pen"></i>
+					</button>
+					<button type="button" class="bookmark-item-action" data-action="delete" aria-label="Usuń zakładkę">
+						<i class="fa-solid fa-trash"></i>
+					</button>
+				</div>
+			`
+			bookmarkList.appendChild(item)
+		})
+	}
+
+	const initBookmarks = () => {
+		if (!bookmarkDrawer || !bookmarkDrawerToggle || !bookmarkList) return
+
+		renderBookmarks()
+
+		bookmarkDrawerToggle.addEventListener('click', () => {
+			const isOpen = bookmarkDrawer.classList.toggle('is-open')
+			bookmarkDrawerToggle.setAttribute('aria-expanded', String(isOpen))
+		})
+
+		bookmarkSettingsToggle?.addEventListener('click', () => {
+			const isManaging = bookmarkDrawer.classList.toggle('is-managing')
+			bookmarkSettingsToggle.setAttribute('aria-pressed', String(isManaging))
+		})
+
+		bookmarkAddButton?.addEventListener('click', () => {
+			openBookmarkForm()
+		})
+
+		bookmarkCancelButton?.addEventListener('click', () => {
+			closeBookmarkForm()
+		})
+
+		bookmarkForm?.addEventListener('submit', event => {
+			event.preventDefault()
+
+			if (!bookmarkTitleInput || !bookmarkUrlInput || !bookmarkIdInput) return
+
+			const title = bookmarkTitleInput.value.trim()
+			const url = normalizeUrl(bookmarkUrlInput.value)
+			const existingId = bookmarkIdInput.value
+
+			if (!title || !url) return
+
+			if (existingId) {
+				bookmarks = bookmarks.map(bookmark =>
+					bookmark.id === existingId ? { ...bookmark, title, url } : bookmark
+				)
+			} else {
+				bookmarks.unshift({
+					id: createBookmarkId(),
+					title,
+					url,
+				})
+			}
+
+			saveBookmarks()
+			renderBookmarks()
+			closeBookmarkForm()
+		})
+
+		bookmarkList.addEventListener('click', event => {
+			const actionButton = event.target.closest('[data-action]')
+			if (!actionButton) {
+				const item = event.target.closest('.bookmark-item')
+				if (!item?.dataset.url) return
+				window.open(item.dataset.url, '_blank')
+				return
+			}
+
+			const item = actionButton.closest('.bookmark-item')
+			const bookmarkId = item?.dataset.id
+			if (!bookmarkId) return
+
+			const bookmark = bookmarks.find(entry => entry.id === bookmarkId)
+			if (!bookmark) return
+
+			if (actionButton.dataset.action === 'edit') {
+				openBookmarkForm(bookmark)
+			}
+
+			if (actionButton.dataset.action === 'delete') {
+				bookmarks = bookmarks.filter(entry => entry.id !== bookmarkId)
+				saveBookmarks()
+				renderBookmarks()
+				if (bookmarkIdInput?.value === bookmarkId) {
+					closeBookmarkForm()
+				}
+			}
+		})
+	}
+
 	updateClock()
 	window.setInterval(updateClock, 1000)
 	initWeather()
+	initBookmarks()
 
 	document.querySelectorAll('.menu-item[target="_blank"]').forEach(link => {
 		link.addEventListener('click', event => {
