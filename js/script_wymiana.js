@@ -3,9 +3,137 @@ const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.EXCHANGES
 
 // Zmienna sterująca widokiem daty
 let currentViewDate = new Date()
-let isAnimating = false // Blokada dla płynności animacji
+let isAnimating = false
+let editIndex = null
+let monthPopover = null
+let monthPopoverCleanup = null
 
-/* ======= INICJALIZACJA I IKONKI ======= */
+function supportsMonthInput() {
+	const input = document.createElement('input')
+	input.setAttribute('type', 'month')
+	return input.type === 'month'
+}
+
+function parseYearMonth(value) {
+	if (!value) return null
+
+	const match = value.match(/^(\d{4})-(\d{1,2})/)
+	if (!match) return null
+
+	const year = Number(match[1])
+	const month = Number(match[2])
+	if (!year || month < 1 || month > 12) return null
+
+	return { year, month }
+}
+
+function closeMonthPopover() {
+	if (monthPopoverCleanup) {
+		monthPopoverCleanup()
+		monthPopoverCleanup = null
+	}
+
+	if (monthPopover) {
+		monthPopover.remove()
+		monthPopover = null
+	}
+}
+
+function openFallbackMonthPopover() {
+	closeMonthPopover()
+
+	const trigger = document.getElementById('month-trigger')
+	if (!trigger) return
+
+	const monthNames = AppUtils.config.MONTH_NAMES
+	const selectedYear = currentViewDate.getFullYear()
+	const selectedMonth = currentViewDate.getMonth()
+
+	const popover = document.createElement('div')
+	popover.className = 'month-fallback-popover'
+	popover.setAttribute('role', 'dialog')
+	popover.setAttribute('aria-label', 'Wybór miesiąca')
+
+	const monthOptions = monthNames
+		.map((name, idx) => `<option value="${idx}" ${idx === selectedMonth ? 'selected' : ''}>${name}</option>`)
+		.join('')
+
+	let yearOptions = ''
+	for (let year = selectedYear - 5; year <= selectedYear + 5; year += 1) {
+		yearOptions += `<option value="${year}" ${year === selectedYear ? 'selected' : ''}>${year}</option>`
+	}
+
+	popover.innerHTML = `
+		<div class="month-fallback-title">Wybierz miesiąc</div>
+		<div class="month-fallback-grid">
+			<label class="month-fallback-field">
+				<span>Miesiąc</span>
+				<select id="fallback-month-select">${monthOptions}</select>
+			</label>
+			<label class="month-fallback-field">
+				<span>Rok</span>
+				<select id="fallback-year-select">${yearOptions}</select>
+			</label>
+		</div>
+		<div class="month-fallback-actions">
+			<button type="button" class="month-fallback-btn" id="fallback-month-cancel">Anuluj</button>
+			<button type="button" class="month-fallback-btn is-primary" id="fallback-month-apply">Zastosuj</button>
+		</div>
+	`
+
+	document.body.appendChild(popover)
+	monthPopover = popover
+
+	const triggerRect = trigger.getBoundingClientRect()
+	const popoverRect = popover.getBoundingClientRect()
+	const top = triggerRect.bottom + window.scrollY + 8
+	const left = Math.max(12, Math.min(triggerRect.left + window.scrollX, window.scrollX + window.innerWidth - popoverRect.width - 12))
+	popover.style.top = `${top}px`
+	popover.style.left = `${left}px`
+
+	const monthSelect = popover.querySelector('#fallback-month-select')
+	const yearSelect = popover.querySelector('#fallback-year-select')
+	const applyBtn = popover.querySelector('#fallback-month-apply')
+	const cancelBtn = popover.querySelector('#fallback-month-cancel')
+
+	const apply = () => {
+		const year = Number(yearSelect.value)
+		const month = Number(monthSelect.value)
+		if (!year || month < 0 || month > 11) return
+
+		currentViewDate = new Date(year, month, 1)
+		renderTable()
+		closeMonthPopover()
+	}
+
+	applyBtn.addEventListener('click', apply)
+	cancelBtn.addEventListener('click', closeMonthPopover)
+
+	const onKeyDown = e => {
+		if (e.key === 'Escape') {
+			e.preventDefault()
+			closeMonthPopover()
+		}
+	}
+
+	const onDocClick = e => {
+		if (!popover.contains(e.target) && !trigger.contains(e.target)) {
+			closeMonthPopover()
+		}
+	}
+
+	window.addEventListener('keydown', onKeyDown)
+	setTimeout(() => {
+		document.addEventListener('click', onDocClick)
+	}, 0)
+
+	monthPopoverCleanup = () => {
+		window.removeEventListener('keydown', onKeyDown)
+		document.removeEventListener('click', onDocClick)
+	}
+}
+
+/* ======= INICJALIZACJA ======= */
 
 document.addEventListener('DOMContentLoaded', () => {
 	// Obsługa klikania w ikonki akcesoriów
@@ -14,11 +142,49 @@ document.addEventListener('DOMContentLoaded', () => {
 	accessoryItems.forEach(item => {
 		item.addEventListener('click', () => {
 			item.classList.toggle('active')
-			// Efekt fizycznego kliknięcia
 			item.style.transform = 'scale(0.9)'
-			setTimeout(() => (item.style.transform = ''), 100)
+			setTimeout(() => {
+				item.style.transform = ''
+			}, 100)
 		})
 	})
+
+	// Obsługa wyboru miesiąca
+	const mInput = document.getElementById('hidden-month-input')
+	if (mInput) {
+		if (!supportsMonthInput()) {
+			// Safari fallback: trzymamy tylko wybór miesiąca (bez dni).
+			mInput.type = 'text'
+			mInput.readOnly = true
+			mInput.inputMode = 'none'
+		}
+
+		syncMonthInputWithView()
+
+		if (mInput.type === 'month') {
+			const handleDatePick = e => {
+				const parsed = parseYearMonth(e.target.value)
+				if (!parsed) return
+
+				currentViewDate = new Date(parsed.year, parsed.month - 1, 1)
+				renderTable()
+			}
+
+			mInput.addEventListener('change', handleDatePick)
+			mInput.addEventListener('input', handleDatePick)
+		}
+	}
+
+	// Dostępność: Enter / Spacja na kontenerze miesiąca
+	const monthTrigger = document.getElementById('month-trigger')
+	if (monthTrigger) {
+		monthTrigger.addEventListener('keydown', e => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault()
+				openMonthPicker()
+			}
+		})
+	}
 
 	loadData()
 })
@@ -40,29 +206,61 @@ function saveData() {
 
 function updateMonthDisplay() {
 	const display = document.getElementById('current-month-display')
-	if (display) {
-		const monthName = AppUtils.config.MONTH_NAMES[currentViewDate.getMonth()].toUpperCase()
-		display.innerText = `${monthName} ${currentViewDate.getFullYear()}`
+	if (!display) return
+
+	const monthName = AppUtils.config.MONTH_NAMES[currentViewDate.getMonth()].toUpperCase()
+	display.innerText = `${monthName} ${currentViewDate.getFullYear()}`
+}
+
+function syncMonthInputWithView() {
+	const input = document.getElementById('hidden-month-input')
+	if (!input) return
+
+	const year = currentViewDate.getFullYear()
+	const month = String(currentViewDate.getMonth() + 1).padStart(2, '0')
+	input.value = `${year}-${month}`
+}
+
+function openMonthPicker() {
+	const input = document.getElementById('hidden-month-input')
+	if (!input) return
+
+	syncMonthInputWithView()
+
+	if (input.type !== 'month') {
+		openFallbackMonthPopover()
+		return
 	}
+
+	try {
+		if (typeof input.showPicker === 'function') {
+			input.showPicker()
+			return
+		}
+	} catch (err) {
+		// fallback poniżej
+	}
+
+	input.focus()
+	input.click()
 }
 
 function changeMonth(delta) {
 	if (isAnimating) return
+
 	const tbody = document.getElementById('table-body')
 	if (!tbody) return
 
 	isAnimating = true
 
-	// 1. Animacja wyjścia
 	tbody.classList.remove('slide-in')
 	tbody.classList.add('slide-out')
 
 	setTimeout(() => {
-		// 2. Zmiana danych w tle
 		currentViewDate.setMonth(currentViewDate.getMonth() + delta)
+		syncMonthInputWithView()
 		renderTable()
 
-		// 3. Przygotowanie do wejścia
 		tbody.style.visibility = 'hidden'
 		tbody.classList.remove('slide-out')
 
@@ -82,9 +280,11 @@ function changeMonth(delta) {
 function renderTable() {
 	const tbody = document.getElementById('table-body')
 	if (!tbody) return
+
 	tbody.innerHTML = ''
 
 	updateMonthDisplay()
+	syncMonthInputWithView()
 
 	const filteredExchanges = exchanges.filter(ex => {
 		const exDate = new Date(ex.plannedDate)
@@ -92,7 +292,8 @@ function renderTable() {
 	})
 
 	if (filteredExchanges.length === 0) {
-		tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="text-align:center; padding: 40px; color: #94a3b8;">Brak planowanych wymian w tym miesiącu.</td></tr>`
+		tbody.innerHTML =
+			'<tr><td colspan="7" class="empty-state" style="text-align:center; padding: 40px; color: #94a3b8;">Brak planowanych wymian w tym miesiącu.</td></tr>'
 		return
 	}
 
@@ -108,77 +309,76 @@ function renderTable() {
 		const originalIndex = exchanges.findIndex(original => original === ex)
 		const isDone = ex.status === 'done'
 		const row = document.createElement('tr')
+
 		if (isDone) row.classList.add('is-done')
 
-		// INFO - Tooltip (Poprawiony zgodnie z nowym SCSS)
 		const infoHtml =
 			ex.notes && ex.notes.trim() !== ''
 				? `<div class="notes-tooltip-container">
-                 <i class="fas fa-info-circle notes-icon"></i>
-                 <span class="notes-tooltip-text">${ex.notes}</span>
-               </div>`
+					<i class="fas fa-info-circle notes-icon"></i>
+					<span class="notes-tooltip-text">${ex.notes}</span>
+				</div>`
 				: ''
 
-		// AKCESORIA
 		const accHtml = (ex.accessories || [])
-			.map(acc => `<i class="fas ${accessoryIcons[acc]} acc-icon" title="${acc}"></i>`)
+			.map(acc => `<i class="fas ${accessoryIcons[acc] || ''} acc-icon" title="${acc}"></i>`)
 			.join('')
 
 		row.innerHTML = `
-            <td class="col-info-narrow">
-                <div class="td-info-center">${infoHtml}</div>
-            </td>
-            <td class="col-worker">
-                <span class="worker-name">${ex.name}</span>
-            </td>
-            <td class="col-date">
-                <span class="date-text">${ex.plannedDate}</span>
-            </td>
-            <td class="col-laptop">
-                <span class="sn-badge out">RU: ${ex.oldSn || '---'}</span>
-            </td>
-            <td class="col-laptop">
-                <span class="sn-badge in">RU: ${ex.newSn || '---'}</span>
-            </td>
-            <td class="col-acc">
-                <div class="acc-wrapper">${accHtml}</div>
-            </td>
-            <td class="col-actions">
-                <div class="action-wrapper">
-                    ${!isDone ? `<button class="btn-table btn-ok" onclick="completeExchange(${originalIndex})" title="Finalizuj"><i class="fas fa-check"></i></button>` : ''}
-                    <button class="btn-table btn-edit" onclick="editExchange(${originalIndex})" title="Edytuj"><i class="fas fa-edit"></i></button>
-                    <button class="btn-table btn-delete" onclick="removeItem(${originalIndex})" title="Usuń"><i class="fas fa-trash"></i></button>
-                </div>
-            </td>
-        `
+			<td class="col-info-narrow">
+				<div class="td-info-center">${infoHtml}</div>
+			</td>
+			<td class="col-worker">
+				<span class="worker-name">${ex.name}</span>
+			</td>
+			<td class="col-date">
+				<span class="date-text">${ex.plannedDate}</span>
+			</td>
+			<td class="col-laptop">
+				<span class="sn-badge out">RU: ${ex.oldSn || '---'}</span>
+			</td>
+			<td class="col-laptop">
+				<span class="sn-badge in">RU: ${ex.newSn || '---'}</span>
+			</td>
+			<td class="col-acc">
+				<div class="acc-wrapper">${accHtml}</div>
+			</td>
+			<td class="col-actions">
+				<div class="action-wrapper">
+					${
+						!isDone
+							? `<button class="btn-table btn-ok" onclick="completeExchange(${originalIndex})" title="Finalizuj" type="button"><i class="fas fa-check"></i></button>`
+							: ''
+					}
+					<button class="btn-table btn-edit" onclick="editExchange(${originalIndex})" title="Edytuj" type="button"><i class="fas fa-edit"></i></button>
+					<button class="btn-table btn-delete" onclick="removeItem(${originalIndex})" title="Usuń" type="button"><i class="fas fa-trash"></i></button>
+				</div>
+			</td>
+		`
+
 		tbody.appendChild(row)
 	})
 }
 
 /* ======= LOGIKA PROCESU ======= */
 
-let editIndex = null // Dodaj to na górze pliku script_wymiana.js
-
 function editExchange(index) {
 	const ex = exchanges[index]
 	if (!ex) return
 
-	editIndex = index // Zapamiętujemy, który element edytujemy
+	editIndex = index
 
-	// Wypełnianie formularza
 	document.getElementById('emp-name').value = ex.name
 	document.getElementById('exchange-date').value = ex.plannedDate
 	document.getElementById('old-sn').value = ex.oldSn
 	document.getElementById('new-sn').value = ex.newSn
 	document.getElementById('notes').value = ex.notes || ''
 
-	// Akcesoria
 	document.querySelectorAll('.accessory-item').forEach(item => {
 		const itemName = item.dataset.item
 		item.classList.toggle('active', ex.accessories && ex.accessories.includes(itemName))
 	})
 
-	// Interfejs edycji
 	const submitBtn = document.getElementById('submit-btn')
 	if (submitBtn) {
 		submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Zapisz zmiany'
@@ -188,58 +388,17 @@ function editExchange(index) {
 	const cancelContainer = document.getElementById('cancel-edit-container')
 	if (cancelContainer) {
 		cancelContainer.innerHTML = `
-            <button type="button" class="btn-submit" style="background:#94a3b8; margin-top:10px;" onclick="cancelEdit()">
-                <i class="fa-solid fa-times"></i> Anuluj edycję
-            </button>`
+			<button type="button" class="btn-submit" style="background:#94a3b8; margin-top:10px;" onclick="cancelEdit()">
+				<i class="fa-solid fa-times"></i> Anuluj edycję
+			</button>
+		`
 	}
 
 	document.querySelector('aside').classList.add('editing-active')
 	window.scrollTo({ top: 0, behavior: 'smooth' })
 
-	// NIE robimy już splice tutaj!
 	renderTable()
 }
-
-// function editExchange(index) {
-// 	const ex = exchanges[index]
-// 	if (!ex) return
-
-// 	// 1. Wypełnienie formularza
-// 	document.getElementById('emp-name').value = ex.name
-// 	document.getElementById('exchange-date').value = ex.plannedDate
-// 	document.getElementById('old-sn').value = ex.oldSn
-// 	document.getElementById('new-sn').value = ex.newSn
-// 	document.getElementById('notes').value = ex.notes || ''
-
-// 	// 2. Akcesoria
-// 	document.querySelectorAll('.accessory-item').forEach(item => {
-// 		const itemName = item.dataset.item
-// 		item.classList.toggle('active', ex.accessories && ex.accessories.includes(itemName))
-// 	})
-
-// 	// 3. Interfejs edycji
-// 	const submitBtn = document.getElementById('submit-btn')
-// 	if (submitBtn) {
-// 		submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Zapisz zmiany'
-// 		submitBtn.style.background = '#6366f1'
-// 	}
-
-// 	const cancelContainer = document.getElementById('cancel-edit-container')
-// 	if (cancelContainer) {
-// 		cancelContainer.innerHTML = `
-//             <button type="button" class="btn-submit" style="background:#94a3b8; margin-top:10px;" onclick="cancelEdit()">
-//                 <i class="fa-solid fa-times"></i> Anuluj edycję
-//             </button>`
-// 	}
-
-// 	document.querySelector('aside').classList.add('editing-active')
-
-// 	// 4. Usuwamy stary, by dodać "nowy" po zapisie
-// 	exchanges.splice(index, 1)
-
-// 	window.scrollTo({ top: 0, behavior: 'smooth' })
-// 	renderTable()
-// }
 
 function cancelEdit() {
 	if (confirm('Anulować edycję? Zmiany nie zostaną zapisane.')) {
@@ -262,8 +421,9 @@ function completeExchange(index) {
 	}
 
 	if (ex.newSn) {
-		let d = new Date()
+		const d = new Date()
 		d.setDate(d.getDate() + 60)
+
 		monitorData.push({
 			name: ex.name,
 			ru: 'WYMIANA',
@@ -304,75 +464,47 @@ if (exchangeForm) {
 			newSn: document.getElementById('new-sn').value,
 			notes: document.getElementById('notes').value,
 			accessories: selectedAccessories,
-			status: editIndex !== null ? exchanges[editIndex].status : 'pending', // Zachowaj status przy edycji
+			status: editIndex !== null ? exchanges[editIndex].status : 'pending',
 			createdAt: editIndex !== null ? exchanges[editIndex].createdAt : new Date(),
 		}
 
 		if (editIndex !== null) {
-			// TRYB EDYCJI: Podmieniamy dane w konkretnym miejscu
 			exchanges[editIndex] = exchangeData
-			editIndex = null // Resetujemy indeks po zapisie
+			editIndex = null
 			alert('Zmiany zostały zapisane.')
 		} else {
-			// TRYB DODAWANIA: Standardowe push
 			exchanges.push(exchangeData)
 		}
 
 		saveData()
 
-		// Reset formularza i UI
 		e.target.reset()
 		document.querySelectorAll('.accessory-item').forEach(item => item.classList.remove('active'))
 		document.querySelector('aside').classList.remove('editing-active')
 
 		const submitBtn = document.getElementById('submit-btn')
-		submitBtn.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Zatwierdź i zaplanuj'
-		submitBtn.style.background = '#f59e0b'
-		document.getElementById('cancel-edit-container').innerHTML = ''
+		if (submitBtn) {
+			submitBtn.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Zatwierdź i zaplanuj'
+			submitBtn.style.background = '#f59e0b'
+		}
 
-		// Jeśli chcesz uniknąć location.reload(), renderTable() wystarczy
+		const cancelContainer = document.getElementById('cancel-edit-container')
+		if (cancelContainer) {
+			cancelContainer.innerHTML = ''
+		}
+
 		renderTable()
 	})
 }
-// if (exchangeForm) {
-// 	exchangeForm.addEventListener('submit', e => {
-// 		e.preventDefault()
-
-// 		const selectedAccessories = []
-// 		document.querySelectorAll('.accessory-item.active').forEach(item => {
-// 			selectedAccessories.push(item.dataset.item)
-// 		})
-
-// 		const newExchange = {
-// 			name: document.getElementById('emp-name').value.toUpperCase(),
-// 			plannedDate: document.getElementById('exchange-date').value,
-// 			oldSn: document.getElementById('old-sn').value,
-// 			newSn: document.getElementById('new-sn').value,
-// 			notes: document.getElementById('notes').value,
-// 			accessories: selectedAccessories,
-// 			status: 'pending',
-// 			createdAt: new Date(),
-// 		}
-
-// 		exchanges.push(newExchange)
-
-// 		// Jeśli byliśmy w trybie edycji, po zapisie odświeżamy stronę by zresetować UI
-// 		const isEditing = document.querySelector('aside').classList.contains('editing-active')
-// 		if (isEditing) {
-// 			saveData()
-// 			location.reload()
-// 		} else {
-// 			e.target.reset()
-// 			document.querySelectorAll('.accessory-item').forEach(item => item.classList.remove('active'))
-// 			saveData()
-// 		}
-// 	})
-// }
 
 /* ======= EXPORT / IMPORT ======= */
 
 function exportExcel() {
-	if (exchanges.length === 0) return alert('Brak danych do eksportu!')
+	if (exchanges.length === 0) {
+		alert('Brak danych do eksportu!')
+		return
+	}
+
 	const data = exchanges.map(ex => ({
 		Pracownik: ex.name,
 		Data: ex.plannedDate,
@@ -381,6 +513,7 @@ function exportExcel() {
 		Akcesoria: (ex.accessories || []).join(', '),
 		Status: ex.status === 'done' ? 'Zakończono' : 'Planowana',
 	}))
+
 	const ws = XLSX.utils.json_to_sheet(data)
 	const wb = XLSX.utils.book_new()
 	XLSX.utils.book_append_sheet(wb, ws, 'Wymiany')
@@ -390,7 +523,9 @@ function exportExcel() {
 function importExcel(event) {
 	const file = event.target.files[0]
 	if (!file) return
+
 	const reader = new FileReader()
+
 	reader.onload = function (e) {
 		try {
 			const data = new Uint8Array(e.target.result)
@@ -417,15 +552,20 @@ function importExcel(event) {
 		} catch (err) {
 			alert('Błąd importu pliku Excel.')
 		}
+
 		event.target.value = ''
 	}
+
 	reader.readAsArrayBuffer(file)
 }
 
-// Globalizacja
+/* ======= GLOBALIZACJA ======= */
+
+window.openMonthPicker = openMonthPicker
 window.changeMonth = changeMonth
 window.editExchange = editExchange
 window.cancelEdit = cancelEdit
 window.completeExchange = completeExchange
 window.removeItem = removeItem
 window.exportExcel = exportExcel
+window.importExcel = importExcel

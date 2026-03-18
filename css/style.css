@@ -31,6 +31,104 @@
   text-align: center;
 }
 
+.month-picker-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+.month-picker-container h2 {
+  margin: 0;
+}
+.month-picker-container:focus {
+  outline: none;
+}
+.month-picker-container:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 6px;
+  border-radius: 8px;
+}
+
+.hidden-month-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  -moz-appearance: none;
+       appearance: none;
+  -webkit-appearance: none;
+}
+
+.month-fallback-popover {
+  position: absolute;
+  z-index: 2000;
+  width: 280px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+  padding: 14px;
+}
+.month-fallback-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 12px;
+}
+.month-fallback-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.month-fallback-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.month-fallback-field span {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.month-fallback-field select {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #0f172a;
+}
+.month-fallback-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.month-fallback-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.month-fallback-btn.is-primary {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
 .td-info-center {
   display: flex;
   justify-content: flex-start;
@@ -718,6 +816,35 @@ table th:nth-child(6) {
   position: relative;
   min-height: 60px;
 }
+.table-header .month-picker-container {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 25px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  min-width: 220px;
+  overflow: hidden;
+}
+.table-header .month-picker-container h2 {
+  margin: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.table-header .month-picker-container .hidden-month-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
 .table-header .month-nav-btn {
   position: absolute;
   top: 50%;
@@ -734,7 +861,7 @@ table th:nth-child(6) {
   justify-content: center;
   color: #6366f1;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  z-index: 5;
+  z-index: 15;
 }
 .table-header .month-nav-btn:hover {
   background: #6366f1;

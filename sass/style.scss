@@ -449,6 +449,7 @@ table {
 }
 
 /* ======= AKCESORIA I KALENDARZ ======= */
+
 .accessory-picker {
 	display: flex;
 	gap: 10px;
@@ -489,6 +490,38 @@ table {
 	position: relative;
 	min-height: 60px;
 
+	.month-picker-container {
+		position: relative;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 10px 25px;
+		background: #f1f5f9;
+		border-radius: 12px;
+		min-width: 220px;
+		overflow: hidden; // Ważne!
+
+		h2 {
+			margin: 0;
+			pointer-events: none; // Napis nie blokuje kliknięcia
+			z-index: 1;
+		}
+
+		.hidden-month-input {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 1px;
+			height: 1px;
+			opacity: 0;
+			pointer-events: none;
+			border: 0;
+			padding: 0;
+			margin: 0;
+		}
+	}
+
 	.month-nav-btn {
 		position: absolute;
 		top: 50%;
@@ -505,7 +538,8 @@ table {
 		justify-content: center;
 		color: $primary;
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-		z-index: 5;
+		z-index: 15; // Zwiększone: żeby strzałki były nad inputem kalendarza
+
 		&:hover {
 			background: $primary;
 			color: white;

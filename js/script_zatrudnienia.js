@@ -2,6 +2,134 @@ let hires = []
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.HIRES
 
 let currentViewDate = new Date()
+let isAnimating = false
+let monthPopover = null
+let monthPopoverCleanup = null
+
+function supportsMonthInput() {
+	const input = document.createElement('input')
+	input.setAttribute('type', 'month')
+	return input.type === 'month'
+}
+
+function parseYearMonth(value) {
+	if (!value) return null
+
+	const match = value.match(/^(\d{4})-(\d{1,2})/)
+	if (!match) return null
+
+	const year = Number(match[1])
+	const month = Number(match[2])
+	if (!year || month < 1 || month > 12) return null
+
+	return { year, month }
+}
+
+function closeMonthPopover() {
+	if (monthPopoverCleanup) {
+		monthPopoverCleanup()
+		monthPopoverCleanup = null
+	}
+
+	if (monthPopover) {
+		monthPopover.remove()
+		monthPopover = null
+	}
+}
+
+function openFallbackMonthPopover() {
+	closeMonthPopover()
+
+	const trigger = document.getElementById('month-trigger')
+	if (!trigger) return
+
+	const monthNames = AppUtils.config.MONTH_NAMES
+	const selectedYear = currentViewDate.getFullYear()
+	const selectedMonth = currentViewDate.getMonth()
+
+	const popover = document.createElement('div')
+	popover.className = 'month-fallback-popover'
+	popover.setAttribute('role', 'dialog')
+	popover.setAttribute('aria-label', 'Wybór miesiąca')
+
+	const monthOptions = monthNames
+		.map((name, idx) => `<option value="${idx}" ${idx === selectedMonth ? 'selected' : ''}>${name}</option>`)
+		.join('')
+
+	let yearOptions = ''
+	for (let year = selectedYear - 5; year <= selectedYear + 5; year += 1) {
+		yearOptions += `<option value="${year}" ${year === selectedYear ? 'selected' : ''}>${year}</option>`
+	}
+
+	popover.innerHTML = `
+		<div class="month-fallback-title">Wybierz miesiąc</div>
+		<div class="month-fallback-grid">
+			<label class="month-fallback-field">
+				<span>Miesiąc</span>
+				<select id="fallback-month-select">${monthOptions}</select>
+			</label>
+			<label class="month-fallback-field">
+				<span>Rok</span>
+				<select id="fallback-year-select">${yearOptions}</select>
+			</label>
+		</div>
+		<div class="month-fallback-actions">
+			<button type="button" class="month-fallback-btn" id="fallback-month-cancel">Anuluj</button>
+			<button type="button" class="month-fallback-btn is-primary" id="fallback-month-apply">Zastosuj</button>
+		</div>
+	`
+
+	document.body.appendChild(popover)
+	monthPopover = popover
+
+	const triggerRect = trigger.getBoundingClientRect()
+	const popoverRect = popover.getBoundingClientRect()
+	const top = triggerRect.bottom + window.scrollY + 8
+	const left = Math.max(12, Math.min(triggerRect.left + window.scrollX, window.scrollX + window.innerWidth - popoverRect.width - 12))
+	popover.style.top = `${top}px`
+	popover.style.left = `${left}px`
+
+	const monthSelect = popover.querySelector('#fallback-month-select')
+	const yearSelect = popover.querySelector('#fallback-year-select')
+	const applyBtn = popover.querySelector('#fallback-month-apply')
+	const cancelBtn = popover.querySelector('#fallback-month-cancel')
+
+	const apply = () => {
+		const year = Number(yearSelect.value)
+		const month = Number(monthSelect.value)
+		if (!year || month < 0 || month > 11) return
+
+		currentViewDate = new Date(year, month, 1)
+		renderTable()
+		closeMonthPopover()
+	}
+
+	applyBtn.addEventListener('click', apply)
+	cancelBtn.addEventListener('click', closeMonthPopover)
+
+	const onKeyDown = e => {
+		if (e.key === 'Escape') {
+			e.preventDefault()
+			closeMonthPopover()
+		}
+	}
+
+	const onDocClick = e => {
+		if (!popover.contains(e.target) && !trigger.contains(e.target)) {
+			closeMonthPopover()
+		}
+	}
+
+	window.addEventListener('keydown', onKeyDown)
+	setTimeout(() => {
+		document.addEventListener('click', onDocClick)
+	}, 0)
+
+	monthPopoverCleanup = () => {
+		window.removeEventListener('keydown', onKeyDown)
+		document.removeEventListener('click', onDocClick)
+	}
+}
 
 /* ======= DANE (LocalStorage) ======= */
 
@@ -20,32 +148,81 @@ function saveData() {
 
 function updateMonthDisplay() {
 	const display = document.getElementById('current-month-display')
-	if (display) {
-		const monthName = AppUtils.config.MONTH_NAMES[currentViewDate.getMonth()].toUpperCase()
-		display.innerText = `${monthName} ${currentViewDate.getFullYear()}`
+	if (!display) return
+
+	const monthName = AppUtils.config.MONTH_NAMES[currentViewDate.getMonth()].toUpperCase()
+	display.innerText = `${monthName} ${currentViewDate.getFullYear()}`
+}
+
+function syncMonthInputWithView() {
+	const input = document.getElementById('hidden-month-input')
+	if (!input) return
+
+	const year = currentViewDate.getFullYear()
+	const month = String(currentViewDate.getMonth() + 1).padStart(2, '0')
+	input.value = `${year}-${month}`
+}
+
+function setViewDateFromInputValue(value) {
+	const parsed = parseYearMonth(value)
+	if (!parsed) return
+
+	currentViewDate = new Date(parsed.year, parsed.month - 1, 1)
+	renderTable()
+}
+
+function openMonthPicker() {
+	const input = document.getElementById('hidden-month-input')
+	if (!input) return
+
+	syncMonthInputWithView()
+
+	if (input.type !== 'month') {
+		openFallbackMonthPopover()
+		return
 	}
+
+	try {
+		if (typeof input.showPicker === 'function') {
+			input.showPicker()
+			return
+		}
+	} catch (err) {
+		// fallback poniżej
+	}
+
+	input.focus()
+	input.click()
 }
 
 function changeMonth(delta) {
-    const tbody = document.getElementById('table-body');
-    if (!tbody) return;
+	if (isAnimating) return
 
-    tbody.classList.remove('slide-in');
-    tbody.classList.add('slide-out');
+	const tbody = document.getElementById('table-body')
+	if (!tbody) return
 
-    setTimeout(() => {
-        currentViewDate.setMonth(currentViewDate.getMonth() + delta);
-        renderTable();
+	isAnimating = true
 
-        tbody.style.visibility = 'hidden';
-        tbody.classList.remove('slide-out');
+	tbody.classList.remove('slide-in')
+	tbody.classList.add('slide-out')
 
-        requestAnimationFrame(() => {
-            tbody.style.visibility = 'visible';
-            tbody.classList.add('slide-in');
-        });
+	setTimeout(() => {
+		currentViewDate.setMonth(currentViewDate.getMonth() + delta)
+		syncMonthInputWithView()
+		renderTable()
 
-    }, 250);
+		tbody.style.visibility = 'hidden'
+		tbody.classList.remove('slide-out')
+
+		requestAnimationFrame(() => {
+			tbody.style.visibility = 'visible'
+			tbody.classList.add('slide-in')
+
+			setTimeout(() => {
+				isAnimating = false
+			}, 500)
+		})
+	}, 250)
 }
 
 /* ======= LOGIKA AKCESORIÓW ======= */
@@ -65,6 +242,7 @@ function renderTable() {
 	tbody.innerHTML = ''
 
 	updateMonthDisplay()
+	syncMonthInputWithView()
 
 	const today = new Date()
 	today.setHours(0, 0, 0, 0)
@@ -192,12 +370,45 @@ function importExcel(event) {
 	reader.readAsArrayBuffer(file)
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+	const mInput = document.getElementById('hidden-month-input')
+	if (mInput) {
+		if (!supportsMonthInput()) {
+			// Safari fallback: trzymamy tylko wybór miesiąca (bez dni).
+			mInput.type = 'text'
+			mInput.readOnly = true
+			mInput.inputMode = 'none'
+		}
+
+		syncMonthInputWithView()
+
+		if (mInput.type === 'month') {
+			const handleDatePick = e => {
+				setViewDateFromInputValue(e.target.value)
+			}
+
+			mInput.addEventListener('change', handleDatePick)
+			mInput.addEventListener('input', handleDatePick)
+		}
+	}
+
+	const monthTrigger = document.getElementById('month-trigger')
+	if (monthTrigger) {
+		monthTrigger.addEventListener('keydown', e => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault()
+				openMonthPicker()
+			}
+		})
+	}
+
+	loadData()
+})
+
 /* ======= START I GLOBALIZACJA ======= */
 
+window.openMonthPicker = openMonthPicker
 window.changeMonth = changeMonth
 window.removeItem = removeItem
 window.exportExcel = exportExcel
 window.importExcel = importExcel
-
-loadData()
-
