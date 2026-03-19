@@ -41,21 +41,500 @@ document.addEventListener('DOMContentLoaded', () => {
 	const clockSecond = document.getElementById('clock-second')
 	const clockDigital = document.getElementById('clock-digital')
 	const clockDate = document.getElementById('clock-date')
+	const clockWidgetTrigger = document.getElementById('clock-widget-trigger')
+	const taskPreviewList = document.getElementById('task-preview-list')
 	const weatherSearchForm = document.getElementById('weather-search-form')
 	const weatherLocationInput = document.getElementById('weather-location-input')
-	const bookmarkDrawer = document.getElementById('bookmark-drawer')
-	const bookmarkDrawerToggle = document.getElementById('bookmark-drawer-toggle')
-	const bookmarkSettingsToggle = document.getElementById('bookmark-settings-toggle')
-	const bookmarkList = document.getElementById('bookmark-list')
-	const bookmarkForm = document.getElementById('bookmark-form')
-	const bookmarkIdInput = document.getElementById('bookmark-id')
-	const bookmarkTitleInput = document.getElementById('bookmark-title')
-	const bookmarkUrlInput = document.getElementById('bookmark-url')
-	const bookmarkAddButton = document.getElementById('bookmark-add-btn')
-	const bookmarkCancelButton = document.getElementById('bookmark-cancel-btn')
+	const weatherWidget = document.querySelector('.weather-widget')
+	const taskModal = document.getElementById('task-modal')
+	const taskForm = document.getElementById('task-form')
+	const taskTitleInput = document.getElementById('task-title')
+	const taskDateInput = document.getElementById('task-date')
+	const taskTimeInput = document.getElementById('task-time')
+	const taskHourInput = document.getElementById('task-hour')
+	const taskMinuteInput = document.getElementById('task-minute')
+	const taskPriorityInput = document.getElementById('task-priority')
+	const taskDescriptionInput = document.getElementById('task-description')
+	const taskCalendarMonth = document.getElementById('task-calendar-month')
+	const taskCalendarGrid = document.getElementById('task-calendar-grid')
+	const taskCalendarWeekdays = document.getElementById('task-calendar-weekdays')
+	const taskAgendaTitle = document.getElementById('task-agenda-title')
+	const taskAgendaCount = document.getElementById('task-agenda-count')
+	const taskAgendaList = document.getElementById('task-agenda-list')
+	const taskCalendarPrev = document.getElementById('task-calendar-prev')
+	const taskCalendarNext = document.getElementById('task-calendar-next')
+	const taskToastStack = document.getElementById('task-toast-stack')
+	const taskAutoclearToggle = document.getElementById('task-autoclear-toggle')
 
-	const bookmarkConfig = {
-		storageKey: 'dashboard-bookmarks',
+	const taskConfig = {
+		storageKey: 'dashboard-tasks',
+		reminderKey: 'dashboard-task-reminders',
+		autoclearKey: 'dashboard-task-autoclear',
+	}
+
+	const priorityMap = {
+		high: { label: 'Wysoki', className: 'is-high' },
+		medium: { label: 'Sredni', className: 'is-medium' },
+		low: { label: 'Niski', className: 'is-low' },
+	}
+
+	const weekdayLabels = ['Pn', 'Wt', 'Sr', 'Cz', 'Pt', 'Sb', 'Nd']
+
+	const padNumber = value => String(value).padStart(2, '0')
+
+	const formatTaskDateKey = date =>
+		`${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())}`
+
+	const getTaskDateTime = task => new Date(`${task.date}T${task.time || '00:00'}`)
+
+	const compareTasks = (left, right) => getTaskDateTime(left) - getTaskDateTime(right)
+
+	const loadTasks = () => {
+		try {
+			const storedTasks = JSON.parse(localStorage.getItem(taskConfig.storageKey) || '[]')
+			return Array.isArray(storedTasks) ? storedTasks.sort(compareTasks) : []
+		} catch (error) {
+			return []
+		}
+	}
+
+	let tasks = loadTasks()
+	let selectedTaskDate = formatTaskDateKey(new Date())
+	let calendarCursor = new Date()
+	let reminderTimerId = null
+	let autoClearEnabled = localStorage.getItem(taskConfig.autoclearKey) === 'true'
+
+	const loadRemindedTasks = () => {
+		try {
+			const storedReminders = JSON.parse(localStorage.getItem(taskConfig.reminderKey) || '[]')
+			return new Set(Array.isArray(storedReminders) ? storedReminders : [])
+		} catch (error) {
+			return new Set()
+		}
+	}
+
+	let remindedTaskIds = loadRemindedTasks()
+
+	const saveTasks = () => {
+		localStorage.setItem(taskConfig.storageKey, JSON.stringify(tasks))
+	}
+
+	const saveRemindedTasks = () => {
+		localStorage.setItem(taskConfig.reminderKey, JSON.stringify([...remindedTaskIds]))
+	}
+
+	const saveAutoclearPreference = () => {
+		localStorage.setItem(taskConfig.autoclearKey, String(autoClearEnabled))
+	}
+
+	const createTaskId = () => `task-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
+
+	const createReminderId = task => `${task.id}-${task.date}-${task.time}`
+
+	const getTasksForDate = dateKey => tasks.filter(task => task.date === dateKey).sort(compareTasks)
+
+	const getUpcomingTasks = () => {
+		const now = new Date()
+		return tasks.filter(task => getTaskDateTime(task) >= now).sort(compareTasks)
+	}
+
+	const setDefaultTaskDate = dateKey => {
+		if (taskDateInput) {
+			taskDateInput.value = dateKey
+		}
+	}
+
+	const syncTaskTimeValue = () => {
+		if (!taskTimeInput || !taskHourInput || !taskMinuteInput) return
+
+		const hour = taskHourInput.value
+		const minute = taskMinuteInput.value
+		taskTimeInput.value = hour && minute ? `${hour}:${minute}` : ''
+	}
+
+	const populateTimeSelects = () => {
+		if (!taskHourInput || !taskMinuteInput) return
+
+		const hourOptions = Array.from({ length: 24 }, (_, hour) => {
+			const value = padNumber(hour)
+			return `<option value="${value}">${value}</option>`
+		}).join('')
+
+		const minuteOptions = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55']
+			.map(value => `<option value="${value}">${value}</option>`)
+			.join('')
+
+		taskHourInput.innerHTML = `<option value="">Godz.</option>${hourOptions}`
+		taskMinuteInput.innerHTML = `<option value="">Min.</option>${minuteOptions}`
+	}
+
+	const resetTaskTimePicker = () => {
+		if (taskHourInput) taskHourInput.value = ''
+		if (taskMinuteInput) taskMinuteInput.value = ''
+		if (taskTimeInput) taskTimeInput.value = ''
+	}
+
+	const renderTaskPreview = () => {
+		if (!taskPreviewList) return
+
+		const todayKey = formatTaskDateKey(new Date())
+		const todayTasks = getTasksForDate(todayKey).slice(0, 3)
+		taskPreviewList.innerHTML = ''
+
+		if (todayTasks.length === 0) {
+			const emptyState = document.createElement('div')
+			emptyState.className = 'task-preview-empty'
+			emptyState.textContent = 'Brak zadan na dzisiaj'
+			taskPreviewList.appendChild(emptyState)
+			return
+		}
+
+		todayTasks.forEach(task => {
+			const priority = priorityMap[task.priority] || priorityMap.medium
+			const item = document.createElement('div')
+			item.className = 'task-preview-item'
+			item.innerHTML = `
+				<span class="task-preview-dot ${priority.className}"></span>
+				<span class="task-preview-copy">${task.time} • ${task.title}</span>
+			`
+			taskPreviewList.appendChild(item)
+		})
+	}
+
+	const renderTaskAgenda = () => {
+		if (!taskAgendaList || !taskAgendaTitle || !taskAgendaCount) return
+
+		const selectedDate = new Date(`${selectedTaskDate}T00:00`)
+		const selectedTasks = getTasksForDate(selectedTaskDate)
+
+		taskAgendaTitle.textContent = selectedDate.toLocaleDateString('pl-PL', {
+			weekday: 'long',
+			day: '2-digit',
+			month: 'long',
+		})
+		taskAgendaCount.textContent = String(selectedTasks.length)
+		taskAgendaList.innerHTML = ''
+
+		if (selectedTasks.length === 0) {
+			const emptyState = document.createElement('div')
+			emptyState.className = 'task-agenda-empty'
+			emptyState.textContent = 'Brak zadan na wybrany dzien.'
+			taskAgendaList.appendChild(emptyState)
+			return
+		}
+
+		selectedTasks.forEach(task => {
+			const priority = priorityMap[task.priority] || priorityMap.medium
+			const item = document.createElement('article')
+			item.className = `task-agenda-item ${priority.className}`
+			item.innerHTML = `
+				<div class="task-agenda-main">
+					<div class="task-agenda-topline">
+						<span class="task-priority-pill ${priority.className}">${priority.label}</span>
+						<span class="task-agenda-time">${task.time}</span>
+					</div>
+					<h4>${task.title}</h4>
+					<p>${task.description?.trim() || 'Bez dodatkowego opisu.'}</p>
+				</div>
+				<button type="button" class="task-delete-btn" data-task-delete="${task.id}" aria-label="Usun zadanie">
+					<i class="fa-solid fa-trash"></i>
+				</button>
+			`
+			taskAgendaList.appendChild(item)
+		})
+	}
+
+	const renderTaskCalendar = () => {
+		if (!taskCalendarGrid || !taskCalendarMonth || !taskCalendarWeekdays) return
+
+		taskCalendarMonth.textContent = calendarCursor.toLocaleDateString('pl-PL', {
+			month: 'long',
+			year: 'numeric',
+		})
+
+		taskCalendarWeekdays.innerHTML = weekdayLabels.map(day => `<span>${day}</span>`).join('')
+		taskCalendarGrid.innerHTML = ''
+
+		const year = calendarCursor.getFullYear()
+		const month = calendarCursor.getMonth()
+		const firstDay = new Date(year, month, 1)
+		const daysInMonth = new Date(year, month + 1, 0).getDate()
+		const startOffset = (firstDay.getDay() + 6) % 7
+		const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7
+		const todayKey = formatTaskDateKey(new Date())
+
+		for (let index = 0; index < totalCells; index += 1) {
+			const dayNumber = index - startOffset + 1
+			const cellDate = new Date(year, month, dayNumber)
+			const cellKey = formatTaskDateKey(cellDate)
+			const isCurrentMonth = cellDate.getMonth() === month
+			const tasksForDay = getTasksForDate(cellKey)
+
+			const button = document.createElement('button')
+			button.type = 'button'
+			button.className = 'task-calendar-day'
+			button.dataset.date = cellKey
+			button.disabled = !isCurrentMonth
+			if (isCurrentMonth) {
+				button.classList.add('is-current-month')
+			}
+			if (cellKey === selectedTaskDate) {
+				button.classList.add('is-selected')
+			}
+			if (cellKey === todayKey) {
+				button.classList.add('is-today')
+			}
+
+			const dotsMarkup = tasksForDay
+				.slice(0, 3)
+				.map(task => {
+					const priority = priorityMap[task.priority] || priorityMap.medium
+					return `<span class="task-calendar-dot ${priority.className}"></span>`
+				})
+				.join('')
+
+			button.innerHTML = `
+				<span class="task-calendar-day-number">${cellDate.getDate()}</span>
+				<span class="task-calendar-dots">${dotsMarkup}</span>
+			`
+
+			taskCalendarGrid.appendChild(button)
+		}
+	}
+
+	const syncTaskUi = () => {
+		renderTaskCalendar()
+		renderTaskAgenda()
+		renderTaskPreview()
+	}
+
+	const showTaskToast = task => {
+		if (!taskToastStack) return
+
+		const priority = priorityMap[task.priority] || priorityMap.medium
+		const toast = document.createElement('article')
+		toast.className = `task-toast ${priority.className}`
+		toast.innerHTML = `
+			<div class="task-toast-dot ${priority.className}"></div>
+			<div class="task-toast-copy">
+				<strong>Za 5 minut: ${task.title}</strong>
+				<span>${task.time} • ${task.description?.trim() || 'Zaplanowane zadanie'}</span>
+			</div>
+			<button type="button" class="task-toast-close" aria-label="Zamknij przypomnienie">
+				<i class="fa-solid fa-xmark"></i>
+			</button>
+		`
+
+		taskToastStack.appendChild(toast)
+
+		const removeToast = () => {
+			toast.classList.add('is-leaving')
+			window.setTimeout(() => toast.remove(), 220)
+		}
+
+		toast.querySelector('.task-toast-close')?.addEventListener('click', removeToast)
+		window.setTimeout(removeToast, 9000)
+	}
+
+	const cleanupReminderCache = () => {
+		const activeReminderIds = new Set(tasks.map(createReminderId))
+		remindedTaskIds.forEach(reminderId => {
+			if (!activeReminderIds.has(reminderId)) {
+				remindedTaskIds.delete(reminderId)
+			}
+		})
+		saveRemindedTasks()
+	}
+
+	const removeExpiredTasks = () => {
+		if (!autoClearEnabled) return
+
+		const now = new Date()
+		const initialTaskCount = tasks.length
+		tasks = tasks.filter(task => getTaskDateTime(task) >= now)
+		if (tasks.length === initialTaskCount) return
+
+		saveTasks()
+		cleanupReminderCache()
+
+		const selectedTasks = getTasksForDate(selectedTaskDate)
+		if (selectedTasks.length === 0) {
+			selectedTaskDate = formatTaskDateKey(now)
+			setDefaultTaskDate(selectedTaskDate)
+		}
+
+		syncTaskUi()
+	}
+
+	const checkTaskReminders = () => {
+		removeExpiredTasks()
+
+		const now = new Date()
+
+		tasks.forEach(task => {
+			const reminderId = createReminderId(task)
+			if (remindedTaskIds.has(reminderId)) return
+
+			const minutesUntilTask = (getTaskDateTime(task) - now) / 60000
+			if (minutesUntilTask > 5 || minutesUntilTask < 0) return
+
+			remindedTaskIds.add(reminderId)
+			saveRemindedTasks()
+			showTaskToast(task)
+		})
+	}
+
+	const initTaskReminders = () => {
+		if (!taskToastStack) return
+
+		cleanupReminderCache()
+		checkTaskReminders()
+
+		if (reminderTimerId) {
+			window.clearInterval(reminderTimerId)
+		}
+
+		reminderTimerId = window.setInterval(checkTaskReminders, 30000)
+	}
+
+	const openTaskModal = () => {
+		if (!taskModal) return
+		taskModal.hidden = false
+		taskModal.setAttribute('aria-hidden', 'false')
+		document.body.classList.add('task-modal-open')
+		setDefaultTaskDate(selectedTaskDate)
+		syncTaskUi()
+		taskTitleInput?.focus()
+	}
+
+	const closeTaskModal = () => {
+		if (!taskModal) return
+		taskModal.hidden = true
+		taskModal.setAttribute('aria-hidden', 'true')
+		document.body.classList.remove('task-modal-open')
+	}
+
+	const initTasks = () => {
+		if (!clockWidgetTrigger || !taskModal || !taskForm) return
+
+		populateTimeSelects()
+		setDefaultTaskDate(selectedTaskDate)
+		syncTaskUi()
+		if (taskAutoclearToggle) {
+			taskAutoclearToggle.checked = autoClearEnabled
+		}
+
+		clockWidgetTrigger.addEventListener('click', openTaskModal)
+		clockWidgetTrigger.addEventListener('keydown', event => {
+			if (event.key !== 'Enter' && event.key !== ' ') return
+			event.preventDefault()
+			openTaskModal()
+		})
+
+		taskModal.addEventListener('click', event => {
+			if (event.target.closest('[data-task-close]')) {
+				closeTaskModal()
+			}
+		})
+
+		document.addEventListener('keydown', event => {
+			if (event.key === 'Escape' && !taskModal.hidden) {
+				closeTaskModal()
+			}
+		})
+
+		taskCalendarPrev?.addEventListener('click', () => {
+			calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1)
+			renderTaskCalendar()
+		})
+
+		taskCalendarNext?.addEventListener('click', () => {
+			calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1)
+			renderTaskCalendar()
+		})
+
+		taskCalendarGrid?.addEventListener('click', event => {
+			const dayButton = event.target.closest('.task-calendar-day.is-current-month')
+			if (!dayButton?.dataset.date) return
+
+			selectedTaskDate = dayButton.dataset.date
+			setDefaultTaskDate(selectedTaskDate)
+			renderTaskCalendar()
+			renderTaskAgenda()
+		})
+
+		taskDateInput?.addEventListener('change', () => {
+			if (!taskDateInput.value) return
+			selectedTaskDate = taskDateInput.value
+			const [year, month] = selectedTaskDate.split('-').map(Number)
+			calendarCursor = new Date(year, month - 1, 1)
+			renderTaskCalendar()
+			renderTaskAgenda()
+		})
+
+		taskHourInput?.addEventListener('change', () => {
+			syncTaskTimeValue()
+			taskMinuteInput?.focus()
+		})
+
+		taskMinuteInput?.addEventListener('change', () => {
+			syncTaskTimeValue()
+			taskMinuteInput.blur()
+		})
+
+		taskAutoclearToggle?.addEventListener('change', () => {
+			autoClearEnabled = Boolean(taskAutoclearToggle.checked)
+			saveAutoclearPreference()
+			removeExpiredTasks()
+		})
+
+		taskForm.addEventListener('submit', event => {
+			event.preventDefault()
+
+			if (!taskTitleInput || !taskDateInput || !taskTimeInput || !taskPriorityInput) return
+
+			const title = taskTitleInput.value.trim()
+			const date = taskDateInput.value
+			const time = taskTimeInput.value
+			const priority = taskPriorityInput.value
+			const description = taskDescriptionInput?.value.trim() || ''
+
+			if (!title || !date || !time || !priority) return
+
+			tasks.push({
+				id: createTaskId(),
+				title,
+				date,
+				time,
+				priority,
+				description,
+			})
+			tasks.sort(compareTasks)
+			saveTasks()
+
+			selectedTaskDate = date
+			const [year, month] = date.split('-').map(Number)
+			calendarCursor = new Date(year, month - 1, 1)
+
+			taskForm.reset()
+			taskPriorityInput.value = 'high'
+			resetTaskTimePicker()
+			setDefaultTaskDate(selectedTaskDate)
+			syncTaskUi()
+			cleanupReminderCache()
+			checkTaskReminders()
+		})
+
+		taskAgendaList?.addEventListener('click', event => {
+			const deleteButton = event.target.closest('[data-task-delete]')
+			const taskId = deleteButton?.getAttribute('data-task-delete')
+			if (!taskId) return
+
+			tasks = tasks.filter(task => task.id !== taskId)
+			saveTasks()
+			syncTaskUi()
+			cleanupReminderCache()
+		})
 	}
 
 	const updateClock = () => {
@@ -83,6 +562,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			day: '2-digit',
 			month: 'long',
 		})
+
+		renderTaskPreview()
 	}
 
 	const setWeatherState = ({ temperature, location, description, wind, icon }) => {
@@ -93,7 +574,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		const weatherIcon = document.getElementById('weather-icon')
 
 		if (weatherTemp) weatherTemp.textContent = temperature
-		if (weatherLocation) weatherLocation.textContent = location
+		if (weatherLocation) {
+			const compactLocation = window.innerWidth <= 640 ? location.split(',')[0].trim() : location
+			weatherLocation.textContent = compactLocation
+		}
 		if (weatherDescription) weatherDescription.textContent = description
 		if (weatherWind) weatherWind.textContent = wind
 		if (weatherIcon) {
@@ -191,190 +675,43 @@ document.addEventListener('DOMContentLoaded', () => {
 			weatherSearchForm.addEventListener('submit', event => {
 				event.preventDefault()
 				fetchWeatherForLocation(weatherLocationInput.value)
+				document.body.classList.remove('mobile-weather-editing')
 			})
 		}
-	}
 
-	const normalizeUrl = value => {
-		const trimmedValue = value.trim()
-		if (!trimmedValue) return ''
-		if (/^https?:\/\//i.test(trimmedValue)) return trimmedValue
-		return `https://${trimmedValue}`
-	}
+		if (weatherWidget && weatherLocationInput) {
+			weatherWidget.addEventListener('click', event => {
+				if (window.innerWidth > 640) return
+				if (event.target.closest('button')) return
 
-	const createBookmarkId = () => `bookmark-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
-
-	const getBookmarkHostname = url => {
-		try {
-			return new URL(url).hostname
-		} catch (error) {
-			return ''
-		}
-	}
-
-	const getBookmarkInitials = title =>
-		title
-			.trim()
-			.split(/\s+/)
-			.slice(0, 2)
-			.map(part => part[0]?.toUpperCase() ?? '')
-			.join('') || 'WW'
-
-	const loadBookmarks = () => {
-		try {
-			const storedBookmarks = JSON.parse(localStorage.getItem(bookmarkConfig.storageKey) || '[]')
-			return Array.isArray(storedBookmarks) ? storedBookmarks : []
-		} catch (error) {
-			return []
-		}
-	}
-
-	let bookmarks = loadBookmarks()
-
-	const saveBookmarks = () => {
-		localStorage.setItem(bookmarkConfig.storageKey, JSON.stringify(bookmarks))
-	}
-
-	const closeBookmarkForm = () => {
-		if (!bookmarkForm) return
-		bookmarkForm.hidden = true
-		bookmarkForm.reset()
-		if (bookmarkIdInput) {
-			bookmarkIdInput.value = ''
-		}
-	}
-
-	const openBookmarkForm = bookmark => {
-		if (!bookmarkForm || !bookmarkTitleInput || !bookmarkUrlInput || !bookmarkIdInput) return
-
-		bookmarkForm.hidden = false
-		bookmarkIdInput.value = bookmark?.id || ''
-		bookmarkTitleInput.value = bookmark?.title || ''
-		bookmarkUrlInput.value = bookmark?.url || ''
-		bookmarkTitleInput.focus()
-		if (bookmarkDrawer && !bookmarkDrawer.classList.contains('is-open')) {
-			bookmarkDrawer.classList.add('is-open')
-		}
-	}
-
-	const renderBookmarks = () => {
-		if (!bookmarkList) return
-
-		bookmarkList.innerHTML = ''
-
-		bookmarks.forEach(bookmark => {
-			const hostname = getBookmarkHostname(bookmark.url)
-			const item = document.createElement('li')
-			item.className = 'bookmark-item'
-			item.dataset.id = bookmark.id
-			item.dataset.url = bookmark.url
-			item.innerHTML = `
-				<div class="bookmark-item-badge">
-					<img class="bookmark-item-favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(bookmark.url)}&sz=64" alt="" loading="lazy">
-				</div>
-				<div class="bookmark-item-main">
-					<div class="bookmark-item-link">${bookmark.title}</div>
-					<div class="bookmark-item-url">${hostname || bookmark.url}</div>
-				</div>
-				<div class="bookmark-item-actions">
-					<button type="button" class="bookmark-item-action" data-action="edit" aria-label="Edytuj zakładkę">
-						<i class="fa-solid fa-pen"></i>
-					</button>
-					<button type="button" class="bookmark-item-action" data-action="delete" aria-label="Usuń zakładkę">
-						<i class="fa-solid fa-trash"></i>
-					</button>
-				</div>
-			`
-			bookmarkList.appendChild(item)
-		})
-	}
-
-	const initBookmarks = () => {
-		if (!bookmarkDrawer || !bookmarkDrawerToggle || !bookmarkList) return
-
-		renderBookmarks()
-
-		bookmarkDrawerToggle.addEventListener('click', () => {
-			const isOpen = bookmarkDrawer.classList.toggle('is-open')
-			bookmarkDrawerToggle.setAttribute('aria-expanded', String(isOpen))
-		})
-
-		bookmarkSettingsToggle?.addEventListener('click', () => {
-			const isManaging = bookmarkDrawer.classList.toggle('is-managing')
-			bookmarkSettingsToggle.setAttribute('aria-pressed', String(isManaging))
-		})
-
-		bookmarkAddButton?.addEventListener('click', () => {
-			openBookmarkForm()
-		})
-
-		bookmarkCancelButton?.addEventListener('click', () => {
-			closeBookmarkForm()
-		})
-
-		bookmarkForm?.addEventListener('submit', event => {
-			event.preventDefault()
-
-			if (!bookmarkTitleInput || !bookmarkUrlInput || !bookmarkIdInput) return
-
-			const title = bookmarkTitleInput.value.trim()
-			const url = normalizeUrl(bookmarkUrlInput.value)
-			const existingId = bookmarkIdInput.value
-
-			if (!title || !url) return
-
-			if (existingId) {
-				bookmarks = bookmarks.map(bookmark =>
-					bookmark.id === existingId ? { ...bookmark, title, url } : bookmark
-				)
-			} else {
-				bookmarks.unshift({
-					id: createBookmarkId(),
-					title,
-					url,
-				})
-			}
-
-			saveBookmarks()
-			renderBookmarks()
-			closeBookmarkForm()
-		})
-
-		bookmarkList.addEventListener('click', event => {
-			const actionButton = event.target.closest('[data-action]')
-			if (!actionButton) {
-				const item = event.target.closest('.bookmark-item')
-				if (!item?.dataset.url) return
-				window.open(item.dataset.url, '_blank')
-				return
-			}
-
-			const item = actionButton.closest('.bookmark-item')
-			const bookmarkId = item?.dataset.id
-			if (!bookmarkId) return
-
-			const bookmark = bookmarks.find(entry => entry.id === bookmarkId)
-			if (!bookmark) return
-
-			if (actionButton.dataset.action === 'edit') {
-				openBookmarkForm(bookmark)
-			}
-
-			if (actionButton.dataset.action === 'delete') {
-				bookmarks = bookmarks.filter(entry => entry.id !== bookmarkId)
-				saveBookmarks()
-				renderBookmarks()
-				if (bookmarkIdInput?.value === bookmarkId) {
-					closeBookmarkForm()
+				if (!document.body.classList.contains('mobile-weather-editing')) {
+					document.body.classList.add('mobile-weather-editing')
+					window.setTimeout(() => {
+						weatherLocationInput.focus()
+						weatherLocationInput.select()
+					}, 20)
 				}
-			}
-		})
+			})
+
+			document.addEventListener('click', event => {
+				if (window.innerWidth > 640) return
+				if (!document.body.classList.contains('mobile-weather-editing')) return
+				if (weatherWidget.contains(event.target)) return
+				document.body.classList.remove('mobile-weather-editing')
+			})
+
+			weatherLocationInput.addEventListener('keydown', event => {
+				if (event.key !== 'Escape') return
+				document.body.classList.remove('mobile-weather-editing')
+			})
+		}
 	}
 
 	updateClock()
 	window.setInterval(updateClock, 1000)
 	initWeather()
-	initBookmarks()
+	initTasks()
+	initTaskReminders()
 
 	document.querySelectorAll('.menu-item[target="_blank"]').forEach(link => {
 		link.addEventListener('click', event => {

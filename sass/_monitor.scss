@@ -11,36 +11,41 @@
 .stat-card {
 	flex: 1;
 	min-width: 200px;
-	background: white;
 	padding: 20px;
-	border-radius: 15px;
+	border: 1px solid var(--border);
+	border-radius: 18px;
+	background: var(--card-bg-soft);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+	box-shadow: var(--shadow-md);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
 
 	p {
 		font-size: 1.1rem;
-		color: $text-muted;
+		color: var(--text-muted);
 		font-weight: bold;
 		margin-bottom: 5px;
 	}
 	h2 {
+		margin-bottom: 0;
 		font-size: 2.8rem;
 	}
 	i {
 		font-size: 3rem;
-		opacity: 0.2;
+		color: var(--primary);
+		opacity: 0.3;
 	}
 
 	&.active {
-		border-bottom: 4px solid $success;
+		border-bottom: 4px solid var(--success);
 	}
 	&.warning {
-		border-bottom: 4px solid $warning;
+		border-bottom: 4px solid var(--warning);
 	}
 	&.danger {
-		border-bottom: 4px solid $danger;
+		border-bottom: 4px solid var(--danger);
 	}
 }
 /* === Monitor Statistics: End === */
@@ -57,14 +62,14 @@
 		gap: 8px;
 		font-size: 1.3rem;
 		font-weight: 600;
-		color: #334155;
+		color: var(--text-main);
 		cursor: pointer;
 		padding: 6px 10px;
 		border-radius: 8px;
 		transition: background-color 0.2s ease;
 
 		&:hover {
-			background-color: #f1f5f9;
+			background-color: var(--bg-panel);
 		}
 
 		input[type='radio'] {
@@ -73,9 +78,9 @@
 			width: 18px;
 			height: 18px;
 			margin: 0;
-			border: 2px solid #94a3b8;
+			border: 2px solid var(--text-soft);
 			border-radius: 50%;
-			background: #fff;
+			background: var(--bg-surface-strong);
 			display: grid;
 			place-content: center;
 			cursor: pointer;
@@ -95,8 +100,8 @@
 			}
 
 			&:checked {
-				border-color: #6366f1;
-				background: #6366f1;
+				border-color: var(--primary);
+				background: var(--primary);
 			}
 
 			&:checked::before {

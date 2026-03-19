@@ -1,0 +1,60 @@
+@media (max-width: 900px) {
+	.main-content {
+		gap: 22px;
+
+		section,
+		aside {
+			padding: 20px;
+		}
+	}
+
+	.logo-section h1 {
+		font-size: 2rem;
+	}
+
+	table th {
+		padding: 12px 10px;
+		font-size: 1rem;
+	}
+
+	table td {
+		padding: 16px 10px;
+		font-size: 1.18rem;
+	}
+
+	.backup_section .backup-row {
+		flex-wrap: wrap;
+	}
+
+	.backup_section .backup-row .btn-backup-item {
+		min-width: 0;
+	}
+
+	.table-header .month-picker-container {
+		min-width: 220px;
+		padding: 10px 22px;
+	}
+
+	.month-fallback-popover {
+		width: min(360px, calc(100vw - 40px));
+	}
+
+	body.dashboard-page .dashboard-container {
+		padding: 20px 20px 24px;
+	}
+
+	body.dashboard-page .dashboard-header {
+		margin-bottom: 36px;
+	}
+
+	body.dashboard-page .task-modal-card {
+		width: min(100% - 24px, 960px);
+		padding: 26px 18px 18px;
+	}
+
+	body.dashboard-page .task-autoclear-toggle {
+		position: static;
+		margin: 0 44px 18px 0;
+		justify-content: space-between;
+	}
+}

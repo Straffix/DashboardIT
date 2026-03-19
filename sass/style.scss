@@ -1,4 +1,64 @@
 @use 'colors' as *;
+@use 'colors-dark' as *;
+@use 'responsive-medium';
+@use 'responsive-small';
+@use 'responsive-large';
+
+:root {
+	--bg-color: #{$bg-color};
+	--bg-surface: rgba(255, 255, 255, 0.9);
+	--bg-surface-strong: rgba(255, 255, 255, 0.96);
+	--bg-panel: rgba(255, 255, 255, 0.78);
+	--bg-panel-hover: rgba(255, 255, 255, 0.94);
+	--card-bg: #{$card-bg};
+	--card-bg-soft: rgba(255, 255, 255, 0.7);
+	--text-main: #{$text-main};
+	--text-muted: #{$text-muted};
+	--text-soft: #94a3b8;
+	--primary: #{$primary};
+	--primary-strong: #2563eb;
+	--success: #{$success};
+	--warning: #{$warning};
+	--danger: #{$danger};
+	--border: #{$border};
+	--border-strong: rgba(99, 102, 241, 0.25);
+	--shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.15);
+	--shadow-md: 0 12px 30px rgba(15, 23, 42, 0.1);
+	--shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.08);
+	--page-gradient:
+		radial-gradient(circle at 18% 16%, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0) 24%),
+		radial-gradient(circle at 84% 14%, rgba(37, 99, 235, 0.16) 0%, rgba(37, 99, 235, 0) 30%),
+		radial-gradient(circle at 50% 100%, rgba(71, 85, 105, 0.08) 0%, rgba(71, 85, 105, 0) 26%),
+		linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
+}
+
+body.theme-dark {
+	--bg-color: #{$bg-color-dark};
+	--bg-surface: #{$bg-surface-dark};
+	--bg-surface-strong: #{$bg-surface-strong-dark};
+	--bg-panel: #{$bg-panel-dark};
+	--bg-panel-hover: #{$bg-panel-hover-dark};
+	--card-bg: #{$card-bg-dark};
+	--card-bg-soft: #{$card-bg-soft-dark};
+	--text-main: #{$text-main-dark};
+	--text-muted: #{$text-muted-dark};
+	--text-soft: #{$text-soft-dark};
+	--primary: #{$primary-dark};
+	--primary-strong: #{$primary-strong-dark};
+	--success: #{$success-dark};
+	--warning: #{$warning-dark};
+	--danger: #{$danger-dark};
+	--border: #{$border-dark};
+	--border-strong: #{$border-strong-dark};
+	--shadow-lg: #{$shadow-dark};
+	--shadow-md: #{$shadow-soft-dark};
+	--shadow-sm: 0 10px 24px rgba(2, 8, 23, 0.28);
+	--page-gradient:
+		radial-gradient(circle at 18% 16%, rgba(110, 231, 255, 0.16) 0%, rgba(110, 231, 255, 0) 22%),
+		radial-gradient(circle at 82% 14%, rgba(124, 92, 255, 0.2) 0%, rgba(124, 92, 255, 0) 28%),
+		radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0) 24%),
+		linear-gradient(135deg, #060b17 0%, #0b1430 42%, #121e46 72%, #0a1228 100%);
+}
 
 /* === Base Reset: Start === */
 *::after,
@@ -17,17 +77,99 @@ body {
 	display: block;
 	min-height: 100vh;
 	font-family: 'Poppins', 'Segoe UI', sans-serif;
-	background-color: $bg-color;
-	color: $text-main;
+	background-color: var(--bg-color);
+	color: var(--text-main);
 	transition: background-color 0.3s ease;
 	overflow-x: hidden;
 	padding: 40px 0;
+}
+
+.theme-toggle-btn {
+	position: fixed;
+	top: 20px;
+	left: 20px;
+	z-index: 1001;
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 14px;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+	background: var(--bg-panel);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	box-shadow: var(--shadow-sm);
+	color: var(--text-main);
+	font-size: 1.2rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		transform 0.2s ease,
+		background-color 0.2s ease,
+		border-color 0.2s ease,
+		color 0.2s ease;
+
+	i {
+		font-size: 1.2rem;
+		color: var(--primary);
+	}
+
+	&:hover {
+		transform: translateY(-1px);
+		border-color: var(--border-strong);
+		background: var(--bg-panel-hover);
+	}
 }
 
 .wrapper {
 	width: min(1280px, 100% - 48px);
 	margin-inline: auto;
 	transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body:not(.dashboard-page) {
+	position: relative;
+	background: var(--page-gradient);
+	background-attachment: fixed;
+
+	&::before {
+		content: '';
+		position: fixed;
+		inset: 0;
+		background:
+			repeating-linear-gradient(
+				135deg,
+				rgba(255, 255, 255, 0.035) 0,
+				rgba(255, 255, 255, 0.035) 1px,
+				transparent 1px,
+				transparent 22px
+			),
+			linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 35%);
+		opacity: 0.24;
+		pointer-events: none;
+	}
+
+	.wrapper {
+		position: relative;
+		padding: 32px 28px 24px;
+		border-radius: 30px;
+		background: var(--bg-surface);
+		border: 1px solid rgba(255, 255, 255, 0.46);
+		box-shadow: var(--shadow-lg), 0 42px 96px rgba(15, 23, 42, 0.16);
+		backdrop-filter: blur(18px);
+		-webkit-backdrop-filter: blur(18px);
+		overflow: hidden;
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 14px;
+			border-radius: 24px;
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(248, 250, 255, 0.08) 100%);
+			border: 1px solid rgba(255, 255, 255, 0.24);
+			pointer-events: none;
+		}
+	}
 }
 /* === Base Reset: End === */
 
@@ -38,11 +180,11 @@ body {
 	gap: 10px;
 	padding: 10px 14px 10px 10px;
 	margin-bottom: 12px;
-	border: 1px solid rgba(148, 163, 184, 0.28);
+	border: 1px solid var(--border);
 	border-radius: 999px;
-	background: rgba(255, 255, 255, 0.78);
+	background: var(--bg-panel);
 	backdrop-filter: blur(10px);
-	box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+	box-shadow: var(--shadow-sm);
 	text-decoration: none;
 	color: inherit;
 	font-size: 1.2rem;
@@ -60,8 +202,8 @@ body {
 		width: 28px;
 		height: 28px;
 		border-radius: 50%;
-		background: #e2e8f0;
-		color: $text-main;
+		background: rgba(148, 163, 184, 0.18);
+		color: var(--text-main);
 		font-size: 1.1rem;
 		transition:
 			transform 0.2s ease,
@@ -70,13 +212,13 @@ body {
 	}
 
 	&:hover {
-		color: $primary;
-		border-color: rgba(99, 102, 241, 0.35);
+		color: var(--primary);
+		border-color: var(--border-strong);
 		box-shadow: 0 14px 28px rgba(99, 102, 241, 0.12);
 		transform: translateY(-1px);
 
 		i {
-			background: $primary;
+			background: var(--primary);
 			color: #ffffff;
 			transform: translateX(-2px);
 		}
@@ -99,22 +241,23 @@ body {
 
 	p {
 		font-size: 1.2rem;
-		color: $text-muted;
+		color: var(--text-muted);
 		margin-top: 0.3rem;
 	}
 
 	span {
-		color: $text-main;
+		color: var(--text-main);
 		font-weight: bold;
 	}
 }
 
 .icon-box {
-	background: $text-main;
+	background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
 	color: white;
 	padding: 12px;
 	border-radius: 10px;
 	font-size: 2rem;
+	box-shadow: 0 12px 24px rgba(99, 102, 241, 0.2);
 }
 /* === Shared Header: End === */
 
@@ -131,10 +274,13 @@ body {
 
 	section,
 	aside {
-		background: white;
+		background: var(--card-bg);
 		padding: 25px;
-		border-radius: 15px;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+		border-radius: 22px;
+		border: 1px solid var(--border);
+		box-shadow: var(--shadow-md);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 		transition: padding 0.35s ease;
 	}
 
@@ -147,7 +293,7 @@ body {
 h2 {
 	font-size: 1.8rem;
 	margin-bottom: 25px;
-	color: $text-main;
+	color: var(--text-main);
 	transition: font-size 0.35s ease;
 }
 
@@ -160,11 +306,11 @@ table {
 	th {
 		text-align: left;
 		padding: 15px;
-		color: #94a3b8;
+		color: var(--text-soft);
 		font-size: 1.1rem;
 		text-transform: uppercase;
 		letter-spacing: 1px;
-		border-bottom: 1px solid $border;
+		border-bottom: 1px solid var(--border);
 		transition:
 			width 0.35s ease,
 			padding 0.35s ease,
@@ -175,7 +321,7 @@ table {
 		padding: 20px 15px;
 		font-size: 1.3rem;
 		vertical-align: middle;
-		border-bottom: 1px solid #f1f5f9;
+		border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 		transition:
 			padding 0.35s ease,
 			font-size 0.35s ease;
@@ -197,7 +343,7 @@ table {
 
 .empty-state-cell {
 	padding: 40px 15px;
-	color: #94a3b8;
+	color: var(--text-soft);
 	text-align: center;
 }
 
@@ -217,21 +363,21 @@ table {
 
 /* === Shared Interactive Elements: Start === */
 .extend-btn {
-	background: #f1f5f9;
-	border: 1px solid #e2e8f0;
+	background: var(--bg-panel);
+	border: 1px solid var(--border);
 	padding: 8px 15px;
 	border-radius: 8px;
 	font-weight: 600;
-	color: $text-main;
+	color: var(--text-main);
 	cursor: pointer;
 	transition: all 0.2s;
 	&:hover {
-		background: #e2e8f0;
+		background: var(--bg-panel-hover);
 	}
 }
 
 .delete-btn {
-	color: #cbd5e1;
+	color: var(--text-soft);
 	font-size: 1.8rem;
 	cursor: pointer;
 	padding: 5px;
@@ -239,7 +385,7 @@ table {
 	border: none;
 	transition: color 0.2s;
 	&:hover {
-		color: $danger;
+		color: var(--danger);
 	}
 }
 
@@ -251,15 +397,15 @@ table {
 	font-weight: 600;
 	&.ok {
 		background: #eefdf3;
-		color: $success;
+		color: var(--success);
 	}
 	&.near {
 		background: #fff9eb;
-		color: $warning;
+		color: var(--warning);
 	}
 	&.expired {
 		background: #fef2f2;
-		color: $danger;
+		color: var(--danger);
 	}
 }
 
@@ -287,9 +433,9 @@ table {
 	width: 28px;
 	height: 28px;
 	border-radius: 999px;
-	border: 1px solid $border;
-	background: #f8fafc;
-	color: #64748b;
+	border: 1px solid var(--border);
+	background: var(--bg-panel);
+	color: var(--text-muted);
 	cursor: default;
 	transition:
 		width 0.35s ease,
@@ -322,9 +468,9 @@ table {
 	height: 28px;
 	padding: 0 8px;
 	border-radius: 999px;
-	border: 1px solid #cbd5e1;
-	background: #ffffff;
-	color: #64748b;
+	border: 1px solid var(--border);
+	background: var(--bg-surface-strong);
+	color: var(--text-muted);
 	font-size: 0.85rem;
 	font-weight: 700;
 	transition:
@@ -336,7 +482,7 @@ table {
 }
 
 .acc-empty {
-	color: #cbd5e1;
+	color: var(--text-soft);
 	font-size: 1.1rem;
 }
 
@@ -371,11 +517,12 @@ table {
 	input:not([type='radio']):not([type='checkbox']) {
 		width: 100%;
 		padding: 12px;
-		border: 1px solid $border;
-		border-radius: 8px;
-		background: #f8fafc;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		background: var(--bg-panel);
+		color: var(--text-main);
 		&:focus {
-			outline: 2px solid $primary;
+			outline: 2px solid var(--primary);
 		}
 	}
 }
@@ -383,7 +530,7 @@ table {
 .btn-submit {
 	width: 100%;
 	padding: 15px;
-	background: $danger;
+	background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
 	color: white;
 	border: none;
 	border-radius: 10px;
@@ -396,19 +543,19 @@ table {
 }
 
 .btn-submit-warning {
-	background: $warning;
+	background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
 }
 
 .btn-submit-primary {
-	background: $primary;
+	background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
 }
 
 .btn-submit-muted {
-	background: #94a3b8;
+	background: linear-gradient(135deg, #64748b 0%, #475569 100%);
 }
 
 .btn-submit-soft-danger {
-	background: rgba(241, 99, 99, 0.8);
+	background: linear-gradient(135deg, rgba(241, 99, 99, 0.8) 0%, rgba(220, 38, 38, 0.9) 100%);
 }
 
 .btn-submit-spaced {
@@ -425,15 +572,15 @@ table {
 	padding: 20px;
 	border-radius: 12px;
 	margin-top: 35px;
-	border: 1px solid $border;
+	border: 1px solid var(--border);
 	border-top: 10px solid rgba(112, 112, 112, 0.322);
 	border-bottom: 7px solid rgba(112, 112, 112, 0.233);
-	background-color: #f8fafc;
+	background-color: var(--bg-panel);
 
 	h3 {
 		font-size: 1.6rem;
 		margin-bottom: 20px;
-		color: $text-main;
+		color: var(--text-main);
 	}
 	.backup-container {
 		display: flex;
@@ -451,16 +598,16 @@ table {
 			justify-content: center;
 			gap: 8px;
 			padding: 15px;
-			background-color: #f1f5f9;
-			border: 1px solid $border;
+			background-color: var(--bg-panel);
+			border: 1px solid var(--border);
 			border-radius: 8px;
 			font-weight: 600;
-			color: $text-main;
+			color: var(--text-main);
 			font-size: 1.3rem;
 			cursor: pointer;
 			transition: all 0.2s ease-in-out;
 			&:hover {
-				background: #e2e8f0;
+				background: var(--bg-panel-hover);
 				font-size: 1.4rem;
 			}
 			i {
@@ -486,10 +633,10 @@ table {
 	gap: 10px;
 	flex-wrap: nowrap;
 	overflow-x: auto;
-	background: #f8fafc;
+	background: var(--bg-panel);
 	padding: 10px;
 	border-radius: 8px;
-	border: 1px solid $border;
+	border: 1px solid var(--border);
 	justify-content: flex-start;
 
 	.accessory-item {
@@ -500,23 +647,23 @@ table {
 		align-items: center;
 		justify-content: center;
 		font-size: 1.55rem;
-		color: #94a3b8;
+		color: var(--text-soft);
 		cursor: pointer;
 		transition: all 0.2s ease;
 		border-radius: 10px;
-		border: 1px solid #cbd5e1;
-		background: #ffffff;
+		border: 1px solid var(--border);
+		background: var(--bg-surface-strong);
 
 		&:hover {
-			background: #f1f5f9;
-			border-color: #94a3b8;
-			color: $text-main;
+			background: var(--bg-panel-hover);
+			border-color: var(--border-strong);
+			color: var(--text-main);
 			transform: translateY(-1px);
 		}
 		&.active {
-			background: $primary;
+			background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
 			color: white;
-			border-color: $primary;
+			border-color: transparent;
 			box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
 		}
 
@@ -542,7 +689,7 @@ table {
 		align-items: center;
 		justify-content: center;
 		padding: 11px 28px;
-		background: #f1f5f9;
+		background: var(--bg-panel);
 		border-radius: 12px;
 		min-width: 240px;
 		overflow: visible;
@@ -572,8 +719,8 @@ table {
 		position: absolute;
 		top: 50%;
 		transform: translateY(-50%);
-		background: white;
-		border: 1px solid $border;
+		background: var(--bg-surface-strong);
+		border: 1px solid var(--border);
 		width: 45px;
 		height: 45px;
 		border-radius: 50%;
@@ -582,12 +729,12 @@ table {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: $primary;
+		color: var(--primary);
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 		z-index: 15;
 
 		&:hover {
-			background: $primary;
+			background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
 			color: white;
 			transform: translateY(-50%) scale(1.1);
 		}
@@ -607,8 +754,8 @@ table {
 	z-index: 2000;
 	width: 375px;
 	padding: 23px;
-	background: #ffffff;
-	border: 1px solid #e2e8f0;
+	background: var(--bg-surface-strong);
+	border: 1px solid var(--border);
 	border-radius: 12px;
 	box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
 	transform: translateX(-50%);
@@ -618,7 +765,7 @@ table {
 	margin-bottom: 17px;
 	font-weight: 700;
 	font-size: 1.7rem;
-	color: #0f172a;
+	color: var(--text-main);
 	text-transform: uppercase;
 }
 
@@ -636,16 +783,16 @@ table {
 	span {
 		font-size: 1.15rem;
 		font-weight: 600;
-		color: #64748b;
+		color: var(--text-muted);
 	}
 
 	select {
-		border: 1px solid #cbd5e1;
+		border: 1px solid var(--border);
 		border-radius: 8px;
 		padding: 12px 15px;
 		font-size: 1.35rem;
-		background: #f8fafc;
-		color: #0f172a;
+		background: var(--bg-panel);
+		color: var(--text-main);
 		transition:
 			border-color 0.2s ease,
 			box-shadow 0.2s ease,
@@ -653,14 +800,14 @@ table {
 
 		&:focus {
 			outline: none;
-			border-color: #818cf8;
+			border-color: var(--border-strong);
 			box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
-			background: #eef2ff;
+			background: var(--bg-panel-hover);
 		}
 
 		option {
-			background: #ffffff;
-			color: #0f172a;
+			background: var(--bg-surface-strong);
+			color: var(--text-main);
 		}
 
 		option:checked {
@@ -680,8 +827,8 @@ table {
 
 .month-fallback-btn {
 	border: 1px solid #cbd5e1;
-	background: #fff;
-	color: #334155;
+	background: var(--bg-surface-strong);
+	color: var(--text-main);
 	border-radius: 8px;
 	padding: 10px 17px;
 	font-size: 1.25rem;
@@ -689,8 +836,8 @@ table {
 	cursor: pointer;
 
 	&.is-primary {
-		background: #6366f1;
-		border-color: #6366f1;
+		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+		border-color: transparent;
 		color: #fff;
 	}
 }
@@ -716,7 +863,7 @@ table {
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		font-weight: 600;
-		color: #94a3b8;
+		color: var(--text-soft);
 		.status-dot {
 			width: 6px;
 			height: 6px;
@@ -736,9 +883,9 @@ table {
 	width: 45px;
 	height: 45px;
 	border-radius: 50%;
-	border: 1px solid $border;
-	background: white;
-	color: $text-main;
+	border: 1px solid var(--border);
+	background: var(--bg-panel);
+	color: var(--text-main);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -748,7 +895,7 @@ table {
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 	transition: all 0.2s ease;
 	&:hover {
-		background: $primary;
+		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
 		color: white;
 		transform: scale(1.1);
 	}
@@ -940,8 +1087,18 @@ body.wide-mode {
 		padding: 24px 0;
 	}
 
+	.theme-toggle-btn {
+		top: auto;
+		bottom: 20px;
+		left: 20px;
+	}
+
 	.wrapper {
 		width: min(100% - 24px, 1280px);
+	}
+
+	body:not(.dashboard-page) .wrapper {
+		padding: 24px 18px 18px;
 	}
 
 	.logo-section {

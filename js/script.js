@@ -33,6 +33,7 @@ const APP_CONFIG = {
 		HIRES: 'nowe_zatrudnienia_dane',
 		EXCHANGES: 'wymiana_sprzetu_dane',
 	},
+	THEME_KEY: 'dashboard-theme',
 }
 /* === Shared Config: End === */
 
@@ -402,10 +403,54 @@ const createMonthPicker = ({
 /* === Shared Month Picker Factory: End === */
 
 /* === Shared Global UI: Start === */
+const applyTheme = theme => {
+	const isDark = theme === 'dark'
+	document.body.classList.toggle('theme-dark', isDark)
+}
+
+const getStoredTheme = () => localStorage.getItem(APP_CONFIG.THEME_KEY) || 'light'
+
+const createThemeToggle = () => {
+	if (document.querySelector('.theme-toggle-btn')) return null
+
+	const toggle = document.createElement('button')
+	toggle.type = 'button'
+	toggle.className = 'theme-toggle-btn'
+	toggle.setAttribute('aria-label', 'Przelacz motyw')
+	toggle.innerHTML = `
+		<i class="fa-solid fa-moon"></i>
+		<span>Dark Mode</span>
+	`
+
+	const updateToggle = isDark => {
+		toggle.innerHTML = isDark
+			? '<i class="fa-solid fa-sun"></i><span>Light Mode</span>'
+			: '<i class="fa-solid fa-moon"></i><span>Dark Mode</span>'
+		toggle.setAttribute('aria-pressed', String(isDark))
+	}
+
+	toggle.addEventListener('click', () => {
+		const nextTheme = document.body.classList.contains('theme-dark') ? 'light' : 'dark'
+		applyTheme(nextTheme)
+		localStorage.setItem(APP_CONFIG.THEME_KEY, nextTheme)
+		updateToggle(nextTheme === 'dark')
+	})
+
+	updateToggle(getStoredTheme() === 'dark')
+	return toggle
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+	applyTheme(getStoredTheme())
+
 	document.querySelectorAll('#current-year').forEach(element => {
 		element.textContent = new Date().getFullYear()
 	})
+
+	const themeToggle = createThemeToggle()
+	if (themeToggle) {
+		document.body.appendChild(themeToggle)
+	}
 
 	const returnMenuLinks = document.querySelectorAll('.menu-btn[href="index.html"]')
 	returnMenuLinks.forEach(link => {

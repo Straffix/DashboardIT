@@ -27,7 +27,6 @@
 
             <section class="dashboard-topbar" aria-label="Panel informacji">
                 <article class="dashboard-widget weather-widget" aria-live="polite">
-                    <div class="widget-kicker">Pogoda</div>
                     <form class="weather-search" id="weather-search-form">
                         <input type="text" id="weather-location-input" placeholder="Wpisz miasto" value="Warszawa"
                             autocomplete="off">
@@ -50,9 +49,11 @@
                     </div>
                 </article>
 
-                <article class="dashboard-widget clock-widget" aria-label="Zegar lokalny">
-                    <div class="widget-kicker">Czas lokalny</div>
+                <article class="dashboard-widget clock-widget" id="clock-widget-trigger" aria-label="Zegar lokalny"
+                    role="button" tabindex="0" aria-haspopup="dialog" aria-controls="task-modal">
                     <div class="clock-face" aria-hidden="true">
+                        <span class="clock-face-ring"></span>
+                        <span class="clock-face-glow"></span>
                         <span class="clock-hand hour-hand" id="clock-hour"></span>
                         <span class="clock-hand minute-hand" id="clock-minute"></span>
                         <span class="clock-hand second-hand" id="clock-second"></span>
@@ -61,6 +62,7 @@
                     <div class="clock-meta">
                         <div class="clock-time" id="clock-digital">--:--</div>
                         <div class="clock-date" id="clock-date">--</div>
+                        <div class="task-preview-list" id="task-preview-list" aria-live="polite"></div>
                     </div>
                 </article>
             </section>
@@ -133,53 +135,106 @@
             </footer>
         </div>
 
-        <aside class="bookmark-drawer" id="bookmark-drawer" aria-label="Skróty WWW">
-            <button type="button" class="bookmark-drawer-toggle" id="bookmark-drawer-toggle"
-                aria-expanded="false" aria-controls="bookmark-drawer-panel">
-                <span class="bookmark-toggle-arrow">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </span>
-            </button>
+        <div class="task-modal-shell" id="task-modal" hidden aria-hidden="true">
+            <div class="task-modal-backdrop" data-task-close></div>
+            <section class="task-modal-card" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
+                <button type="button" class="task-modal-close" data-task-close aria-label="Zamknij planer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
 
-            <div class="bookmark-drawer-panel" id="bookmark-drawer-panel">
-                <div class="bookmark-drawer-head">
-                    <div>
-                        <p class="bookmark-kicker">Skróty WWW</p>
-                        <h2>Panel zakładek</h2>
-                    </div>
-                    <div class="bookmark-head-actions">
-                        <button type="button" class="bookmark-mode-btn" id="bookmark-settings-toggle"
-                            aria-pressed="false" aria-label="Pokaż opcje zarządzania zakładkami">
-                            <i class="fa-solid fa-gear"></i>
-                        </button>
-                        <button type="button" class="bookmark-add-btn" id="bookmark-add-btn" aria-label="Dodaj zakładkę">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
+                <label class="task-autoclear-toggle" for="task-autoclear-toggle">
+                    <span class="task-autoclear-copy">
+                        <strong>Auto-usuwanie</strong>
+                        <small>Kasuj zadania po upływie ich godziny</small>
+                    </span>
+                    <span class="task-autoclear-switch">
+                        <input type="checkbox" id="task-autoclear-toggle">
+                        <span class="task-autoclear-slider" aria-hidden="true"></span>
+                    </span>
+                </label>
+
+                <div class="task-modal-copy">
+                    <p class="task-modal-kicker">Planer dnia</p>
+                    <h2 id="task-modal-title">Zadania i kalendarz</h2>
+                    <p>Zapisuj zadania, oznaczaj priorytet i przeglądaj harmonogram miesiąca.</p>
                 </div>
 
-                <form class="bookmark-form" id="bookmark-form" hidden>
-                    <input type="hidden" id="bookmark-id">
+                <div class="task-modal-layout">
+                    <section class="task-calendar-panel" aria-label="Kalendarz zadań">
+                        <div class="task-calendar-head">
+                            <button type="button" class="task-calendar-nav" id="task-calendar-prev" aria-label="Poprzedni miesiąc">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <div class="task-calendar-month" id="task-calendar-month">--</div>
+                            <button type="button" class="task-calendar-nav" id="task-calendar-next" aria-label="Następny miesiąc">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="task-calendar-weekdays" id="task-calendar-weekdays"></div>
+                        <div class="task-calendar-grid" id="task-calendar-grid"></div>
+                    </section>
 
-                    <label class="bookmark-field">
-                        <span>Nazwa</span>
-                        <input type="text" id="bookmark-title" placeholder="np. SharePoint" maxlength="32" required>
-                    </label>
+                    <section class="task-form-panel">
+                        <form class="task-form" id="task-form">
+                            <label class="task-field">
+                                <span>Tytuł</span>
+                                <input type="text" id="task-title" maxlength="80" placeholder="Np. Przegląd ticketów" required>
+                            </label>
 
-                    <label class="bookmark-field">
-                        <span>Adres URL</span>
-                        <input type="url" id="bookmark-url" placeholder="https://..." required>
-                    </label>
+                            <div class="task-field-row">
+                                <label class="task-field">
+                                    <span>Data</span>
+                                    <input type="date" id="task-date" required>
+                                </label>
 
-                    <div class="bookmark-form-actions">
-                        <button type="button" class="bookmark-secondary-btn" id="bookmark-cancel-btn">Anuluj</button>
-                        <button type="submit" class="bookmark-primary-btn">Zapisz</button>
-                    </div>
-                </form>
+                                <label class="task-field">
+                                    <span>Godzina</span>
+                                    <div class="task-time-picker">
+                                        <select id="task-hour" aria-label="Wybierz godzinę" required>
+                                            <option value="">Godz.</option>
+                                        </select>
+                                        <span class="task-time-separator">:</span>
+                                        <select id="task-minute" aria-label="Wybierz minuty" required>
+                                            <option value="">Min.</option>
+                                        </select>
+                                        <input type="hidden" id="task-time" required>
+                                    </div>
+                                </label>
+                            </div>
 
-                <ul class="bookmark-list" id="bookmark-list"></ul>
-            </div>
-        </aside>
+                            <label class="task-field">
+                                <span>Priorytet</span>
+                                <select id="task-priority" required>
+                                    <option value="high">Wysoki</option>
+                                    <option value="medium">Średni</option>
+                                    <option value="low">Niski</option>
+                                </select>
+                            </label>
+
+                            <label class="task-field">
+                                <span>Opis</span>
+                                <textarea id="task-description" rows="4" placeholder="Krótki opis zadania"></textarea>
+                            </label>
+
+                            <div class="task-form-actions">
+                                <button type="submit" class="task-save-btn">Dodaj zadanie</button>
+                            </div>
+                        </form>
+
+                        <div class="task-agenda">
+                            <div class="task-agenda-head">
+                                <h3 id="task-agenda-title">Zadania na wybrany dzień</h3>
+                                <span id="task-agenda-count">0</span>
+                            </div>
+                            <div class="task-agenda-list" id="task-agenda-list"></div>
+                        </div>
+                    </section>
+                </div>
+            </section>
+        </div>
+
+        <div class="task-toast-stack" id="task-toast-stack" aria-live="polite" aria-atomic="false"></div>
+
     </div>
 
     <script src="./js/script.js"></script>
