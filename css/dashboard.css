@@ -1615,10 +1615,10 @@ body.dashboard-page.theme-dark .menu-item.wymiana-sprzetu .card-icon-shell {
     margin-top: 3px;
     font-size: 0.64rem;
     line-height: 1.08;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
+    display: block;
     overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .dashboard-container .main-footer {
     display: none;
