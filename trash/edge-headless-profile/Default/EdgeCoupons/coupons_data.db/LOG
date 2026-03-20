@@ -1,9 +1,0 @@
-2026/03/20-13:52:02.986 39ac Reusing MANIFEST c:\DashboardIT\trash\edge-headless-profile\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
-2026/03/20-13:52:02.988 39ac Recovering log #12
-2026/03/20-13:52:02.990 39ac Level-0 table #16: started
-2026/03/20-13:52:02.997 39ac Level-0 table #16: 681712 bytes OK
-2026/03/20-13:52:02.998 39ac Recovering log #14
-2026/03/20-13:52:02.998 39ac Reusing old log c:\DashboardIT\trash\edge-headless-profile\Default\EdgeCoupons/coupons_data.db/000014.log 
-2026/03/20-13:52:03.000 39ac Delete type=0 #12
-2026/03/20-13:52:03.004 2050 Level-0 table #18: started
-2026/03/20-13:52:03.009 2050 Level-0 table #18: 681712 bytes OK
