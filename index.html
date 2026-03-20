@@ -68,60 +68,56 @@
             </section>
 
             <header class="dashboard-header">
-                <p class="dashboard-kicker">Centrum operacyjne IT</p>
-                <h1>IT Management Dashboard</h1>
-                <p class="dashboard-subtitle">Wybierz moduł operacyjny i przejdź do pracy w odpowiednim obszarze.</p>
+                <div class="dashboard-header-copy">
+                    <p class="dashboard-kicker">Centrum operacyjne IT</p>
+                    <h1>IT Management Dashboard</h1>
+                    <p class="dashboard-subtitle">Wybierz moduł operacyjny i przejdź do pracy w odpowiednim obszarze.</p>
+                </div>
+                <button type="button" class="dashboard-scroll-cue" id="dashboard-scroll-cue"
+                    aria-label="Przewiń do modułów dashboardu">
+                    <i class="fa-solid fa-arrow-down"></i>
+                </button>
             </header>
 
-            <nav class="menu-grid" aria-label="Moduły dashboardu">
-                <a href="nowe_zatrudnienia.html" target="_blank" class="menu-item nowe-zatrudnienia">
-                    <article class="dashboard-card">
-                        <div class="card-icon-shell">
-                            <i class="fa-solid fa-user-plus"></i>
-                        </div>
-                        <div class="card-copy">
-                            <span>Nowe Zatrudnienia</span>
-                            <small>Onboarding IT i przygotowanie sprzętu dla nowych pracowników.</small>
-                        </div>
-                        <div class="card-meta">
-                            <strong>Onboarding</strong>
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        </div>
-                    </article>
-                </a>
+            <section class="dashboard-menu-stage">
+                <nav class="menu-grid" id="dashboard-menu" aria-label="Moduły dashboardu">
+                    <a href="nowe_zatrudnienia.html" target="_blank" class="menu-item nowe-zatrudnienia">
+                        <article class="dashboard-card">
+                            <div class="card-icon-shell">
+                                <i class="fa-solid fa-user-plus"></i>
+                            </div>
+                            <div class="card-copy">
+                                <span>Nowe Zatrudnienia</span>
+                                <small>Onboarding IT i przygotowanie sprzętu dla nowych pracowników.</small>
+                            </div>
+                        </article>
+                    </a>
 
-                <a href="monitor_laptopow.html" target="_blank" class="menu-item monitor-laptopow">
-                    <article class="dashboard-card">
-                        <div class="card-icon-shell">
-                            <i class="fa-solid fa-laptop"></i>
-                        </div>
-                        <div class="card-copy">
-                            <span>Monitor Laptopów</span>
-                            <small>Status urządzeń w domenie i kontrola terminów aktywności.</small>
-                        </div>
-                        <div class="card-meta">
-                            <strong>Domena</strong>
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        </div>
-                    </article>
-                </a>
+                    <a href="monitor_laptopow.html" target="_blank" class="menu-item monitor-laptopow">
+                        <article class="dashboard-card">
+                            <div class="card-icon-shell">
+                                <i class="fa-solid fa-laptop"></i>
+                            </div>
+                            <div class="card-copy">
+                                <span>Monitor Laptopów</span>
+                                <small>Status urządzeń w domenie i kontrola terminów aktywności.</small>
+                            </div>
+                        </article>
+                    </a>
 
-                <a href="wymiana_sprzetu.html" target="_blank" class="menu-item wymiana-sprzetu">
-                    <article class="dashboard-card">
-                        <div class="card-icon-shell">
-                            <i class="fa-solid fa-right-left"></i>
-                        </div>
-                        <div class="card-copy">
-                            <span>Wymiana Sprzętu</span>
-                            <small>Planowanie cyklu wymian i obsługa rotacji urządzeń w firmie.</small>
-                        </div>
-                        <div class="card-meta">
-                            <strong>Cykl 3-letni</strong>
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        </div>
-                    </article>
-                </a>
-            </nav>
+                    <a href="wymiana_sprzetu.html" target="_blank" class="menu-item wymiana-sprzetu">
+                        <article class="dashboard-card">
+                            <div class="card-icon-shell">
+                                <i class="fa-solid fa-right-left"></i>
+                            </div>
+                            <div class="card-copy">
+                                <span>Wymiana Sprzętu</span>
+                                <small>Planowanie cyklu wymian i obsługa rotacji urządzeń w firmie.</small>
+                            </div>
+                        </article>
+                    </a>
+                </nav>
+            </section>
 
             <footer class="main-footer">
                 <div class="footer-content">

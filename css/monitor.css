@@ -1,3 +1,4 @@
+/* === Monitor Statistics: Start === */
 .stats-grid {
   display: flex;
   gap: 20px;
@@ -8,73 +9,67 @@
 .stat-card {
   flex: 1;
   min-width: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 18px;
   background: var(--card-bg-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
-
 .stat-card p {
-  margin-bottom: 5px;
   font-size: 1.1rem;
-  font-weight: 700;
   color: var(--text-muted);
+  font-weight: bold;
+  margin-bottom: 5px;
 }
-
 .stat-card h2 {
   margin-bottom: 0;
   font-size: 2.8rem;
 }
-
 .stat-card i {
-  color: var(--primary);
   font-size: 3rem;
+  color: var(--primary);
   opacity: 0.3;
 }
-
 .stat-card.active {
   border-bottom: 4px solid var(--success);
 }
-
 .stat-card.warning {
   border-bottom: 4px solid var(--warning);
 }
-
 .stat-card.danger {
   border-bottom: 4px solid var(--danger);
 }
 
+/* === Monitor Statistics: End === */
+/* === Monitor Device Type Selector: Start === */
 .radio-group {
   display: flex;
   gap: 15px;
   flex-wrap: wrap;
 }
-
 .radio-group .radio-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  color: var(--text-main);
   font-size: 1.3rem;
   font-weight: 600;
+  color: var(--text-main);
   cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
   transition: background-color 0.2s ease;
 }
-
 .radio-group .radio-item:hover {
   background-color: var(--bg-panel);
 }
-
-.radio-group .radio-item input[type="radio"] {
-  appearance: none;
+.radio-group .radio-item input[type=radio] {
+  -moz-appearance: none;
+       appearance: none;
   -webkit-appearance: none;
   width: 18px;
   height: 18px;
@@ -88,51 +83,303 @@
   flex: 0 0 18px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-
-.radio-group .radio-item input[type="radio"]::before {
+.radio-group .radio-item input[type=radio]::before {
   content: "";
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #ffffff;
+  background: #fff;
   transform: scale(0);
   transition: transform 0.15s ease;
 }
-
-.radio-group .radio-item input[type="radio"]:checked {
+.radio-group .radio-item input[type=radio]:checked {
   border-color: var(--primary);
   background: var(--primary);
 }
-
-.radio-group .radio-item input[type="radio"]:checked::before {
+.radio-group .radio-item input[type=radio]:checked::before {
   transform: scale(1);
 }
-
-.radio-group .radio-item input[type="radio"]:focus-visible {
+.radio-group .radio-item input[type=radio]:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
 
+/* === Monitor Device Type Selector: End === */
+/* === Monitor Table Layout: Start === */
 .monitor-table th:nth-child(1) {
   width: 23%;
 }
-
 .monitor-table th:nth-child(2) {
   width: 14%;
 }
-
 .monitor-table th:nth-child(3) {
   width: 17%;
 }
-
 .monitor-table th:nth-child(4) {
   width: 22%;
 }
-
 .monitor-table th:nth-child(5) {
   width: 17%;
 }
-
 .monitor-table th:nth-child(6) {
   width: 7%;
 }
+
+/* === Monitor Table Layout: End === */
+/* === Monitor Larger Breakpoints: Start === */
+@media (min-width: 641px) and (max-width: 900px) {
+  .main-content {
+    gap: 22px;
+  }
+  .main-content section,
+  .main-content aside {
+    padding: 20px;
+  }
+  .logo-section h1 {
+    font-size: 2rem;
+  }
+  table th {
+    padding: 12px 10px;
+    font-size: 1rem;
+  }
+  table td {
+    padding: 16px 10px;
+    font-size: 1.18rem;
+  }
+  .backup_section .backup-row {
+    flex-wrap: wrap;
+  }
+  .backup_section .backup-row .btn-backup-item {
+    min-width: 0;
+  }
+  .table-header .month-picker-container {
+    min-width: 220px;
+    padding: 10px 22px;
+  }
+  .month-fallback-popover {
+    width: min(360px, 100vw - 40px);
+  }
+  .dashboard-container {
+    padding: 20px 20px 24px;
+  }
+  .dashboard-header {
+    margin-bottom: 36px;
+  }
+  .task-modal-card {
+    width: min(100% - 24px, 960px);
+    padding: 26px 18px 18px;
+  }
+  .task-autoclear-toggle {
+    position: static;
+    margin: 0 44px 18px 0;
+    justify-content: space-between;
+  }
+}
+@media (min-width: 641px) and (max-width: 1100px) {
+  .dashboard-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .clock-widget {
+    justify-content: space-between;
+  }
+  .menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 32px;
+  }
+  .task-modal-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (min-width: 641px) and (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+  .main-content aside {
+    width: 100%;
+  }
+}
+@media (min-width: 641px) and (max-width: 768px) {
+  body {
+    padding: 24px 0;
+  }
+  .theme-toggle-btn {
+    top: auto;
+    bottom: 20px;
+    left: 20px;
+  }
+  .wrapper {
+    width: min(100% - 24px, 1280px);
+  }
+  body:not(.dashboard-page) .wrapper {
+    padding: 24px 18px 18px;
+  }
+  .logo-section {
+    align-items: flex-start;
+  }
+  .dashboard-container {
+    padding-top: 18px;
+  }
+  .dashboard-header {
+    margin-bottom: 40px;
+  }
+  .dashboard-header h1 {
+    letter-spacing: 2px;
+  }
+  .dashboard-kicker {
+    font-size: 1.1rem;
+    letter-spacing: 0.22em;
+  }
+  .dashboard-subtitle {
+    font-size: 1.5rem;
+  }
+  .dashboard-topbar {
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .dashboard-widget {
+    padding: 10px 12px;
+  }
+  .weather-widget,
+  .clock-widget {
+    width: 100%;
+  }
+  .clock-widget {
+    justify-content: flex-start;
+  }
+  .clock-face {
+    width: 84px;
+    height: 84px;
+  }
+  .hour-hand {
+    height: 22px;
+  }
+  .minute-hand {
+    height: 30px;
+  }
+  .second-hand {
+    height: 33px;
+  }
+  .task-preview-item,
+  .task-preview-empty {
+    max-width: 100%;
+  }
+  .task-modal-card {
+    width: min(100% - 20px, 1040px);
+    margin: 10px auto;
+    padding: 22px 16px 16px;
+    max-height: calc(100vh - 20px);
+  }
+  .task-autoclear-toggle {
+    position: static;
+    margin: 0 44px 18px 0;
+    justify-content: space-between;
+  }
+  .task-field-row {
+    grid-template-columns: 1fr;
+  }
+  .task-calendar-day {
+    min-height: 64px;
+  }
+  .task-agenda-topline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .task-agenda-item {
+    flex-direction: column;
+  }
+  .task-delete-btn {
+    align-self: flex-end;
+  }
+  .task-toast-stack {
+    right: 10px;
+    bottom: 10px;
+    width: min(360px, 100vw - 20px);
+  }
+  .menu-grid {
+    grid-template-columns: 1fr;
+    margin-top: 24px;
+    gap: 20px;
+  }
+  .dashboard-card {
+    min-height: 260px;
+    padding: 24px;
+  }
+  .card-copy {
+    margin-top: 44px;
+  }
+  .card-copy span {
+    font-size: 1.9rem;
+  }
+  .card-copy small {
+    font-size: 1.35rem;
+  }
+  .exchange-laptop-grid {
+    grid-template-columns: 1fr;
+  }
+  .table-container {
+    overflow-x: auto;
+  }
+}
+@media (min-width: 1600px) {
+  html {
+    font-size: 66%;
+  }
+  .wrapper {
+    width: min(1500px, 100% - 72px);
+  }
+  body:not(.dashboard-page) .wrapper {
+    padding: 40px 36px 30px;
+  }
+  .main-content {
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
+    gap: 40px;
+  }
+  body.dashboard-page .dashboard-container {
+    max-width: 1500px;
+    padding: 32px 40px 36px;
+  }
+  body.dashboard-page .dashboard-header {
+    max-width: 860px;
+    margin-bottom: 56px;
+  }
+  body.dashboard-page .menu-grid {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    gap: 28px;
+  }
+  body.dashboard-page .dashboard-card {
+    min-height: 320px;
+  }
+  body.dashboard-page .task-modal-card {
+    width: min(1180px, 100% - 48px);
+  }
+}
+@media (min-width: 2200px) {
+  html {
+    font-size: 70%;
+  }
+  .wrapper {
+    width: min(1760px, 100% - 96px);
+  }
+  body.wide-mode .wrapper {
+    max-width: min(94%, 1900px);
+    width: min(94%, 1900px);
+  }
+  body.dashboard-page .wrapper {
+    width: min(1800px, 100% - 96px);
+  }
+  body.dashboard-page .dashboard-container {
+    max-width: 1760px;
+    min-height: calc(100vh - 120px);
+  }
+  body.dashboard-page .menu-grid {
+    grid-template-columns: repeat(4, minmax(260px, 1fr));
+  }
+  body.dashboard-page .dashboard-header h1 {
+    font-size: clamp(4rem, 4.2vw, 6rem);
+  }
+  body.dashboard-page .dashboard-subtitle {
+    font-size: 1.8rem;
+  }
+}
+/* === Monitor Larger Breakpoints: End === *//*# sourceMappingURL=monitor.css.map */

@@ -427,6 +427,7 @@ const createThemeToggle = () => {
 			? '<i class="fa-solid fa-sun"></i><span>Light Mode</span>'
 			: '<i class="fa-solid fa-moon"></i><span>Dark Mode</span>'
 		toggle.setAttribute('aria-pressed', String(isDark))
+		toggle.title = isDark ? 'Przelacz na jasny motyw' : 'Przelacz na ciemny motyw'
 	}
 
 	toggle.addEventListener('click', () => {
@@ -449,7 +450,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const themeToggle = createThemeToggle()
 	if (themeToggle) {
-		document.body.appendChild(themeToggle)
+		const dashboardTopbar = document.querySelector('.dashboard-topbar')
+		const weatherWidget = dashboardTopbar?.querySelector('.weather-widget')
+		if (document.body.classList.contains('dashboard-page') && dashboardTopbar) {
+			if (weatherWidget) {
+				weatherWidget.insertAdjacentElement('afterend', themeToggle)
+			} else {
+				dashboardTopbar.prepend(themeToggle)
+			}
+		} else {
+			document.body.appendChild(themeToggle)
+		}
 	}
 
 	const returnMenuLinks = document.querySelectorAll('.menu-btn[href="index.html"]')

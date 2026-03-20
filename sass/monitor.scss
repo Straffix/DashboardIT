@@ -1,0 +1,152 @@
+@use 'sass:meta';
+@use 'colors' as *;
+
+/* === Monitor Statistics: Start === */
+.stats-grid {
+	display: flex;
+	gap: 20px;
+	margin-bottom: 30px;
+	flex-wrap: wrap;
+}
+
+.stat-card {
+	flex: 1;
+	min-width: 200px;
+	padding: 20px;
+	border: 1px solid var(--border);
+	border-radius: 18px;
+	background: var(--card-bg-soft);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	box-shadow: var(--shadow-md);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+
+	p {
+		font-size: 1.1rem;
+		color: var(--text-muted);
+		font-weight: bold;
+		margin-bottom: 5px;
+	}
+	h2 {
+		margin-bottom: 0;
+		font-size: 2.8rem;
+	}
+	i {
+		font-size: 3rem;
+		color: var(--primary);
+		opacity: 0.3;
+	}
+
+	&.active {
+		border-bottom: 4px solid var(--success);
+	}
+	&.warning {
+		border-bottom: 4px solid var(--warning);
+	}
+	&.danger {
+		border-bottom: 4px solid var(--danger);
+	}
+}
+/* === Monitor Statistics: End === */
+
+/* === Monitor Device Type Selector: Start === */
+.radio-group {
+	display: flex;
+	gap: 15px;
+	flex-wrap: wrap;
+
+	.radio-item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 1.3rem;
+		font-weight: 600;
+		color: var(--text-main);
+		cursor: pointer;
+		padding: 6px 10px;
+		border-radius: 8px;
+		transition: background-color 0.2s ease;
+
+		&:hover {
+			background-color: var(--bg-panel);
+		}
+
+		input[type='radio'] {
+			appearance: none;
+			-webkit-appearance: none;
+			width: 18px;
+			height: 18px;
+			margin: 0;
+			border: 2px solid var(--text-soft);
+			border-radius: 50%;
+			background: var(--bg-surface-strong);
+			display: grid;
+			place-content: center;
+			cursor: pointer;
+			flex: 0 0 18px;
+			transition:
+				border-color 0.2s ease,
+				box-shadow 0.2s ease;
+
+			&::before {
+				content: '';
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: #fff;
+				transform: scale(0);
+				transition: transform 0.15s ease;
+			}
+
+			&:checked {
+				border-color: var(--primary);
+				background: var(--primary);
+			}
+
+			&:checked::before {
+				transform: scale(1);
+			}
+
+			&:focus-visible {
+				outline: none;
+				box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+			}
+		}
+	}
+}
+/* === Monitor Device Type Selector: End === */
+
+/* === Monitor Table Layout: Start === */
+.monitor-table {
+	th:nth-child(1) {
+		width: 23%;
+	}
+
+	th:nth-child(2) {
+		width: 14%;
+	}
+
+	th:nth-child(3) {
+		width: 17%;
+	}
+
+	th:nth-child(4) {
+		width: 22%;
+	}
+
+	th:nth-child(5) {
+		width: 17%;
+	}
+
+	th:nth-child(6) {
+		width: 7%;
+	}
+}
+/* === Monitor Table Layout: End === */
+
+/* === Monitor Larger Breakpoints: Start === */
+@include meta.load-css('medium');
+@include meta.load-css('large');
+/* === Monitor Larger Breakpoints: End === */

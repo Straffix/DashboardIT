@@ -42,6 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const clockDigital = document.getElementById('clock-digital')
 	const clockDate = document.getElementById('clock-date')
 	const clockWidgetTrigger = document.getElementById('clock-widget-trigger')
+	const dashboardScrollCue = document.getElementById('dashboard-scroll-cue')
+	const dashboardMenu = document.getElementById('dashboard-menu')
 	const taskPreviewList = document.getElementById('task-preview-list')
 	const weatherSearchForm = document.getElementById('weather-search-form')
 	const weatherLocationInput = document.getElementById('weather-location-input')
@@ -537,6 +539,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	}
 
+	const initScrollCue = () => {
+		if (!dashboardScrollCue || !dashboardMenu) return
+
+		dashboardScrollCue.addEventListener('click', () => {
+			dashboardMenu.scrollIntoView({
+				behavior: 'smooth',
+				block: 'start',
+			})
+		})
+	}
+
 	const updateClock = () => {
 		if (!clockHour || !clockMinute || !clockSecond || !clockDigital || !clockDate) return
 
@@ -712,6 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	initWeather()
 	initTasks()
 	initTaskReminders()
+	initScrollCue()
 
 	document.querySelectorAll('.menu-item[target="_blank"]').forEach(link => {
 		link.addEventListener('click', event => {

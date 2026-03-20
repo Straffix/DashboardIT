@@ -1,0 +1,246 @@
+@media (min-width: 641px) and (max-width: 900px) {
+	.main-content {
+		gap: 22px;
+
+		section,
+		aside {
+			padding: 20px;
+		}
+	}
+
+	.logo-section h1 {
+		font-size: 2rem;
+	}
+
+	table th {
+		padding: 12px 10px;
+		font-size: 1rem;
+	}
+
+	table td {
+		padding: 16px 10px;
+		font-size: 1.18rem;
+	}
+
+	.backup_section .backup-row {
+		flex-wrap: wrap;
+	}
+
+	.backup_section .backup-row .btn-backup-item {
+		min-width: 0;
+	}
+
+	.table-header .month-picker-container {
+		min-width: 220px;
+		padding: 10px 22px;
+	}
+
+	.month-fallback-popover {
+		width: min(360px, calc(100vw - 40px));
+	}
+
+	.dashboard-container {
+		padding: 20px 20px 24px;
+	}
+
+	.dashboard-header {
+		margin-bottom: 36px;
+	}
+
+	.task-modal-card {
+		width: min(100% - 24px, 960px);
+		padding: 26px 18px 18px;
+	}
+
+	.task-autoclear-toggle {
+		position: static;
+		margin: 0 44px 18px 0;
+		justify-content: space-between;
+	}
+}
+
+@media (min-width: 641px) and (max-width: 1100px) {
+	.dashboard-topbar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.clock-widget {
+		justify-content: space-between;
+	}
+
+	.menu-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		margin-top: 32px;
+	}
+
+	.task-modal-layout {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+	.main-content {
+		grid-template-columns: 1fr;
+
+		aside {
+			width: 100%;
+		}
+	}
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+	body {
+		padding: 24px 0;
+	}
+
+	.theme-toggle-btn {
+		top: auto;
+		bottom: 20px;
+		left: 20px;
+	}
+
+	.wrapper {
+		width: min(100% - 24px, 1280px);
+	}
+
+	body:not(.dashboard-page) .wrapper {
+		padding: 24px 18px 18px;
+	}
+
+	.logo-section {
+		align-items: flex-start;
+	}
+
+	.dashboard-container {
+		padding-top: 18px;
+	}
+
+	.dashboard-header {
+		margin-bottom: 40px;
+
+		h1 {
+			letter-spacing: 2px;
+		}
+	}
+
+	.dashboard-kicker {
+		font-size: 1.1rem;
+		letter-spacing: 0.22em;
+	}
+
+	.dashboard-subtitle {
+		font-size: 1.5rem;
+	}
+
+	.dashboard-topbar {
+		gap: 16px;
+		margin-bottom: 22px;
+	}
+
+	.dashboard-widget {
+		padding: 10px 12px;
+	}
+
+	.weather-widget,
+	.clock-widget {
+		width: 100%;
+	}
+
+	.clock-widget {
+		justify-content: flex-start;
+	}
+
+	.clock-face {
+		width: 84px;
+		height: 84px;
+	}
+
+	.hour-hand {
+		height: 22px;
+	}
+
+	.minute-hand {
+		height: 30px;
+	}
+
+	.second-hand {
+		height: 33px;
+	}
+
+	.task-preview-item,
+	.task-preview-empty {
+		max-width: 100%;
+	}
+
+	.task-modal-card {
+		width: min(100% - 20px, 1040px);
+		margin: 10px auto;
+		padding: 22px 16px 16px;
+		max-height: calc(100vh - 20px);
+	}
+
+	.task-autoclear-toggle {
+		position: static;
+		margin: 0 44px 18px 0;
+		justify-content: space-between;
+	}
+
+	.task-field-row {
+		grid-template-columns: 1fr;
+	}
+
+	.task-calendar-day {
+		min-height: 64px;
+	}
+
+	.task-agenda-topline {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.task-agenda-item {
+		flex-direction: column;
+	}
+
+	.task-delete-btn {
+		align-self: flex-end;
+	}
+
+	.task-toast-stack {
+		right: 10px;
+		bottom: 10px;
+		width: min(360px, calc(100vw - 20px));
+	}
+
+	.menu-grid {
+		grid-template-columns: 1fr;
+		margin-top: 24px;
+		gap: 20px;
+	}
+
+	.dashboard-card {
+		min-height: 260px;
+		padding: 24px;
+	}
+
+	.card-copy {
+		margin-top: 44px;
+
+		span {
+			font-size: 1.9rem;
+		}
+
+		small {
+			font-size: 1.35rem;
+		}
+	}
+
+	.exchange-laptop-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.table-container {
+		overflow-x: auto;
+	}
+}

@@ -1,0 +1,18 @@
+2026/03/20-13:18:43.508 2540 Reusing MANIFEST c:\DashboardIT\trash\edge-headless-profile\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/03/20-13:18:43.510 2540 Recovering log #9
+2026/03/20-13:18:43.512 2540 Level-0 table #12: started
+2026/03/20-13:18:43.520 2540 Level-0 table #12: 681712 bytes OK
+2026/03/20-13:18:43.521 2540 Recovering log #12
+2026/03/20-13:18:43.521 2540 Reusing old log c:\DashboardIT\trash\edge-headless-profile\Default\EdgeCoupons/coupons_data.db/000012.log 
+2026/03/20-13:18:43.525 2540 Delete type=0 #9
+2026/03/20-13:18:43.526 2540 Delete type=2 #11
+2026/03/20-13:18:43.526 2540 Delete type=2 #13
+2026/03/20-13:18:43.528 2994 Compacting 5@0 + 0@1 files
+2026/03/20-13:18:43.537 2994 Generated table #13@0: 4 keys, 681735 bytes
+2026/03/20-13:18:43.537 2994 Compacted 5@0 + 0@1 files => 681735 bytes
+2026/03/20-13:18:43.538 2994 compacted to: files[ 0 1 0 0 0 0 0 ]
+2026/03/20-13:18:43.540 2994 Delete type=2 #3
+2026/03/20-13:18:43.540 2994 Delete type=2 #6
+2026/03/20-13:18:43.540 2994 Delete type=2 #8
+2026/03/20-13:18:43.540 2994 Delete type=2 #10
+2026/03/20-13:18:43.540 2994 Delete type=2 #12
