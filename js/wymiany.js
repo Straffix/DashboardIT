@@ -15,6 +15,18 @@ const importExcelTrigger = document.getElementById('import-excel-trigger')
 
 const monthPicker = AppUtils.createMonthPicker({
 	onChange: () => renderTable(),
+	getCounts: year => {
+		const counts = Array.from({ length: 12 }, () => 0)
+
+		exchanges.forEach(exchange => {
+			const exchangeDate = new Date(exchange.plannedDate)
+			if (Number.isNaN(exchangeDate.getTime()) || exchangeDate.getFullYear() !== year) return
+
+			counts[exchangeDate.getMonth()] += 1
+		})
+
+		return counts
+	},
 })
 /* === Exchanges State And References: End === */
 

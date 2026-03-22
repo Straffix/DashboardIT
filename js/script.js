@@ -130,6 +130,7 @@ const parseYearMonth = value => {
 const createMonthPicker = ({
 	initialDate = new Date(),
 	onChange,
+	getCounts,
 	useCustomPicker = true,
 	triggerId = 'month-trigger',
 	inputId = 'hidden-month-input',
@@ -201,16 +202,11 @@ const createMonthPicker = ({
 		if (!trigger) return
 
 		const selectedYear = currentViewDate.getFullYear()
-		const selectedMonth = currentViewDate.getMonth()
 
 		const popover = document.createElement('div')
 		popover.className = 'month-fallback-popover'
 		popover.setAttribute('role', 'dialog')
-		popover.setAttribute('aria-label', 'Wybor miesiaca')
-
-		const monthOptions = APP_CONFIG.MONTH_NAMES.map(
-			(name, idx) => `<option value="${idx}" ${idx === selectedMonth ? 'selected' : ''}>${name}</option>`
-		).join('')
+		popover.setAttribute('aria-label', 'Wybor roku i miesiaca')
 
 		let yearOptions = ''
 		for (let year = selectedYear - 5; year <= selectedYear + 5; year += 1) {
@@ -218,41 +214,47 @@ const createMonthPicker = ({
 		}
 
 		popover.innerHTML = `
-			<div class="month-fallback-title">Wybierz miesiac</div>
+			<div class="month-fallback-title">Wybierz rok i miesiac</div>
 			<div class="month-fallback-grid">
-				<label class="month-fallback-field">
-					<span>Miesiac</span>
-					<select id="fallback-month-select">${monthOptions}</select>
-				</label>
 				<label class="month-fallback-field">
 					<span>Rok</span>
 					<select id="fallback-year-select">${yearOptions}</select>
 				</label>
 			</div>
-			<div class="month-fallback-actions">
-				<button type="button" class="month-fallback-btn" id="fallback-month-cancel">Anuluj</button>
-				<button type="button" class="month-fallback-btn is-primary" id="fallback-month-apply">Zastosuj</button>
-			</div>
+			<div class="month-fallback-months" id="fallback-months" aria-label="Lista miesiecy"></div>
 		`
 
 		trigger.appendChild(popover)
 		monthPopover = popover
 
-		const monthSelect = popover.querySelector('#fallback-month-select')
 		const yearSelect = popover.querySelector('#fallback-year-select')
-		const applyBtn = popover.querySelector('#fallback-month-apply')
-		const cancelBtn = popover.querySelector('#fallback-month-cancel')
+		const monthsContainer = popover.querySelector('#fallback-months')
 		const stopPopoverEvent = event => {
 			event.stopPropagation()
 		}
 
-		const apply = () => {
-			const year = Number(yearSelect.value)
-			const month = Number(monthSelect.value)
-			if (!year || month < 0 || month > 11) return
+		const renderMonthButtons = year => {
+			if (!monthsContainer) return
 
-			setCurrentDate(new Date(year, month, 1))
-			closePopover()
+			const monthCounts =
+				typeof getCounts === 'function' ? getCounts(year) : Array.from({ length: 12 }, () => 0)
+
+			monthsContainer.innerHTML = APP_CONFIG.MONTH_NAMES.map((name, monthIndex) => {
+				const count = Number(monthCounts?.[monthIndex]) || 0
+				const isActive = year === currentViewDate.getFullYear() && monthIndex === currentViewDate.getMonth()
+
+				return `
+					<button
+						type="button"
+						class="month-fallback-month${count > 0 ? ' has-records' : ''}${isActive ? ' is-active' : ''}"
+						data-month-index="${monthIndex}"
+						aria-pressed="${isActive}"
+						aria-label="${name} ${year}, liczba rekordow: ${count}">
+						<span class="month-fallback-month-label">${name.slice(0, 3).toLocaleUpperCase('pl-PL')}</span>
+						${count > 0 ? `<span class="month-fallback-month-count">${count}</span>` : ''}
+					</button>
+				`
+			}).join('')
 		}
 
 		const onKeyDown = event => {
@@ -270,9 +272,22 @@ const createMonthPicker = ({
 
 		popover.addEventListener('click', stopPopoverEvent)
 		popover.addEventListener('mousedown', stopPopoverEvent)
-		applyBtn.addEventListener('click', apply)
-		cancelBtn.addEventListener('click', closePopover)
+		yearSelect?.addEventListener('change', event => {
+			renderMonthButtons(Number(event.target.value))
+		})
+		monthsContainer?.addEventListener('click', event => {
+			const monthButton = event.target.closest('.month-fallback-month[data-month-index]')
+			if (!monthButton) return
+
+			const year = Number(yearSelect?.value)
+			const month = Number(monthButton.dataset.monthIndex)
+			if (!year || month < 0 || month > 11) return
+
+			setCurrentDate(new Date(year, month, 1))
+			closePopover()
+		})
 		window.addEventListener('keydown', onKeyDown)
+		renderMonthButtons(selectedYear)
 
 		setTimeout(() => {
 			document.addEventListener('click', onDocumentClick)

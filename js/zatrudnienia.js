@@ -11,6 +11,18 @@ const importExcelTrigger = document.getElementById('import-excel-trigger')
 
 const monthPicker = AppUtils.createMonthPicker({
 	onChange: () => renderTable(),
+	getCounts: year => {
+		const counts = Array.from({ length: 12 }, () => 0)
+
+		hires.forEach(hire => {
+			const hireDate = new Date(hire.date)
+			if (Number.isNaN(hireDate.getTime()) || hireDate.getFullYear() !== year) return
+
+			counts[hireDate.getMonth()] += 1
+		})
+
+		return counts
+	},
 })
 /* === Hires State And References: End === */
 
