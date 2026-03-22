@@ -42,8 +42,36 @@
             </div>
         </header>
 
-        <main class="main-content">
-            <section>
+        <main class="main-content exchange-content">
+            <section class="exchange-workspace">
+                <div class="workspace-panel-top">
+                    <div class="workspace-copy">
+                        <span class="workspace-kicker">Wymiana sprzętu</span>
+                        <h2>Plan wymian</h2>
+                        <p id="exchange-month-summary">Ładowanie widoku miesiąca...</p>
+                    </div>
+
+                    <div class="workspace-actions">
+                        <input type="file" id="importExcelFile" class="visually-hidden-file-input"
+                            accept=".xlsx, .xls" />
+
+                        <button id="import-excel-trigger" class="workspace-action-btn" type="button">
+                            <i class="fa-solid fa-file-import"></i>
+                            <span>Import Excel</span>
+                        </button>
+
+                        <button id="export-excel-btn" class="workspace-action-btn workspace-action-btn-green" type="button">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Eksport Excel</span>
+                        </button>
+
+                        <button id="open-exchange-drawer" class="workspace-primary-btn" type="button">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Zaplanuj wymianę</span>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="table-header">
                     <button class="month-nav-btn" type="button" data-month-delta="-1" aria-label="Poprzedni miesiąc">
                         <i class="fas fa-chevron-left"></i>
@@ -61,14 +89,14 @@
                 </div>
 
                 <div class="table-container">
-                    <table>
+                    <table class="exchange-table">
                         <thead>
                             <tr>
                                 <th class="col-info-narrow"></th>
                                 <th class="col-worker">PRACOWNIK</th>
-                                <th class="col-date">DATA WYMIANY</th>
-                                <th class="col-laptop">OLD LAPTOP (RU)</th>
-                                <th class="col-laptop">NEW LAPTOP (RU)</th>
+                                <th class="col-date">DATA</th>
+                                <th class="col-laptop">ZWROT</th>
+                                <th class="col-laptop">WYDANIE</th>
                                 <th class="col-acc">AKCESORIA</th>
                                 <th class="col-actions">AKCJE</th>
                             </tr>
@@ -78,11 +106,25 @@
                     </table>
                 </div>
             </section>
+        </main>
 
-            <aside>
-                <h2>Zaplanuj nową wymianę</h2>
+        <div id="exchange-drawer-shell" class="exchange-drawer-shell" aria-hidden="true">
+            <div id="exchange-drawer-backdrop" class="exchange-drawer-backdrop"></div>
 
-                <form id="exchange-form">
+            <aside id="exchange-drawer" class="exchange-drawer" aria-labelledby="exchange-drawer-title">
+                <div class="exchange-drawer-header">
+                    <div>
+                        <p class="exchange-drawer-kicker">Wymiana sprzętu</p>
+                        <h2 id="exchange-drawer-title">Zaplanuj nową wymianę</h2>
+                        <p id="exchange-drawer-copy" class="exchange-drawer-copy">Uzupełnij dane pracownika, sprzętu i zapisz plan na wybrany miesiąc.</p>
+                    </div>
+
+                    <button id="close-exchange-drawer" class="exchange-drawer-close" type="button" aria-label="Zamknij panel">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <form id="exchange-form" class="exchange-drawer-form">
                     <div class="input-group">
                         <label><i class="fa-solid fa-user"></i> Pracownik</label>
                         <input type="text" id="emp-name" required placeholder="Imię i Nazwisko" />
@@ -136,38 +178,19 @@
                         <input type="text" id="notes" placeholder="Opcjonalne notatki..." />
                     </div>
 
-                    <button type="submit" id="submit-btn" class="btn-submit btn-submit-warning btn-submit-spaced">
-                        <i class="fa-solid fa-calendar-check"></i>
-                        Zatwierdź i zaplanuj
-                    </button>
+                    <div class="exchange-form-actions">
+                        <button type="button" id="cancel-edit-btn" class="btn-submit btn-submit-muted btn-submit-tight">
+                            Anuluj
+                        </button>
 
-                    <button type="button" id="cancel-edit-btn"
-                        class="btn-submit btn-submit-muted btn-submit-tight is-hidden">
-                        <i class="fa-solid fa-times"></i>
-                        Anuluj edycję
-                    </button>
-                </form>
-
-                <section class="backup_section">
-                    <h3>Kopia zapasowa</h3>
-
-                    <div class="backup-container">
-                        <div class="backup-row">
-                            <button id="export-excel-btn" class="btn-backup-item btn-excel-green" type="button">
-                                <i class="fa-solid fa-file-excel"></i>
-                            </button>
-
-                            <input type="file" id="importExcelFile" class="visually-hidden-file-input"
-                                accept=".xlsx, .xls" />
-
-                            <button id="import-excel-trigger" class="btn-backup-item" type="button">
-                                Import Excel
-                            </button>
-                        </div>
+                        <button type="submit" id="submit-btn" class="btn-submit btn-submit-warning btn-submit-tight">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            Zatwierdź i zaplanuj
+                        </button>
                     </div>
-                </section>
+                </form>
             </aside>
-        </main>
+        </div>
 
         <footer class="main-footer">
             <div class="footer-content">

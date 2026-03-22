@@ -4,7 +4,6 @@ let editIndex = null
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.EXCHANGES
 
 const exchangeForm = document.getElementById('exchange-form')
-const exchangeAside = document.querySelector('aside')
 const tableBody = document.getElementById('table-body')
 const accessoryPicker = document.getElementById('accessory-picker')
 const submitBtn = document.getElementById('submit-btn')
@@ -12,6 +11,13 @@ const cancelEditBtn = document.getElementById('cancel-edit-btn')
 const exportExcelBtn = document.getElementById('export-excel-btn')
 const importExcelInput = document.getElementById('importExcelFile')
 const importExcelTrigger = document.getElementById('import-excel-trigger')
+const openDrawerBtn = document.getElementById('open-exchange-drawer')
+const closeDrawerBtn = document.getElementById('close-exchange-drawer')
+const drawerShell = document.getElementById('exchange-drawer-shell')
+const drawerBackdrop = document.getElementById('exchange-drawer-backdrop')
+const drawerTitle = document.getElementById('exchange-drawer-title')
+const drawerCopy = document.getElementById('exchange-drawer-copy')
+const monthSummary = document.getElementById('exchange-month-summary')
 
 const monthPicker = AppUtils.createMonthPicker({
 	onChange: () => renderTable(),
@@ -90,13 +96,42 @@ function getCurrentMonthExchanges() {
 	const { currentViewDate } = getCurrentMonthContext()
 	return exchanges.filter(exchange => AppUtils.isSameMonth(exchange.plannedDate, currentViewDate))
 }
-/* === Exchanges View Helpers: End === */
 
-/* === Exchanges Form State: Start === */
 function getSelectedAccessories() {
 	return Array.from(document.querySelectorAll('.accessory-item.active')).map(item => item.dataset.item)
 }
 
+function hasDrawerFormChanges() {
+	if (!exchangeForm) return false
+
+	const textInputs = Array.from(exchangeForm.querySelectorAll('input'))
+	const hasValue = textInputs.some(input => {
+		if (input.type === 'date') return Boolean(input.value)
+		if (input.type === 'text') return input.value.trim() !== ''
+		return false
+	})
+
+	return hasValue || getSelectedAccessories().length > 0
+}
+
+function updateMonthSummary(visibleCount, totalCount, monthLabel) {
+	if (!monthSummary) return
+
+	if (totalCount === 0) {
+		monthSummary.textContent = `${monthLabel} · baza jest pusta, możesz zaplanować pierwszą wymianę.`
+		return
+	}
+
+	if (visibleCount === totalCount) {
+		monthSummary.textContent = `${monthLabel} · widoczne wymiany: ${visibleCount}.`
+		return
+	}
+
+	monthSummary.textContent = `${monthLabel} · widoczne wymiany: ${visibleCount} z ${totalCount} w całej bazie.`
+}
+/* === Exchanges View Helpers: End === */
+
+/* === Exchanges Drawer: Start === */
 function resetFormState() {
 	editIndex = null
 
@@ -108,21 +143,89 @@ function resetFormState() {
 		item.classList.remove('active', 'is-tapped')
 	})
 
+	if (drawerTitle) {
+		drawerTitle.textContent = 'Zaplanuj nową wymianę'
+	}
+
+	if (drawerCopy) {
+		drawerCopy.textContent = 'Uzupełnij dane pracownika, sprzętu i zapisz plan na wybrany miesiąc.'
+	}
+
 	if (submitBtn) {
 		submitBtn.classList.remove('btn-submit-primary')
 		submitBtn.classList.add('btn-submit-warning')
 		submitBtn.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Zatwierdź i zaplanuj'
 	}
-
-	if (cancelEditBtn) {
-		cancelEditBtn.classList.add('is-hidden')
-	}
-
-	if (exchangeAside) {
-		exchangeAside.classList.remove('editing-active')
-	}
 }
-/* === Exchanges Form State: End === */
+
+function openDrawer() {
+	if (!drawerShell) return
+
+	drawerShell.classList.add('is-open')
+	drawerShell.setAttribute('aria-hidden', 'false')
+	document.body.classList.add('exchange-drawer-open')
+
+	const firstField = document.getElementById('emp-name')
+	window.setTimeout(() => firstField?.focus(), 80)
+}
+
+function closeDrawer({ force = false } = {}) {
+	if (!drawerShell) return false
+
+	if (!force && hasDrawerFormChanges()) {
+		const shouldClose = confirm('Zamknąć panel? Niezapisane zmiany zostaną utracone.')
+		if (!shouldClose) return false
+	}
+
+	drawerShell.classList.remove('is-open')
+	drawerShell.setAttribute('aria-hidden', 'true')
+	document.body.classList.remove('exchange-drawer-open')
+	resetFormState()
+	return true
+}
+
+function startCreateFlow() {
+	resetFormState()
+	openDrawer()
+}
+
+function startEditFlow(index) {
+	const exchange = exchanges[index]
+	if (!exchange) return
+
+	resetFormState()
+	editIndex = index
+
+	document.getElementById('emp-name').value = exchange.name || ''
+	document.getElementById('exchange-date').value = AppUtils.normalizeSpreadsheetDate(exchange.plannedDate) || ''
+	document.getElementById('old-sn').value = exchange.oldSn || ''
+	document.getElementById('new-sn').value = exchange.newSn || ''
+	document.getElementById('notes').value = exchange.notes || ''
+
+	document.querySelectorAll('.accessory-item').forEach(item => {
+		const itemName = item.dataset.item
+		item.classList.toggle('active', exchange.accessories && exchange.accessories.includes(itemName))
+	})
+
+	if (drawerTitle) {
+		drawerTitle.textContent = 'Edytuj wymianę'
+	}
+
+	if (drawerCopy) {
+		drawerCopy.textContent = 'Zmień dane planu, zapisz poprawki i zostań w bieżącym widoku tabeli.'
+	}
+
+	if (submitBtn) {
+		submitBtn.classList.remove('btn-submit-warning')
+		submitBtn.classList.add('btn-submit-primary')
+		submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Zapisz zmiany'
+	}
+
+	monthPicker.setCurrentDate(AppUtils.parseDate(exchange.plannedDate) || new Date(), { render: false })
+	renderTable()
+	openDrawer()
+}
+/* === Exchanges Drawer: End === */
 
 /* === Exchanges Table Rendering: Start === */
 function renderTable() {
@@ -132,6 +235,7 @@ function renderTable() {
 
 	const { monthLabel } = getCurrentMonthContext()
 	const filteredExchanges = getCurrentMonthExchanges()
+	updateMonthSummary(filteredExchanges.length, exchanges.length, monthLabel)
 
 	if (filteredExchanges.length === 0) {
 		const hiddenCount = exchanges.length
@@ -156,7 +260,7 @@ function renderTable() {
 						<i class="fas fa-info-circle notes-icon"></i>
 						<span class="notes-tooltip-text">${exchange.notes}</span>
 					</div>`
-				: ''
+				: '<span class="exchange-info-placeholder">-</span>'
 
 		const accessoriesHtml = AppUtils.renderAccessoryIcons(exchange.accessories, {
 			size: '1rem',
@@ -170,27 +274,36 @@ function renderTable() {
 				<div class="td-info-center">${infoHtml}</div>
 			</td>
 			<td class="col-worker">
-				<span class="worker-name">${exchange.name}</span>
+				<div class="exchange-worker-wrap">
+					<span class="worker-name">${exchange.name}</span>
+					${isDone ? '<span class="exchange-state-badge">Zakończona</span>' : ''}
+				</div>
 			</td>
 			<td class="col-date">
 				<span class="date-text">${exchange.plannedDate}</span>
 			</td>
 			<td class="col-laptop">
-				<span class="sn-badge out">RU: ${exchange.oldSn || '---'}</span>
+				<span class="sn-badge out">${exchange.oldSn ? `RU: ${exchange.oldSn}` : 'Brak zwrotu'}</span>
 			</td>
 			<td class="col-laptop">
-				<span class="sn-badge in">RU: ${exchange.newSn || '---'}</span>
+				<span class="sn-badge in">${exchange.newSn ? `RU: ${exchange.newSn}` : 'Brak wydania'}</span>
 			</td>
 			<td class="col-acc">${accessoriesHtml}</td>
 			<td class="col-actions">
 				<div class="action-wrapper">
 					${
 						!isDone
-							? `<button class="btn-table btn-ok" type="button" data-action="complete" data-index="${originalIndex}" title="Finalizuj"><i class="fas fa-check"></i></button>`
+							? `<button class="icon-button exchange-action-btn exchange-action-btn-complete" type="button" data-action="complete" data-index="${originalIndex}" aria-label="Finalizuj wymianę" title="Finalizuj wymianę">
+								<i class="fas fa-check"></i>
+							</button>`
 							: ''
 					}
-					<button class="btn-table btn-edit" type="button" data-action="edit" data-index="${originalIndex}" title="Edytuj"><i class="fas fa-edit"></i></button>
-					<button class="btn-table btn-delete" type="button" data-action="delete" data-index="${originalIndex}" title="Usuń"><i class="fas fa-trash"></i></button>
+					<button class="icon-button exchange-action-btn" type="button" data-action="edit" data-index="${originalIndex}" aria-label="Edytuj wymianę" title="Edytuj wymianę">
+						<i class="fas fa-pen"></i>
+					</button>
+					<button class="icon-button exchange-action-btn exchange-action-btn-danger" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usuń wymianę" title="Usuń wymianę">
+						<i class="fas fa-trash"></i>
+					</button>
 				</div>
 			</td>
 		`
@@ -201,47 +314,6 @@ function renderTable() {
 /* === Exchanges Table Rendering: End === */
 
 /* === Exchanges Actions: Start === */
-function editExchange(index) {
-	const exchange = exchanges[index]
-	if (!exchange) return
-
-	editIndex = index
-
-	document.getElementById('emp-name').value = exchange.name
-	document.getElementById('exchange-date').value = AppUtils.normalizeSpreadsheetDate(exchange.plannedDate) || ''
-	document.getElementById('old-sn').value = exchange.oldSn
-	document.getElementById('new-sn').value = exchange.newSn
-	document.getElementById('notes').value = exchange.notes || ''
-
-	document.querySelectorAll('.accessory-item').forEach(item => {
-		const itemName = item.dataset.item
-		item.classList.toggle('active', exchange.accessories && exchange.accessories.includes(itemName))
-	})
-
-	if (submitBtn) {
-		submitBtn.classList.remove('btn-submit-warning')
-		submitBtn.classList.add('btn-submit-primary')
-		submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Zapisz zmiany'
-	}
-
-	if (cancelEditBtn) {
-		cancelEditBtn.classList.remove('is-hidden')
-	}
-
-	if (exchangeAside) {
-		exchangeAside.classList.add('editing-active')
-	}
-
-	monthPicker.setCurrentDate(AppUtils.parseDate(exchange.plannedDate) || new Date(), { render: false })
-	renderTable()
-	window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function cancelEdit() {
-	if (!confirm('Anulować edycję? Zmiany nie zostaną zapisane.')) return
-	resetFormState()
-}
-
 function completeExchange(index) {
 	const exchange = exchanges[index]
 	if (!exchange || exchange.status === 'done') return
@@ -274,6 +346,12 @@ function completeExchange(index) {
 
 function removeItem(index) {
 	if (!confirm('Usunąć ten wpis?')) return
+
+	if (editIndex === index) {
+		closeDrawer({ force: true })
+	} else if (editIndex !== null && editIndex > index) {
+		editIndex -= 1
+	}
 
 	exchanges.splice(index, 1)
 	saveData()
@@ -321,8 +399,8 @@ function importExcel(event) {
 				name: (row.Pracownik || row.Użytkownik || '').toString().toUpperCase(),
 				plannedDate:
 					AppUtils.normalizeSpreadsheetDate(row.Data || row['Data planowanej wymiany']) || AppUtils.formatDate(new Date()),
-				oldSn: row['Stary SN'] || row['SN do zwrotu'] || '',
-				newSn: row['Nowy SN'] || row['SN do wydania'] || '',
+				oldSn: AppUtils.normalizeSN(row['Stary SN'] || row['SN do zwrotu'] || ''),
+				newSn: AppUtils.normalizeSN(row['Nowy SN'] || row['SN do wydania'] || ''),
 				accessories: row.Akcesoria ? row.Akcesoria.split(',').map(item => item.trim()).filter(Boolean) : [],
 				notes: row.Uwagi || '',
 				status: row.Status === 'Zakończono' ? 'done' : 'pending',
@@ -348,6 +426,7 @@ function importExcel(event) {
 /* === Exchanges Init: Start === */
 document.addEventListener('DOMContentLoaded', () => {
 	monthPicker.init()
+	resetFormState()
 
 	document.querySelectorAll('[data-month-delta]').forEach(button => {
 		button.addEventListener('click', () => {
@@ -377,10 +456,32 @@ document.addEventListener('DOMContentLoaded', () => {
 			const action = actionButton.dataset.action
 
 			if (action === 'complete') completeExchange(index)
-			if (action === 'edit') editExchange(index)
+			if (action === 'edit') startEditFlow(index)
 			if (action === 'delete') removeItem(index)
 		})
 	}
+
+	if (openDrawerBtn) {
+		openDrawerBtn.addEventListener('click', startCreateFlow)
+	}
+
+	if (closeDrawerBtn) {
+		closeDrawerBtn.addEventListener('click', () => closeDrawer())
+	}
+
+	if (cancelEditBtn) {
+		cancelEditBtn.addEventListener('click', () => closeDrawer())
+	}
+
+	if (drawerBackdrop) {
+		drawerBackdrop.addEventListener('click', () => closeDrawer())
+	}
+
+	window.addEventListener('keydown', event => {
+		if (event.key === 'Escape' && drawerShell?.classList.contains('is-open')) {
+			closeDrawer()
+		}
+	})
 
 	if (exchangeForm) {
 		exchangeForm.addEventListener('submit', event => {
@@ -389,9 +490,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			const exchangeData = {
 				name: document.getElementById('emp-name').value.toUpperCase(),
 				plannedDate: document.getElementById('exchange-date').value,
-				oldSn: document.getElementById('old-sn').value,
-				newSn: document.getElementById('new-sn').value,
-				notes: document.getElementById('notes').value,
+				oldSn: AppUtils.normalizeSN(document.getElementById('old-sn').value),
+				newSn: AppUtils.normalizeSN(document.getElementById('new-sn').value),
+				notes: document.getElementById('notes').value.trim(),
 				accessories: getSelectedAccessories(),
 				status: editIndex !== null ? exchanges[editIndex].status : 'pending',
 				createdAt: editIndex !== null ? exchanges[editIndex].createdAt : new Date(),
@@ -399,19 +500,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			if (editIndex !== null) {
 				exchanges[editIndex] = exchangeData
-				alert('Zmiany zostały zapisane.')
 			} else {
 				exchanges.push(exchangeData)
 			}
 
 			monthPicker.setCurrentDate(AppUtils.parseDate(exchangeData.plannedDate) || new Date(), { render: false })
 			saveData()
-			resetFormState()
+			closeDrawer({ force: true })
 		})
-	}
-
-	if (cancelEditBtn) {
-		cancelEditBtn.addEventListener('click', cancelEdit)
 	}
 
 	if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)
@@ -421,6 +517,5 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	loadData()
-	resetFormState()
 })
 /* === Exchanges Init: End === */

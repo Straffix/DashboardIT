@@ -49,9 +49,36 @@
 
         </header>
 
-        <div class="main-content">
+        <div class="main-content hires-content">
 
-            <section>
+            <section class="hires-workspace">
+
+                <div class="workspace-panel-top">
+                    <div class="workspace-copy">
+                        <span class="workspace-kicker">Nowe zatrudnienia</span>
+                        <h2>Plan zatrudnień</h2>
+                        <p id="hires-month-summary">Ładowanie widoku miesiąca...</p>
+                    </div>
+
+                    <div class="workspace-actions">
+                        <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
+
+                        <button id="import-excel-trigger" class="workspace-action-btn" type="button">
+                            <i class="fa-solid fa-file-import"></i>
+                            <span>Import Excel</span>
+                        </button>
+
+                        <button id="export-excel-btn" class="workspace-action-btn workspace-action-btn-green" type="button">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Eksport Excel</span>
+                        </button>
+
+                        <button id="open-hire-drawer" class="workspace-primary-btn" type="button">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Dodaj pracownika</span>
+                        </button>
+                    </div>
+                </div>
 
                 <div class="table-header">
                     <button class="month-nav-btn" type="button" data-month-delta="-1" aria-label="Poprzedni miesiąc">
@@ -64,36 +91,51 @@
                         <input type="month" id="hidden-month-input" class="hidden-month-input" aria-hidden="true">
                     </div>
 
-
                     <button class="month-nav-btn" type="button" data-month-delta="1" aria-label="Następny miesiąc">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
 
-                <table class="hires-table">
+                <div class="table-container">
+                    <table class="hires-table">
 
-                    <thead>
-                        <tr>
-                            <th>IMIĘ I NAZWISKO</th>
-                            <th>SEKCJA</th>
-                            <th>SPRZĘT (SN)</th>
-                            <th>DATA STARTU</th>
-                            <th class="table-head-cell-center">AKCESORIA</th>
-                            <th></th>
-                        </tr>
-                    </thead>
+                        <thead>
+                            <tr>
+                                <th>IMIĘ I NAZWISKO</th>
+                                <th>SEKCJA</th>
+                                <th>SPRZĘT / SN</th>
+                                <th>START</th>
+                                <th class="table-head-cell-center">AKCESORIA</th>
+                                <th class="table-head-cell-center">AKCJE</th>
+                            </tr>
+                        </thead>
 
-                    <tbody id="table-body"></tbody>
+                        <tbody id="table-body"></tbody>
 
-                </table>
+                    </table>
+                </div>
 
             </section>
 
-            <aside>
+        </div>
 
-                <h2>Dodaj pracownika</h2>
+        <div id="hire-drawer-shell" class="hire-drawer-shell" aria-hidden="true">
+            <div id="hire-drawer-backdrop" class="hire-drawer-backdrop"></div>
 
-                <form id="device-form">
+            <aside id="hire-drawer" class="hire-drawer" aria-labelledby="hire-drawer-title">
+                <div class="hire-drawer-header">
+                    <div>
+                        <p class="hire-drawer-kicker">Nowe zatrudnienia</p>
+                        <h2 id="hire-drawer-title">Dodaj pracownika</h2>
+                        <p id="hire-drawer-copy" class="hire-drawer-copy">Uzupełnij dane i zapisz nowy onboarding.</p>
+                    </div>
+
+                    <button id="close-hire-drawer" class="hire-drawer-close" type="button" aria-label="Zamknij panel">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <form id="device-form" class="hire-drawer-form">
 
                     <div class="input-group">
                         <label>Imię i Nazwisko</label>
@@ -111,7 +153,6 @@
                     </div>
 
                     <div class="input-group">
-
                         <label>Akcesoria do wydania</label>
 
                         <div class="accessory-picker" id="accessory-picker">
@@ -137,7 +178,6 @@
                             </div>
 
                         </div>
-
                     </div>
 
                     <div class="input-group" id="date-group">
@@ -145,36 +185,18 @@
                         <input type="date" id="date" required>
                     </div>
 
-                    <button type="submit" class="btn-submit btn-submit-soft-danger">
-                        Dodaj do listy
-                    </button>
+                    <div class="hire-form-actions">
+                        <button type="button" id="cancel-hire-drawer" class="btn-submit btn-submit-muted btn-submit-tight">
+                            Anuluj
+                        </button>
+
+                        <button type="submit" id="hire-submit-btn" class="btn-submit btn-submit-soft-danger btn-submit-tight">
+                            Dodaj do listy
+                        </button>
+                    </div>
 
                 </form>
-
-                <section class="backup_section">
-
-                    <h3>Kopia zapasowa</h3>
-
-                    <div class="backup-container">
-
-                        <div class="backup-row">
-
-                            <button id="export-excel-btn" class="btn-backup-item btn-excel-green" type="button">
-                                <i class="fa-solid fa-file-excel"></i>
-                            </button>
-
-                            <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
-
-                            <button id="import-excel-trigger" class="btn-backup-item" type="button">
-                                Import Excel
-                            </button>
-
-                        </div>
-                    </div>
-                </section>
-
             </aside>
-
         </div>
 
         <footer class="main-footer">
