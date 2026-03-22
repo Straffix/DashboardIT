@@ -15,8 +15,8 @@ const monthPicker = AppUtils.createMonthPicker({
 		const counts = Array.from({ length: 12 }, () => 0)
 
 		hires.forEach(hire => {
-			const hireDate = new Date(hire.date)
-			if (Number.isNaN(hireDate.getTime()) || hireDate.getFullYear() !== year) return
+			const hireDate = AppUtils.parseDate(hire.date)
+			if (!hireDate || hireDate.getFullYear() !== year) return
 
 			counts[hireDate.getMonth()] += 1
 		})
@@ -29,7 +29,38 @@ const monthPicker = AppUtils.createMonthPicker({
 /* === Hires Storage: Start === */
 function loadData() {
 	const saved = localStorage.getItem(STORAGE_KEY)
-	hires = saved ? JSON.parse(saved) : []
+	const parsedHires = saved ? JSON.parse(saved) : []
+	let hasUpdates = false
+
+	hires = parsedHires.map(hire => {
+		const normalizedDate = AppUtils.normalizeSpreadsheetDate(hire.date)
+		if (normalizedDate && normalizedDate !== hire.date) {
+			hasUpdates = true
+		}
+
+		return {
+			...hire,
+			date: normalizedDate || hire.date || '',
+		}
+	})
+
+	const currentViewDate = monthPicker.getCurrentDate()
+	const hasCurrentMonthData = hires.some(hire => AppUtils.isSameMonth(hire.date, currentViewDate))
+	if (!hasCurrentMonthData) {
+		const latestHireDate = hires
+			.map(hire => AppUtils.parseDate(hire.date))
+			.filter(Boolean)
+			.sort((left, right) => right - left)[0]
+
+		if (latestHireDate) {
+			monthPicker.setCurrentDate(latestHireDate, { render: false })
+		}
+	}
+
+	if (hasUpdates) {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(hires))
+	}
+
 	renderTable()
 }
 
@@ -39,36 +70,57 @@ function saveData() {
 }
 /* === Hires Storage: End === */
 
+/* === Hires View Helpers: Start === */
+function getCurrentMonthContext() {
+	const currentViewDate = monthPicker.getCurrentDate()
+	const month = String(currentViewDate.getMonth() + 1).padStart(2, '0')
+
+	return {
+		currentViewDate,
+		monthKey: `${currentViewDate.getFullYear()}-${month}`,
+		monthLabel: `${AppUtils.config.MONTH_NAMES[currentViewDate.getMonth()].toUpperCase()} ${currentViewDate.getFullYear()}`,
+	}
+}
+
+function getCurrentMonthHires() {
+	const { currentViewDate } = getCurrentMonthContext()
+	return hires.filter(hire => AppUtils.isSameMonth(hire.date, currentViewDate))
+}
+/* === Hires View Helpers: End === */
+
 /* === Hires Table Rendering: Start === */
 function renderTable() {
 	if (!tableBody) return
 	tableBody.innerHTML = ''
 	monthPicker.refreshView()
 
-	const currentViewDate = monthPicker.getCurrentDate()
+	const { monthLabel } = getCurrentMonthContext()
 	const today = new Date()
 	today.setHours(0, 0, 0, 0)
 
-	const filteredHires = hires.filter(hire => {
-		const hireDate = new Date(hire.date)
-		return hireDate.getMonth() === currentViewDate.getMonth() && hireDate.getFullYear() === currentViewDate.getFullYear()
-	})
+	const filteredHires = getCurrentMonthHires()
 
 	if (filteredHires.length === 0) {
+		const hiddenCount = hires.length
 		tableBody.innerHTML =
-			'<tr><td colspan="6" class="empty-state-cell">Brak planowanych zatrudnień w tym miesiącu.</td></tr>'
+			`<tr><td colspan="6" class="empty-state-cell">Brak planowanych zatrudnień w tym miesiącu.${
+				hiddenCount > 0 ? `<br><small>W bazie jest jeszcze ${hiddenCount} rekordów, ale eksport Excel działa dla wybranego miesiąca: ${monthLabel}.</small>` : ''
+			}</td></tr>`
 		return
 	}
 
 	filteredHires.forEach(hire => {
 		const originalIndex = hires.findIndex(original => original === hire)
-		const startDate = new Date(hire.date)
-		const diff = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24))
+		const startDate = AppUtils.parseDate(hire.date)
+		const diff = startDate ? Math.ceil((startDate - today) / (1000 * 60 * 60 * 24)) : Number.POSITIVE_INFINITY
 
 		let statusClass = 'ok'
 		let statusText = hire.date
 
-		if (diff < 0) {
+		if (!startDate) {
+			statusClass = 'near'
+			statusText = 'Nieprawidłowa data'
+		} else if (diff < 0) {
 			statusClass = 'expired'
 			statusText = 'Zatrudniony'
 		} else if (diff <= 3) {
@@ -111,9 +163,15 @@ function removeItem(index) {
 
 /* === Hires Excel Backup: Start === */
 function exportExcel() {
-	if (hires.length === 0) return alert('Brak danych!')
+	const { monthKey, monthLabel } = getCurrentMonthContext()
+	const hiresToExport = getCurrentMonthHires()
 
-	const dataToExport = hires.map(hire => ({
+	if (hiresToExport.length === 0) {
+		alert(`Arkusz za ${monthLabel} pozostal pusty. Zmien miesiac albo dodaj wpis, a wtedy eksport ruszy bez problemu.`)
+		return
+	}
+
+	const dataToExport = hiresToExport.map(hire => ({
 		'Imię i Nazwisko': hire.name,
 		'Dział / Stanowisko': hire.ru,
 		'SN Sprzętu': hire.sn,
@@ -123,7 +181,7 @@ function exportExcel() {
 	const worksheet = XLSX.utils.json_to_sheet(dataToExport)
 	const workbook = XLSX.utils.book_new()
 	XLSX.utils.book_append_sheet(workbook, worksheet, 'Zatrudnienia')
-	XLSX.writeFile(workbook, `zatrudnienia_${AppUtils.formatDate(new Date())}.xlsx`)
+	XLSX.writeFile(workbook, `zatrudnienia_${monthKey}.xlsx`)
 }
 
 function importExcel(event) {
@@ -140,7 +198,7 @@ function importExcel(event) {
 			name: (row['Imię i Nazwisko'] || '').toString().toUpperCase(),
 			ru: row['Dział / Stanowisko'] || '',
 			sn: AppUtils.normalizeSN(row['SN Sprzętu']),
-			date: row['Data rozpoczęcia'] || '',
+			date: AppUtils.normalizeSpreadsheetDate(row['Data rozpoczęcia']) || '',
 			accessories: row.Akcesoria ? row.Akcesoria.split(', ').filter(Boolean) : [],
 		}))
 
@@ -199,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				accessories: selectedAccessories,
 			})
 
-			monthPicker.setCurrentDate(new Date(newHireDate), { render: false })
+			monthPicker.setCurrentDate(AppUtils.parseDate(newHireDate) || new Date(), { render: false })
 			event.target.reset()
 			document.querySelectorAll('.accessory-item').forEach(item => item.classList.remove('active'))
 			saveData()

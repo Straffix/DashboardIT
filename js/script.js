@@ -38,15 +38,78 @@ const APP_CONFIG = {
 /* === Shared Config: End === */
 
 /* === Shared Formatters: Start === */
+const createDateFromParts = (year, month, day) => {
+	const parsedYear = Number(year)
+	const parsedMonth = Number(month)
+	const parsedDay = Number(day)
+
+	if (!parsedYear || !parsedMonth || !parsedDay) return null
+
+	const parsedDate = new Date(parsedYear, parsedMonth - 1, parsedDay)
+	if (Number.isNaN(parsedDate.getTime())) return null
+	if (parsedDate.getFullYear() !== parsedYear || parsedDate.getMonth() !== parsedMonth - 1 || parsedDate.getDate() !== parsedDay) {
+		return null
+	}
+
+	return parsedDate
+}
+
+const parseDate = value => {
+	if (value instanceof Date) {
+		const parsedDate = new Date(value.getTime())
+		return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+	}
+
+	if (typeof value === 'number' && Number.isFinite(value)) {
+		const excelDate = new Date(Date.UTC(1899, 11, 30) + value * 86400000)
+		return createDateFromParts(excelDate.getUTCFullYear(), excelDate.getUTCMonth() + 1, excelDate.getUTCDate())
+	}
+
+	const stringValue = String(value || '').trim()
+	if (!stringValue) return null
+
+	if (/^\d+(\.\d+)?$/.test(stringValue)) {
+		return parseDate(Number(stringValue))
+	}
+
+	const isoDateMatch = stringValue.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
+	if (isoDateMatch) {
+		return createDateFromParts(isoDateMatch[1], isoDateMatch[2], isoDateMatch[3])
+	}
+
+	const isoDateTimeMatch = stringValue.match(/^(\d{4})-(\d{1,2})-(\d{1,2})T/)
+	if (isoDateTimeMatch) {
+		return createDateFromParts(isoDateTimeMatch[1], isoDateTimeMatch[2], isoDateTimeMatch[3])
+	}
+
+	const localDateMatch = stringValue.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/)
+	if (localDateMatch) {
+		return createDateFromParts(localDateMatch[3], localDateMatch[2], localDateMatch[1])
+	}
+
+	const parsedDate = new Date(stringValue)
+	return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+}
+
 const formatDate = date => {
-	const parsedDate = new Date(date)
-	if (Number.isNaN(parsedDate.getTime())) return ''
+	const parsedDate = parseDate(date)
+	if (!parsedDate) return ''
 
 	const year = parsedDate.getFullYear()
 	const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
 	const day = String(parsedDate.getDate()).padStart(2, '0')
 
 	return `${year}-${month}-${day}`
+}
+
+const normalizeSpreadsheetDate = value => formatDate(parseDate(value))
+
+const isSameMonth = (leftValue, rightValue) => {
+	const leftDate = parseDate(leftValue)
+	const rightDate = parseDate(rightValue)
+	if (!leftDate || !rightDate) return false
+
+	return leftDate.getFullYear() === rightDate.getFullYear() && leftDate.getMonth() === rightDate.getMonth()
 }
 
 const normalizeSN = sn => (sn ? sn.toString().trim().replace(/-/g, '').toUpperCase() : '')
@@ -202,6 +265,11 @@ const createMonthPicker = ({
 		if (!trigger) return
 
 		const selectedYear = currentViewDate.getFullYear()
+		const getMonthCountsForYear = year =>
+			typeof getCounts === 'function' ? getCounts(year) : Array.from({ length: 12 }, () => 0)
+
+		const getYearRecordTotal = year =>
+			getMonthCountsForYear(year).reduce((sum, count) => sum + (Number(count) || 0), 0)
 
 		const popover = document.createElement('div')
 		popover.className = 'month-fallback-popover'
@@ -210,7 +278,9 @@ const createMonthPicker = ({
 
 		let yearOptions = ''
 		for (let year = selectedYear - 5; year <= selectedYear + 5; year += 1) {
-			yearOptions += `<option value="${year}" ${year === selectedYear ? 'selected' : ''}>${year}</option>`
+			const yearTotal = getYearRecordTotal(year)
+			const optionLabel = yearTotal > 0 ? `${year} (${yearTotal})` : `${year}`
+			yearOptions += `<option value="${year}" ${year === selectedYear ? 'selected' : ''}>${optionLabel}</option>`
 		}
 
 		popover.innerHTML = `
@@ -236,8 +306,7 @@ const createMonthPicker = ({
 		const renderMonthButtons = year => {
 			if (!monthsContainer) return
 
-			const monthCounts =
-				typeof getCounts === 'function' ? getCounts(year) : Array.from({ length: 12 }, () => 0)
+			const monthCounts = getMonthCountsForYear(year)
 
 			monthsContainer.innerHTML = APP_CONFIG.MONTH_NAMES.map((name, monthIndex) => {
 				const count = Number(monthCounts?.[monthIndex]) || 0
@@ -273,7 +342,8 @@ const createMonthPicker = ({
 		popover.addEventListener('click', stopPopoverEvent)
 		popover.addEventListener('mousedown', stopPopoverEvent)
 		yearSelect?.addEventListener('change', event => {
-			renderMonthButtons(Number(event.target.value))
+			const nextYear = Number(event.target.value)
+			renderMonthButtons(nextYear)
 		})
 		monthsContainer?.addEventListener('click', event => {
 			const monthButton = event.target.closest('.month-fallback-month[data-month-index]')
@@ -532,6 +602,9 @@ document.addEventListener('DOMContentLoaded', () => {
 window.AppUtils = {
 	config: APP_CONFIG,
 	formatDate,
+	parseDate,
+	normalizeSpreadsheetDate,
+	isSameMonth,
 	normalizeSN,
 	renderAccessoryIcons,
 	createMonthPicker,

@@ -19,8 +19,8 @@ const monthPicker = AppUtils.createMonthPicker({
 		const counts = Array.from({ length: 12 }, () => 0)
 
 		exchanges.forEach(exchange => {
-			const exchangeDate = new Date(exchange.plannedDate)
-			if (Number.isNaN(exchangeDate.getTime()) || exchangeDate.getFullYear() !== year) return
+			const exchangeDate = AppUtils.parseDate(exchange.plannedDate)
+			if (!exchangeDate || exchangeDate.getFullYear() !== year) return
 
 			counts[exchangeDate.getMonth()] += 1
 		})
@@ -33,7 +33,38 @@ const monthPicker = AppUtils.createMonthPicker({
 /* === Exchanges Storage: Start === */
 function loadData() {
 	const saved = localStorage.getItem(STORAGE_KEY)
-	exchanges = saved ? JSON.parse(saved) : []
+	const parsedExchanges = saved ? JSON.parse(saved) : []
+	let hasUpdates = false
+
+	exchanges = parsedExchanges.map(exchange => {
+		const normalizedDate = AppUtils.normalizeSpreadsheetDate(exchange.plannedDate)
+		if (normalizedDate && normalizedDate !== exchange.plannedDate) {
+			hasUpdates = true
+		}
+
+		return {
+			...exchange,
+			plannedDate: normalizedDate || exchange.plannedDate || '',
+		}
+	})
+
+	const currentViewDate = monthPicker.getCurrentDate()
+	const hasCurrentMonthData = exchanges.some(exchange => AppUtils.isSameMonth(exchange.plannedDate, currentViewDate))
+	if (!hasCurrentMonthData) {
+		const latestExchangeDate = exchanges
+			.map(exchange => AppUtils.parseDate(exchange.plannedDate))
+			.filter(Boolean)
+			.sort((left, right) => right - left)[0]
+
+		if (latestExchangeDate) {
+			monthPicker.setCurrentDate(latestExchangeDate, { render: false })
+		}
+	}
+
+	if (hasUpdates) {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(exchanges))
+	}
+
 	renderTable()
 }
 
@@ -42,6 +73,24 @@ function saveData() {
 	renderTable()
 }
 /* === Exchanges Storage: End === */
+
+/* === Exchanges View Helpers: Start === */
+function getCurrentMonthContext() {
+	const currentViewDate = monthPicker.getCurrentDate()
+	const month = String(currentViewDate.getMonth() + 1).padStart(2, '0')
+
+	return {
+		currentViewDate,
+		monthKey: `${currentViewDate.getFullYear()}-${month}`,
+		monthLabel: `${AppUtils.config.MONTH_NAMES[currentViewDate.getMonth()].toUpperCase()} ${currentViewDate.getFullYear()}`,
+	}
+}
+
+function getCurrentMonthExchanges() {
+	const { currentViewDate } = getCurrentMonthContext()
+	return exchanges.filter(exchange => AppUtils.isSameMonth(exchange.plannedDate, currentViewDate))
+}
+/* === Exchanges View Helpers: End === */
 
 /* === Exchanges Form State: Start === */
 function getSelectedAccessories() {
@@ -81,17 +130,14 @@ function renderTable() {
 	tableBody.innerHTML = ''
 	monthPicker.refreshView()
 
-	const currentViewDate = monthPicker.getCurrentDate()
-	const filteredExchanges = exchanges.filter(exchange => {
-		const exchangeDate = new Date(exchange.plannedDate)
-		return (
-			exchangeDate.getMonth() === currentViewDate.getMonth() &&
-			exchangeDate.getFullYear() === currentViewDate.getFullYear()
-		)
-	})
+	const { monthLabel } = getCurrentMonthContext()
+	const filteredExchanges = getCurrentMonthExchanges()
 
 	if (filteredExchanges.length === 0) {
-		tableBody.innerHTML = '<tr><td colspan="7" class="empty-state-cell">Brak planowanych wymian w tym miesiącu.</td></tr>'
+		const hiddenCount = exchanges.length
+		tableBody.innerHTML = `<tr><td colspan="7" class="empty-state-cell">Brak planowanych wymian w tym miesiącu.${
+			hiddenCount > 0 ? `<br><small>W bazie jest jeszcze ${hiddenCount} rekordów, ale eksport Excel działa dla wybranego miesiąca: ${monthLabel}.</small>` : ''
+		}</td></tr>`
 		return
 	}
 
@@ -162,7 +208,7 @@ function editExchange(index) {
 	editIndex = index
 
 	document.getElementById('emp-name').value = exchange.name
-	document.getElementById('exchange-date').value = exchange.plannedDate
+	document.getElementById('exchange-date').value = AppUtils.normalizeSpreadsheetDate(exchange.plannedDate) || ''
 	document.getElementById('old-sn').value = exchange.oldSn
 	document.getElementById('new-sn').value = exchange.newSn
 	document.getElementById('notes').value = exchange.notes || ''
@@ -186,7 +232,7 @@ function editExchange(index) {
 		exchangeAside.classList.add('editing-active')
 	}
 
-	monthPicker.setCurrentDate(new Date(exchange.plannedDate), { render: false })
+	monthPicker.setCurrentDate(AppUtils.parseDate(exchange.plannedDate) || new Date(), { render: false })
 	renderTable()
 	window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -236,12 +282,15 @@ function removeItem(index) {
 
 /* === Exchanges Excel Backup: Start === */
 function exportExcel() {
-	if (exchanges.length === 0) {
-		alert('Brak danych do eksportu!')
+	const { monthKey, monthLabel } = getCurrentMonthContext()
+	const exchangesToExport = getCurrentMonthExchanges()
+
+	if (exchangesToExport.length === 0) {
+		alert(`Nic nie wyladowalo w eksporcie za ${monthLabel}. Ten miesiac jest czysty, wiec plik nie zostal pobrany.`)
 		return
 	}
 
-	const data = exchanges.map(exchange => ({
+	const data = exchangesToExport.map(exchange => ({
 		Pracownik: exchange.name,
 		Data: exchange.plannedDate,
 		'Stary SN': exchange.oldSn,
@@ -253,7 +302,7 @@ function exportExcel() {
 	const worksheet = XLSX.utils.json_to_sheet(data)
 	const workbook = XLSX.utils.book_new()
 	XLSX.utils.book_append_sheet(workbook, worksheet, 'Wymiany')
-	XLSX.writeFile(workbook, `wymiany_${new Date().toISOString().slice(0, 10)}.xlsx`)
+	XLSX.writeFile(workbook, `wymiany_${monthKey}.xlsx`)
 }
 
 function importExcel(event) {
@@ -270,7 +319,8 @@ function importExcel(event) {
 
 			const imported = jsonData.map(row => ({
 				name: (row.Pracownik || row.Użytkownik || '').toString().toUpperCase(),
-				plannedDate: row.Data || row['Data planowanej wymiany'] || new Date().toISOString().split('T')[0],
+				plannedDate:
+					AppUtils.normalizeSpreadsheetDate(row.Data || row['Data planowanej wymiany']) || AppUtils.formatDate(new Date()),
 				oldSn: row['Stary SN'] || row['SN do zwrotu'] || '',
 				newSn: row['Nowy SN'] || row['SN do wydania'] || '',
 				accessories: row.Akcesoria ? row.Akcesoria.split(',').map(item => item.trim()).filter(Boolean) : [],
@@ -354,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				exchanges.push(exchangeData)
 			}
 
-			monthPicker.setCurrentDate(new Date(exchangeData.plannedDate), { render: false })
+			monthPicker.setCurrentDate(AppUtils.parseDate(exchangeData.plannedDate) || new Date(), { render: false })
 			saveData()
 			resetFormState()
 		})

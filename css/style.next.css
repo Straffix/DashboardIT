@@ -146,10 +146,53 @@ body:not(.dashboard-page) .wrapper::before {
   content: "";
   position: absolute;
   inset: 14px;
+  z-index: 0;
   border-radius: 24px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(248, 250, 255, 0.08) 100%);
   border: 1px solid rgba(255, 255, 255, 0.24);
   pointer-events: none;
+}
+body:not(.dashboard-page) .wrapper > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.theme-dark:not(.dashboard-page) {
+  --text-muted: #c2d3ee;
+  --text-soft: #adc0de;
+}
+body.theme-dark:not(.dashboard-page)::before {
+  opacity: 0.14;
+}
+
+body.theme-dark:not(.dashboard-page) .wrapper {
+  background: rgba(9, 16, 31, 0.76);
+  border-color: rgba(124, 140, 255, 0.22);
+  box-shadow: 0 30px 80px rgba(2, 8, 23, 0.52), 0 0 0 1px rgba(110, 231, 255, 0.08);
+}
+
+body.theme-dark:not(.dashboard-page) .wrapper::before {
+  background: linear-gradient(180deg, rgba(21, 32, 57, 0.9) 0%, rgba(9, 16, 31, 0.62) 100%);
+  border-color: rgba(124, 140, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+body.theme-dark:not(.dashboard-page) .main-content section,
+body.theme-dark:not(.dashboard-page) .main-content aside {
+  background: rgba(15, 24, 42, 0.82);
+  border-color: rgba(124, 140, 255, 0.22);
+  box-shadow: 0 18px 40px rgba(2, 8, 23, 0.36);
+}
+
+body.theme-dark:not(.dashboard-page) .stats-grid .stat-card {
+  background: rgba(15, 24, 42, 0.82);
+  border-color: rgba(124, 140, 255, 0.22);
+  box-shadow: 0 18px 40px rgba(2, 8, 23, 0.36);
+}
+body.theme-dark:not(.dashboard-page) .input-group input:not([type=radio]):not([type=checkbox])::placeholder,
+body.theme-dark:not(.dashboard-page) .input-group textarea::placeholder {
+  color: rgba(173, 192, 222, 0.82);
+  opacity: 1;
 }
 
 .menu-btn {
@@ -207,6 +250,7 @@ body:not(.dashboard-page) .wrapper::before {
 .logo-section h1 {
   font-family: "Audiowide", sans-serif;
   font-size: 2.4rem;
+  color: var(--text-main);
   text-transform: uppercase;
   transition: font-size 0.35s ease;
 }
@@ -718,6 +762,7 @@ table tr:last-child td {
   left: 50%;
   z-index: 2000;
   width: 375px;
+  max-width: min(92vw, 375px);
   padding: 23px;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -736,8 +781,9 @@ table tr:last-child td {
 
 .month-fallback-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 15px;
+  margin-bottom: 18px;
 }
 
 .month-fallback-field {
@@ -772,6 +818,80 @@ table tr:last-child td {
 .month-fallback-field select option {
   background: var(--bg-surface-strong);
   color: var(--text-main);
+}
+
+.month-fallback-months {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.month-fallback-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 54px;
+  padding: 10px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.month-fallback-month:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  background: var(--bg-panel-hover);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+}
+
+.month-fallback-month:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
+}
+
+.month-fallback-month.has-records {
+  border-color: var(--border-strong);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.month-fallback-month.is-active {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.28);
+}
+
+.month-fallback-month-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.month-fallback-month-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.14);
+  color: var(--primary-strong);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.month-fallback-month.is-active .month-fallback-month-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
 }
 
 .month-fallback-actions {
@@ -937,6 +1057,24 @@ body.wide-mode .month-fallback-grid {
   gap: 17px;
 }
 
+body.wide-mode .month-fallback-months {
+  gap: 12px;
+}
+
+body.wide-mode .month-fallback-month {
+  min-height: 58px;
+}
+
+body.wide-mode .month-fallback-month-label {
+  font-size: 1.28rem;
+}
+
+body.wide-mode .month-fallback-month-count {
+  min-width: 24px;
+  height: 24px;
+  font-size: 1.05rem;
+}
+
 body.wide-mode .month-fallback-field span {
   font-size: 1.28rem;
 }
@@ -1055,5 +1193,19 @@ body.wide-mode .month-fallback-btn {
 
   .logo-section {
     align-items: flex-start;
+  }
+
+  .month-fallback-months {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .month-fallback-month {
+    min-height: 48px;
+    padding: 8px 6px;
+  }
+
+  .month-fallback-month-label {
+    font-size: 1.08rem;
   }
 }
