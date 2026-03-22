@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		fallbackName: 'Warszawa',
 		fallbackLat: 52.2298,
 		fallbackLon: 21.0118,
+		geoapifyApiKeyMetaName: 'geoapify-api-key',
 	}
 
 	const weatherCodeMap = {
@@ -47,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const taskPreviewList = document.getElementById('task-preview-list')
 	const weatherSearchForm = document.getElementById('weather-search-form')
 	const weatherLocationInput = document.getElementById('weather-location-input')
+	const weatherCurrentLocationBtn = document.getElementById('weather-current-location-btn')
 	const weatherWidget = document.querySelector('.weather-widget')
 	const taskModal = document.getElementById('task-modal')
 	const taskForm = document.getElementById('task-form')
@@ -84,6 +86,147 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const padNumber = value => String(value).padStart(2, '0')
 
+	const normalizeSearchValue = value =>
+		String(value || '')
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.toLocaleLowerCase('pl-PL')
+			.trim()
+
+	const normalizeLocationPart = value =>
+		String(value || '')
+			.replace(/^(gmina|gm\.|powiat|województwo)\s+/i, '')
+			.replace(/\s+/g, ' ')
+			.trim()
+
+	const getUniqueLocationParts = parts => {
+		const seen = new Set()
+
+		return parts
+			.map(normalizeLocationPart)
+			.filter(part => {
+				if (!part) return false
+
+				const key = normalizeSearchValue(part)
+				if (seen.has(key)) return false
+
+				seen.add(key)
+				return true
+			})
+	}
+
+	const buildCurrentLocationDetails = address => {
+		const primaryLabel =
+			getUniqueLocationParts([
+				address.hamlet,
+				address.village,
+				address.locality,
+				address.neighbourhood,
+				address.residential,
+				address.suburb,
+				address.quarter,
+				address.town,
+				address.city_district,
+				address.city,
+				address.municipality,
+				address.county,
+			])[0] ||
+			getUniqueLocationParts([address.state, address.country])[0] ||
+			'Aktualna lokalizacja'
+
+		const contextLabel =
+			getUniqueLocationParts([
+				address.town,
+				address.city_district,
+				address.city,
+				address.municipality,
+				address.county,
+				address.state,
+				address.country,
+			]).find(part => part !== primaryLabel) || ''
+
+		return {
+			displayLabel: getUniqueLocationParts([primaryLabel, contextLabel]).join(', ') || 'Aktualna lokalizacja',
+			searchLabel: primaryLabel,
+		}
+	}
+
+	const scoreGeocodingResult = (result, query) => {
+		const normalizedQuery = normalizeSearchValue(query)
+		const normalizedName = normalizeSearchValue(result?.name)
+		const normalizedAdmin1 = normalizeSearchValue(result?.admin1)
+		const normalizedAdmin2 = normalizeSearchValue(result?.admin2)
+		const featureBonus = {
+			PPLC: 8,
+			PPLA: 7,
+			PPLA2: 6,
+			PPLA3: 5,
+			PPLA4: 4,
+			PPL: 4,
+			PPLL: 3,
+			PPLX: 2,
+		}
+
+		let score = 0
+
+		if (normalizedName === normalizedQuery) score += 100
+		else if (normalizedName.startsWith(normalizedQuery)) score += 60
+		else if (normalizedName.includes(normalizedQuery)) score += 40
+
+		if (normalizedAdmin2 === normalizedQuery) score += 20
+		if (normalizedAdmin1 === normalizedQuery) score += 10
+		if (result?.country_code === 'PL') score += 25
+
+		score += featureBonus[result?.feature_code] || 0
+		score += Math.min(Number(result?.population) || 0, 1000000) / 100000
+
+		return score
+	}
+
+	const pickBestGeocodingResult = (results, query) =>
+		[...(results || [])].sort((left, right) => scoreGeocodingResult(right, query) - scoreGeocodingResult(left, query))[0]
+
+	const getGeoapifyApiKey = () => {
+		const apiKey =
+			document
+				.querySelector(`meta[name="${weatherConfig.geoapifyApiKeyMetaName}"]`)
+				?.getAttribute('content')
+				?.trim() || ''
+
+		if (!apiKey) return ''
+		if (/your[_-\s]?geoapify[_-\s]?api[_-\s]?key/i.test(apiKey)) return ''
+		if (/paste[_-\s]?geoapify[_-\s]?api[_-\s]?key/i.test(apiKey)) return ''
+
+		return apiKey
+	}
+
+	const buildGeoapifyLocationDetails = properties => {
+		const primaryLabel =
+			getUniqueLocationParts([
+				properties.city,
+				properties.town,
+				properties.village,
+				properties.hamlet,
+				properties.suburb,
+				properties.district,
+				properties.county,
+			])[0] ||
+			getUniqueLocationParts([properties.state, properties.country])[0] ||
+			'Aktualna lokalizacja'
+
+		const contextLabel =
+			getUniqueLocationParts([
+				properties.county,
+				properties.state,
+				properties.country,
+			]).find(part => part !== primaryLabel) || ''
+
+		return {
+			displayLabel: getUniqueLocationParts([primaryLabel, contextLabel]).join(', ') || 'Aktualna lokalizacja',
+			searchLabel: primaryLabel,
+		}
+	}
+
 	const formatTaskDateKey = date =>
 		`${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())}`
 
@@ -105,6 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	let calendarCursor = new Date()
 	let reminderTimerId = null
 	let autoClearEnabled = localStorage.getItem(taskConfig.autoclearKey) === 'true'
+	let lastClockMinuteKey = ''
+	let lastClockDateKey = ''
 
 	const loadRemindedTasks = () => {
 		try {
@@ -557,6 +702,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		const hours = now.getHours()
 		const minutes = now.getMinutes()
 		const seconds = now.getSeconds()
+		const minuteKey = `${padNumber(hours)}:${padNumber(minutes)}`
+		const dateKey = formatTaskDateKey(now)
 
 		const hourDegrees = (hours % 12) * 30 + minutes * 0.5
 		const minuteDegrees = minutes * 6 + seconds * 0.1
@@ -566,17 +713,20 @@ document.addEventListener('DOMContentLoaded', () => {
 		clockMinute.style.transform = `translateX(-50%) rotate(${minuteDegrees}deg)`
 		clockSecond.style.transform = `translateX(-50%) rotate(${secondDegrees}deg)`
 
-		clockDigital.textContent = now.toLocaleTimeString('pl-PL', {
-			hour: '2-digit',
-			minute: '2-digit',
-		})
-		clockDate.textContent = now.toLocaleDateString('pl-PL', {
-			weekday: 'long',
-			day: '2-digit',
-			month: 'long',
-		})
+		if (minuteKey !== lastClockMinuteKey) {
+			lastClockMinuteKey = minuteKey
+			clockDigital.textContent = minuteKey
+		}
 
-		renderTaskPreview()
+		if (dateKey !== lastClockDateKey) {
+			lastClockDateKey = dateKey
+			clockDate.textContent = now.toLocaleDateString('pl-PL', {
+				weekday: 'long',
+				day: '2-digit',
+				month: 'long',
+			})
+			renderTaskPreview()
+		}
 	}
 
 	const setWeatherState = ({ temperature, location, description, wind, icon }) => {
@@ -647,7 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		try {
 			const response = await fetch(
-				`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmedLocation)}&count=1&language=pl&format=json`,
+				`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmedLocation)}&count=10&language=pl&format=json`,
 				{ cache: 'no-store' }
 			)
 			if (!response.ok) {
@@ -655,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			const data = await response.json()
-			const result = data.results && data.results[0]
+			const result = pickBestGeocodingResult(data.results, trimmedLocation)
 			if (!result) {
 				throw new Error('Location not found')
 			}
@@ -674,8 +824,217 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const requestCurrentPosition = options =>
+		new Promise((resolve, reject) => {
+			navigator.geolocation.getCurrentPosition(resolve, reject, options)
+		})
+
+	const requestBestCurrentPosition = ({ timeout = 16000, desiredAccuracy = 2500 } = {}) =>
+		new Promise((resolve, reject) => {
+			let bestPosition = null
+			let isSettled = false
+			let watchId = null
+			let timeoutId = null
+
+			const finish = (callback, value) => {
+				if (isSettled) return
+
+				isSettled = true
+				if (watchId !== null) {
+					navigator.geolocation.clearWatch(watchId)
+				}
+				if (timeoutId !== null) {
+					window.clearTimeout(timeoutId)
+				}
+
+				callback(value)
+			}
+
+			const rememberBestPosition = position => {
+				if (!bestPosition) {
+					bestPosition = position
+					return
+				}
+
+				if ((position.coords.accuracy ?? Number.POSITIVE_INFINITY) < (bestPosition.coords.accuracy ?? Number.POSITIVE_INFINITY)) {
+					bestPosition = position
+				}
+			}
+
+			// `watchPosition` daje przeglądarce chwilę na doprecyzowanie współrzędnych.
+			watchId = navigator.geolocation.watchPosition(
+				position => {
+					rememberBestPosition(position)
+
+					if ((position.coords.accuracy ?? Number.POSITIVE_INFINITY) <= desiredAccuracy) {
+						finish(resolve, bestPosition)
+					}
+				},
+				error => {
+					if (bestPosition) {
+						finish(resolve, bestPosition)
+						return
+					}
+
+					finish(reject, error)
+				},
+				{
+					enableHighAccuracy: true,
+					timeout,
+					maximumAge: 0,
+				}
+			)
+
+			timeoutId = window.setTimeout(() => {
+				if (bestPosition) {
+					finish(resolve, bestPosition)
+					return
+				}
+
+				requestCurrentPosition({
+					enableHighAccuracy: false,
+					timeout: 10000,
+					maximumAge: 300000,
+				})
+					.then(position => finish(resolve, position))
+					.catch(error => finish(reject, error))
+			}, timeout)
+		})
+
+	const resolveCurrentLocationName = async (latitude, longitude) => {
+		const geoapifyApiKey = getGeoapifyApiKey()
+
+		if (geoapifyApiKey) {
+			try {
+				const response = await fetch(
+					`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&type=city&lang=pl&limit=1&apiKey=${encodeURIComponent(geoapifyApiKey)}`,
+					{ cache: 'no-store' }
+				)
+				if (!response.ok) {
+					throw new Error('Geoapify reverse geocoding request failed')
+				}
+
+				const data = await response.json()
+				const properties = data?.features?.[0]?.properties
+				if (properties) {
+					return buildGeoapifyLocationDetails(properties)
+				}
+			} catch (error) {
+				// Fallback zostaje na Nominatim, żeby przycisk działał nawet przy błędzie API lub limicie.
+			}
+		}
+
+		try {
+			const response = await fetch(
+				`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&accept-language=pl&addressdetails=1&zoom=18`,
+				{ cache: 'no-store' }
+			)
+			if (!response.ok) {
+				throw new Error('Reverse geocoding request failed')
+			}
+
+			const data = await response.json()
+			const address = data.address || {}
+			return buildCurrentLocationDetails(address)
+		} catch (error) {
+			return {
+				displayLabel: 'Aktualna lokalizacja',
+				searchLabel: 'Aktualna lokalizacja',
+			}
+		}
+	}
+
+	const fetchWeatherForCurrentLocation = async () => {
+		if (!navigator.geolocation) {
+			setWeatherState({
+				temperature: '--°C',
+				location: 'Aktualna lokalizacja',
+				description: 'Geolokalizacja niedostępna',
+				wind: 'Twoja przeglądarka jej nie wspiera',
+				icon: 'fa-location-crosshairs',
+			})
+			return
+		}
+
+		if (!window.isSecureContext) {
+			setWeatherState({
+				temperature: '--°C',
+				location: 'Aktualna lokalizacja',
+				description: 'Safari wymaga bezpiecznego adresu',
+				wind: 'Uruchom przez HTTPS albo localhost',
+				icon: 'fa-location-crosshairs',
+			})
+			return
+		}
+
+		setWeatherState({
+			temperature: '--°C',
+			location: 'Aktualna lokalizacja',
+			description: 'Pobieram pozycję...',
+			wind: 'Proszę czekać',
+			icon: 'fa-location-crosshairs',
+		})
+
+		try {
+			const position = await requestBestCurrentPosition()
+
+			const latitude = position.coords.latitude
+			const longitude = position.coords.longitude
+			const locationDetails = await resolveCurrentLocationName(latitude, longitude)
+
+			fetchWeather(latitude, longitude, locationDetails.displayLabel)
+			if (weatherLocationInput) {
+				weatherLocationInput.value = locationDetails.searchLabel
+			}
+			localStorage.setItem(weatherConfig.storageKey, locationDetails.searchLabel)
+		} catch (error) {
+			const geolocationErrors = {
+				1: {
+					description: 'Dostęp do lokalizacji zablokowany',
+					wind: 'Sprawdź ustawienia Safari i macOS',
+				},
+				2: {
+					description: 'Safari nie mogło ustalić pozycji',
+					wind: 'Włącz Wi-Fi i spróbuj ponownie',
+				},
+				3: {
+					description: 'Przekroczono czas pobierania',
+					wind: 'Połączenie lub usługi lokalizacji odpowiadają zbyt długo',
+				},
+			}
+			const fallbackMessage = {
+				description: 'Nie udało się pobrać lokalizacji',
+				wind: 'Sprawdź uprawnienia przeglądarki',
+			}
+			const message = geolocationErrors[error?.code] || fallbackMessage
+
+			setWeatherState({
+				temperature: '--°C',
+				location: 'Aktualna lokalizacja',
+				description: message.description,
+				wind: message.wind,
+				icon: 'fa-location-crosshairs',
+			})
+		}
+	}
+
 	const initWeather = () => {
 		if (!document.getElementById('weather-temp')) return
+
+		const closeWeatherEditor = () => {
+			document.body.classList.remove('weather-editor-open')
+		}
+
+		const openWeatherEditor = () => {
+			if (!weatherLocationInput) return
+
+			document.body.classList.add('weather-editor-open')
+			weatherLocationInput.value = localStorage.getItem(weatherConfig.storageKey) || weatherConfig.fallbackName
+			window.setTimeout(() => {
+				weatherLocationInput.focus()
+				weatherLocationInput.select()
+			}, 20)
+		}
 
 		const savedLocation = localStorage.getItem(weatherConfig.storageKey) || weatherConfig.fallbackName
 		if (weatherLocationInput) {
@@ -688,34 +1047,38 @@ document.addEventListener('DOMContentLoaded', () => {
 			weatherSearchForm.addEventListener('submit', event => {
 				event.preventDefault()
 				fetchWeatherForLocation(weatherLocationInput.value)
-				document.body.classList.remove('mobile-weather-editing')
+				closeWeatherEditor()
 			})
 		}
 
+		weatherCurrentLocationBtn?.addEventListener('click', () => {
+			fetchWeatherForCurrentLocation()
+			closeWeatherEditor()
+		})
+
 		if (weatherWidget && weatherLocationInput) {
 			weatherWidget.addEventListener('click', event => {
-				if (window.innerWidth > 640) return
-				if (event.target.closest('button')) return
+				if (event.target.closest('.weather-search')) return
+				openWeatherEditor()
+			})
 
-				if (!document.body.classList.contains('mobile-weather-editing')) {
-					document.body.classList.add('mobile-weather-editing')
-					window.setTimeout(() => {
-						weatherLocationInput.focus()
-						weatherLocationInput.select()
-					}, 20)
-				}
+			weatherWidget.addEventListener('keydown', event => {
+				if (event.key !== 'Enter' && event.key !== ' ') return
+				if (document.body.classList.contains('weather-editor-open')) return
+
+				event.preventDefault()
+				openWeatherEditor()
 			})
 
 			document.addEventListener('click', event => {
-				if (window.innerWidth > 640) return
-				if (!document.body.classList.contains('mobile-weather-editing')) return
+				if (!document.body.classList.contains('weather-editor-open')) return
 				if (weatherWidget.contains(event.target)) return
-				document.body.classList.remove('mobile-weather-editing')
+				closeWeatherEditor()
 			})
 
 			weatherLocationInput.addEventListener('keydown', event => {
 				if (event.key !== 'Escape') return
-				document.body.classList.remove('mobile-weather-editing')
+				closeWeatherEditor()
 			})
 		}
 	}

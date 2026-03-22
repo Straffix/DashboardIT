@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="geoapify-api-key" content="">
     <title>IT Management Dashboard</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,18 +21,26 @@
 
 <body class="dashboard-page">
     <div class="wrapper">
+        <div class="dashboard-theme-bookmark">
+            <div class="dashboard-theme-bookmark-slot"></div>
+        </div>
         <div class="dashboard-container">
             <div class="dashboard-orb dashboard-orb-left" aria-hidden="true"></div>
             <div class="dashboard-orb dashboard-orb-right" aria-hidden="true"></div>
             <div class="dashboard-grid-glow" aria-hidden="true"></div>
-
             <section class="dashboard-topbar" aria-label="Panel informacji">
-                <article class="dashboard-widget weather-widget" aria-live="polite">
+                <article class="dashboard-widget weather-widget" aria-live="polite" role="button" tabindex="0"
+                    aria-haspopup="dialog" aria-controls="weather-search-form">
                     <form class="weather-search" id="weather-search-form">
-                        <input type="text" id="weather-location-input" placeholder="Wpisz miasto" value="Warszawa"
-                            autocomplete="off">
-                        <button type="submit" id="weather-search-btn" aria-label="Pobierz pogodę">
-                            <i class="fa-solid fa-magnifying-glass"></i>
+                        <label class="weather-search-label" for="weather-location-input">Wybierz miasto</label>
+                        <div class="weather-search-row">
+                            <input type="text" id="weather-location-input" placeholder="Wpisz miasto" value="Warszawa"
+                                autocomplete="off">
+                            <button type="submit" id="weather-search-btn">Zmień</button>
+                        </div>
+                        <button type="button" class="weather-location-btn" id="weather-current-location-btn">
+                            <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                            <span>Użyj aktualnej lokalizacji</span>
                         </button>
                     </form>
                     <div class="weather-main">
@@ -54,6 +63,10 @@
                     <div class="clock-face" aria-hidden="true">
                         <span class="clock-face-ring"></span>
                         <span class="clock-face-glow"></span>
+                        <span class="clock-face-number clock-face-number-top">12</span>
+                        <span class="clock-face-number clock-face-number-right">3</span>
+                        <span class="clock-face-number clock-face-number-bottom">6</span>
+                        <span class="clock-face-number clock-face-number-left">9</span>
                         <span class="clock-hand hour-hand" id="clock-hour"></span>
                         <span class="clock-hand minute-hand" id="clock-minute"></span>
                         <span class="clock-hand second-hand" id="clock-second"></span>
