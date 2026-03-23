@@ -128,6 +128,23 @@
                 </nav>
             </section>
 
+            <section class="dashboard-bookmarks-stage" aria-labelledby="dashboard-bookmarks-title">
+                <div class="dashboard-bookmarks-head">
+                    <div class="dashboard-bookmarks-copy">
+                        <p class="dashboard-kicker">Prywatne zakladki</p>
+                        <h2 id="dashboard-bookmarks-title">Szybki dostep</h2>
+                        <p id="dashboard-bookmarks-summary">Przypnij najwazniejsze linki do SharePointa, plikow i narzedzi tylko dla swojego konta.</p>
+                    </div>
+                    <button type="button" class="dashboard-bookmarks-add-btn" id="dashboard-bookmark-add-btn">
+                        <i class="fa-solid fa-bookmark"></i>
+                        <span>Dodaj zakladke</span>
+                    </button>
+                </div>
+                <div class="dashboard-bookmarks-panel">
+                    <div class="dashboard-bookmarks-list" id="dashboard-bookmarks-list" aria-live="polite"></div>
+                </div>
+            </section>
+
             <footer class="main-footer">
                 <div class="footer-content">
                     <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
@@ -240,10 +257,53 @@
 
         <div class="task-toast-stack" id="task-toast-stack" aria-live="polite" aria-atomic="false"></div>
 
+        <div class="dashboard-bookmark-modal-shell" id="dashboard-bookmark-modal" hidden aria-hidden="true">
+            <div class="dashboard-bookmark-modal-backdrop" data-bookmark-close></div>
+            <section class="dashboard-bookmark-modal-card" role="dialog" aria-modal="true"
+                aria-labelledby="dashboard-bookmark-modal-title">
+                <button type="button" class="dashboard-bookmark-modal-close" data-bookmark-close
+                    aria-label="Zamknij panel zakladki">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div class="dashboard-bookmark-modal-copy">
+                    <p class="dashboard-kicker">Zakladki uzytkownika</p>
+                    <h2 id="dashboard-bookmark-modal-title">Dodaj zakladke</h2>
+                    <p id="dashboard-bookmark-modal-text">Zapisz szybki link tylko dla swojego konta.</p>
+                </div>
+
+                <form class="dashboard-bookmark-form" id="dashboard-bookmark-form" novalidate>
+                    <label class="dashboard-bookmark-field">
+                        <span>Nazwa</span>
+                        <input type="text" id="dashboard-bookmark-label" maxlength="60"
+                            placeholder="Np. Raport wymian" required>
+                    </label>
+
+                    <label class="dashboard-bookmark-field">
+                        <span>Adres lub sciezka</span>
+                        <input type="text" id="dashboard-bookmark-url"
+                            placeholder="https://..., \\\\serwer\\plik.xlsx albo C:\\folder\\plik.xlsx" required>
+                    </label>
+
+                    <label class="dashboard-bookmark-field">
+                        <span>Krotki opis</span>
+                        <textarea id="dashboard-bookmark-description" rows="3"
+                            placeholder="Opcjonalnie: do czego sluzy ten link"></textarea>
+                    </label>
+
+                    <div class="dashboard-bookmark-form-actions">
+                        <button type="button" class="dashboard-bookmark-secondary-btn" id="dashboard-bookmark-cancel-btn">Anuluj</button>
+                        <button type="submit" class="dashboard-bookmark-primary-btn" id="dashboard-bookmark-submit-btn">Zapisz zakladke</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
     </div>
 
     <script src="./js/script.js"></script>
     <script src="./js/dashboard.js"></script>
+    <script src="./js/dashboard-bookmarks.js"></script>
 </body>
 
 </html>

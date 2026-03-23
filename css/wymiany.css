@@ -81,6 +81,7 @@ body.exchange-month-transitioning {
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
+
 .workspace-actions.is-search-open {
   padding-bottom: 70px;
 }
@@ -122,6 +123,9 @@ body.exchange-month-transitioning {
   font-size: 1.08rem;
   font-weight: 500;
   outline: none;
+}
+.workspace-search input::-moz-placeholder {
+  color: var(--text-muted);
 }
 .workspace-search input::placeholder {
   color: var(--text-muted);

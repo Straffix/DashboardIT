@@ -53,13 +53,23 @@ function loadData() {
 
 	exchanges = parsedExchanges.map(exchange => {
 		const normalizedDate = AppUtils.normalizeSpreadsheetDate(exchange.plannedDate)
+		const normalizedAudit = normalizeAuditFields(exchange)
 		if (normalizedDate && normalizedDate !== exchange.plannedDate) {
+			hasUpdates = true
+		}
+
+		if (
+			normalizedAudit.updatedBy !== (exchange.updatedBy || exchange.createdBy || null) ||
+			normalizedAudit.createdAt !== (exchange.createdAt || '') ||
+			normalizedAudit.updatedAt !== (exchange.updatedAt || exchange.createdAt || '')
+		) {
 			hasUpdates = true
 		}
 
 		return {
 			...exchange,
 			plannedDate: normalizedDate || exchange.plannedDate || '',
+			...normalizedAudit,
 		}
 	})
 
@@ -114,6 +124,36 @@ function getVisibleExchanges() {
 			searchQuery
 		)
 	)
+}
+
+function normalizeAuditFields(record) {
+	return {
+		createdBy: record.createdBy || null,
+		updatedBy: record.updatedBy || record.createdBy || null,
+		createdAt: record.createdAt || '',
+		updatedAt: record.updatedAt || record.createdAt || '',
+	}
+}
+
+function getAuditActor() {
+	return AppUtils.auth.getAuditActorSnapshot()
+}
+
+function buildAuditMarkup(record) {
+	const createdByLabel = AppUtils.auth.getAuditActorLabel(record.createdBy)
+	const updatedByLabel = AppUtils.auth.getAuditActorLabel(record.updatedBy || record.createdBy)
+	const createdAtLabel = AppUtils.formatDate(record.createdAt)
+	const updatedAtLabel = AppUtils.formatDate(record.updatedAt)
+	const createdLine = createdAtLabel ? `${createdByLabel} · ${createdAtLabel}` : createdByLabel
+	const updatedLine = updatedAtLabel ? `${updatedByLabel} · ${updatedAtLabel}` : updatedByLabel
+	const shouldShowUpdate = Boolean(record.updatedBy || record.updatedAt) && updatedLine !== createdLine
+
+	return `
+		<div class="record-audit">
+			<span class="record-audit-line"><strong>Dodal:</strong> ${createdLine}</span>
+			${shouldShowUpdate ? `<span class="record-audit-line"><strong>Edytowal:</strong> ${updatedLine}</span>` : ''}
+		</div>
+	`
 }
 
 function setSearchOpen(isOpen) {
@@ -448,6 +488,7 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 					<span class="worker-name">${exchange.name}</span>
 					${isDone ? '<span class="exchange-state-badge">Zakończona</span>' : ''}
 				</div>
+				${buildAuditMarkup(exchange)}
 			</td>
 			<td class="col-date">
 				<span class="date-text">${exchange.plannedDate}</span>
@@ -499,6 +540,8 @@ async function completeExchange(index) {
 
 	const monitorKey = AppUtils.config.STORAGE_KEYS.MONITOR
 	let monitorData = JSON.parse(localStorage.getItem(monitorKey)) || []
+	const actor = getAuditActor()
+	const now = new Date().toISOString()
 
 	if (exchange.oldSn) {
 		const cleanOldSn = AppUtils.normalizeSN(exchange.oldSn)
@@ -514,11 +557,17 @@ async function completeExchange(index) {
 			ru: 'WYMIANA',
 			sn: AppUtils.normalizeSN(exchange.newSn).toUpperCase(),
 			date: AppUtils.formatDate(newDate),
+			createdBy: actor,
+			updatedBy: actor,
+			createdAt: now,
+			updatedAt: now,
 		})
 	}
 
 	localStorage.setItem(monitorKey, JSON.stringify(monitorData))
 	exchanges[index].status = 'done'
+	exchanges[index].updatedBy = actor
+	exchanges[index].updatedAt = now
 	saveData()
 }
 
@@ -581,6 +630,8 @@ function importExcel(event) {
 			const worksheet = workbook.Sheets[workbook.SheetNames[0]]
 			const jsonData = XLSX.utils.sheet_to_json(worksheet)
 
+			const actor = getAuditActor()
+			const importedAt = new Date().toISOString()
 			const imported = jsonData.map(row => ({
 				name: (row.Pracownik || row.Użytkownik || '').toString().toUpperCase(),
 				plannedDate:
@@ -590,7 +641,10 @@ function importExcel(event) {
 				accessories: row.Akcesoria ? row.Akcesoria.split(',').map(item => item.trim()).filter(Boolean) : [],
 				notes: row.Uwagi || '',
 				status: row.Status === 'Zakończono' ? 'done' : 'pending',
-				createdAt: new Date(),
+				createdBy: actor,
+				updatedBy: actor,
+				createdAt: importedAt,
+				updatedAt: importedAt,
 			}))
 
 			if (
@@ -684,6 +738,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		exchangeForm.addEventListener('submit', async event => {
 			event.preventDefault()
 
+			const actor = getAuditActor()
+			const now = new Date().toISOString()
 			const exchangeData = {
 				name: document.getElementById('emp-name').value.toUpperCase(),
 				plannedDate: document.getElementById('exchange-date').value,
@@ -692,7 +748,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				notes: document.getElementById('notes').value.trim(),
 				accessories: getSelectedAccessories(),
 				status: editIndex !== null ? exchanges[editIndex].status : 'pending',
-				createdAt: editIndex !== null ? exchanges[editIndex].createdAt : new Date(),
+				createdBy: editIndex !== null ? exchanges[editIndex].createdBy || null : actor,
+				updatedBy: actor,
+				createdAt: editIndex !== null ? exchanges[editIndex].createdAt || '' : now,
+				updatedAt: now,
 			}
 
 			if (editIndex !== null) {

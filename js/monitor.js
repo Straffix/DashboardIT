@@ -43,8 +43,15 @@ function loadData() {
 		const normalizedLastExtendedOn = AppUtils.formatDate(device.lastExtendedOn)
 		const nextDate = normalizedDate || device.date || ''
 		const nextLastExtendedOn = normalizedLastExtendedOn || ''
+		const normalizedAudit = normalizeAuditFields(device)
 
-		if (nextDate !== (device.date || '') || nextLastExtendedOn !== (device.lastExtendedOn || '')) {
+		if (
+			nextDate !== (device.date || '') ||
+			nextLastExtendedOn !== (device.lastExtendedOn || '') ||
+			normalizedAudit.updatedBy !== (device.updatedBy || device.createdBy || null) ||
+			normalizedAudit.createdAt !== (device.createdAt || '') ||
+			normalizedAudit.updatedAt !== (device.updatedAt || device.createdAt || '')
+		) {
 			hasUpdates = true
 		}
 
@@ -52,6 +59,7 @@ function loadData() {
 			...device,
 			date: nextDate,
 			lastExtendedOn: nextLastExtendedOn,
+			...normalizedAudit,
 		}
 	})
 
@@ -83,6 +91,36 @@ function getDefaultDomainDate() {
 	const defaultDate = getTodayDate()
 	defaultDate.setDate(defaultDate.getDate() + 60)
 	return AppUtils.formatDate(defaultDate)
+}
+
+function normalizeAuditFields(record) {
+	return {
+		createdBy: record.createdBy || null,
+		updatedBy: record.updatedBy || record.createdBy || null,
+		createdAt: record.createdAt || '',
+		updatedAt: record.updatedAt || record.createdAt || '',
+	}
+}
+
+function getAuditActor() {
+	return AppUtils.auth.getAuditActorSnapshot()
+}
+
+function buildAuditMarkup(record) {
+	const createdByLabel = AppUtils.auth.getAuditActorLabel(record.createdBy)
+	const updatedByLabel = AppUtils.auth.getAuditActorLabel(record.updatedBy || record.createdBy)
+	const createdAtLabel = AppUtils.formatDate(record.createdAt)
+	const updatedAtLabel = AppUtils.formatDate(record.updatedAt)
+	const createdLine = createdAtLabel ? `${createdByLabel} · ${createdAtLabel}` : createdByLabel
+	const updatedLine = updatedAtLabel ? `${updatedByLabel} · ${updatedAtLabel}` : updatedByLabel
+	const shouldShowUpdate = Boolean(record.updatedBy || record.updatedAt) && updatedLine !== createdLine
+
+	return `
+		<div class="record-audit">
+			<span class="record-audit-line"><strong>Dodal:</strong> ${createdLine}</span>
+			${shouldShowUpdate ? `<span class="record-audit-line"><strong>Edytowal:</strong> ${updatedLine}</span>` : ''}
+		</div>
+	`
 }
 
 function getFormState() {
@@ -258,10 +296,16 @@ function importExcel(event) {
 		const worksheet = workbook.Sheets[workbook.SheetNames[0]]
 		const jsonData = XLSX.utils.sheet_to_json(worksheet)
 
+		const actor = getAuditActor()
+		const importedAt = new Date().toISOString()
 		const imported = jsonData.map(row => ({
 			name: (row['Nazwa użytkownika'] || '').toString().toUpperCase(),
 			ru: row['Dział / RU'] || '',
 			sn: AppUtils.normalizeSN(row['Numer Seryjny']),
+			createdBy: actor,
+			updatedBy: actor,
+			createdAt: importedAt,
+			updatedAt: importedAt,
 			date: AppUtils.normalizeSpreadsheetDate(row['Data ważności domeny']) || '',
 		}))
 
@@ -354,6 +398,8 @@ async function extendDomain(index, { skipSameDayConfirmation = false } = {}) {
 
 	devices[index].date = AppUtils.formatDate(baseDate)
 	devices[index].lastExtendedOn = todayString
+	devices[index].updatedBy = getAuditActor()
+	devices[index].updatedAt = new Date().toISOString()
 	saveData()
 }
 
@@ -449,6 +495,7 @@ function renderTable() {
 		row.innerHTML = `
 			<td>
 				<span class="monitor-name">${(device.name || '').toUpperCase()}</span>
+				${buildAuditMarkup(device)}
 			</td>
 			<td>
 				<span class="monitor-ru">${device.ru || '---'}</span>
@@ -598,6 +645,9 @@ document.addEventListener('DOMContentLoaded', () => {
 				return
 			}
 
+			const actor = getAuditActor()
+			const now = new Date().toISOString()
+
 			if (isEditing) {
 				devices[editingDeviceIndex] = {
 					...devices[editingDeviceIndex],
@@ -605,9 +655,21 @@ document.addEventListener('DOMContentLoaded', () => {
 					ru,
 					sn,
 					date,
+					updatedBy: actor,
+					updatedAt: now,
 				}
 			} else {
-				devices.push({ name, ru, sn, date, lastExtendedOn: '' })
+				devices.push({
+					name,
+					ru,
+					sn,
+					date,
+					lastExtendedOn: '',
+					createdBy: actor,
+					updatedBy: actor,
+					createdAt: now,
+					updatedAt: now,
+				})
 			}
 
 			saveData()

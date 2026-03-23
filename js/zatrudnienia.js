@@ -53,13 +53,23 @@ function loadData() {
 
 	hires = parsedHires.map(hire => {
 		const normalizedDate = AppUtils.normalizeSpreadsheetDate(hire.date)
+		const normalizedAudit = normalizeAuditFields(hire)
 		if (normalizedDate && normalizedDate !== hire.date) {
+			hasUpdates = true
+		}
+
+		if (
+			normalizedAudit.updatedBy !== (hire.updatedBy || hire.createdBy || null) ||
+			normalizedAudit.createdAt !== (hire.createdAt || '') ||
+			normalizedAudit.updatedAt !== (hire.updatedAt || hire.createdAt || '')
+		) {
 			hasUpdates = true
 		}
 
 		return {
 			...hire,
 			date: normalizedDate || hire.date || '',
+			...normalizedAudit,
 		}
 	})
 
@@ -111,6 +121,36 @@ function getVisibleHires() {
 	return source.filter(hire =>
 		AppUtils.matchesSearchQuery([(hire.name || '').toUpperCase(), hire.ru || '', hire.sn || '', hire.date || ''], searchQuery)
 	)
+}
+
+function normalizeAuditFields(record) {
+	return {
+		createdBy: record.createdBy || null,
+		updatedBy: record.updatedBy || record.createdBy || null,
+		createdAt: record.createdAt || '',
+		updatedAt: record.updatedAt || record.createdAt || '',
+	}
+}
+
+function getAuditActor() {
+	return AppUtils.auth.getAuditActorSnapshot()
+}
+
+function buildAuditMarkup(record) {
+	const createdByLabel = AppUtils.auth.getAuditActorLabel(record.createdBy)
+	const updatedByLabel = AppUtils.auth.getAuditActorLabel(record.updatedBy || record.createdBy)
+	const createdAtLabel = AppUtils.formatDate(record.createdAt)
+	const updatedAtLabel = AppUtils.formatDate(record.updatedAt)
+	const createdLine = createdAtLabel ? `${createdByLabel} · ${createdAtLabel}` : createdByLabel
+	const updatedLine = updatedAtLabel ? `${updatedByLabel} · ${updatedAtLabel}` : updatedByLabel
+	const shouldShowUpdate = Boolean(record.updatedBy || record.updatedAt) && updatedLine !== createdLine
+
+	return `
+		<div class="record-audit">
+			<span class="record-audit-line"><strong>Dodal:</strong> ${createdLine}</span>
+			${shouldShowUpdate ? `<span class="record-audit-line"><strong>Edytowal:</strong> ${updatedLine}</span>` : ''}
+		</div>
+	`
 }
 
 function setSearchOpen(isOpen) {
@@ -443,6 +483,7 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 		row.innerHTML = `
 			<td>
 				<span class="hire-name">${hire.name}</span>
+				${buildAuditMarkup(hire)}
 			</td>
 			<td>
 				<span class="hire-ru">${hire.ru || '---'}</span>
@@ -526,12 +567,18 @@ function importExcel(event) {
 		const workbook = XLSX.read(data, { type: 'array' })
 		const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
 
+		const actor = getAuditActor()
+		const importedAt = new Date().toISOString()
 		const importedHires = jsonData.map(row => ({
 			name: (row['Imię i Nazwisko'] || '').toString().toUpperCase(),
 			ru: row['Dział / Stanowisko'] || '',
 			sn: AppUtils.normalizeSN(row['SN Sprzętu']),
 			date: AppUtils.normalizeSpreadsheetDate(row['Data rozpoczęcia']) || '',
 			accessories: row.Akcesoria ? row.Akcesoria.split(', ').filter(Boolean) : [],
+			createdBy: actor,
+			updatedBy: actor,
+			createdAt: importedAt,
+			updatedAt: importedAt,
 		}))
 
 		if (
@@ -625,10 +672,24 @@ document.addEventListener('DOMContentLoaded', () => {
 				accessories: selectedAccessories,
 			}
 
+			const actor = getAuditActor()
+			const now = new Date().toISOString()
+
 			if (editIndex !== null) {
-				hires[editIndex] = hireData
+				hires[editIndex] = {
+					...hires[editIndex],
+					...hireData,
+					updatedBy: actor,
+					updatedAt: now,
+				}
 			} else {
-				hires.push(hireData)
+				hires.push({
+					...hireData,
+					createdBy: actor,
+					updatedBy: actor,
+					createdAt: now,
+					updatedAt: now,
+				})
 			}
 
 			monthPicker.setCurrentDate(AppUtils.parseDate(newHireDate) || new Date(), { render: false })

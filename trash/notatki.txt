@@ -4,3 +4,18 @@
 4. Dodać pasek zakładek na stronie głównej Dashboardu, albo coś co pozwoli mi przypiąć ważne zakładki z przeglądarki i szybko do nich przejść. Mamy kilka takich plików w share point albo plikach .xlsx umieszczonych w sieci, że dobrze byłoby je mieć pod ręką.
 5. Kolory CAŁEJ APLIKACJI w stylu rossmanna 
 6. Możliwość edycji kolejności kafelków w dashboardzie.
+
+
+OSTATNI KROK:
+
+Kolejny krok zrobiony: na dashboardzie są już prywatne zakładki przypisane do zalogowanego użytkownika.
+
+Dodałem nową sekcję Szybki dostep oraz modal dodawania/edycji w index.html (line 131) i index.html (line 260). Całą logikę wyniosłem do osobnego modułu dashboard-bookmarks.js (line 1), więc nie dokładaliśmy tego do wspólnego script.js. Zakładki zapisują się w localStorage pod kontem użytkownika, działają tylko dla zalogowanej osoby i mają dodaj / edytuj / usun / otworz. Obsługują też zwykłe URL-e, ścieżki sieciowe \\\\serwer\\... i lokalne C:\\....
+
+Żeby sekcja mogła otwierać logowanie z dashboardu, wystawiłem też publicznie auth modal w script.js (line 1514). Styl całego modułu jest w dashboard.css (line 1218) i źródle dashboard.scss (line 1317).
+
+Weryfikacja:
+
+headless smoke test dashboardu przeszedł
+zrzut zapisał się jako trash/dashboard-bookmarks-smoke.png
+Następny sensowny krok to już wejście w nowy moduł, czyli Rezerwacja obiadow.

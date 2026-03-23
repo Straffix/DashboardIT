@@ -1,0 +1,21 @@
+{
+   "background": {
+      "service_worker": "background.js"
+   },
+   "description": "SentinelOne DeepVisibility plugin",
+   "host_permissions": [ "*://*/*" ],
+   "icons": {
+      "128": "images/s1-icon-128.png",
+      "16": "images/s1-icon-16.png",
+      "32": "images/s1-icon-32.png",
+      "48": "images/s1-icon-48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxyUX/HvUURw/YG9JKxO6IYi6kKg0LtpgXljRN++KV5hT9ZEJBa81X/Lb/vl9FDChGLwoTfIM/SgOoT0tqWH1a/3MCtSZH4xPZYWG+12vhg/0j3WN59tpRwhjNYTNXgSmv+hyozsk8zm8x45fsplLik3P3VSxD77kVLL+6D0MEmqCVT6Lb+XSYyrDFf6yoF8x7N8Fi05R8nUXWnlNvmV0t2aPaifVoZ4MYIsQkFqUtB937faC6QU9Eu5vt0UIkmq8zqd9wufhJinLGzRTrcFhq8QzPWpb5JN/LGcg02EvdUl6VIY71Cc+fD3SdX8NTaomC1VseZmuLr5a+NTF/moXywIDAQAB",
+   "manifest_version": 3,
+   "minimum_chrome_version": "91",
+   "name": "SentinelOne",
+   "permissions": [ "nativeMessaging", "webRequest", "alarms" ],
+   "short_name": "SentinelOne",
+   "update_url": "https://edge.microsoft.com/extensionwebstorebase/v1/crx",
+   "version": "0.2.0"
+}

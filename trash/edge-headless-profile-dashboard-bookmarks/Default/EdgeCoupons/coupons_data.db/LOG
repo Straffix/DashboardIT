@@ -1,0 +1,5 @@
+2026/03/23-16:55:40.505 54c4 Creating DB c:\DashboardIT\trash\edge-headless-profile-dashboard-bookmarks\Default\EdgeCoupons/coupons_data.db since it was missing.
+2026/03/23-16:55:40.513 54c4 Reusing MANIFEST c:\DashboardIT\trash\edge-headless-profile-dashboard-bookmarks\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/03/23-16:55:40.789 38a8 Level-0 table #5: started
+2026/03/23-16:55:40.798 38a8 Level-0 table #5: 681609 bytes OK
+2026/03/23-16:55:40.802 38a8 Delete type=0 #3
