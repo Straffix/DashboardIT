@@ -55,6 +55,28 @@
                         <input type="file" id="importExcelFile" class="visually-hidden-file-input"
                             accept=".xlsx, .xls" />
 
+                        <button
+                            id="exchange-search-toggle"
+                            class="workspace-action-btn workspace-search-toggle"
+                            type="button"
+                            aria-label="Otwórz wyszukiwarkę"
+                            aria-expanded="false"
+                            aria-controls="exchange-search-panel">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+
+                        <div id="exchange-search-panel" class="workspace-search-panel" hidden>
+                            <label class="workspace-search" for="exchange-search-input">
+                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                <input
+                                    type="search"
+                                    id="exchange-search-input"
+                                    placeholder="Szukaj w tabeli..."
+                                    autocomplete="off"
+                                    aria-label="Szukaj w tabeli wymian sprzętu" />
+                            </label>
+                        </div>
+
                         <button id="import-excel-trigger" class="workspace-action-btn" type="button">
                             <i class="fa-solid fa-file-import"></i>
                             <span>Import Excel</span>

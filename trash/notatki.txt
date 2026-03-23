@@ -1,7 +1,5 @@
-Zablokować możliwość podwójnego kliknięcia na przycisk odbijania w domenie o +60 dni. Ewentualnie dodać informację "Czy na pewno chcesz PONOWNIE przedłużyć okres urządzenia w domenie"
-Dodać możliwość wyszukiwania rekordów w całym systemie - nie tylko w danym miesiacu ( więc cmd + f odpada)
-Dodać możliwość edytowania dodatnych rekordów, a nie tylko usuwania
-Dodać rezerwację obiadów - klikamy na godzinę i rezerwujemy. Limit kliknięć 4 osoby! 
-Podręczny notatnik z notatkami dla każdego. Można tak wpisać zwroty używane do zamykania SD. Fajnie, gdyby dostęp do notatnika był na każdej stronie w postaci małej ikonki w lewym dolnym rogu ekranu.
-Dopracować kalendarz wymian etc (zeby dobrze pokazywalo wymian yw danych miesiacach),
-Sprawdzic wysylke do excel. Robi kopie, nawet jak nie ma rekordow.
+1. Dodać panel użytkownika / awatar z możliwością zmiany, rejestracja, logowanie i zaimplementować go do działania całego systemu - jeśłi np dana zalogowania osoba dodaje jakiś rekord, to fajnie, aby było widać, kto go dodał, a kto edytował. I inne takie funkcjionalności, które pozwolą zidentyfikować osoby dodające / edytujące.
+2. Dodać rezerwację obiadów - klikamy na godzinę i rezerwujemy. Limit kliknięć 4 osoby! Rezerwacji mogą dokonywać tylko osoby zalogowane.
+3. Podręczny notatnik z notatkami dla każdego (DOSTĘPNY DLA WSZYSTKICH). Można tak wpisać zwroty używane do zamykania SD. Fajnie, gdyby dostęp do notatnika był na każdej stronie w postaci małej ikonki w lewym dolnym rogu ekranu. Do notatkina dobrze byłoby dodać też możliwość dodawania zadań i przypisywania ich np do danej osoby - przełożeni mogliby dodawać coś na samej górze tablicy - notanika tak, aby to było widoczne dla każego. Troche taka "biała tablica" na mega ważne tematy.
+4. Dodać jakiś pasek zakładek, albo coś co pozwoli mi przypiąć ważne zakładki z przeglądarki i szybko do nich przejść. Mamy kilka takich plików w share point albo plikach .xlsx umieszczonych w sieci, że dobrze byłoby je mieć pod ręką.
+5. Kolory rossmanna 

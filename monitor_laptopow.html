@@ -92,6 +92,28 @@
                     <div class="workspace-actions">
                         <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
 
+                        <button
+                            id="monitor-search-toggle"
+                            class="workspace-action-btn workspace-search-toggle"
+                            type="button"
+                            aria-label="Otwórz wyszukiwarkę"
+                            aria-expanded="false"
+                            aria-controls="monitor-search-panel">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+
+                        <div id="monitor-search-panel" class="workspace-search-panel" hidden>
+                            <label class="workspace-search" for="monitor-search-input">
+                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                <input
+                                    type="search"
+                                    id="monitor-search-input"
+                                    placeholder="Szukaj w tabeli..."
+                                    autocomplete="off"
+                                    aria-label="Szukaj w tabeli urządzeń">
+                            </label>
+                        </div>
+
                         <button id="import-excel-trigger" class="workspace-action-btn" type="button">
                             <i class="fa-solid fa-file-import"></i>
                             <span>Import Excel</span>
@@ -194,6 +216,27 @@
 
                 </form>
             </aside>
+        </div>
+
+        <div id="monitor-confirm-shell" class="monitor-confirm-shell" aria-hidden="true">
+            <div id="monitor-confirm-backdrop" class="monitor-confirm-backdrop"></div>
+
+            <div class="monitor-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="monitor-confirm-title"
+                aria-describedby="monitor-confirm-message">
+                <p class="monitor-confirm-kicker">Potwierdzenie</p>
+                <h2 id="monitor-confirm-title">Wykonać akcję?</h2>
+                <p id="monitor-confirm-message" class="monitor-confirm-message">Czy na pewno chcesz kontynuować?</p>
+
+                <div class="monitor-confirm-actions">
+                    <button type="button" id="monitor-confirm-no" class="btn-submit btn-submit-muted btn-submit-tight">
+                        NIE
+                    </button>
+
+                    <button type="button" id="monitor-confirm-yes" class="btn-submit btn-submit-primary btn-submit-tight">
+                        TAK
+                    </button>
+                </div>
+            </div>
         </div>
 
         <footer class="main-footer">

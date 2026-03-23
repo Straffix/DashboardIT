@@ -113,6 +113,24 @@ const isSameMonth = (leftValue, rightValue) => {
 }
 
 const normalizeSN = sn => (sn ? sn.toString().trim().replace(/-/g, '').toUpperCase() : '')
+
+const normalizeSearchText = value => {
+	const rawValue = String(value ?? '').trim()
+	if (!rawValue) return ''
+
+	const withoutDiacritics =
+		typeof rawValue.normalize === 'function' ? rawValue.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : rawValue
+
+	return withoutDiacritics.replace(/\s+/g, ' ').toUpperCase()
+}
+
+const matchesSearchQuery = (fields, query) => {
+	const normalizedQuery = normalizeSearchText(query)
+	if (!normalizedQuery) return true
+
+	const values = Array.isArray(fields) ? fields : [fields]
+	return values.some(value => normalizeSearchText(value).includes(normalizedQuery))
+}
 /* === Shared Formatters: End === */
 
 /* === Shared Accessory Rendering: Start === */
@@ -275,6 +293,7 @@ const createMonthPicker = ({
 		popover.className = 'month-fallback-popover'
 		popover.setAttribute('role', 'dialog')
 		popover.setAttribute('aria-label', 'Wybor roku i miesiaca')
+		popover.style.visibility = 'hidden'
 
 		let yearOptions = ''
 		for (let year = selectedYear - 5; year <= selectedYear + 5; year += 1) {
@@ -294,13 +313,34 @@ const createMonthPicker = ({
 			<div class="month-fallback-months" id="fallback-months" aria-label="Lista miesiecy"></div>
 		`
 
-		trigger.appendChild(popover)
+		document.body.appendChild(popover)
 		monthPopover = popover
 
 		const yearSelect = popover.querySelector('#fallback-year-select')
 		const monthsContainer = popover.querySelector('#fallback-months')
 		const stopPopoverEvent = event => {
 			event.stopPropagation()
+		}
+		const positionPopover = () => {
+			if (!popover.isConnected) return
+
+			const triggerRect = trigger.getBoundingClientRect()
+			const popoverRect = popover.getBoundingClientRect()
+			const viewportPadding = 12
+			const preferredTop = triggerRect.bottom + 8
+			const topLimit = Math.max(viewportPadding, window.innerHeight - popoverRect.height - viewportPadding)
+			const preferredAboveTop = triggerRect.top - popoverRect.height - 8
+			const shouldOpenAbove = preferredTop > topLimit && preferredAboveTop >= viewportPadding
+			const top = shouldOpenAbove
+				? preferredAboveTop
+				: Math.max(viewportPadding, Math.min(preferredTop, topLimit))
+			const preferredLeft = triggerRect.left + triggerRect.width / 2 - popoverRect.width / 2
+			const leftLimit = Math.max(viewportPadding, window.innerWidth - popoverRect.width - viewportPadding)
+			const left = Math.max(viewportPadding, Math.min(preferredLeft, leftLimit))
+
+			popover.style.top = `${Math.round(top)}px`
+			popover.style.left = `${Math.round(left)}px`
+			popover.style.visibility = 'visible'
 		}
 
 		const renderMonthButtons = year => {
@@ -324,6 +364,8 @@ const createMonthPicker = ({
 					</button>
 				`
 			}).join('')
+
+			positionPopover()
 		}
 
 		const onKeyDown = event => {
@@ -357,7 +399,10 @@ const createMonthPicker = ({
 			closePopover()
 		})
 		window.addEventListener('keydown', onKeyDown)
+		window.addEventListener('resize', positionPopover)
+		window.addEventListener('scroll', positionPopover, true)
 		renderMonthButtons(selectedYear)
+		positionPopover()
 
 		setTimeout(() => {
 			document.addEventListener('click', onDocumentClick)
@@ -367,6 +412,8 @@ const createMonthPicker = ({
 			popover.removeEventListener('click', stopPopoverEvent)
 			popover.removeEventListener('mousedown', stopPopoverEvent)
 			window.removeEventListener('keydown', onKeyDown)
+			window.removeEventListener('resize', positionPopover)
+			window.removeEventListener('scroll', positionPopover, true)
 			document.removeEventListener('click', onDocumentClick)
 		}
 	}
@@ -487,6 +534,106 @@ const createMonthPicker = ({
 }
 /* === Shared Month Picker Factory: End === */
 
+/* === Shared Confirm Dialog: Start === */
+const appConfirmState = {
+	shell: null,
+	title: null,
+	message: null,
+	confirmBtn: null,
+	cancelBtn: null,
+	resolver: null,
+}
+
+const closeConfirmDialog = (result = false) => {
+	if (!appConfirmState.shell || !appConfirmState.resolver) return false
+
+	const resolve = appConfirmState.resolver
+	appConfirmState.resolver = null
+
+	appConfirmState.shell.classList.remove('is-open')
+	appConfirmState.shell.setAttribute('aria-hidden', 'true')
+	document.body.classList.remove('app-confirm-open')
+	resolve(result)
+	return true
+}
+
+const ensureConfirmDialog = () => {
+	if (appConfirmState.shell || !document.body) return appConfirmState
+
+	const shell = document.createElement('div')
+	shell.className = 'app-confirm-shell'
+	shell.setAttribute('aria-hidden', 'true')
+	shell.innerHTML = `
+		<div class="app-confirm-backdrop"></div>
+		<div class="app-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="app-confirm-title" aria-describedby="app-confirm-message">
+			<p class="app-confirm-kicker">Potwierdzenie</p>
+			<h2 id="app-confirm-title">Wykonać akcję?</h2>
+			<p id="app-confirm-message" class="app-confirm-message">Czy na pewno chcesz kontynuować?</p>
+			<div class="app-confirm-actions">
+				<button type="button" class="app-confirm-btn app-confirm-btn-secondary" data-confirm-action="cancel">NIE</button>
+				<button type="button" class="app-confirm-btn app-confirm-btn-primary" data-confirm-action="confirm">TAK</button>
+			</div>
+		</div>
+	`
+
+	document.body.appendChild(shell)
+
+	appConfirmState.shell = shell
+	appConfirmState.title = shell.querySelector('#app-confirm-title')
+	appConfirmState.message = shell.querySelector('#app-confirm-message')
+	appConfirmState.confirmBtn = shell.querySelector('[data-confirm-action="confirm"]')
+	appConfirmState.cancelBtn = shell.querySelector('[data-confirm-action="cancel"]')
+
+	shell.querySelector('.app-confirm-backdrop')?.addEventListener('click', () => closeConfirmDialog(false))
+	appConfirmState.cancelBtn?.addEventListener('click', () => closeConfirmDialog(false))
+	appConfirmState.confirmBtn?.addEventListener('click', () => closeConfirmDialog(true))
+
+	window.addEventListener('keydown', event => {
+		if (event.key === 'Escape' && appConfirmState.shell?.classList.contains('is-open')) {
+			event.preventDefault()
+			closeConfirmDialog(false)
+		}
+	})
+
+	return appConfirmState
+}
+
+const confirmDialog = ({
+	title = 'Wykonać akcję?',
+	message = 'Czy na pewno chcesz kontynuować?',
+	confirmLabel = 'TAK',
+	cancelLabel = 'NIE',
+} = {}) => {
+	if (typeof document === 'undefined' || !document.body) {
+		return Promise.resolve(confirm(message))
+	}
+
+	const dialog = ensureConfirmDialog()
+	if (!dialog.shell || !dialog.title || !dialog.message || !dialog.confirmBtn || !dialog.cancelBtn) {
+		return Promise.resolve(confirm(message))
+	}
+
+	if (dialog.resolver) {
+		closeConfirmDialog(false)
+	}
+
+	dialog.title.textContent = title
+	dialog.message.textContent = message
+	dialog.confirmBtn.textContent = confirmLabel
+	dialog.cancelBtn.textContent = cancelLabel
+
+	dialog.shell.classList.add('is-open')
+	dialog.shell.setAttribute('aria-hidden', 'false')
+	document.body.classList.add('app-confirm-open')
+
+	window.setTimeout(() => dialog.cancelBtn?.focus(), 50)
+
+	return new Promise(resolve => {
+		dialog.resolver = resolve
+	})
+}
+/* === Shared Confirm Dialog: End === */
+
 /* === Shared Global UI: Start === */
 const applyTheme = theme => {
 	const isDark = theme === 'dark'
@@ -606,6 +753,9 @@ window.AppUtils = {
 	normalizeSpreadsheetDate,
 	isSameMonth,
 	normalizeSN,
+	normalizeSearchText,
+	matchesSearchQuery,
+	confirmDialog,
 	renderAccessoryIcons,
 	createMonthPicker,
 }

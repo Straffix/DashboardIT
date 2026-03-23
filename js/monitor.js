@@ -1,23 +1,35 @@
 /* === Monitor State And References: Start === */
 let devices = []
+let editingDeviceIndex = null
+let drawerInitialState = ''
+let searchQuery = ''
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.MONITOR
 
 const deviceForm = document.getElementById('device-form')
 const tableBody = document.getElementById('table-body')
+const nameInput = document.getElementById('name')
 const newRadio = document.getElementById('new-device')
 const oldRadio = document.getElementById('old-device')
 const dateGroup = document.getElementById('date-group')
 const dateInput = document.getElementById('date')
 const ruInput = document.getElementById('ru')
+const snInput = document.getElementById('sn')
 const exportExcelBtn = document.getElementById('export-excel-btn')
 const importExcelInput = document.getElementById('importExcelFile')
 const importExcelTrigger = document.getElementById('import-excel-trigger')
 const openDrawerBtn = document.getElementById('open-monitor-drawer')
 const closeDrawerBtn = document.getElementById('close-monitor-drawer')
 const cancelDrawerBtn = document.getElementById('cancel-monitor-drawer')
+const workspaceActions = document.querySelector('.workspace-actions')
 const drawerShell = document.getElementById('monitor-drawer-shell')
 const drawerBackdrop = document.getElementById('monitor-drawer-backdrop')
 const summary = document.getElementById('monitor-summary')
+const drawerTitle = document.getElementById('monitor-drawer-title')
+const drawerCopy = document.getElementById('monitor-drawer-copy')
+const drawerSubmitBtn = deviceForm?.querySelector('button[type="submit"]')
+const searchToggleBtn = document.getElementById('monitor-search-toggle')
+const searchPanel = document.getElementById('monitor-search-panel')
+const searchInput = document.getElementById('monitor-search-input')
 /* === Monitor State And References: End === */
 
 /* === Monitor Storage: Start === */
@@ -28,13 +40,18 @@ function loadData() {
 
 	devices = parsedDevices.map(device => {
 		const normalizedDate = AppUtils.normalizeSpreadsheetDate(device.date)
-		if (normalizedDate && normalizedDate !== device.date) {
+		const normalizedLastExtendedOn = AppUtils.formatDate(device.lastExtendedOn)
+		const nextDate = normalizedDate || device.date || ''
+		const nextLastExtendedOn = normalizedLastExtendedOn || ''
+
+		if (nextDate !== (device.date || '') || nextLastExtendedOn !== (device.lastExtendedOn || '')) {
 			hasUpdates = true
 		}
 
 		return {
 			...device,
-			date: normalizedDate || device.date || '',
+			date: nextDate,
+			lastExtendedOn: nextLastExtendedOn,
 		}
 	})
 
@@ -51,14 +68,78 @@ function saveData() {
 }
 /* === Monitor Storage: End === */
 
+/* === Monitor Helpers: Start === */
+function getTodayDate() {
+	const today = new Date()
+	today.setHours(0, 0, 0, 0)
+	return today
+}
+
+function getTodayDateString() {
+	return AppUtils.formatDate(getTodayDate())
+}
+
+function getDefaultDomainDate() {
+	const defaultDate = getTodayDate()
+	defaultDate.setDate(defaultDate.getDate() + 60)
+	return AppUtils.formatDate(defaultDate)
+}
+
+function getFormState() {
+	return {
+		name: (nameInput?.value || '').trim().toUpperCase(),
+		ru: (ruInput?.value || '').trim(),
+		sn: AppUtils.normalizeSN(snInput?.value || ''),
+		deviceType: oldRadio?.checked ? 'old' : 'new',
+		date: dateInput?.value || '',
+	}
+}
+
+function captureDrawerSnapshot() {
+	drawerInitialState = JSON.stringify(getFormState())
+}
+
+function setDrawerMode(mode = 'create') {
+	const isEditMode = mode === 'edit'
+
+	if (drawerTitle) {
+		drawerTitle.textContent = isEditMode ? 'Edytuj urządzenie' : 'Dodaj urządzenie'
+	}
+
+	if (drawerCopy) {
+		drawerCopy.textContent = isEditMode
+			? 'Zaktualizuj dane istniejącego wpisu w monitoringu domeny.'
+			: 'Dodaj nowy laptop do monitoringu domeny i od razu ustaw jego status.'
+	}
+
+	if (drawerSubmitBtn) {
+		drawerSubmitBtn.textContent = isEditMode ? 'Zapisz zmiany' : 'Dodaj urządzenie'
+	}
+}
+
+async function canStartDrawerFlow() {
+	return !drawerShell?.classList.contains('is-open') || (await closeDrawer())
+}
+/* === Monitor Helpers: End === */
+
+/* === Monitor Confirm: Start === */
+function closeMonitorConfirm(result = false) {
+	return result
+}
+
+function openMonitorConfirm({
+	title = 'Wykonać akcję?',
+	message = 'Czy na pewno chcesz kontynuować?',
+	confirmLabel = 'TAK',
+	cancelLabel = 'NIE',
+} = {}) {
+	return AppUtils.confirmDialog({ title, message, confirmLabel, cancelLabel })
+}
+/* === Monitor Confirm: End === */
+
 /* === Monitor Drawer: Start === */
 function hasDrawerFormChanges() {
-	if (!deviceForm) return false
-
-	const textInputs = Array.from(deviceForm.querySelectorAll('input[type="text"], input[type="date"]'))
-	const hasValue = textInputs.some(input => input.value.trim() !== '')
-
-	return hasValue || oldRadio?.checked
+	return Boolean(deviceForm) && JSON.stringify(getFormState()) !== drawerInitialState
 }
 
 function resetFormState() {
@@ -66,11 +147,15 @@ function resetFormState() {
 		deviceForm.reset()
 	}
 
+	editingDeviceIndex = null
+
 	if (newRadio) {
 		newRadio.checked = true
 	}
 
+	setDrawerMode('create')
 	toggleDateInput()
+	captureDrawerSnapshot()
 }
 
 function openDrawer() {
@@ -80,15 +165,17 @@ function openDrawer() {
 	drawerShell.setAttribute('aria-hidden', 'false')
 	document.body.classList.add('monitor-drawer-open')
 
-	const firstField = document.getElementById('name')
-	window.setTimeout(() => firstField?.focus(), 80)
+	window.setTimeout(() => nameInput?.focus(), 80)
 }
 
-function closeDrawer({ force = false } = {}) {
+async function closeDrawer({ force = false } = {}) {
 	if (!drawerShell) return false
 
 	if (!force && hasDrawerFormChanges()) {
-		const shouldClose = confirm('Zamknąć panel? Niezapisane zmiany zostaną utracone.')
+		const shouldClose = await AppUtils.confirmDialog({
+			title: 'Niezapisane zmiany',
+			message: 'Zamknąć panel? Niezapisane zmiany zostaną utracone.',
+		})
 		if (!shouldClose) return false
 	}
 
@@ -99,8 +186,44 @@ function closeDrawer({ force = false } = {}) {
 	return true
 }
 
-function startCreateFlow() {
+async function startCreateFlow() {
+	if (!(await canStartDrawerFlow())) return
+
 	resetFormState()
+	openDrawer()
+}
+
+async function startEditFlow(index) {
+	const device = devices[index]
+	if (!device || !(await canStartDrawerFlow())) return
+
+	resetFormState()
+	editingDeviceIndex = index
+	setDrawerMode('edit')
+
+	if (nameInput) {
+		nameInput.value = (device.name || '').toUpperCase()
+	}
+
+	if (ruInput) {
+		ruInput.value = device.ru || ''
+	}
+
+	if (snInput) {
+		snInput.value = (device.sn || '').toUpperCase()
+	}
+
+	if (oldRadio) {
+		oldRadio.checked = true
+	}
+
+	toggleDateInput()
+
+	if (dateInput) {
+		dateInput.value = AppUtils.formatDate(device.date) || ''
+	}
+
+	captureDrawerSnapshot()
 	openDrawer()
 }
 /* === Monitor Drawer: End === */
@@ -129,7 +252,7 @@ function importExcel(event) {
 	if (!file) return
 
 	const reader = new FileReader()
-	reader.onload = loadEvent => {
+	reader.onload = async loadEvent => {
 		const data = new Uint8Array(loadEvent.target.result)
 		const workbook = XLSX.read(data, { type: 'array' })
 		const worksheet = workbook.Sheets[workbook.SheetNames[0]]
@@ -142,7 +265,12 @@ function importExcel(event) {
 			date: AppUtils.normalizeSpreadsheetDate(row['Data ważności domeny']) || '',
 		}))
 
-		if (confirm(`Zaimportować ${imported.length} urządzeń z Excela?`)) {
+		const shouldImport = await AppUtils.confirmDialog({
+			title: 'Import urządzeń',
+			message: `Zaimportować ${imported.length} urządzeń z Excela?`,
+		})
+
+		if (shouldImport) {
 			devices = [...devices, ...imported]
 			saveData()
 		}
@@ -155,28 +283,90 @@ function importExcel(event) {
 /* === Monitor Excel Backup: End === */
 
 /* === Monitor Device Actions: Start === */
-function findDuplicate(ru, sn) {
+function findDuplicate(ru, sn, excludedIndex = -1) {
 	const normalizedSn = AppUtils.normalizeSN(sn)
-	return devices.findIndex(device => device.ru === ru && AppUtils.normalizeSN(device.sn) === normalizedSn)
+	return devices.findIndex((device, index) => index !== excludedIndex && device.ru === ru && AppUtils.normalizeSN(device.sn) === normalizedSn)
 }
 
-function extendDomain(index) {
+function getVisibleDevices() {
+	return devices.filter(device =>
+		AppUtils.matchesSearchQuery([(device.name || '').toUpperCase(), device.ru || '', device.sn || '', device.date || ''], searchQuery)
+	)
+}
+
+function setSearchOpen(isOpen) {
+	if (!searchPanel) return
+
+	searchPanel.hidden = !isOpen
+	workspaceActions?.classList.toggle('is-search-open', isOpen)
+	searchToggleBtn?.setAttribute('aria-expanded', String(isOpen))
+
+	if (isOpen) {
+		window.setTimeout(() => searchInput?.focus(), 40)
+	}
+}
+
+function closeSearch({ clearValue = true } = {}) {
+	if (clearValue) {
+		searchQuery = ''
+
+		if (searchInput) {
+			searchInput.value = ''
+		}
+
+		renderTable()
+	}
+
+	setSearchOpen(false)
+}
+
+function toggleSearch() {
+	const isOpen = Boolean(searchPanel) && !searchPanel.hidden
+
+	if (isOpen) {
+		closeSearch()
+		return
+	}
+
+	setSearchOpen(true)
+}
+
+async function extendDomain(index, { skipSameDayConfirmation = false } = {}) {
 	const device = devices[index]
 	if (!device) return
 
-	const today = new Date()
-	today.setHours(0, 0, 0, 0)
+	const today = getTodayDate()
+	const todayString = getTodayDateString()
+
+	if (!skipSameDayConfirmation && device.lastExtendedOn === todayString) {
+		const shouldExtendAgain = await AppUtils.confirmDialog({
+			title: 'Ponowne przedłużenie',
+			message: 'Czy na pewno chcesz PONOWNIE przedłużyć okres urządzenia w domenie?',
+			confirmLabel: 'TAK',
+			cancelLabel: 'NIE',
+		})
+		if (!shouldExtendAgain) return
+	}
 
 	const currentExpiry = AppUtils.parseDate(device.date)
 	const baseDate = !currentExpiry || currentExpiry < today ? today : new Date(currentExpiry)
 	baseDate.setDate(baseDate.getDate() + 60)
 
 	devices[index].date = AppUtils.formatDate(baseDate)
+	devices[index].lastExtendedOn = todayString
 	saveData()
 }
 
-function removeItem(index) {
-	if (!confirm('Usunąć urządzenie z listy?')) return
+async function removeItem(index) {
+	if (
+		!(
+			await AppUtils.confirmDialog({
+				title: 'Usuwanie urządzenia',
+				message: 'Usunąć urządzenie z listy?',
+			})
+		)
+	)
+		return
 
 	devices.splice(index, 1)
 	saveData()
@@ -184,11 +374,21 @@ function removeItem(index) {
 /* === Monitor Device Actions: End === */
 
 /* === Monitor Table Rendering: Start === */
-function updateSummary(stats) {
+function updateSummary(stats, totalCount = stats.all) {
 	if (!summary) return
 
-	if (stats.all === 0) {
+	if (totalCount === 0) {
 		summary.textContent = 'Baza jest pusta, dodaj pierwsze urządzenie do monitoringu domeny.'
+		return
+	}
+
+	if (searchQuery.trim()) {
+		if (stats.all === 0) {
+			summary.textContent = 'Brak wyników wyszukiwania. Szukaj po nazwie, RU, numerze SN lub dacie z tej tabeli.'
+			return
+		}
+
+		summary.textContent = `Wyniki wyszukiwania: ${stats.all} z ${totalCount} urządzeń · aktywne: ${stats.ok} · wygasające: ${stats.warn} · wypadły: ${stats.dead}.`
 		return
 	}
 
@@ -199,13 +399,17 @@ function renderTable() {
 	if (!tableBody) return
 	tableBody.innerHTML = ''
 
-	const stats = { all: devices.length, ok: 0, warn: 0, dead: 0 }
+	const visibleDevices = getVisibleDevices()
+	const stats = { all: visibleDevices.length, ok: 0, warn: 0, dead: 0 }
 	const today = new Date()
 	today.setHours(0, 0, 0, 0)
 
-	if (devices.length === 0) {
-		tableBody.innerHTML = '<tr><td colspan="5" class="empty-state-cell">Brak urządzeń w monitoringu. Dodaj pierwszy wpis albo zaimportuj plik Excel.</td></tr>'
-		updateSummary(stats)
+	if (visibleDevices.length === 0) {
+		tableBody.innerHTML =
+			devices.length === 0
+				? '<tr><td colspan="5" class="empty-state-cell">Brak urządzeń w monitoringu. Dodaj pierwszy wpis albo zaimportuj plik Excel.</td></tr>'
+				: '<tr><td colspan="5" class="empty-state-cell">Brak wyników wyszukiwania.<br><small>Sprawdź nazwę, RU, numer SN lub datę z tej tabeli.</small></td></tr>'
+		updateSummary(stats, devices.length)
 		const updateStat = (id, value) => {
 			const element = document.getElementById(id)
 			if (element) element.innerText = value
@@ -217,7 +421,8 @@ function renderTable() {
 		return
 	}
 
-	devices.forEach((device, index) => {
+	visibleDevices.forEach(device => {
+		const index = devices.findIndex(original => original === device)
 		const expiryDate = AppUtils.parseDate(device.date)
 		const diff = expiryDate ? Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24)) : Number.NaN
 
@@ -259,6 +464,9 @@ function renderTable() {
 					<button class="icon-button monitor-row-btn monitor-row-btn-extend" type="button" data-action="extend" data-index="${index}" aria-label="Przedłuż o 60 dni" title="Przedłuż o 60 dni">
 						<i class="fa-solid fa-rotate-right"></i>
 					</button>
+					<button class="icon-button monitor-row-btn monitor-row-btn-edit" type="button" data-action="edit" data-index="${index}" aria-label="Edytuj urządzenie" title="Edytuj urządzenie">
+						<i class="fa-solid fa-pen-to-square"></i>
+					</button>
 					<button class="icon-button monitor-row-btn monitor-row-btn-danger" type="button" data-action="delete" data-index="${index}" aria-label="Usuń urządzenie" title="Usuń urządzenie">
 						<i class="fa-solid fa-trash"></i>
 					</button>
@@ -277,7 +485,7 @@ function renderTable() {
 	updateStat('stats-active', stats.ok)
 	updateStat('stats-warn', stats.warn)
 	updateStat('stats-danger', stats.dead)
-	updateSummary(stats)
+	updateSummary(stats, devices.length)
 }
 /* === Monitor Table Rendering: End === */
 
@@ -313,46 +521,56 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!actionButton) return
 
 			const index = Number(actionButton.dataset.index)
-			if (actionButton.dataset.action === 'extend') extendDomain(index)
-			if (actionButton.dataset.action === 'delete') removeItem(index)
+			if (actionButton.dataset.action === 'extend') void extendDomain(index)
+			if (actionButton.dataset.action === 'edit') void startEditFlow(index)
+			if (actionButton.dataset.action === 'delete') void removeItem(index)
 		})
 	}
 
 	if (openDrawerBtn) {
-		openDrawerBtn.addEventListener('click', startCreateFlow)
+		openDrawerBtn.addEventListener('click', () => void startCreateFlow())
 	}
 
 	if (closeDrawerBtn) {
-		closeDrawerBtn.addEventListener('click', () => closeDrawer())
+		closeDrawerBtn.addEventListener('click', () => void closeDrawer())
 	}
 
 	if (cancelDrawerBtn) {
-		cancelDrawerBtn.addEventListener('click', () => closeDrawer())
+		cancelDrawerBtn.addEventListener('click', () => void closeDrawer())
 	}
 
 	if (drawerBackdrop) {
-		drawerBackdrop.addEventListener('click', () => closeDrawer())
+		drawerBackdrop.addEventListener('click', () => void closeDrawer())
 	}
 
 	window.addEventListener('keydown', event => {
+		if (event.key === 'Escape' && searchPanel && !searchPanel.hidden) {
+			closeSearch()
+			return
+		}
+
 		if (event.key === 'Escape' && drawerShell?.classList.contains('is-open')) {
-			closeDrawer()
+			void closeDrawer()
 		}
 	})
 
 	if (deviceForm) {
-		deviceForm.addEventListener('submit', event => {
+		deviceForm.addEventListener('submit', async event => {
 			event.preventDefault()
 
-			const name = document.getElementById('name').value.toUpperCase()
-			const ru = document.getElementById('ru').value
-			const sn = AppUtils.normalizeSN(document.getElementById('sn').value)
+			const isEditing = editingDeviceIndex !== null
+			const name = (nameInput?.value || '').trim().toUpperCase()
+			const ru = (ruInput?.value || '').trim()
+			const sn = AppUtils.normalizeSN(snInput?.value || '')
 			let date
 
+			if (!name || !ru || !sn) {
+				alert('Uzupełnij nazwę komputera, numer RU i numer SN.')
+				return
+			}
+
 			if (newRadio?.checked) {
-				const newDate = new Date()
-				newDate.setDate(newDate.getDate() + 60)
-				date = AppUtils.formatDate(newDate)
+				date = getDefaultDomainDate()
 			} else {
 				date = dateInput.value
 				if (!date) {
@@ -361,18 +579,39 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 
-			const duplicateIndex = findDuplicate(ru, sn)
+			const duplicateIndex = findDuplicate(ru, sn, isEditing ? editingDeviceIndex : -1)
 			if (duplicateIndex !== -1) {
-				if (confirm('Urządzenie już istnieje. Odświeżyć wpis o 60 dni od dziś?')) {
-					extendDomain(duplicateIndex)
-					closeDrawer({ force: true })
+				if (isEditing) {
+					alert('Inny rekord z takim samym numerem RU i SN już istnieje. Zmień dane albo usuń duplikat.')
+					return
+				}
+
+				if (
+					await AppUtils.confirmDialog({
+						title: 'Duplikat urządzenia',
+						message: 'Urządzenie już istnieje. Odświeżyć wpis o 60 dni od dziś?',
+					})
+				) {
+					await extendDomain(duplicateIndex, { skipSameDayConfirmation: true })
+					await closeDrawer({ force: true })
 				}
 				return
 			}
 
-			devices.push({ name, ru, sn, date })
+			if (isEditing) {
+				devices[editingDeviceIndex] = {
+					...devices[editingDeviceIndex],
+					name,
+					ru,
+					sn,
+					date,
+				}
+			} else {
+				devices.push({ name, ru, sn, date, lastExtendedOn: '' })
+			}
+
 			saveData()
-			closeDrawer({ force: true })
+			await closeDrawer({ force: true })
 		})
 	}
 
@@ -380,6 +619,17 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (importExcelTrigger && importExcelInput) {
 		importExcelTrigger.addEventListener('click', () => importExcelInput.click())
 		importExcelInput.addEventListener('change', importExcel)
+	}
+
+	if (searchInput) {
+		searchInput.addEventListener('input', event => {
+			searchQuery = event.target.value || ''
+			renderTable()
+		})
+	}
+
+	if (searchToggleBtn) {
+		searchToggleBtn.addEventListener('click', toggleSearch)
 	}
 
 	loadData()

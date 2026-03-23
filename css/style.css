@@ -65,6 +65,7 @@ body.theme-dark {
 
 html {
   font-size: 62.5%;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -182,12 +183,161 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card {
   border-color: rgba(124, 140, 255, 0.22);
   box-shadow: 0 18px 40px rgba(2, 8, 23, 0.36);
 }
+body.theme-dark:not(.dashboard-page) .input-group input:not([type=radio]):not([type=checkbox])::-moz-placeholder {
+  color: rgba(173, 192, 222, 0.82);
+  opacity: 1;
+}
 body.theme-dark:not(.dashboard-page) .input-group input:not([type=radio]):not([type=checkbox])::placeholder {
   color: rgba(173, 192, 222, 0.82);
   opacity: 1;
 }
 
 /* === Base Reset: End === */
+/* === Shared Confirm Dialog: Start === */
+body.app-confirm-open {
+  overflow: hidden;
+}
+
+.app-confirm-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  pointer-events: none;
+}
+.app-confirm-shell.is-open {
+  pointer-events: auto;
+}
+
+.app-confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.app-confirm-shell.is-open .app-confirm-backdrop {
+  opacity: 1;
+}
+
+.app-confirm-card {
+  position: relative;
+  width: min(440px, calc(100vw - 24px));
+  padding: 24px 22px 20px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.28);
+  transform: translateY(18px) scale(0.98);
+  opacity: 0;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+.app-confirm-card h2 {
+  margin-bottom: 8px;
+  font-size: 1.84rem;
+}
+
+.app-confirm-shell.is-open .app-confirm-card {
+  transform: translateY(-24px) scale(1);
+  opacity: 1;
+}
+
+.app-confirm-kicker {
+  margin-bottom: 10px;
+  color: var(--primary);
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.app-confirm-message {
+  color: var(--text-muted);
+  font-size: 1.16rem;
+  line-height: 1.6;
+}
+
+.app-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.app-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+.app-confirm-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.12);
+}
+.app-confirm-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22), 0 14px 26px rgba(15, 23, 42, 0.12);
+}
+
+.app-confirm-btn-secondary {
+  border-color: var(--border);
+  background: #475569;
+  color: #ffffff;
+}
+.app-confirm-btn-secondary:hover {
+  background: #334155;
+  border-color: #334155;
+}
+
+.app-confirm-btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  color: #ffffff;
+  box-shadow: 0 14px 26px rgba(99, 102, 241, 0.18);
+}
+.app-confirm-btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+}
+
+body.theme-dark .app-confirm-card {
+  background: rgba(10, 18, 34, 0.96);
+  border-color: rgba(124, 140, 255, 0.22);
+  box-shadow: 0 26px 72px rgba(2, 8, 23, 0.62);
+}
+
+body.theme-dark .app-confirm-backdrop {
+  background: rgba(2, 8, 23, 0.68);
+}
+
+body.theme-dark .app-confirm-btn-secondary {
+  border-color: rgba(124, 140, 255, 0.22);
+  background: #243246;
+}
+body.theme-dark .app-confirm-btn-secondary:hover {
+  background: #1b2738;
+  border-color: rgba(124, 140, 255, 0.34);
+}
+@media (max-width: 640px) {
+  .app-confirm-shell {
+    padding: 16px;
+  }
+  .app-confirm-actions {
+    grid-template-columns: 1fr;
+  }
+}
+/* === Shared Confirm Dialog: End === */
 /* === Shared Header: Start === */
 .menu-btn {
   display: inline-flex;
@@ -271,6 +421,7 @@ body.theme-dark:not(.dashboard-page) .input-group input:not([type=radio]):not([t
   gap: 30px;
   width: 100%;
   align-items: start;
+  z-index: 2;
   transition: grid-template-columns 0.35s ease, gap 0.35s ease;
 }
 .main-content section,
@@ -714,31 +865,41 @@ table tr:last-child td {
 }
 
 .month-fallback-popover {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
+  position: fixed;
+  top: 0;
+  left: 0;
   z-index: 2000;
-  width: min(560px, calc(100vw - 32px));
-  padding: 22px;
-  background: var(--bg-surface-strong);
+  width: 375px;
+  max-width: min(92vw, 375px);
+  padding: 23px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
   border: 1px solid var(--border);
-  border-radius: 24px;
-  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.18);
-  transform: translateX(-50%);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+  transform: none;
+  isolation: isolate;
+  overflow: hidden;
+  contain: paint;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.theme-dark .month-fallback-popover {
+  background: linear-gradient(180deg, #111b2f 0%, #0a1222 100%);
 }
 
 .month-fallback-title {
-  margin-bottom: 18px;
+  margin-bottom: 17px;
   font-weight: 700;
-  font-size: 1.45rem;
+  font-size: 1.7rem;
   color: var(--text-main);
-  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .month-fallback-grid {
-  display: flex;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 15px;
   margin-bottom: 18px;
 }
 
@@ -746,20 +907,17 @@ table tr:last-child td {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: min(180px, 100%);
 }
 .month-fallback-field span {
-  font-size: 0.94rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 .month-fallback-field select {
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 12px 15px;
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   background: var(--bg-panel);
   color: var(--text-main);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
@@ -783,63 +941,94 @@ table tr:last-child td {
 .month-fallback-months {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .month-fallback-month {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 10px 12px;
+  gap: 4px;
+  min-height: 54px;
+  padding: 10px 8px;
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 12px;
   background: var(--bg-panel);
   color: var(--text-main);
-  font-size: 1.04rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font: inherit;
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 .month-fallback-month:hover {
   transform: translateY(-1px);
   border-color: var(--border-strong);
-  color: var(--text-main);
-  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+  background: var(--bg-panel-hover);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+}
+.month-fallback-month:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
 }
 .month-fallback-month.has-records {
-  border-color: rgba(99, 102, 241, 0.2);
+  border-color: var(--border-strong);
+  background: rgba(99, 102, 241, 0.08);
 }
 .month-fallback-month.is-active {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
   border-color: transparent;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
   color: #fff;
-  box-shadow: 0 14px 24px rgba(99, 102, 241, 0.22);
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.28);
 }
 
 .month-fallback-month-label {
-  display: inline-block;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .month-fallback-month-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(37, 99, 235, 0.14);
   color: var(--primary-strong);
-  font-size: 0.78rem;
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0;
+  line-height: 1;
 }
+
 .month-fallback-month.is-active .month-fallback-month-count {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.month-fallback-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 11px;
+  margin-top: 19px;
+}
+
+.month-fallback-btn {
+  border: 1px solid #cbd5e1;
+  background: var(--bg-surface-strong);
+  color: var(--text-main);
+  border-radius: 8px;
+  padding: 10px 17px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.month-fallback-btn.is-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  border-color: transparent;
+  color: #fff;
 }
 
 /* === Shared Accessories And Calendar: End === */
@@ -973,24 +1162,6 @@ table tr:last-child td {
     width: 38px;
     height: 38px;
   }
-  .month-fallback-popover {
-    width: min(100vw - 24px, 520px);
-    padding: 18px;
-  }
-  .month-fallback-grid {
-    margin-bottom: 14px;
-  }
-  .month-fallback-field {
-    width: 100%;
-  }
-  .month-fallback-months {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-  }
-  .month-fallback-month {
-    min-height: 44px;
-    padding: 9px 10px;
-  }
   .backup_section .backup-row {
     flex-direction: column;
   }
@@ -1013,15 +1184,25 @@ table tr:last-child td {
     padding: 18px;
   }
   .month-fallback-grid {
-    margin-bottom: 12px;
+    grid-template-columns: 1fr;
   }
   .month-fallback-months {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
   }
   .month-fallback-month {
-    min-height: 42px;
-    padding: 8px;
+    min-height: 48px;
+    padding: 8px 6px;
+  }
+  .month-fallback-month-label {
+    font-size: 1.08rem;
+  }
+  .month-fallback-actions {
+    justify-content: stretch;
+  }
+  .month-fallback-btn {
+    flex: 1;
+    text-align: center;
   }
   .main-footer {
     margin-top: 56px;
@@ -1084,7 +1265,7 @@ body.wide-mode .table-header .month-picker-container h2 {
   font-size: 2.1rem;
 }
 body.wide-mode .month-fallback-popover {
-  width: min(620px, calc(100vw - 40px));
+  width: 420px;
   padding: 26px;
 }
 body.wide-mode .month-fallback-title {
@@ -1101,7 +1282,22 @@ body.wide-mode .month-fallback-field select {
   font-size: 1.48rem;
 }
 body.wide-mode .month-fallback-months {
-  gap: 14px;
+  gap: 12px;
+}
+body.wide-mode .month-fallback-month {
+  min-height: 58px;
+}
+body.wide-mode .month-fallback-month-label {
+  font-size: 1.28rem;
+}
+body.wide-mode .month-fallback-month-count {
+  min-width: 24px;
+  height: 24px;
+  font-size: 1.05rem;
+}
+body.wide-mode .month-fallback-btn {
+  padding: 12px 19px;
+  font-size: 1.38rem;
 }
 
 /* === Shared Wide Mode: End === */

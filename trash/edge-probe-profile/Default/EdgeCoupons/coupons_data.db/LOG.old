@@ -1,0 +1,4 @@
+2026/03/23-13:59:58.587 6010 Creating DB c:\DashboardIT\trash\edge-probe-profile\Default\EdgeCoupons/coupons_data.db since it was missing.
+2026/03/23-13:59:58.596 6010 Reusing MANIFEST c:\DashboardIT\trash\edge-probe-profile\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/03/23-13:59:58.604 5ec8 Level-0 table #5: started
+2026/03/23-13:59:58.613 5ec8 Level-0 table #5: 681609 bytes OK

@@ -63,6 +63,28 @@
                     <div class="workspace-actions">
                         <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
 
+                        <button
+                            id="hire-search-toggle"
+                            class="workspace-action-btn workspace-search-toggle"
+                            type="button"
+                            aria-label="Otwórz wyszukiwarkę"
+                            aria-expanded="false"
+                            aria-controls="hire-search-panel">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+
+                        <div id="hire-search-panel" class="workspace-search-panel" hidden>
+                            <label class="workspace-search" for="hire-search-input">
+                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                <input
+                                    type="search"
+                                    id="hire-search-input"
+                                    placeholder="Szukaj w tabeli..."
+                                    autocomplete="off"
+                                    aria-label="Szukaj w tabeli nowych zatrudnień">
+                            </label>
+                        </div>
+
                         <button id="import-excel-trigger" class="workspace-action-btn" type="button">
                             <i class="fa-solid fa-file-import"></i>
                             <span>Import Excel</span>

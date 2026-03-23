@@ -1,6 +1,8 @@
 /* === Hires State And References: Start === */
 let hires = []
 let editIndex = null
+let drawerInitialState = ''
+let searchQuery = ''
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.HIRES
 
 const hiresForm = document.getElementById('device-form')
@@ -12,15 +14,22 @@ const importExcelTrigger = document.getElementById('import-excel-trigger')
 const openDrawerBtn = document.getElementById('open-hire-drawer')
 const closeDrawerBtn = document.getElementById('close-hire-drawer')
 const cancelDrawerBtn = document.getElementById('cancel-hire-drawer')
+const workspaceActions = document.querySelector('.workspace-actions')
 const drawerShell = document.getElementById('hire-drawer-shell')
 const drawerBackdrop = document.getElementById('hire-drawer-backdrop')
 const drawerTitle = document.getElementById('hire-drawer-title')
 const drawerCopy = document.getElementById('hire-drawer-copy')
 const submitBtn = document.getElementById('hire-submit-btn')
 const monthSummary = document.getElementById('hires-month-summary')
+const hiresWorkspace = document.querySelector('.hires-workspace')
+const searchToggleBtn = document.getElementById('hire-search-toggle')
+const searchPanel = document.getElementById('hire-search-panel')
+const searchInput = document.getElementById('hire-search-input')
+
+let workspaceHeightAnimationFallbackId = null
 
 const monthPicker = AppUtils.createMonthPicker({
-	onChange: () => renderTable(),
+	onChange: () => renderTable({ animateContainer: true }),
 	getCounts: year => {
 		const counts = Array.from({ length: 12 }, () => 0)
 
@@ -97,24 +106,73 @@ function getCurrentMonthHires() {
 	return hires.filter(hire => AppUtils.isSameMonth(hire.date, currentViewDate))
 }
 
+function getVisibleHires() {
+	const source = searchQuery.trim() ? hires : getCurrentMonthHires()
+	return source.filter(hire =>
+		AppUtils.matchesSearchQuery([(hire.name || '').toUpperCase(), hire.ru || '', hire.sn || '', hire.date || ''], searchQuery)
+	)
+}
+
+function setSearchOpen(isOpen) {
+	if (!searchPanel) return
+
+	searchPanel.hidden = !isOpen
+	workspaceActions?.classList.toggle('is-search-open', isOpen)
+	searchToggleBtn?.setAttribute('aria-expanded', String(isOpen))
+
+	if (isOpen) {
+		window.setTimeout(() => searchInput?.focus(), 40)
+	}
+}
+
+function closeSearch({ clearValue = true } = {}) {
+	if (clearValue) {
+		searchQuery = ''
+
+		if (searchInput) {
+			searchInput.value = ''
+		}
+
+		renderTable()
+	}
+
+	setSearchOpen(false)
+}
+
+function toggleSearch() {
+	const isOpen = Boolean(searchPanel) && !searchPanel.hidden
+
+	if (isOpen) {
+		closeSearch()
+		return
+	}
+
+	setSearchOpen(true)
+}
+
 function getSelectedAccessories() {
 	return Array.from(document.querySelectorAll('.accessory-item.active')).map(item => item.dataset.item)
 }
 
-function hasDrawerFormChanges() {
-	if (!hiresForm) return false
-
-	const textInputs = Array.from(hiresForm.querySelectorAll('input'))
-	const hasValue = textInputs.some(input => {
-		if (input.type === 'date') return Boolean(input.value)
-		if (input.type === 'text') return input.value.trim() !== ''
-		return false
-	})
-
-	return hasValue || getSelectedAccessories().length > 0
+function getFormState() {
+	return {
+		name: (document.getElementById('name')?.value || '').trim().toUpperCase(),
+		ru: (document.getElementById('ru')?.value || '').trim(),
+		sn: AppUtils.normalizeSN(document.getElementById('sn')?.value || ''),
+		date: document.getElementById('date')?.value || '',
+		accessories: getSelectedAccessories(),
+	}
 }
 
-function updateMonthSummary(visibleCount, totalCount, monthLabel) {
+function captureDrawerSnapshot() {
+	drawerInitialState = JSON.stringify(getFormState())
+}
+
+function hasDrawerFormChanges() {
+	return Boolean(hiresForm) && JSON.stringify(getFormState()) !== drawerInitialState
+}
+
+function updateMonthSummary({ visibleCount, monthCount, totalCount, monthLabel }) {
 	if (!monthSummary) return
 
 	if (totalCount === 0) {
@@ -122,12 +180,90 @@ function updateMonthSummary(visibleCount, totalCount, monthLabel) {
 		return
 	}
 
-	if (visibleCount === totalCount) {
-		monthSummary.textContent = `${monthLabel} · widoczne wpisy: ${visibleCount}.`
+	if (searchQuery.trim()) {
+		monthSummary.textContent = `Wyniki wyszukiwania: ${visibleCount} z ${totalCount} wpisów na stronie nowych zatrudnień.`
 		return
 	}
 
-	monthSummary.textContent = `${monthLabel} · widoczne wpisy: ${visibleCount} z ${totalCount} w całej bazie.`
+	if (monthCount === 0) {
+		monthSummary.textContent = `${monthLabel} · brak wpisów w tym miesiącu.`
+		return
+	}
+
+	if (monthCount === totalCount) {
+		monthSummary.textContent = `${monthLabel} · widoczne wpisy: ${monthCount}.`
+		return
+	}
+
+	monthSummary.textContent = `${monthLabel} · widoczne wpisy: ${monthCount} z ${totalCount} w całej bazie.`
+}
+function prefersReducedMotion() {
+	return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function setMonthTransitionState(isActive) {
+	document.body.classList.toggle('hires-month-transitioning', isActive)
+	hiresWorkspace?.classList.toggle('is-month-transitioning', isActive)
+}
+
+function resetWorkspaceHeightAnimation() {
+	if (!hiresWorkspace) return
+
+	hiresWorkspace.style.height = ''
+	hiresWorkspace.style.overflow = ''
+	hiresWorkspace.style.transition = ''
+	hiresWorkspace.style.willChange = ''
+	setMonthTransitionState(false)
+}
+
+function renderTableContent() {
+	renderTable({ skipAnimationReset: true })
+}
+
+function animateWorkspaceHeight(renderContent) {
+	if (!hiresWorkspace || prefersReducedMotion()) {
+		renderContent()
+		return
+	}
+
+	window.clearTimeout(workspaceHeightAnimationFallbackId)
+	resetWorkspaceHeightAnimation()
+
+	const startHeight = hiresWorkspace.getBoundingClientRect().height
+
+	setMonthTransitionState(true)
+	hiresWorkspace.style.height = `${startHeight}px`
+	hiresWorkspace.style.overflow = 'hidden'
+	hiresWorkspace.style.transition = 'none'
+	hiresWorkspace.style.willChange = 'height'
+
+	renderContent()
+
+	hiresWorkspace.style.height = 'auto'
+	const endHeight = hiresWorkspace.getBoundingClientRect().height
+	hiresWorkspace.style.height = `${startHeight}px`
+	void hiresWorkspace.offsetHeight
+
+	if (Math.abs(endHeight - startHeight) < 2) {
+		resetWorkspaceHeightAnimation()
+		return
+	}
+
+	const finishAnimation = event => {
+		if (event && event.propertyName !== 'height') return
+
+		hiresWorkspace.removeEventListener('transitionend', finishAnimation)
+		window.clearTimeout(workspaceHeightAnimationFallbackId)
+		resetWorkspaceHeightAnimation()
+	}
+
+	hiresWorkspace.addEventListener('transitionend', finishAnimation)
+	workspaceHeightAnimationFallbackId = window.setTimeout(() => finishAnimation(), 460)
+
+	requestAnimationFrame(() => {
+		hiresWorkspace.style.transition = 'height 360ms cubic-bezier(0.22, 1, 0.36, 1)'
+		hiresWorkspace.style.height = `${endHeight}px`
+	})
 }
 /* === Hires View Helpers: End === */
 
@@ -156,6 +292,8 @@ function resetFormState() {
 		submitBtn.classList.add('btn-submit-soft-danger')
 		submitBtn.textContent = 'Dodaj do listy'
 	}
+
+	captureDrawerSnapshot()
 }
 
 function openDrawer() {
@@ -169,11 +307,14 @@ function openDrawer() {
 	window.setTimeout(() => firstField?.focus(), 80)
 }
 
-function closeDrawer({ force = false } = {}) {
+async function closeDrawer({ force = false } = {}) {
 	if (!drawerShell) return false
 
 	if (!force && hasDrawerFormChanges()) {
-		const shouldClose = confirm('Zamknąć panel? Niezapisane zmiany zostaną utracone.')
+		const shouldClose = await AppUtils.confirmDialog({
+			title: 'Niezapisane zmiany',
+			message: 'Zamknąć panel? Niezapisane zmiany zostaną utracone.',
+		})
 		if (!shouldClose) return false
 	}
 
@@ -220,13 +361,25 @@ function startEditFlow(index) {
 		submitBtn.textContent = 'Zapisz zmiany'
 	}
 
+	captureDrawerSnapshot()
 	openDrawer()
 }
 /* === Hires Drawer: End === */
 
 /* === Hires Table Rendering: Start === */
-function renderTable() {
+function renderTable({ animateContainer = false, skipAnimationReset = false } = {}) {
 	if (!tableBody) return
+
+	if (animateContainer) {
+		animateWorkspaceHeight(renderTableContent)
+		return
+	}
+
+	if (!skipAnimationReset) {
+		window.clearTimeout(workspaceHeightAnimationFallbackId)
+		resetWorkspaceHeightAnimation()
+	}
+
 	tableBody.innerHTML = ''
 	monthPicker.refreshView()
 
@@ -234,16 +387,30 @@ function renderTable() {
 	const today = new Date()
 	today.setHours(0, 0, 0, 0)
 
-	const filteredHires = getCurrentMonthHires()
-	updateMonthSummary(filteredHires.length, hires.length, monthLabel)
+	const monthHires = getCurrentMonthHires()
+	const filteredHires = getVisibleHires()
+	updateMonthSummary({
+		visibleCount: filteredHires.length,
+		monthCount: monthHires.length,
+		totalCount: hires.length,
+		monthLabel,
+	})
 
 	if (filteredHires.length === 0) {
-		const hiddenCount = hires.length
-		tableBody.innerHTML =
-			`<tr><td colspan="6" class="empty-state-cell">Brak planowanych zatrudnień w tym miesiącu.${
-				hiddenCount > 0 ? `<br><small>W bazie jest jeszcze ${hiddenCount} rekordów, ale eksport Excel działa dla wybranego miesiąca: ${monthLabel}.</small>` : ''
-			}</td></tr>`
-		return
+		if (searchQuery.trim()) {
+			tableBody.innerHTML =
+				'<tr><td colspan="6" class="empty-state-cell">Brak wyników wyszukiwania na stronie nowych zatrudnień.<br><small>Sprawdź imię, nazwisko, sekcję, numer SN lub datę startu w tej tabeli.</small></td></tr>'
+			return
+		}
+
+		if (monthHires.length === 0) {
+			const hiddenCount = hires.length
+			tableBody.innerHTML =
+				`<tr><td colspan="6" class="empty-state-cell">Brak planowanych zatrudnień w tym miesiącu.${
+					hiddenCount > 0 ? `<br><small>W bazie jest jeszcze ${hiddenCount} rekordów, ale eksport Excel działa dla wybranego miesiąca: ${monthLabel}.</small>` : ''
+				}</td></tr>`
+			return
+		}
 	}
 
 	filteredHires.forEach(hire => {
@@ -304,11 +471,19 @@ function renderTable() {
 /* === Hires Table Rendering: End === */
 
 /* === Hires Actions: Start === */
-function removeItem(index) {
-	if (!confirm('Usunąć wpis?')) return
+async function removeItem(index) {
+	if (
+		!(
+			await AppUtils.confirmDialog({
+				title: 'Usuwanie wpisu',
+				message: 'Usunąć wpis?',
+			})
+		)
+	)
+		return
 
 	if (editIndex === index) {
-		closeDrawer({ force: true })
+		await closeDrawer({ force: true })
 	} else if (editIndex !== null && editIndex > index) {
 		editIndex -= 1
 	}
@@ -346,7 +521,7 @@ function importExcel(event) {
 	if (!file) return
 
 	const reader = new FileReader()
-	reader.onload = loadEvent => {
+	reader.onload = async loadEvent => {
 		const data = new Uint8Array(loadEvent.target.result)
 		const workbook = XLSX.read(data, { type: 'array' })
 		const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
@@ -359,7 +534,12 @@ function importExcel(event) {
 			accessories: row.Akcesoria ? row.Akcesoria.split(', ').filter(Boolean) : [],
 		}))
 
-		if (confirm(`Zaimportować ${importedHires.length} wpisów?`)) {
+		if (
+			await AppUtils.confirmDialog({
+				title: 'Import zatrudnień',
+				message: `Zaimportować ${importedHires.length} wpisów?`,
+			})
+		) {
 			hires = [...hires, ...importedHires]
 			saveData()
 		}
@@ -400,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const { action } = actionButton.dataset
 
 			if (action === 'edit') startEditFlow(index)
-			if (action === 'delete') removeItem(index)
+			if (action === 'delete') void removeItem(index)
 		})
 	}
 
@@ -409,25 +589,30 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	if (closeDrawerBtn) {
-		closeDrawerBtn.addEventListener('click', () => closeDrawer())
+		closeDrawerBtn.addEventListener('click', () => void closeDrawer())
 	}
 
 	if (cancelDrawerBtn) {
-		cancelDrawerBtn.addEventListener('click', () => closeDrawer())
+		cancelDrawerBtn.addEventListener('click', () => void closeDrawer())
 	}
 
 	if (drawerBackdrop) {
-		drawerBackdrop.addEventListener('click', () => closeDrawer())
+		drawerBackdrop.addEventListener('click', () => void closeDrawer())
 	}
 
 	window.addEventListener('keydown', event => {
+		if (event.key === 'Escape' && searchPanel && !searchPanel.hidden) {
+			closeSearch()
+			return
+		}
+
 		if (event.key === 'Escape' && drawerShell?.classList.contains('is-open')) {
-			closeDrawer()
+			void closeDrawer()
 		}
 	})
 
 	if (hiresForm) {
-		hiresForm.addEventListener('submit', event => {
+		hiresForm.addEventListener('submit', async event => {
 			event.preventDefault()
 
 			const selectedAccessories = getSelectedAccessories()
@@ -448,7 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			monthPicker.setCurrentDate(AppUtils.parseDate(newHireDate) || new Date(), { render: false })
 			saveData()
-			closeDrawer({ force: true })
+			await closeDrawer({ force: true })
 		})
 	}
 
@@ -456,6 +641,17 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (importExcelTrigger && importExcelInput) {
 		importExcelTrigger.addEventListener('click', () => importExcelInput.click())
 		importExcelInput.addEventListener('change', importExcel)
+	}
+
+	if (searchInput) {
+		searchInput.addEventListener('input', event => {
+			searchQuery = event.target.value || ''
+			renderTable()
+		})
+	}
+
+	if (searchToggleBtn) {
+		searchToggleBtn.addEventListener('click', toggleSearch)
 	}
 
 	loadData()

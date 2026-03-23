@@ -1,6 +1,8 @@
 /* === Exchanges State And References: Start === */
 let exchanges = []
 let editIndex = null
+let drawerInitialState = ''
+let searchQuery = ''
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.EXCHANGES
 
 const exchangeForm = document.getElementById('exchange-form')
@@ -13,14 +15,21 @@ const importExcelInput = document.getElementById('importExcelFile')
 const importExcelTrigger = document.getElementById('import-excel-trigger')
 const openDrawerBtn = document.getElementById('open-exchange-drawer')
 const closeDrawerBtn = document.getElementById('close-exchange-drawer')
+const workspaceActions = document.querySelector('.workspace-actions')
 const drawerShell = document.getElementById('exchange-drawer-shell')
 const drawerBackdrop = document.getElementById('exchange-drawer-backdrop')
 const drawerTitle = document.getElementById('exchange-drawer-title')
 const drawerCopy = document.getElementById('exchange-drawer-copy')
 const monthSummary = document.getElementById('exchange-month-summary')
+const exchangeWorkspace = document.querySelector('.exchange-workspace')
+const searchToggleBtn = document.getElementById('exchange-search-toggle')
+const searchPanel = document.getElementById('exchange-search-panel')
+const searchInput = document.getElementById('exchange-search-input')
+
+let workspaceHeightAnimationFallbackId = null
 
 const monthPicker = AppUtils.createMonthPicker({
-	onChange: () => renderTable(),
+	onChange: () => renderTable({ animateContainer: true }),
 	getCounts: year => {
 		const counts = Array.from({ length: 12 }, () => 0)
 
@@ -97,24 +106,77 @@ function getCurrentMonthExchanges() {
 	return exchanges.filter(exchange => AppUtils.isSameMonth(exchange.plannedDate, currentViewDate))
 }
 
+function getVisibleExchanges() {
+	const source = searchQuery.trim() ? exchanges : getCurrentMonthExchanges()
+	return source.filter(exchange =>
+		AppUtils.matchesSearchQuery(
+			[(exchange.name || '').toUpperCase(), exchange.plannedDate || '', exchange.oldSn || '', exchange.newSn || ''],
+			searchQuery
+		)
+	)
+}
+
+function setSearchOpen(isOpen) {
+	if (!searchPanel) return
+
+	searchPanel.hidden = !isOpen
+	workspaceActions?.classList.toggle('is-search-open', isOpen)
+	searchToggleBtn?.setAttribute('aria-expanded', String(isOpen))
+
+	if (isOpen) {
+		window.setTimeout(() => searchInput?.focus(), 40)
+	}
+}
+
+function closeSearch({ clearValue = true } = {}) {
+	if (clearValue) {
+		searchQuery = ''
+
+		if (searchInput) {
+			searchInput.value = ''
+		}
+
+		renderTable()
+	}
+
+	setSearchOpen(false)
+}
+
+function toggleSearch() {
+	const isOpen = Boolean(searchPanel) && !searchPanel.hidden
+
+	if (isOpen) {
+		closeSearch()
+		return
+	}
+
+	setSearchOpen(true)
+}
+
 function getSelectedAccessories() {
 	return Array.from(document.querySelectorAll('.accessory-item.active')).map(item => item.dataset.item)
 }
 
-function hasDrawerFormChanges() {
-	if (!exchangeForm) return false
-
-	const textInputs = Array.from(exchangeForm.querySelectorAll('input'))
-	const hasValue = textInputs.some(input => {
-		if (input.type === 'date') return Boolean(input.value)
-		if (input.type === 'text') return input.value.trim() !== ''
-		return false
-	})
-
-	return hasValue || getSelectedAccessories().length > 0
+function getFormState() {
+	return {
+		name: (document.getElementById('emp-name')?.value || '').trim().toUpperCase(),
+		plannedDate: document.getElementById('exchange-date')?.value || '',
+		oldSn: AppUtils.normalizeSN(document.getElementById('old-sn')?.value || ''),
+		newSn: AppUtils.normalizeSN(document.getElementById('new-sn')?.value || ''),
+		notes: (document.getElementById('notes')?.value || '').trim(),
+		accessories: getSelectedAccessories(),
+	}
 }
 
-function updateMonthSummary(visibleCount, totalCount, monthLabel) {
+function captureDrawerSnapshot() {
+	drawerInitialState = JSON.stringify(getFormState())
+}
+
+function hasDrawerFormChanges() {
+	return Boolean(exchangeForm) && JSON.stringify(getFormState()) !== drawerInitialState
+}
+
+function updateMonthSummary({ visibleCount, monthCount, totalCount, monthLabel }) {
 	if (!monthSummary) return
 
 	if (totalCount === 0) {
@@ -122,12 +184,90 @@ function updateMonthSummary(visibleCount, totalCount, monthLabel) {
 		return
 	}
 
-	if (visibleCount === totalCount) {
-		monthSummary.textContent = `${monthLabel} · widoczne wymiany: ${visibleCount}.`
+	if (searchQuery.trim()) {
+		monthSummary.textContent = `Wyniki wyszukiwania: ${visibleCount} z ${totalCount} wpisów na stronie wymiany sprzętu.`
 		return
 	}
 
-	monthSummary.textContent = `${monthLabel} · widoczne wymiany: ${visibleCount} z ${totalCount} w całej bazie.`
+	if (monthCount === 0) {
+		monthSummary.textContent = `${monthLabel} · brak wpisów w tym miesiącu.`
+		return
+	}
+
+	if (monthCount === totalCount) {
+		monthSummary.textContent = `${monthLabel} · widoczne wymiany: ${monthCount}.`
+		return
+	}
+
+	monthSummary.textContent = `${monthLabel} · widoczne wymiany: ${monthCount} z ${totalCount} w całej bazie.`
+}
+function prefersReducedMotion() {
+	return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function setMonthTransitionState(isActive) {
+	document.body.classList.toggle('exchange-month-transitioning', isActive)
+	exchangeWorkspace?.classList.toggle('is-month-transitioning', isActive)
+}
+
+function resetWorkspaceHeightAnimation() {
+	if (!exchangeWorkspace) return
+
+	exchangeWorkspace.style.height = ''
+	exchangeWorkspace.style.overflow = ''
+	exchangeWorkspace.style.transition = ''
+	exchangeWorkspace.style.willChange = ''
+	setMonthTransitionState(false)
+}
+
+function renderTableContent() {
+	renderTable({ skipAnimationReset: true })
+}
+
+function animateWorkspaceHeight(renderContent) {
+	if (!exchangeWorkspace || prefersReducedMotion()) {
+		renderContent()
+		return
+	}
+
+	window.clearTimeout(workspaceHeightAnimationFallbackId)
+	resetWorkspaceHeightAnimation()
+
+	const startHeight = exchangeWorkspace.getBoundingClientRect().height
+
+	setMonthTransitionState(true)
+	exchangeWorkspace.style.height = `${startHeight}px`
+	exchangeWorkspace.style.overflow = 'hidden'
+	exchangeWorkspace.style.transition = 'none'
+	exchangeWorkspace.style.willChange = 'height'
+
+	renderContent()
+
+	exchangeWorkspace.style.height = 'auto'
+	const endHeight = exchangeWorkspace.getBoundingClientRect().height
+	exchangeWorkspace.style.height = `${startHeight}px`
+	void exchangeWorkspace.offsetHeight
+
+	if (Math.abs(endHeight - startHeight) < 2) {
+		resetWorkspaceHeightAnimation()
+		return
+	}
+
+	const finishAnimation = event => {
+		if (event && event.propertyName !== 'height') return
+
+		exchangeWorkspace.removeEventListener('transitionend', finishAnimation)
+		window.clearTimeout(workspaceHeightAnimationFallbackId)
+		resetWorkspaceHeightAnimation()
+	}
+
+	exchangeWorkspace.addEventListener('transitionend', finishAnimation)
+	workspaceHeightAnimationFallbackId = window.setTimeout(() => finishAnimation(), 460)
+
+	requestAnimationFrame(() => {
+		exchangeWorkspace.style.transition = 'height 360ms cubic-bezier(0.22, 1, 0.36, 1)'
+		exchangeWorkspace.style.height = `${endHeight}px`
+	})
 }
 /* === Exchanges View Helpers: End === */
 
@@ -156,6 +296,7 @@ function resetFormState() {
 		submitBtn.classList.add('btn-submit-warning')
 		submitBtn.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Zatwierdź i zaplanuj'
 	}
+	captureDrawerSnapshot()
 }
 
 function openDrawer() {
@@ -169,11 +310,14 @@ function openDrawer() {
 	window.setTimeout(() => firstField?.focus(), 80)
 }
 
-function closeDrawer({ force = false } = {}) {
+async function closeDrawer({ force = false } = {}) {
 	if (!drawerShell) return false
 
 	if (!force && hasDrawerFormChanges()) {
-		const shouldClose = confirm('Zamknąć panel? Niezapisane zmiany zostaną utracone.')
+		const shouldClose = await AppUtils.confirmDialog({
+			title: 'Niezapisane zmiany',
+			message: 'Zamknąć panel? Niezapisane zmiany zostaną utracone.',
+		})
 		if (!shouldClose) return false
 	}
 
@@ -223,26 +367,52 @@ function startEditFlow(index) {
 
 	monthPicker.setCurrentDate(AppUtils.parseDate(exchange.plannedDate) || new Date(), { render: false })
 	renderTable()
+	captureDrawerSnapshot()
 	openDrawer()
 }
 /* === Exchanges Drawer: End === */
 
 /* === Exchanges Table Rendering: Start === */
-function renderTable() {
+function renderTable({ animateContainer = false, skipAnimationReset = false } = {}) {
 	if (!tableBody) return
+
+	if (animateContainer) {
+		animateWorkspaceHeight(renderTableContent)
+		return
+	}
+
+	if (!skipAnimationReset) {
+		window.clearTimeout(workspaceHeightAnimationFallbackId)
+		resetWorkspaceHeightAnimation()
+	}
+
 	tableBody.innerHTML = ''
 	monthPicker.refreshView()
 
 	const { monthLabel } = getCurrentMonthContext()
-	const filteredExchanges = getCurrentMonthExchanges()
-	updateMonthSummary(filteredExchanges.length, exchanges.length, monthLabel)
+	const monthExchanges = getCurrentMonthExchanges()
+	const filteredExchanges = getVisibleExchanges()
+	updateMonthSummary({
+		visibleCount: filteredExchanges.length,
+		monthCount: monthExchanges.length,
+		totalCount: exchanges.length,
+		monthLabel,
+	})
 
 	if (filteredExchanges.length === 0) {
-		const hiddenCount = exchanges.length
-		tableBody.innerHTML = `<tr><td colspan="7" class="empty-state-cell">Brak planowanych wymian w tym miesiącu.${
-			hiddenCount > 0 ? `<br><small>W bazie jest jeszcze ${hiddenCount} rekordów, ale eksport Excel działa dla wybranego miesiąca: ${monthLabel}.</small>` : ''
-		}</td></tr>`
-		return
+		if (searchQuery.trim()) {
+			tableBody.innerHTML =
+				'<tr><td colspan="7" class="empty-state-cell">Brak wyników wyszukiwania na stronie wymiany sprzętu.<br><small>Sprawdź pracownika, datę lub numery SN widoczne w tej tabeli.</small></td></tr>'
+			return
+		}
+
+		if (monthExchanges.length === 0) {
+			const hiddenCount = exchanges.length
+			tableBody.innerHTML = `<tr><td colspan="7" class="empty-state-cell">Brak planowanych wymian w tym miesiącu.${
+				hiddenCount > 0 ? `<br><small>W bazie jest jeszcze ${hiddenCount} rekordów, ale eksport Excel działa dla wybranego miesiąca: ${monthLabel}.</small>` : ''
+			}</td></tr>`
+			return
+		}
 	}
 
 	filteredExchanges.forEach(exchange => {
@@ -314,10 +484,18 @@ function renderTable() {
 /* === Exchanges Table Rendering: End === */
 
 /* === Exchanges Actions: Start === */
-function completeExchange(index) {
+async function completeExchange(index) {
 	const exchange = exchanges[index]
 	if (!exchange || exchange.status === 'done') return
-	if (!confirm(`Sfinalizować wymianę dla: ${exchange.name}?`)) return
+	if (
+		!(
+			await AppUtils.confirmDialog({
+				title: 'Finalizacja wymiany',
+				message: `Sfinalizować wymianę dla: ${exchange.name}?`,
+			})
+		)
+	)
+		return
 
 	const monitorKey = AppUtils.config.STORAGE_KEYS.MONITOR
 	let monitorData = JSON.parse(localStorage.getItem(monitorKey)) || []
@@ -344,11 +522,19 @@ function completeExchange(index) {
 	saveData()
 }
 
-function removeItem(index) {
-	if (!confirm('Usunąć ten wpis?')) return
+async function removeItem(index) {
+	if (
+		!(
+			await AppUtils.confirmDialog({
+				title: 'Usuwanie wpisu',
+				message: 'Usunąć ten wpis?',
+			})
+		)
+	)
+		return
 
 	if (editIndex === index) {
-		closeDrawer({ force: true })
+		await closeDrawer({ force: true })
 	} else if (editIndex !== null && editIndex > index) {
 		editIndex -= 1
 	}
@@ -388,7 +574,7 @@ function importExcel(event) {
 	if (!file) return
 
 	const reader = new FileReader()
-	reader.onload = loadEvent => {
+	reader.onload = async loadEvent => {
 		try {
 			const data = new Uint8Array(loadEvent.target.result)
 			const workbook = XLSX.read(data, { type: 'array' })
@@ -407,7 +593,13 @@ function importExcel(event) {
 				createdAt: new Date(),
 			}))
 
-			if (imported.length > 0 && confirm(`Zaimportować ${imported.length} rekordów?`)) {
+			if (
+				imported.length > 0 &&
+				(await AppUtils.confirmDialog({
+					title: 'Import wymian',
+					message: `Zaimportować ${imported.length} rekordów?`,
+				}))
+			) {
 				exchanges = [...exchanges, ...imported]
 				saveData()
 				alert('Import zakończony!')
@@ -455,9 +647,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			const index = Number(actionButton.dataset.index)
 			const action = actionButton.dataset.action
 
-			if (action === 'complete') completeExchange(index)
+			if (action === 'complete') void completeExchange(index)
 			if (action === 'edit') startEditFlow(index)
-			if (action === 'delete') removeItem(index)
+			if (action === 'delete') void removeItem(index)
 		})
 	}
 
@@ -466,25 +658,30 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	if (closeDrawerBtn) {
-		closeDrawerBtn.addEventListener('click', () => closeDrawer())
+		closeDrawerBtn.addEventListener('click', () => void closeDrawer())
 	}
 
 	if (cancelEditBtn) {
-		cancelEditBtn.addEventListener('click', () => closeDrawer())
+		cancelEditBtn.addEventListener('click', () => void closeDrawer())
 	}
 
 	if (drawerBackdrop) {
-		drawerBackdrop.addEventListener('click', () => closeDrawer())
+		drawerBackdrop.addEventListener('click', () => void closeDrawer())
 	}
 
 	window.addEventListener('keydown', event => {
+		if (event.key === 'Escape' && searchPanel && !searchPanel.hidden) {
+			closeSearch()
+			return
+		}
+
 		if (event.key === 'Escape' && drawerShell?.classList.contains('is-open')) {
-			closeDrawer()
+			void closeDrawer()
 		}
 	})
 
 	if (exchangeForm) {
-		exchangeForm.addEventListener('submit', event => {
+		exchangeForm.addEventListener('submit', async event => {
 			event.preventDefault()
 
 			const exchangeData = {
@@ -506,7 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			monthPicker.setCurrentDate(AppUtils.parseDate(exchangeData.plannedDate) || new Date(), { render: false })
 			saveData()
-			closeDrawer({ force: true })
+			await closeDrawer({ force: true })
 		})
 	}
 
@@ -514,6 +711,17 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (importExcelTrigger && importExcelInput) {
 		importExcelTrigger.addEventListener('click', () => importExcelInput.click())
 		importExcelInput.addEventListener('change', importExcel)
+	}
+
+	if (searchInput) {
+		searchInput.addEventListener('input', event => {
+			searchQuery = event.target.value || ''
+			renderTable()
+		})
+	}
+
+	if (searchToggleBtn) {
+		searchToggleBtn.addEventListener('click', toggleSearch)
 	}
 
 	loadData()

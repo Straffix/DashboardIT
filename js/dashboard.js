@@ -247,6 +247,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	let selectedTaskDate = formatTaskDateKey(new Date())
 	let calendarCursor = new Date()
 	let reminderTimerId = null
+	let reminderAudioContext = null
+	let reminderAudioElement = null
+	let reminderAudioSourceUrl = ''
+	let lastTaskReminderSoundAt = 0
+	let isTaskReminderSoundPending = false
+	let hasUnlockedReminderAudio = false
+	let hasRequestedNotificationPermission = false
+	const activeTaskNotifications = new Map()
 	let autoClearEnabled = localStorage.getItem(taskConfig.autoclearKey) === 'true'
 	let lastClockMinuteKey = ''
 	let lastClockDateKey = ''
@@ -455,6 +463,305 @@ document.addEventListener('DOMContentLoaded', () => {
 		renderTaskPreview()
 	}
 
+	const buildTaskReminderSubtitle = task => `${task.time} - ${task.description?.trim() || 'Zaplanowane zadanie'}`
+
+	const writeWaveString = (view, offset, value) => {
+		for (let index = 0; index < value.length; index += 1) {
+			view.setUint8(offset + index, value.charCodeAt(index))
+		}
+	}
+
+	const createReminderToneUrl = () => {
+		const sampleRate = 24000
+		const notes = [
+			{ frequency: 740, duration: 0.18, pause: 0.05 },
+			{ frequency: 932.33, duration: 0.18, pause: 0.06 },
+			{ frequency: 1174.66, duration: 0.24, pause: 0 },
+		]
+		const totalDuration = notes.reduce((sum, note) => sum + note.duration + (note.pause || 0), 0) + 0.08
+		const totalSamples = Math.ceil(totalDuration * sampleRate)
+		const audioBuffer = new ArrayBuffer(44 + totalSamples * 2)
+		const view = new DataView(audioBuffer)
+		const attackSamples = Math.max(1, Math.floor(sampleRate * 0.012))
+		const releaseSamples = Math.max(1, Math.floor(sampleRate * 0.035))
+		let sampleCursor = 0
+
+		writeWaveString(view, 0, 'RIFF')
+		view.setUint32(4, 36 + totalSamples * 2, true)
+		writeWaveString(view, 8, 'WAVE')
+		writeWaveString(view, 12, 'fmt ')
+		view.setUint32(16, 16, true)
+		view.setUint16(20, 1, true)
+		view.setUint16(22, 1, true)
+		view.setUint32(24, sampleRate, true)
+		view.setUint32(28, sampleRate * 2, true)
+		view.setUint16(32, 2, true)
+		view.setUint16(34, 16, true)
+		writeWaveString(view, 36, 'data')
+		view.setUint32(40, totalSamples * 2, true)
+
+		notes.forEach(note => {
+			const noteSamples = Math.max(1, Math.floor(note.duration * sampleRate))
+			const pauseSamples = Math.max(0, Math.floor((note.pause || 0) * sampleRate))
+
+			for (let index = 0; index < noteSamples && sampleCursor < totalSamples; index += 1) {
+				const attackProgress = index < attackSamples ? index / attackSamples : 1
+				const releaseProgress = index >= noteSamples - releaseSamples ? (noteSamples - index) / releaseSamples : 1
+				const envelope = Math.max(0, Math.min(1, attackProgress, releaseProgress))
+				const time = index / sampleRate
+				const harmonic = Math.sin(2 * Math.PI * note.frequency * time)
+				const overtone = Math.sin(2 * Math.PI * note.frequency * 2 * time) * 0.18
+				const sample = Math.max(-1, Math.min(1, (harmonic + overtone) * envelope * 0.36))
+
+				view.setInt16(44 + sampleCursor * 2, Math.round(sample * 32767), true)
+				sampleCursor += 1
+			}
+
+			sampleCursor = Math.min(totalSamples, sampleCursor + pauseSamples)
+		})
+
+		return URL.createObjectURL(new Blob([audioBuffer], { type: 'audio/wav' }))
+	}
+
+	const getReminderAudioElement = () => {
+		if (!reminderAudioElement) {
+			reminderAudioSourceUrl = reminderAudioSourceUrl || createReminderToneUrl()
+			reminderAudioElement = new Audio(reminderAudioSourceUrl)
+			reminderAudioElement.preload = 'auto'
+			reminderAudioElement.setAttribute('playsinline', '')
+		}
+
+		return reminderAudioElement
+	}
+
+	const getReminderAudioContext = () => {
+		const AudioContextClass = window.AudioContext || window.webkitAudioContext
+		if (!AudioContextClass) return null
+
+		if (!reminderAudioContext) {
+			reminderAudioContext = new AudioContextClass()
+		}
+
+		return reminderAudioContext
+	}
+
+	const unlockReminderAudio = async () => {
+		const audioContext = getReminderAudioContext()
+		if (!audioContext) return null
+
+		if (audioContext.state !== 'running') {
+			try {
+				await audioContext.resume()
+			} catch (error) {
+				return null
+			}
+		}
+
+		return audioContext.state === 'running' ? audioContext : null
+	}
+
+	const primeReminderAudioPlayback = async () => {
+		const audioElement = getReminderAudioElement()
+		if (!audioElement) return false
+
+		try {
+			audioElement.pause()
+			audioElement.currentTime = 0
+			audioElement.muted = true
+
+			const playbackPromise = audioElement.play()
+			if (playbackPromise?.catch) {
+				await playbackPromise
+			}
+
+			audioElement.pause()
+			audioElement.currentTime = 0
+			audioElement.muted = false
+			hasUnlockedReminderAudio = true
+			return true
+		} catch (error) {
+			audioElement.pause()
+			audioElement.currentTime = 0
+			audioElement.muted = false
+			return false
+		}
+	}
+
+	const playTaskReminderAudioElement = async () => {
+		const audioElement = getReminderAudioElement()
+		if (!audioElement) return false
+
+		try {
+			audioElement.pause()
+			audioElement.currentTime = 0
+			audioElement.muted = false
+			audioElement.volume = 0.95
+
+			const playbackPromise = audioElement.play()
+			if (playbackPromise?.catch) {
+				await playbackPromise
+			}
+
+			hasUnlockedReminderAudio = true
+			return true
+		} catch (error) {
+			return false
+		}
+	}
+
+	const playTaskReminderWebTone = async () => {
+		const audioContext = await unlockReminderAudio()
+		if (!audioContext) return false
+
+		const startAt = audioContext.currentTime + 0.02
+		const masterGain = audioContext.createGain()
+		masterGain.gain.setValueAtTime(0.0001, startAt)
+		masterGain.connect(audioContext.destination)
+
+		const notes = [
+			{ frequency: 740, duration: 0.16, delay: 0 },
+			{ frequency: 932.33, duration: 0.16, delay: 0.2 },
+			{ frequency: 1174.66, duration: 0.22, delay: 0.4 },
+		]
+
+		notes.forEach(note => {
+			const oscillator = audioContext.createOscillator()
+			const gain = audioContext.createGain()
+			const noteStart = startAt + note.delay
+			const noteEnd = noteStart + note.duration
+
+			oscillator.type = 'triangle'
+			oscillator.frequency.setValueAtTime(note.frequency, noteStart)
+
+			gain.gain.setValueAtTime(0.0001, noteStart)
+			gain.gain.exponentialRampToValueAtTime(0.18, noteStart + 0.025)
+			gain.gain.exponentialRampToValueAtTime(0.0001, noteEnd)
+
+			oscillator.connect(gain)
+			gain.connect(masterGain)
+			oscillator.start(noteStart)
+			oscillator.stop(noteEnd + 0.04)
+		})
+
+		masterGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.72)
+		hasUnlockedReminderAudio = true
+		return true
+	}
+
+	const supportsTaskSystemNotifications = () =>
+		typeof window.Notification !== 'undefined' && (window.isSecureContext || window.location.protocol === 'file:')
+
+	const requestTaskNotificationPermission = async () => {
+		if (!supportsTaskSystemNotifications()) return 'unsupported'
+		if (Notification.permission !== 'default') return Notification.permission
+		if (hasRequestedNotificationPermission) return Notification.permission
+
+		hasRequestedNotificationPermission = true
+
+		try {
+			return await Notification.requestPermission()
+		} catch (error) {
+			return Notification.permission || 'default'
+		}
+	}
+
+	const closeTaskSystemNotification = reminderId => {
+		const notification = activeTaskNotifications.get(reminderId)
+		if (!notification) return
+
+		activeTaskNotifications.delete(reminderId)
+		notification.onclose = null
+		notification.close()
+	}
+
+	const closeActiveTaskSystemNotifications = () => {
+		activeTaskNotifications.forEach((notification, reminderId) => {
+			activeTaskNotifications.delete(reminderId)
+			notification.onclose = null
+			notification.close()
+		})
+	}
+
+	const showTaskSystemNotification = task => {
+		if (!supportsTaskSystemNotifications()) return
+		if (Notification.permission !== 'granted') return
+		if (document.visibilityState === 'visible' && document.hasFocus()) return
+
+		const reminderId = createReminderId(task)
+		closeTaskSystemNotification(reminderId)
+
+		let notification = null
+
+		try {
+			notification = new Notification(`Za 5 minut: ${task.title}`, {
+				body: buildTaskReminderSubtitle(task),
+				tag: reminderId,
+				renotify: true,
+				requireInteraction: true,
+				silent: false,
+			})
+		} catch (error) {
+			return
+		}
+
+		activeTaskNotifications.set(reminderId, notification)
+		notification.onclose = () => {
+			activeTaskNotifications.delete(reminderId)
+		}
+		notification.onclick = () => {
+			window.focus()
+			selectedTaskDate = task.date
+
+			const [year, month] = task.date.split('-').map(Number)
+			calendarCursor = new Date(year, month - 1, 1)
+			setDefaultTaskDate(selectedTaskDate)
+			syncTaskUi()
+			openTaskModal()
+			notification.close()
+		}
+
+		window.setTimeout(() => {
+			closeTaskSystemNotification(reminderId)
+		}, 16000)
+	}
+
+	const registerReminderAudioUnlock = () => {
+		const unlockEvents = ['pointerdown', 'keydown', 'touchstart']
+		const handleUnlock = async () => {
+			const [audioContext, audioElementUnlocked] = await Promise.all([unlockReminderAudio(), primeReminderAudioPlayback()])
+			if (!audioContext && !audioElementUnlocked) return
+
+			unlockEvents.forEach(eventName => {
+				window.removeEventListener(eventName, handleUnlock)
+			})
+		}
+
+		unlockEvents.forEach(eventName => {
+			window.addEventListener(eventName, handleUnlock, { passive: true })
+		})
+	}
+
+	const playTaskReminderSound = async () => {
+		const now = Date.now()
+		if (now - lastTaskReminderSoundAt < 1800) return
+		if (isTaskReminderSoundPending) return
+
+		isTaskReminderSoundPending = true
+
+		try {
+			const played =
+				(hasUnlockedReminderAudio && (await playTaskReminderAudioElement())) ||
+				(await playTaskReminderWebTone()) ||
+				(await playTaskReminderAudioElement())
+
+			if (!played) return
+
+			lastTaskReminderSoundAt = Date.now()
+		} finally {
+			isTaskReminderSoundPending = false
+		}
+	}
+
 	const showTaskToast = task => {
 		if (!taskToastStack) return
 
@@ -465,7 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			<div class="task-toast-dot ${priority.className}"></div>
 			<div class="task-toast-copy">
 				<strong>Za 5 minut: ${task.title}</strong>
-				<span>${task.time} • ${task.description?.trim() || 'Zaplanowane zadanie'}</span>
+				<span>${buildTaskReminderSubtitle(task)}</span>
 			</div>
 			<button type="button" class="task-toast-close" aria-label="Zamknij przypomnienie">
 				<i class="fa-solid fa-xmark"></i>
@@ -481,6 +788,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		toast.querySelector('.task-toast-close')?.addEventListener('click', removeToast)
 		window.setTimeout(removeToast, 9000)
+	}
+
+	const notifyTaskReminder = task => {
+		showTaskToast(task)
+		showTaskSystemNotification(task)
+		void playTaskReminderSound()
 	}
 
 	const cleanupReminderCache = () => {
@@ -527,7 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			remindedTaskIds.add(reminderId)
 			saveRemindedTasks()
-			showTaskToast(task)
+			notifyTaskReminder(task)
 		})
 	}
 
@@ -536,6 +849,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		cleanupReminderCache()
 		checkTaskReminders()
+		document.addEventListener('visibilitychange', () => {
+			if (document.visibilityState === 'visible') {
+				closeActiveTaskSystemNotifications()
+				checkTaskReminders()
+			}
+		})
+		window.addEventListener('focus', () => {
+			closeActiveTaskSystemNotifications()
+			checkTaskReminders()
+		})
 
 		if (reminderTimerId) {
 			window.clearInterval(reminderTimerId)
@@ -571,11 +894,18 @@ document.addEventListener('DOMContentLoaded', () => {
 			taskAutoclearToggle.checked = autoClearEnabled
 		}
 
-		clockWidgetTrigger.addEventListener('click', openTaskModal)
+		const handleTaskPlannerOpen = () => {
+			openTaskModal()
+			void unlockReminderAudio()
+			void primeReminderAudioPlayback()
+			void requestTaskNotificationPermission()
+		}
+
+		clockWidgetTrigger.addEventListener('click', handleTaskPlannerOpen)
 		clockWidgetTrigger.addEventListener('keydown', event => {
 			if (event.key !== 'Enter' && event.key !== ' ') return
 			event.preventDefault()
-			openTaskModal()
+			handleTaskPlannerOpen()
 		})
 
 		taskModal.addEventListener('click', event => {
@@ -658,6 +988,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			})
 			tasks.sort(compareTasks)
 			saveTasks()
+			void unlockReminderAudio()
+			void primeReminderAudioPlayback()
+			void requestTaskNotificationPermission()
 
 			selectedTaskDate = date
 			const [year, month] = date.split('-').map(Number)
@@ -1087,6 +1420,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.setInterval(updateClock, 1000)
 	initWeather()
 	initTasks()
+	registerReminderAudioUnlock()
 	initTaskReminders()
 	initScrollCue()
 
