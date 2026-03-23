@@ -1,0 +1,589 @@
+body.lunch-page {
+  --primary: #f97316;
+  --primary-strong: #ea580c;
+  --border-strong: rgba(249, 115, 22, 0.28);
+}
+
+.lunch-content {
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
+}
+
+.lunch-workspace,
+.lunch-sidebar {
+  min-width: 0;
+}
+
+.lunch-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.lunch-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 247, 237, 0.94) 0%, rgba(255, 237, 213, 0.88) 100%);
+  border: 1px solid rgba(249, 115, 22, 0.14);
+  box-shadow: 0 18px 34px rgba(194, 65, 12, 0.08);
+}
+
+.lunch-hero-copy {
+  min-width: 0;
+}
+
+.lunch-kicker,
+.lunch-side-kicker,
+.lunch-slot-kicker {
+  display: inline-flex;
+  margin-bottom: 10px;
+  color: #c2410c;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lunch-hero-copy h2 {
+  margin-bottom: 12px;
+  font-size: 2.4rem;
+  line-height: 1.2;
+}
+
+.lunch-hero-copy p {
+  max-width: 700px;
+  color: var(--text-muted);
+  font-size: 1.28rem;
+  line-height: 1.7;
+}
+
+.lunch-hero-actions {
+  display: grid;
+  gap: 12px;
+  min-width: min(220px, 100%);
+}
+
+.lunch-date-field {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(249, 115, 22, 0.16);
+}
+
+.lunch-date-field span {
+  color: var(--text-muted);
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lunch-date-field input {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid rgba(249, 115, 22, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 1.2rem;
+}
+
+.lunch-date-field input:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
+}
+
+.lunch-today-btn,
+.lunch-auth-btn,
+.lunch-summary-btn,
+.lunch-slot-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  font-size: 1.18rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.lunch-today-btn:hover,
+.lunch-auth-btn:hover,
+.lunch-summary-btn:hover,
+.lunch-slot-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.lunch-today-btn {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(249, 115, 22, 0.18);
+  color: #9a3412;
+}
+
+.lunch-auth-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(249, 115, 22, 0.12);
+  box-shadow: var(--shadow-sm);
+}
+
+.lunch-auth-callout.is-active-user {
+  background: linear-gradient(135deg, rgba(255, 247, 237, 0.9) 0%, rgba(255, 255, 255, 0.82) 100%);
+}
+
+.lunch-auth-copy {
+  min-width: 0;
+}
+
+.lunch-auth-copy strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.38rem;
+  color: var(--text-main);
+}
+
+.lunch-auth-copy p {
+  color: var(--text-muted);
+  font-size: 1.16rem;
+  line-height: 1.65;
+}
+
+.lunch-auth-btn,
+.lunch-summary-btn,
+.lunch-slot-action {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  color: #ffffff;
+  box-shadow: 0 14px 24px rgba(249, 115, 22, 0.18);
+}
+
+.lunch-summary-btn {
+  margin-top: 14px;
+}
+
+.lunch-slot-action.is-cancel,
+.lunch-summary-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 14px 24px rgba(239, 68, 68, 0.16);
+}
+
+.lunch-slot-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+  box-shadow: none;
+  transform: none;
+}
+
+.lunch-feedback {
+  padding: 15px 18px;
+  border-radius: 18px;
+  border: 1px solid transparent;
+  font-size: 1.16rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.lunch-feedback.is-hidden {
+  display: none;
+}
+
+.lunch-feedback.is-success {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.22);
+  color: #166534;
+}
+
+.lunch-feedback.is-warning {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.2);
+  color: #9a3412;
+}
+
+.lunch-feedback.is-error {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.18);
+  color: #b91c1c;
+}
+
+.lunch-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.lunch-slot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(226, 232, 240, 0.94);
+  box-shadow: var(--shadow-sm);
+}
+
+.lunch-slot-card.is-mine {
+  border-color: rgba(249, 115, 22, 0.24);
+  box-shadow: 0 18px 34px rgba(249, 115, 22, 0.12);
+}
+
+.lunch-slot-card.is-full {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.92) 100%);
+}
+
+.lunch-slot-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lunch-slot-top h3 {
+  font-size: 2.2rem;
+  line-height: 1;
+  color: var(--text-main);
+}
+
+.lunch-slot-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.lunch-slot-pill.is-full {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+.lunch-seat-meter {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lunch-seat-dot {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.96);
+  overflow: hidden;
+}
+
+.lunch-seat-dot.is-filled {
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+}
+
+.lunch-slot-meta {
+  color: var(--text-muted);
+  font-size: 1.14rem;
+  line-height: 1.6;
+}
+
+.lunch-slot-meta strong {
+  color: var(--text-main);
+}
+
+.lunch-slot-list-wrap {
+  display: grid;
+  gap: 12px;
+}
+
+.lunch-slot-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lunch-slot-list-head strong {
+  font-size: 1.18rem;
+  color: var(--text-main);
+}
+
+.lunch-slot-list-head span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.12);
+  color: #c2410c;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.lunch-attendee-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+.lunch-attendee,
+.lunch-attendee-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.lunch-attendee.is-current-user {
+  border-color: rgba(249, 115, 22, 0.2);
+  background: rgba(255, 247, 237, 0.84);
+}
+
+.lunch-attendee-empty {
+  justify-content: center;
+  color: var(--text-soft);
+  font-size: 1.08rem;
+  text-align: center;
+}
+
+.lunch-attendee-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fdba74 0%, #f97316 100%);
+  color: #ffffff;
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+
+.lunch-attendee-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.lunch-attendee-copy strong,
+.lunch-my-reservation strong {
+  display: block;
+  font-size: 1.16rem;
+  color: var(--text-main);
+}
+
+.lunch-attendee-copy span,
+.lunch-my-reservation p,
+.lunch-rule-list li {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.lunch-attendee-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.14);
+  color: #c2410c;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.lunch-sidebar-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.lunch-side-card {
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(226, 232, 240, 0.94);
+}
+
+.lunch-my-reservation {
+  display: grid;
+  gap: 8px;
+}
+
+.lunch-side-stats {
+  display: grid;
+  gap: 12px;
+}
+
+.lunch-side-stat {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.94);
+  border: 1px solid rgba(226, 232, 240, 0.92);
+}
+
+.lunch-side-stat span {
+  color: var(--text-soft);
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lunch-side-stat strong {
+  font-size: 1.72rem;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.lunch-side-stat small {
+  color: var(--text-muted);
+  font-size: 1.02rem;
+}
+
+.lunch-rule-list {
+  display: grid;
+  gap: 10px;
+  padding-left: 18px;
+}
+
+.lunch-rule-list li::marker {
+  color: #f97316;
+}
+
+body.theme-dark.lunch-page .lunch-hero {
+  background: linear-gradient(135deg, rgba(73, 33, 12, 0.92) 0%, rgba(37, 24, 18, 0.82) 100%);
+  border-color: rgba(251, 146, 60, 0.18);
+  box-shadow: 0 20px 40px rgba(2, 8, 23, 0.34);
+}
+
+body.theme-dark.lunch-page .lunch-kicker,
+body.theme-dark.lunch-page .lunch-side-kicker,
+body.theme-dark.lunch-page .lunch-slot-kicker {
+  color: #fdba74;
+}
+
+body.theme-dark.lunch-page .lunch-date-field,
+body.theme-dark.lunch-page .lunch-auth-callout,
+body.theme-dark.lunch-page .lunch-slot-card,
+body.theme-dark.lunch-page .lunch-side-card,
+body.theme-dark.lunch-page .lunch-attendee,
+body.theme-dark.lunch-page .lunch-attendee-empty,
+body.theme-dark.lunch-page .lunch-side-stat {
+  background: rgba(15, 24, 42, 0.82);
+  border-color: rgba(124, 140, 255, 0.18);
+}
+
+body.theme-dark.lunch-page .lunch-auth-callout.is-active-user {
+  background: linear-gradient(135deg, rgba(62, 32, 18, 0.9) 0%, rgba(15, 24, 42, 0.82) 100%);
+}
+
+body.theme-dark.lunch-page .lunch-date-field input {
+  background: rgba(9, 16, 31, 0.92);
+  border-color: rgba(251, 146, 60, 0.18);
+  color: var(--text-main);
+}
+
+body.theme-dark.lunch-page .lunch-today-btn {
+  background: rgba(15, 24, 42, 0.88);
+  border-color: rgba(251, 146, 60, 0.18);
+  color: #fdba74;
+}
+
+body.theme-dark.lunch-page .lunch-feedback.is-success {
+  color: #86efac;
+}
+
+body.theme-dark.lunch-page .lunch-feedback.is-warning {
+  color: #fdba74;
+}
+
+body.theme-dark.lunch-page .lunch-feedback.is-error {
+  color: #fca5a5;
+}
+
+body.theme-dark.lunch-page .lunch-slot-pill {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+
+body.theme-dark.lunch-page .lunch-slot-pill.is-full {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+}
+
+body.theme-dark.lunch-page .lunch-seat-dot {
+  background: rgba(51, 65, 85, 0.92);
+}
+
+body.theme-dark.lunch-page .lunch-slot-list-head span,
+body.theme-dark.lunch-page .lunch-attendee-badge {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fdba74;
+}
+
+@media (max-width: 1080px) {
+  .lunch-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lunch-sidebar {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .lunch-hero,
+  .lunch-auth-callout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lunch-hero-actions {
+    min-width: 0;
+  }
+
+  .lunch-slot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .lunch-hero,
+  .lunch-slot-card,
+  .lunch-side-card {
+    padding: 18px;
+  }
+
+  .lunch-slot-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lunch-today-btn,
+  .lunch-auth-btn,
+  .lunch-summary-btn,
+  .lunch-slot-action {
+    width: 100%;
+  }
+}

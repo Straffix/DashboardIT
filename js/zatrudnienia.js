@@ -540,7 +540,11 @@ function exportExcel() {
 	const hiresToExport = getCurrentMonthHires()
 
 	if (hiresToExport.length === 0) {
-		alert(`Arkusz za ${monthLabel} pozostal pusty. Zmien miesiac albo dodaj wpis, a wtedy eksport ruszy bez problemu.`)
+		AppUtils.notify({
+			type: 'warning',
+			title: 'Brak danych do eksportu',
+			message: `Arkusz za ${monthLabel} pozostal pusty. Zmien miesiac albo dodaj wpis, a wtedy eksport ruszy bez problemu.`,
+		})
 		return
 	}
 

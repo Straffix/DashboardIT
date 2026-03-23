@@ -327,20 +327,28 @@ document.addEventListener('DOMContentLoaded', () => {
 			return
 		}
 
-		const label = String(bookmarkLabelInput?.value || '').trim()
-		const url = String(bookmarkUrlInput?.value || '').trim()
-		const description = String(bookmarkDescriptionInput?.value || '').trim()
+			const label = String(bookmarkLabelInput?.value || '').trim()
+			const url = String(bookmarkUrlInput?.value || '').trim()
+			const description = String(bookmarkDescriptionInput?.value || '').trim()
 
-		if (!label || !url) {
-			alert('Wpisz nazwe zakladki i adres lub sciezke.')
-			return
-		}
+			if (!label || !url) {
+				AppUtils.notify({
+					type: 'warning',
+					title: 'Brak danych',
+					message: 'Wpisz nazwe zakladki i adres lub sciezke.',
+				})
+				return
+			}
 
-		const normalizedUrl = normalizeLinkTarget(url)
-		if (!normalizedUrl) {
-			alert('Wpisz poprawny adres lub sciezke.')
-			return
-		}
+			const normalizedUrl = normalizeLinkTarget(url)
+			if (!normalizedUrl) {
+				AppUtils.notify({
+					type: 'error',
+					title: 'Niepoprawny adres',
+					message: 'Wpisz poprawny adres lub sciezke.',
+				})
+				return
+			}
 
 		const now = new Date().toISOString()
 

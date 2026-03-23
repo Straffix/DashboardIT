@@ -384,6 +384,139 @@ body.theme-dark .app-confirm-btn-secondary {
 }
 /* === Shared Confirm Dialog: End === */
 
+/* === Shared System Toasts: Start === */
+.app-toast-stack {
+	position: fixed;
+	right: 20px;
+	bottom: 20px;
+	z-index: 1700;
+	display: grid;
+	gap: 12px;
+	width: min(380px, calc(100vw - 24px));
+	pointer-events: none;
+}
+
+.app-toast {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: start;
+	gap: 12px;
+	padding: 14px 16px;
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	background: var(--bg-surface-strong);
+	box-shadow: var(--shadow-lg);
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+	pointer-events: auto;
+	animation: app-toast-in 0.18s ease forwards;
+
+	&.is-leaving {
+		animation: app-toast-out 0.18s ease forwards;
+	}
+
+	&.is-success .app-toast-icon {
+		background: rgba(34, 197, 94, 0.14);
+		color: var(--success);
+	}
+
+	&.is-warning .app-toast-icon {
+		background: rgba(245, 158, 11, 0.16);
+		color: var(--warning);
+	}
+
+	&.is-error .app-toast-icon {
+		background: rgba(239, 68, 68, 0.14);
+		color: var(--danger);
+	}
+}
+
+.app-toast-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	border-radius: 14px;
+	background: rgba(99, 102, 241, 0.12);
+	color: var(--primary);
+	font-size: 1.5rem;
+}
+
+.app-toast-copy {
+	min-width: 0;
+
+	strong,
+	span {
+		display: block;
+	}
+
+	strong {
+		color: var(--text-main);
+		font-size: 1.22rem;
+	}
+
+	span {
+		margin-top: 4px;
+		color: var(--text-muted);
+		font-size: 1.08rem;
+		line-height: 1.55;
+	}
+}
+
+.app-toast-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border: 1px solid transparent;
+	border-radius: 12px;
+	background: transparent;
+	color: var(--text-soft);
+	cursor: pointer;
+	transition:
+		transform 0.2s ease,
+		color 0.2s ease,
+		background-color 0.2s ease;
+
+	&:hover {
+		transform: translateY(-1px);
+		color: var(--text-main);
+		background: rgba(148, 163, 184, 0.12);
+	}
+}
+
+body.theme-dark .app-toast {
+	background: rgba(10, 18, 34, 0.96);
+	border-color: rgba(124, 140, 255, 0.22);
+}
+
+@keyframes app-toast-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.98);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes app-toast-out {
+	from {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+
+	to {
+		opacity: 0;
+		transform: translateY(8px) scale(0.98);
+	}
+}
+/* === Shared System Toasts: End === */
+
 /* === Shared User Hub: Start === */
 body.app-auth-open {
 	overflow: hidden;
@@ -854,6 +987,224 @@ body.theme-dark {
 	}
 }
 /* === Shared User Hub: End === */
+
+/* === Shared Page Status Strip: Start === */
+.app-page-status-strip {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 18px;
+	align-items: center;
+	margin: 0 0 22px;
+	padding: 18px 20px;
+	border: 1px solid var(--border);
+	border-radius: 24px;
+	background: var(--bg-surface-strong);
+	box-shadow: var(--shadow-sm);
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
+}
+
+.app-page-status-main {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	min-width: 0;
+}
+
+.app-page-status-identity {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: min(320px, 100%);
+}
+
+.app-page-status-avatar {
+	flex-shrink: 0;
+}
+
+.app-page-status-copy {
+	min-width: 0;
+
+	strong,
+	span {
+		display: block;
+	}
+
+	strong {
+		color: var(--text-main);
+		font-size: 1.32rem;
+	}
+
+	span {
+		overflow: hidden;
+		color: var(--text-muted);
+		font-size: 1.05rem;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}
+
+.app-page-status-meta {
+	min-width: 0;
+}
+
+.app-page-status-kicker {
+	margin-bottom: 6px;
+	color: var(--primary);
+	font-size: 0.92rem;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.app-page-status-text {
+	color: var(--text-main);
+	font-size: 1.12rem;
+	line-height: 1.6;
+}
+
+.app-page-status-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.app-page-status-tag {
+	display: inline-flex;
+	align-items: center;
+	min-height: 28px;
+	padding: 5px 10px;
+	border-radius: 999px;
+	background: rgba(99, 102, 241, 0.12);
+	color: var(--primary);
+	font-size: 0.92rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+
+	&.is-admin {
+		background: rgba(16, 185, 129, 0.16);
+		color: #059669;
+	}
+
+	&.is-demo {
+		background: rgba(245, 158, 11, 0.16);
+		color: #b45309;
+	}
+
+	&.is-neutral {
+		background: rgba(148, 163, 184, 0.16);
+		color: #475569;
+	}
+}
+
+.app-page-status-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+.app-page-status-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	min-height: 44px;
+	padding: 10px 14px;
+	border: 1px solid transparent;
+	border-radius: 14px;
+	background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+	color: #ffffff;
+	font-size: 1.08rem;
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: 0 14px 24px rgba(99, 102, 241, 0.16);
+	transition:
+		transform 0.2s ease,
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+
+	&:hover {
+		transform: translateY(-1px);
+	}
+
+	&.is-secondary {
+		border-color: var(--border);
+		background: var(--bg-panel);
+		box-shadow: none;
+		color: var(--text-main);
+
+		&:hover {
+			border-color: var(--border-strong);
+			background: var(--bg-panel-hover);
+		}
+	}
+}
+
+body.theme-dark .app-page-status-strip {
+	background: rgba(10, 18, 34, 0.92);
+	border-color: rgba(124, 140, 255, 0.22);
+}
+
+body.theme-dark .app-page-status-tag {
+	&.is-admin {
+		color: #34d399;
+	}
+
+	&.is-demo {
+		color: #fbbf24;
+	}
+
+	&.is-neutral {
+		color: #cbd5e1;
+	}
+}
+
+@media (max-width: 900px) {
+	.app-page-status-strip {
+		grid-template-columns: 1fr;
+	}
+
+	.app-page-status-actions {
+		justify-content: flex-start;
+	}
+}
+
+@media (max-width: 640px) {
+	.app-toast-stack {
+		right: 12px;
+		left: 12px;
+		bottom: 12px;
+		width: auto;
+	}
+
+	.app-page-status-strip {
+		padding: 16px;
+		border-radius: 20px;
+	}
+
+	.app-page-status-main {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.app-page-status-identity {
+		min-width: 0;
+		width: 100%;
+	}
+
+	.app-page-status-copy span {
+		white-space: normal;
+	}
+
+	.app-page-status-actions,
+	.app-page-status-btn {
+		width: 100%;
+	}
+}
+/* === Shared Page Status Strip: End === */
 
 /* === Shared Header: Start === */
 .menu-btn {

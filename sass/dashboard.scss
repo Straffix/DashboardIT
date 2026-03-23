@@ -1301,6 +1301,22 @@ body.task-modal-open {
 	background: linear-gradient(90deg, rgba(139, 92, 246, 0.78) 0%, rgba(196, 181, 253, 0.34) 100%);
 }
 
+.menu-item.rezerwacja-obiadow .dashboard-card {
+	background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+}
+
+.menu-item.rezerwacja-obiadow .dashboard-card::before {
+	background: linear-gradient(90deg, rgba(249, 115, 22, 0.82) 0%, rgba(251, 191, 36, 0.38) 100%);
+}
+
+.menu-item.notatnik .dashboard-card {
+	background: linear-gradient(180deg, #ecfeff 0%, #cffafe 100%);
+}
+
+.menu-item.notatnik .dashboard-card::before {
+	background: linear-gradient(90deg, rgba(13, 148, 136, 0.78) 0%, rgba(34, 211, 238, 0.34) 100%);
+}
+
 .menu-item.nowe-zatrudnienia .card-icon-shell {
 	color: #0f766e;
 	background: rgba(240, 253, 250, 0.82);
@@ -1314,6 +1330,16 @@ body.task-modal-open {
 .menu-item.wymiana-sprzetu .card-icon-shell {
 	color: #5b21b6;
 	background: rgba(245, 243, 255, 0.82);
+}
+
+.menu-item.rezerwacja-obiadow .card-icon-shell {
+	color: #c2410c;
+	background: rgba(255, 247, 237, 0.88);
+}
+
+.menu-item.notatnik .card-icon-shell {
+	color: #0f766e;
+	background: rgba(236, 254, 255, 0.88);
 }
 /* === Dashboard Navigation Tiles: End === */
 
@@ -1978,6 +2004,14 @@ body.dashboard-page.theme-dark {
 		background: linear-gradient(180deg, rgba(19, 17, 46, 0.94) 0%, rgba(36, 27, 74, 0.84) 100%);
 	}
 
+		.menu-item.rezerwacja-obiadow .dashboard-card {
+			background: linear-gradient(180deg, rgba(74, 33, 12, 0.94) 0%, rgba(120, 53, 15, 0.84) 100%);
+		}
+
+		.menu-item.notatnik .dashboard-card {
+			background: linear-gradient(180deg, rgba(8, 36, 38, 0.94) 0%, rgba(12, 62, 66, 0.84) 100%);
+		}
+
 	.menu-item.nowe-zatrudnienia .card-icon-shell {
 		background: rgba(20, 61, 67, 0.88);
 		color: #7ef9d7;
@@ -1993,7 +2027,17 @@ body.dashboard-page.theme-dark {
 		color: #c7a0ff;
 	}
 
-	.dashboard-bookmarks-copy h2,
+		.menu-item.rezerwacja-obiadow .card-icon-shell {
+			background: rgba(124, 45, 18, 0.88);
+			color: #fdba74;
+		}
+
+		.menu-item.notatnik .card-icon-shell {
+			background: rgba(15, 71, 76, 0.88);
+			color: #8cf4ff;
+		}
+
+		.dashboard-bookmarks-copy h2,
 	.dashboard-bookmark-card-top strong,
 	.dashboard-bookmark-empty-copy strong,
 	.dashboard-bookmark-modal-copy h2 {

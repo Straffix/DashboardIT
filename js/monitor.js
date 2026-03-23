@@ -269,7 +269,11 @@ async function startEditFlow(index) {
 /* === Monitor Excel Backup: Start === */
 function exportExcel() {
 	if (devices.length === 0) {
-		alert('Brak danych do eksportu. Dodaj urządzenie albo zaimportuj plik, a backup ruszy od razu.')
+		AppUtils.notify({
+			type: 'warning',
+			title: 'Brak danych do eksportu',
+			message: 'Dodaj urządzenie albo zaimportuj plik, a backup ruszy od razu.',
+		})
 		return
 	}
 
@@ -612,7 +616,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			let date
 
 			if (!name || !ru || !sn) {
-				alert('Uzupełnij nazwę komputera, numer RU i numer SN.')
+				AppUtils.notify({
+					type: 'warning',
+					title: 'Brak wymaganych danych',
+					message: 'Uzupełnij nazwę komputera, numer RU i numer SN.',
+				})
 				return
 			}
 
@@ -621,7 +629,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			} else {
 				date = dateInput.value
 				if (!date) {
-					alert('Wybierz datę dla starego urządzenia.')
+					AppUtils.notify({
+						type: 'warning',
+						title: 'Brak daty',
+						message: 'Wybierz datę dla starego urządzenia.',
+					})
 					return
 				}
 			}
@@ -629,7 +641,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			const duplicateIndex = findDuplicate(ru, sn, isEditing ? editingDeviceIndex : -1)
 			if (duplicateIndex !== -1) {
 				if (isEditing) {
-					alert('Inny rekord z takim samym numerem RU i SN już istnieje. Zmień dane albo usuń duplikat.')
+					AppUtils.notify({
+						type: 'error',
+						title: 'Duplikat urządzenia',
+						message: 'Inny rekord z takim samym numerem RU i SN już istnieje. Zmień dane albo usuń duplikat.',
+					})
 					return
 				}
 

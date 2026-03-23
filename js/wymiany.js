@@ -599,7 +599,11 @@ function exportExcel() {
 	const exchangesToExport = getCurrentMonthExchanges()
 
 	if (exchangesToExport.length === 0) {
-		alert(`Nic nie wyladowalo w eksporcie za ${monthLabel}. Ten miesiac jest czysty, wiec plik nie zostal pobrany.`)
+		AppUtils.notify({
+			type: 'warning',
+			title: 'Brak danych do eksportu',
+			message: `Nic nie wyladowalo w eksporcie za ${monthLabel}. Ten miesiac jest czysty, wiec plik nie zostal pobrany.`,
+		})
 		return
 	}
 
@@ -656,11 +660,19 @@ function importExcel(event) {
 			) {
 				exchanges = [...exchanges, ...imported]
 				saveData()
-				alert('Import zakończony!')
+				AppUtils.notify({
+					type: 'success',
+					title: 'Import zakonczony',
+					message: 'Nowe rekordy wymian zostaly dodane do lokalnej bazy danych.',
+				})
 			}
-		} catch (error) {
-			alert('Błąd importu pliku Excel.')
-		}
+			} catch (error) {
+				AppUtils.notify({
+					type: 'error',
+					title: 'Blad importu',
+					message: 'Nie udalo sie odczytac pliku Excel dla wymian.',
+				})
+			}
 
 		event.target.value = ''
 	}

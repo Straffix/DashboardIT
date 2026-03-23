@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rezerwacja obiadow - DashboardIT</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous" defer></script>
+
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/lunch.css">
+</head>
+
+<body class="lunch-page">
+
+    <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pelnoekranowy">
+        <i class="fa-solid fa-expand"></i>
+    </button>
+
+    <div class="wrapper">
+        <header class="header">
+            <a href="index.html" class="menu-btn">
+                <i class="fa-solid fa-chevron-left"></i> Powrot do Dashboardu
+            </a>
+
+            <div class="logo-section">
+                <div class="icon-box lunch-icon-box">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+
+                <div>
+                    <h1>Rezerwacja Obiadow</h1>
+                    <p>Wspolny harmonogram slotow obiadowych dla zespolu <span>demo-ready localStorage</span></p>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content lunch-content">
+            <section class="lunch-workspace">
+                <div class="lunch-hero">
+                    <div class="lunch-hero-copy">
+                        <span class="lunch-kicker">Rezerwacja obiadow</span>
+                        <h2>Wybierz godzine i sprawdz, kto juz jest zapisany</h2>
+                        <p id="lunch-day-summary">Ladowanie harmonogramu obiadowego...</p>
+                    </div>
+
+                    <div class="lunch-hero-actions">
+                        <label class="lunch-date-field" for="lunch-date">
+                            <span>Data</span>
+                            <input type="date" id="lunch-date" required>
+                        </label>
+
+                        <button type="button" class="lunch-today-btn" id="lunch-today-btn">
+                            <i class="fa-solid fa-calendar-day"></i>
+                            <span>Dzisiaj</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="lunch-feedback" class="lunch-feedback is-hidden" aria-live="polite"></div>
+
+                <div id="lunch-auth-callout" class="lunch-auth-callout">
+                    <div class="lunch-auth-copy">
+                        <strong id="lunch-auth-title">Podglad slotow jest dostepny dla wszystkich</strong>
+                        <p id="lunch-auth-text">Zaloguj sie, aby zapisac sie na wybrana godzine albo anulowac swoja rezerwacje.</p>
+                    </div>
+
+                    <button type="button" id="lunch-auth-btn" class="lunch-auth-btn">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>Zaloguj sie</span>
+                    </button>
+                </div>
+
+                <div class="lunch-slot-grid" id="lunch-slot-grid" aria-live="polite"></div>
+            </section>
+
+            <aside class="lunch-sidebar">
+                <div class="lunch-sidebar-stack">
+                    <article class="lunch-side-card">
+                        <p class="lunch-side-kicker">Twoja rezerwacja</p>
+                        <div id="lunch-my-reservation" class="lunch-my-reservation">
+                            <strong>Brak danych</strong>
+                            <p>Ladowanie statusu rezerwacji...</p>
+                        </div>
+                    </article>
+
+                    <article class="lunch-side-card">
+                        <p class="lunch-side-kicker">Podsumowanie dnia</p>
+                        <div class="lunch-side-stats">
+                            <div class="lunch-side-stat">
+                                <span>Zajete miejsca</span>
+                                <strong id="lunch-stat-booked">0</strong>
+                                <small id="lunch-stat-capacity">z 36</small>
+                            </div>
+
+                            <div class="lunch-side-stat">
+                                <span>Sloty z wolnym miejscem</span>
+                                <strong id="lunch-stat-open-slots">0</strong>
+                                <small>aktywnie dostepne</small>
+                            </div>
+
+                            <div class="lunch-side-stat">
+                                <span>Status konta</span>
+                                <strong id="lunch-stat-user">Gosc</strong>
+                                <small id="lunch-stat-user-meta">Podglad bez zapisu</small>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="lunch-side-card">
+                        <p class="lunch-side-kicker">Zasady modulu</p>
+                        <ul class="lunch-rule-list">
+                            <li>Sloty dzialaja od 11:00 do 15:00 co 30 minut.</li>
+                            <li>Na jeden termin obowiazuje limit 4 osob.</li>
+                            <li>Zalogowany uzytkownik moze miec jedna aktywna rezerwacje na dany dzien.</li>
+                            <li>W wersji demo limit jest wiarygodny tylko w tej przegladarce i lokalnej bazie danych.</li>
+                        </ul>
+                    </article>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="main-footer">
+            <div class="footer-content">
+                <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
+                <div class="footer-separator"></div>
+                <p class="footer-status">
+                    <span class="status-dot"></span>
+                    arkadiusz-lisiecki.pl
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="./js/script.js"></script>
+    <script src="./js/lunch.js"></script>
+
+</body>
+
+</html>

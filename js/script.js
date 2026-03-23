@@ -35,6 +35,10 @@ const APP_CONFIG = {
 		USERS: 'dashboard_users',
 		SESSION: 'dashboard_user_session',
 		BOOKMARKS: 'dashboard_user_bookmarks',
+		LUNCH: 'dashboard_lunch_reservations',
+		NOTES: 'dashboard_notes_entries',
+		ANNOUNCEMENTS: 'dashboard_notes_announcements',
+		TASKS: 'dashboard_notes_tasks',
 	},
 	THEME_KEY: 'dashboard-theme',
 }
@@ -683,6 +687,15 @@ const authState = {
 	selectedProfileAvatarId: AUTH_CONFIG.avatarPresets[0].id,
 }
 
+const systemUiState = {
+	toastStack: null,
+	pageStatusStrip: null,
+	pageStatusIdentity: null,
+	pageStatusText: null,
+	pageStatusTags: null,
+	pageStatusActions: null,
+}
+
 const cloneValue = value => JSON.parse(JSON.stringify(value))
 
 const getAvatarPreset = avatarId => AUTH_CONFIG.avatarPresets.find(preset => preset.id === avatarId) || AUTH_CONFIG.avatarPresets[0]
@@ -841,6 +854,8 @@ const renderAuthUi = () => {
 				<span>Zaloz konto</span>
 			</button>
 		`
+
+	renderPageStatusStrip()
 }
 
 const setCurrentUser = user => {
@@ -928,9 +943,17 @@ const loginUser = ({ login, password }) => {
 	return sanitizeUser(matchedUser)
 }
 
-const logoutUser = () => {
+const logoutUser = ({ silent = false } = {}) => {
 	saveSession(null)
 	setCurrentUser(null)
+
+	if (!silent) {
+		notify({
+			type: 'info',
+			title: 'Wylogowano',
+			message: 'Sesja lokalna zostala zamknieta dla tej przegladarki.',
+		})
+	}
 }
 
 const updateCurrentUserProfile = ({ fullName, login, avatarId }) => {
@@ -980,6 +1003,201 @@ const createAvatarMarkup = ({ fullName, avatarId, extraClass = '' } = {}) => {
 	const preset = getAvatarPreset(avatarId)
 	const classes = ['app-user-avatar', extraClass].filter(Boolean).join(' ')
 	return `<span class="${classes}" style="--app-avatar-gradient: ${preset.gradient}">${getInitials(fullName)}</span>`
+}
+
+const getToastTitle = type => {
+	if (type === 'success') return 'Gotowe'
+	if (type === 'warning') return 'Uwaga'
+	if (type === 'error') return 'Blad'
+	return 'Informacja'
+}
+
+const ensureToastStack = () => {
+	if (systemUiState.toastStack || !document.body) return systemUiState.toastStack
+
+	const stack = document.createElement('div')
+	stack.className = 'app-toast-stack'
+	stack.setAttribute('aria-live', 'polite')
+	stack.setAttribute('aria-atomic', 'false')
+	document.body.appendChild(stack)
+	systemUiState.toastStack = stack
+	return stack
+}
+
+const dismissToast = toast => {
+	if (!toast || toast.dataset.leaving === 'true') return
+
+	toast.dataset.leaving = 'true'
+	toast.classList.add('is-leaving')
+	window.setTimeout(() => {
+		toast.remove()
+	}, 180)
+}
+
+const notify = ({ message = '', title = '', type = 'info', duration = 4200 } = {}) => {
+	const normalizedMessage = String(message || '').trim()
+	if (!normalizedMessage) return null
+
+	const stack = ensureToastStack()
+	if (!stack) return null
+
+	const iconMap = {
+		success: 'fa-circle-check',
+		warning: 'fa-triangle-exclamation',
+		error: 'fa-circle-xmark',
+		info: 'fa-circle-info',
+	}
+
+	const toast = document.createElement('article')
+	toast.className = `app-toast is-${type}`
+	toast.innerHTML = `
+		<div class="app-toast-icon" aria-hidden="true">
+			<i class="fa-solid ${iconMap[type] || iconMap.info}"></i>
+		</div>
+		<div class="app-toast-copy">
+			<strong>${title || getToastTitle(type)}</strong>
+			<span>${normalizedMessage}</span>
+		</div>
+		<button type="button" class="app-toast-close" aria-label="Zamknij komunikat">
+			<i class="fa-solid fa-xmark"></i>
+		</button>
+	`
+
+	const closeButton = toast.querySelector('.app-toast-close')
+	closeButton?.addEventListener('click', () => dismissToast(toast))
+	stack.appendChild(toast)
+
+	if (duration > 0) {
+		window.setTimeout(() => {
+			dismissToast(toast)
+		}, duration)
+	}
+
+	return toast
+}
+
+const getCurrentModuleLabel = () => {
+	const pageHeading = document.querySelector('.logo-section h1')?.textContent?.trim()
+	if (pageHeading) return pageHeading
+
+	const title = document.title || ''
+	return title.split('-')[0].trim() || 'DashboardIT'
+}
+
+const renderPageStatusStrip = () => {
+	if (
+		!systemUiState.pageStatusStrip ||
+		!systemUiState.pageStatusIdentity ||
+		!systemUiState.pageStatusText ||
+		!systemUiState.pageStatusTags ||
+		!systemUiState.pageStatusActions
+	) {
+		return
+	}
+
+	const currentUser = authState.currentUser
+	const moduleLabel = getCurrentModuleLabel()
+	const identityLabel = currentUser ? currentUser.fullName : 'Gosc systemu'
+	const metaLabel = currentUser
+		? `${currentUser.role === 'admin' ? 'Administrator' : 'Uzytkownik'} · @${currentUser.login}`
+		: 'Tryb podgladu bez lokalnej sesji'
+
+	systemUiState.pageStatusIdentity.innerHTML = `
+		${createAvatarMarkup({
+			fullName: currentUser?.fullName || 'Gosc systemu',
+			avatarId: currentUser?.avatarId || AUTH_CONFIG.avatarPresets[0].id,
+			extraClass: 'app-page-status-avatar',
+		})}
+		<div class="app-page-status-copy">
+			<strong>${identityLabel}</strong>
+			<span>${metaLabel}</span>
+		</div>
+	`
+
+	systemUiState.pageStatusText.textContent = currentUser
+		? `Pracujesz w module ${moduleLabel}. Konto lokalne jest aktywne w tej przegladarce i gotowe do dalszej pracy.`
+		: `Przegladasz modul ${moduleLabel} jako gosc. Zaloguj sie, aby korzystac z funkcji zapisujacych dane i historii zmian.`
+
+	systemUiState.pageStatusTags.innerHTML = `
+		<span class="app-page-status-tag ${currentUser?.role === 'admin' ? 'is-admin' : 'is-neutral'}">
+			${currentUser ? (currentUser.role === 'admin' ? 'Rola admin' : 'Rola user') : 'Gosc'}
+		</span>
+		<span class="app-page-status-tag is-demo">Demo localStorage</span>
+		<span class="app-page-status-tag is-neutral">Frontend ready for API</span>
+	`
+
+	systemUiState.pageStatusActions.innerHTML = currentUser
+		? `
+			<button type="button" class="app-page-status-btn" data-user-action="profile">
+				<i class="fa-solid fa-user-gear"></i>
+				<span>Profil i avatar</span>
+			</button>
+			<button type="button" class="app-page-status-btn is-secondary" data-user-action="logout">
+				<i class="fa-solid fa-arrow-right-from-bracket"></i>
+				<span>Wyloguj</span>
+			</button>
+		`
+		: `
+			<button type="button" class="app-page-status-btn" data-user-action="login">
+				<i class="fa-solid fa-right-to-bracket"></i>
+				<span>Zaloguj sie</span>
+			</button>
+			<button type="button" class="app-page-status-btn is-secondary" data-user-action="register">
+				<i class="fa-solid fa-user-plus"></i>
+				<span>Zaloz konto</span>
+			</button>
+		`
+}
+
+const handleUserAction = action => {
+	closeUserPopover()
+
+	if (action === 'login') openAuthModal('login')
+	if (action === 'register') openAuthModal('register')
+	if (action === 'profile') openProfileModal()
+	if (action === 'logout') logoutUser()
+}
+
+const ensurePageStatusStrip = () => {
+	if (systemUiState.pageStatusStrip || !document.body || document.body.classList.contains('dashboard-page')) {
+		return systemUiState.pageStatusStrip
+	}
+
+	const wrapper = document.querySelector('.wrapper')
+	const header = wrapper?.querySelector('.header')
+	const mainContent = wrapper?.querySelector('.main-content')
+
+	if (!wrapper || !header || !mainContent) return null
+
+	const strip = document.createElement('section')
+	strip.className = 'app-page-status-strip'
+	strip.innerHTML = `
+		<div class="app-page-status-main">
+			<div class="app-page-status-identity"></div>
+			<div class="app-page-status-meta">
+				<p class="app-page-status-kicker">Status pracy</p>
+				<p class="app-page-status-text"></p>
+				<div class="app-page-status-tags"></div>
+			</div>
+		</div>
+		<div class="app-page-status-actions"></div>
+	`
+
+	header.insertAdjacentElement('afterend', strip)
+	systemUiState.pageStatusStrip = strip
+	systemUiState.pageStatusIdentity = strip.querySelector('.app-page-status-identity')
+	systemUiState.pageStatusText = strip.querySelector('.app-page-status-text')
+	systemUiState.pageStatusTags = strip.querySelector('.app-page-status-tags')
+	systemUiState.pageStatusActions = strip.querySelector('.app-page-status-actions')
+
+	strip.addEventListener('click', event => {
+		const actionButton = event.target.closest('[data-user-action]')
+		if (!actionButton) return
+		handleUserAction(actionButton.dataset.userAction)
+	})
+
+	renderPageStatusStrip()
+	return strip
 }
 
 const closeUserPopover = () => {
@@ -1239,13 +1457,7 @@ const ensureAuthUi = () => {
 		const actionButton = event.target.closest('[data-user-action]')
 		if (!actionButton) return
 
-		const { userAction } = actionButton.dataset
-		closeUserPopover()
-
-		if (userAction === 'login') openAuthModal('login')
-		if (userAction === 'register') openAuthModal('register')
-		if (userAction === 'profile') openProfileModal()
-		if (userAction === 'logout') logoutUser()
+		handleUserAction(actionButton.dataset.userAction)
 	})
 
 	document.addEventListener('click', event => {
@@ -1297,27 +1509,41 @@ const ensureAuthUi = () => {
 					throw new Error('Hasla musza byc identyczne.')
 				}
 
-				registerUser({
-					fullName: authState.authFullNameInput?.value || '',
-					login: authState.authLoginInput?.value || '',
-					password,
-					avatarId: authState.selectedRegisterAvatarId,
-				})
-			} else {
-				loginUser({
-					login: authState.authLoginInput?.value || '',
-					password: authState.authPasswordInput?.value || '',
+					registerUser({
+						fullName: authState.authFullNameInput?.value || '',
+						login: authState.authLoginInput?.value || '',
+						password,
+						avatarId: authState.selectedRegisterAvatarId,
+					})
+					notify({
+						type: 'success',
+						title: 'Konto utworzone',
+						message: 'Nowe konto lokalne zostalo zalozone i od razu aktywowane w tej przegladarce.',
+					})
+				} else {
+					loginUser({
+						login: authState.authLoginInput?.value || '',
+						password: authState.authPasswordInput?.value || '',
+					})
+					notify({
+						type: 'success',
+						title: 'Zalogowano',
+						message: 'Sesja uzytkownika jest aktywna i gotowa do pracy we wszystkich modulach.',
+					})
+				}
+
+				authState.authForm.reset()
+				authState.selectedRegisterAvatarId = AUTH_CONFIG.avatarPresets[0].id
+				renderAvatarChoices(authState.authAvatarGrid, authState.selectedRegisterAvatarId)
+				closeModal(authModal)
+			} catch (error) {
+				notify({
+					type: 'error',
+					title: authState.mode === 'register' ? 'Nie udalo sie zalozyc konta' : 'Nie udalo sie zalogowac',
+					message: error.message || 'Nie udalo sie zapisac zmian.',
 				})
 			}
-
-			authState.authForm.reset()
-			authState.selectedRegisterAvatarId = AUTH_CONFIG.avatarPresets[0].id
-			renderAvatarChoices(authState.authAvatarGrid, authState.selectedRegisterAvatarId)
-			closeModal(authModal)
-		} catch (error) {
-			alert(error.message || 'Nie udalo sie zapisac zmian.')
-		}
-	})
+		})
 
 	authState.profileForm?.addEventListener('submit', event => {
 		event.preventDefault()
@@ -1330,8 +1556,17 @@ const ensureAuthUi = () => {
 			})
 
 			closeModal(profileModal)
+			notify({
+				type: 'success',
+				title: 'Profil zaktualizowany',
+				message: 'Zmiany profilu zostaly zapisane i sa widoczne we wszystkich modulach.',
+			})
 		} catch (error) {
-			alert(error.message || 'Nie udalo sie zaktualizowac profilu.')
+			notify({
+				type: 'error',
+				title: 'Aktualizacja nieudana',
+				message: error.message || 'Nie udalo sie zaktualizowac profilu.',
+			})
 		}
 	})
 
@@ -1414,6 +1649,12 @@ const createThemeToggle = () => {
 		updateToggle(nextTheme === 'dark')
 	})
 
+	window.addEventListener('storage', event => {
+		if (event.key === APP_CONFIG.THEME_KEY) {
+			updateToggle(getStoredTheme() === 'dark')
+		}
+	})
+
 	updateToggle(getStoredTheme() === 'dark')
 	return toggle
 }
@@ -1421,6 +1662,7 @@ const createThemeToggle = () => {
 document.addEventListener('DOMContentLoaded', () => {
 	applyTheme(getStoredTheme())
 	ensureAuthUi()
+	ensurePageStatusStrip()
 	syncCurrentUserFromSession()
 
 	document.querySelectorAll('#current-year').forEach(element => {
@@ -1487,8 +1729,19 @@ document.addEventListener('DOMContentLoaded', () => {
 			localStorage.setItem('dashboard-wide-mode', String(isWide))
 		})
 
-		updateWideMode(localStorage.getItem('dashboard-wide-mode') === 'true')
-	}
+			updateWideMode(localStorage.getItem('dashboard-wide-mode') === 'true')
+		}
+
+	window.addEventListener('storage', event => {
+		if (event.key === APP_CONFIG.STORAGE_KEYS.SESSION || event.key === APP_CONFIG.STORAGE_KEYS.USERS) {
+			closeUserPopover()
+			syncCurrentUserFromSession()
+		}
+
+		if (event.key === APP_CONFIG.THEME_KEY) {
+			applyTheme(getStoredTheme())
+		}
+	})
 })
 /* === Shared Global UI: End === */
 
@@ -1505,6 +1758,8 @@ window.AppUtils = {
 	confirmDialog,
 	renderAccessoryIcons,
 	createMonthPicker,
+	createAvatarMarkup,
+	notify,
 	auth: {
 		getCurrentUser,
 		isAuthenticated,
