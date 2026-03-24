@@ -1,3 +1,4 @@
+(function initializeMonitorPage() {
 /* === Monitor State And References: Start === */
 let devices = []
 let editingDeviceIndex = null
@@ -712,3 +713,4 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadData()
 })
 /* === Monitor Init: End === */
+})()

@@ -1,3 +1,4 @@
+(function initializeHiresPage() {
 /* === Hires State And References: Start === */
 let hires = []
 let editIndex = null
@@ -721,3 +722,4 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadData()
 })
 /* === Hires Init: End === */
+})()

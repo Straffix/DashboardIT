@@ -92,12 +92,8 @@
                     <div class="workspace-actions">
                         <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
 
-                        <button
-                            id="monitor-search-toggle"
-                            class="workspace-action-btn workspace-search-toggle"
-                            type="button"
-                            aria-label="Otwórz wyszukiwarkę"
-                            aria-expanded="false"
+                        <button id="monitor-search-toggle" class="workspace-action-btn workspace-search-toggle"
+                            type="button" aria-label="Otwórz wyszukiwarkę" aria-expanded="false"
                             aria-controls="monitor-search-panel">
                             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                         </button>
@@ -105,12 +101,8 @@
                         <div id="monitor-search-panel" class="workspace-search-panel" hidden>
                             <label class="workspace-search" for="monitor-search-input">
                                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                                <input
-                                    type="search"
-                                    id="monitor-search-input"
-                                    placeholder="Szukaj w tabeli..."
-                                    autocomplete="off"
-                                    aria-label="Szukaj w tabeli urządzeń">
+                                <input type="search" id="monitor-search-input" placeholder="Szukaj w tabeli..."
+                                    autocomplete="off" aria-label="Szukaj w tabeli urządzeń">
                             </label>
                         </div>
 
@@ -119,7 +111,8 @@
                             <span>Import Excel</span>
                         </button>
 
-                        <button id="export-excel-btn" class="workspace-action-btn workspace-action-btn-green" type="button">
+                        <button id="export-excel-btn" class="workspace-action-btn workspace-action-btn-green"
+                            type="button">
                             <i class="fa-solid fa-file-excel"></i>
                             <span>Eksport Excel</span>
                         </button>
@@ -156,10 +149,12 @@
                     <div>
                         <p class="monitor-drawer-kicker">Monitor laptopów</p>
                         <h2 id="monitor-drawer-title">Dodaj urządzenie</h2>
-                        <p id="monitor-drawer-copy" class="monitor-drawer-copy">Dodaj nowy laptop do monitoringu domeny i od razu ustaw jego status.</p>
+                        <p id="monitor-drawer-copy" class="monitor-drawer-copy">Dodaj nowy laptop do monitoringu domeny
+                            i od razu ustaw jego status.</p>
                     </div>
 
-                    <button id="close-monitor-drawer" class="monitor-drawer-close" type="button" aria-label="Zamknij panel">
+                    <button id="close-monitor-drawer" class="monitor-drawer-close" type="button"
+                        aria-label="Zamknij panel">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -205,7 +200,8 @@
                     </div>
 
                     <div class="monitor-form-actions">
-                        <button type="button" id="cancel-monitor-drawer" class="btn-submit btn-submit-muted btn-submit-tight">
+                        <button type="button" id="cancel-monitor-drawer"
+                            class="btn-submit btn-submit-muted btn-submit-tight">
                             Anuluj
                         </button>
 
@@ -221,8 +217,8 @@
         <div id="monitor-confirm-shell" class="monitor-confirm-shell" aria-hidden="true">
             <div id="monitor-confirm-backdrop" class="monitor-confirm-backdrop"></div>
 
-            <div class="monitor-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="monitor-confirm-title"
-                aria-describedby="monitor-confirm-message">
+            <div class="monitor-confirm-card" role="alertdialog" aria-modal="true"
+                aria-labelledby="monitor-confirm-title" aria-describedby="monitor-confirm-message">
                 <p class="monitor-confirm-kicker">Potwierdzenie</p>
                 <h2 id="monitor-confirm-title">Wykonać akcję?</h2>
                 <p id="monitor-confirm-message" class="monitor-confirm-message">Czy na pewno chcesz kontynuować?</p>
@@ -232,7 +228,8 @@
                         NIE
                     </button>
 
-                    <button type="button" id="monitor-confirm-yes" class="btn-submit btn-submit-primary btn-submit-tight">
+                    <button type="button" id="monitor-confirm-yes"
+                        class="btn-submit btn-submit-primary btn-submit-tight">
                         TAK
                     </button>
                 </div>
@@ -251,9 +248,9 @@
         </footer>
     </div>
 
-    <script src="./js/app-storage.js"></script>
-    <script src="./js/script.js"></script>
-    <script src="./js/monitor.js"></script>
+    <script src="./js/app-storage.js" charset="utf-8"></script>
+    <script src="./js/script.js" charset="utf-8"></script>
+    <script src="./js/monitor.js" charset="utf-8"></script>
 
 </body>
 

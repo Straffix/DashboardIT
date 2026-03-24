@@ -1,4 +1,0 @@
-2026/03/23-16:26:00.843 4834 Creating DB c:\DashboardIT\trash\edge-auth-smoke-profile-hires\Default\EdgeCoupons/coupons_data.db since it was missing.
-2026/03/23-16:26:00.855 4834 Reusing MANIFEST c:\DashboardIT\trash\edge-auth-smoke-profile-hires\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
-2026/03/23-16:26:00.863 4644 Level-0 table #5: started
-2026/03/23-16:26:00.875 4644 Level-0 table #5: 681609 bytes OK

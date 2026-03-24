@@ -11,24 +11,25 @@ document.addEventListener('DOMContentLoaded', () => {
 		fallbackLat: 52.2298,
 		fallbackLon: 21.0118,
 		geoapifyApiKeyMetaName: 'geoapify-api-key',
+		requestTimeoutMs: 6500,
 	}
 
 	const weatherCodeMap = {
 		0: { label: 'Bezchmurnie', icon: 'fa-sun' },
-		1: { label: 'Głównie słonecznie', icon: 'fa-cloud-sun' },
-		2: { label: 'Częściowe zachmurzenie', icon: 'fa-cloud-sun' },
+		1: { label: 'Glownie slonecznie', icon: 'fa-cloud-sun' },
+		2: { label: 'Czesciowe zachmurzenie', icon: 'fa-cloud-sun' },
 		3: { label: 'Pochmurno', icon: 'fa-cloud' },
-		45: { label: 'Mgła', icon: 'fa-smog' },
-		48: { label: 'Osadzająca się mgła', icon: 'fa-smog' },
-		51: { label: 'Lekka mżawka', icon: 'fa-cloud-rain' },
-		53: { label: 'Mżawka', icon: 'fa-cloud-rain' },
-		55: { label: 'Intensywna mżawka', icon: 'fa-cloud-rain' },
+		45: { label: 'Mgla', icon: 'fa-smog' },
+		48: { label: 'Osadzajaca sie mgla', icon: 'fa-smog' },
+		51: { label: 'Lekka mzawka', icon: 'fa-cloud-rain' },
+		53: { label: 'Mzawka', icon: 'fa-cloud-rain' },
+		55: { label: 'Intensywna mzawka', icon: 'fa-cloud-rain' },
 		61: { label: 'Lekki deszcz', icon: 'fa-cloud-rain' },
 		63: { label: 'Deszcz', icon: 'fa-cloud-showers-heavy' },
 		65: { label: 'Ulewa', icon: 'fa-cloud-showers-heavy' },
-		71: { label: 'Lekki śnieg', icon: 'fa-snowflake' },
-		73: { label: 'Śnieg', icon: 'fa-snowflake' },
-		75: { label: 'Intensywny śnieg', icon: 'fa-snowflake' },
+		71: { label: 'Lekki snieg', icon: 'fa-snowflake' },
+		73: { label: 'Snieg', icon: 'fa-snowflake' },
+		75: { label: 'Intensywny snieg', icon: 'fa-snowflake' },
 		80: { label: 'Przelotny deszcz', icon: 'fa-cloud-sun-rain' },
 		81: { label: 'Przelotny deszcz', icon: 'fa-cloud-sun-rain' },
 		82: { label: 'Silny przelotny deszcz', icon: 'fa-cloud-showers-heavy' },
@@ -97,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const normalizeLocationPart = value =>
 		String(value || '')
-			.replace(/^(gmina|gm\.|powiat|województwo)\s+/i, '')
+			.replace(/^(gmina|gm\.|powiat|wojewodztwo)\s+/i, '')
 			.replace(/\s+/g, ' ')
 			.trim()
 
@@ -202,6 +203,45 @@ document.addEventListener('DOMContentLoaded', () => {
 		return apiKey
 	}
 
+	const fetchJsonWithTimeout = async (url, options = {}, timeoutMs = weatherConfig.requestTimeoutMs) => {
+		const AbortControllerClass = window.AbortController
+		if (!AbortControllerClass) {
+			const response = await fetch(url, options)
+			if (!response.ok) {
+				throw new Error(`Request failed with status ${response.status}`)
+			}
+
+			return response.json()
+		}
+
+		const controller = new AbortControllerClass()
+		const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
+
+		try {
+			const response = await fetch(url, {
+				...options,
+				signal: controller.signal,
+			})
+			if (!response.ok) {
+				throw new Error(`Request failed with status ${response.status}`)
+			}
+
+			return response.json()
+		} finally {
+			window.clearTimeout(timeoutId)
+		}
+	}
+
+	const setOfflineWeatherState = (locationName, reason = 'Brak danych pogodowych') => {
+		setWeatherState({
+			temperature: '-- C',
+			location: locationName || weatherConfig.fallbackName,
+			description: reason,
+			wind: 'Tryb demo offline',
+			icon: 'fa-cloud',
+		})
+	}
+
 	const buildGeoapifyLocationDetails = properties => {
 		const primaryLabel =
 			getUniqueLocationParts([
@@ -253,7 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	let hasUnlockedReminderAudio = false
 	let hasRequestedNotificationPermission = false
 	const activeTaskNotifications = new Map()
-	let autoClearEnabled = preferencesService?.getDashboardTaskAutoclear?.() ?? storageService?.getBoolean?.(taskConfig.autoclearKey, false) || false
+	let autoClearEnabled =
+		(preferencesService?.getDashboardTaskAutoclear?.() ?? storageService?.getBoolean?.(taskConfig.autoclearKey, false)) || false
 	let lastClockMinuteKey = ''
 	let lastClockDateKey = ''
 
@@ -1077,15 +1118,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const fetchWeather = async (latitude, longitude, locationName) => {
 		try {
-			const response = await fetch(
+			const data = await fetchJsonWithTimeout(
 				`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`,
 				{ cache: 'no-store' }
 			)
-			if (!response.ok) {
-				throw new Error('Weather request failed')
-			}
-
-			const data = await response.json()
 			const current = data.current || {}
 			const weatherDetails = weatherCodeMap[current.weather_code] || {
 				label: 'Warunki lokalne',
@@ -1093,20 +1129,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			setWeatherState({
-				temperature: `${Math.round(current.temperature_2m ?? 0)}°C`,
+				temperature: `${Math.round(current.temperature_2m ?? 0)} C`,
 				location: locationName,
 				description: weatherDetails.label,
 				wind: `Wiatr ${Math.round(current.wind_speed_10m ?? 0)} km/h`,
 				icon: weatherDetails.icon,
 			})
 		} catch (error) {
-			setWeatherState({
-				temperature: '--°C',
-				location: locationName,
-				description: 'Brak danych pogodowych',
-				wind: 'Sprawdź połączenie',
-				icon: 'fa-cloud',
-			})
+			setOfflineWeatherState(locationName, 'Brak danych pogodowych')
 		}
 	}
 
@@ -1115,23 +1145,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!trimmedLocation) return
 
 		setWeatherState({
-			temperature: '--°C',
+			temperature: '-- C',
 			location: trimmedLocation,
 			description: 'Szukanie lokalizacji...',
-			wind: 'Proszę czekać',
+			wind: 'Prosze czekac',
 			icon: 'fa-cloud-sun',
 		})
 
 		try {
-			const response = await fetch(
+			const data = await fetchJsonWithTimeout(
 				`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmedLocation)}&count=10&language=pl&format=json`,
 				{ cache: 'no-store' }
 			)
-			if (!response.ok) {
-				throw new Error('Geocoding request failed')
-			}
-
-			const data = await response.json()
 			const result = pickBestGeocodingResult(data.results, trimmedLocation)
 			if (!result) {
 				throw new Error('Location not found')
@@ -1141,13 +1166,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			preferencesService?.setWeatherLocation?.(trimmedLocation) || storageService?.setText?.(weatherConfig.storageKey, trimmedLocation)
 			fetchWeather(result.latitude, result.longitude, resolvedName)
 		} catch (error) {
-			setWeatherState({
-				temperature: '--°C',
-				location: trimmedLocation,
-				description: 'Nie znaleziono lokalizacji',
-				wind: 'Spróbuj innej nazwy',
-				icon: 'fa-cloud',
-			})
+			const fallbackReason =
+				String(error?.name || '').toLowerCase() === 'aborterror' ? 'Brak odpowiedzi z API pogody' : 'Nie znaleziono lokalizacji'
+			setOfflineWeatherState(trimmedLocation, fallbackReason)
 		}
 	}
 
@@ -1188,7 +1209,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 
-			// `watchPosition` daje przeglądarce chwilę na doprecyzowanie współrzędnych.
+			// `watchPosition` daje przegladarce chwile na doprecyzowanie wspolrzednych.
 			watchId = navigator.geolocation.watchPosition(
 				position => {
 					rememberBestPosition(position)
@@ -1233,34 +1254,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (geoapifyApiKey) {
 			try {
-				const response = await fetch(
+				const data = await fetchJsonWithTimeout(
 					`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&type=city&lang=pl&limit=1&apiKey=${encodeURIComponent(geoapifyApiKey)}`,
 					{ cache: 'no-store' }
 				)
-				if (!response.ok) {
-					throw new Error('Geoapify reverse geocoding request failed')
-				}
-
-				const data = await response.json()
 				const properties = data?.features?.[0]?.properties
 				if (properties) {
 					return buildGeoapifyLocationDetails(properties)
 				}
 			} catch (error) {
-				// Fallback zostaje na Nominatim, żeby przycisk działał nawet przy błędzie API lub limicie.
+				// Fallback zostaje na Nominatim, zeby przycisk dzialal nawet przy bledzie API lub limicie.
 			}
 		}
 
 		try {
-			const response = await fetch(
+			const data = await fetchJsonWithTimeout(
 				`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&accept-language=pl&addressdetails=1&zoom=18`,
 				{ cache: 'no-store' }
 			)
-			if (!response.ok) {
-				throw new Error('Reverse geocoding request failed')
-			}
-
-			const data = await response.json()
 			const address = data.address || {}
 			return buildCurrentLocationDetails(address)
 		} catch (error) {
@@ -1274,10 +1285,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	const fetchWeatherForCurrentLocation = async () => {
 		if (!navigator.geolocation) {
 			setWeatherState({
-				temperature: '--°C',
+				temperature: '-- C',
 				location: 'Aktualna lokalizacja',
-				description: 'Geolokalizacja niedostępna',
-				wind: 'Twoja przeglądarka jej nie wspiera',
+				description: 'Geolokalizacja niedostepna',
+				wind: 'Twoja przegladarka jej nie wspiera',
 				icon: 'fa-location-crosshairs',
 			})
 			return
@@ -1285,7 +1296,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (!window.isSecureContext) {
 			setWeatherState({
-				temperature: '--°C',
+				temperature: '-- C',
 				location: 'Aktualna lokalizacja',
 				description: 'Safari wymaga bezpiecznego adresu',
 				wind: 'Uruchom przez HTTPS albo localhost',
@@ -1295,10 +1306,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		setWeatherState({
-			temperature: '--°C',
+			temperature: '-- C',
 			location: 'Aktualna lokalizacja',
-			description: 'Pobieram pozycję...',
-			wind: 'Proszę czekać',
+			description: 'Pobieram pozycje...',
+			wind: 'Prosze czekac',
 			icon: 'fa-location-crosshairs',
 		})
 
@@ -1317,26 +1328,26 @@ document.addEventListener('DOMContentLoaded', () => {
 		} catch (error) {
 			const geolocationErrors = {
 				1: {
-					description: 'Dostęp do lokalizacji zablokowany',
-					wind: 'Sprawdź ustawienia Safari i macOS',
+					description: 'Dostep do lokalizacji zablokowany',
+					wind: 'Sprawdz ustawienia Safari i macOS',
 				},
 				2: {
-					description: 'Safari nie mogło ustalić pozycji',
-					wind: 'Włącz Wi-Fi i spróbuj ponownie',
+					description: 'Safari nie moglo ustalic pozycji',
+					wind: 'Wlacz Wi-Fi i sprobuj ponownie',
 				},
 				3: {
 					description: 'Przekroczono czas pobierania',
-					wind: 'Połączenie lub usługi lokalizacji odpowiadają zbyt długo',
+					wind: 'Polaczenie lub uslugi lokalizacji odpowiadaja zbyt dlugo',
 				},
 			}
 			const fallbackMessage = {
-				description: 'Nie udało się pobrać lokalizacji',
-				wind: 'Sprawdź uprawnienia przeglądarki',
+				description: 'Nie udalo sie pobrac lokalizacji',
+				wind: 'Sprawdz uprawnienia przegladarki',
 			}
 			const message = geolocationErrors[error?.code] || fallbackMessage
 
 			setWeatherState({
-				temperature: '--°C',
+				temperature: '-- C',
 				location: 'Aktualna lokalizacja',
 				description: message.description,
 				wind: message.wind,
@@ -1427,7 +1438,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.querySelectorAll('.menu-item[target="_blank"]').forEach(link => {
 		link.addEventListener('click', event => {
 			event.preventDefault()
-			window.open(link.href, '_blank')
+			const openedWindow = window.open(link.href, '_blank')
+			if (!openedWindow) {
+				window.location.href = link.href
+			}
 		})
 	})
 })

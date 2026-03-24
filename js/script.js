@@ -665,6 +665,9 @@ const confirmDialog = ({
 /* === Shared Auth And Session: Start === */
 const AUTH_CONFIG = {
 	minPasswordLength: 4,
+	maxAvatarUploadSizeBytes: 10 * 1024 * 1024,
+	avatarOutputSize: 192,
+	avatarOutputQuality: 0.9,
 	avatarPresets: [
 		{ id: 'violet', label: 'Fiolet', gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' },
 		{ id: 'blue', label: 'Niebieski', gradient: 'linear-gradient(135deg, #2563eb 0%, #38bdf8 100%)' },
@@ -695,6 +698,10 @@ const authState = {
 	authPasswordRepeatInput: null,
 	authRoleHint: null,
 	authAvatarGrid: null,
+	authAvatarPreview: null,
+	authAvatarUploadInput: null,
+	authAvatarBrowseBtn: null,
+	authAvatarResetBtn: null,
 	authSubmitBtn: null,
 	profileModal: null,
 	profileForm: null,
@@ -702,10 +709,16 @@ const authState = {
 	profileLoginInput: null,
 	profileRoleBadge: null,
 	profileAvatarGrid: null,
+	profileAvatarPreview: null,
+	profileAvatarUploadInput: null,
+	profileAvatarBrowseBtn: null,
+	profileAvatarResetBtn: null,
 	profileLogoutBtn: null,
 	mode: 'login',
 	selectedRegisterAvatarId: AUTH_CONFIG.avatarPresets[0].id,
 	selectedProfileAvatarId: AUTH_CONFIG.avatarPresets[0].id,
+	customRegisterAvatarImage: '',
+	customProfileAvatarImage: '',
 }
 
 const systemUiState = {
@@ -729,6 +742,11 @@ const bookmarksService = appServices.bookmarksService
 const preferencesService = appServices.preferencesService
 
 const getAvatarPreset = avatarId => AUTH_CONFIG.avatarPresets.find(preset => preset.id === avatarId) || AUTH_CONFIG.avatarPresets[0]
+
+const normalizeAvatarImage = value => {
+	const normalizedValue = String(value || '').trim()
+	return /^data:image\//i.test(normalizedValue) ? normalizedValue : ''
+}
 
 const getInitials = fullName => {
 	const words = String(fullName || '')
@@ -763,6 +781,7 @@ const mapStoredUser = user => ({
 	passwordHash: String(user.passwordHash || ''),
 	role: user.role === 'admin' ? 'admin' : 'user',
 	avatarId: getAvatarPreset(user.avatarId).id,
+	avatarImage: normalizeAvatarImage(user.avatarImage),
 	createdAt: user.createdAt || new Date().toISOString(),
 	updatedAt: user.updatedAt || user.createdAt || new Date().toISOString(),
 })
@@ -776,6 +795,7 @@ const sanitizeUser = user => {
 		login: user.login,
 		role: user.role,
 		avatarId: user.avatarId,
+		avatarImage: normalizeAvatarImage(user.avatarImage),
 		createdAt: user.createdAt,
 		updatedAt: user.updatedAt,
 	}
@@ -820,6 +840,7 @@ const renderAuthUi = () => {
 		${createAvatarMarkup({
 			fullName: currentUser?.fullName || 'Gosc systemu',
 			avatarId: currentUser?.avatarId || AUTH_CONFIG.avatarPresets[0].id,
+			avatarImage: currentUser?.avatarImage || '',
 			extraClass: 'app-user-avatar-lg',
 		})}
 		<span class="app-user-trigger-copy">
@@ -833,6 +854,7 @@ const renderAuthUi = () => {
 		${createAvatarMarkup({
 			fullName: currentUser?.fullName || 'Gosc systemu',
 			avatarId: currentUser?.avatarId || AUTH_CONFIG.avatarPresets[0].id,
+			avatarImage: currentUser?.avatarImage || '',
 		})}
 		<div class="app-user-popover-copy">
 			<strong>${identityLabel}</strong>
@@ -905,7 +927,7 @@ const syncCurrentUserFromSession = () => {
 	return authState.currentUser
 }
 
-const registerUser = ({ fullName, login, password, avatarId }) => {
+const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 	const normalizedName = String(fullName || '').trim()
 	const normalizedLogin = normalizeUserLogin(login)
 	const normalizedPassword = String(password || '')
@@ -934,6 +956,7 @@ const registerUser = ({ fullName, login, password, avatarId }) => {
 		passwordHash: encodeLocalPassword(normalizedPassword),
 		role: authState.users.length === 0 ? 'admin' : 'user',
 		avatarId: getAvatarPreset(avatarId).id,
+		avatarImage: normalizeAvatarImage(avatarImage),
 		createdAt: now,
 		updatedAt: now,
 	}
@@ -969,7 +992,7 @@ const logoutUser = ({ silent = false } = {}) => {
 	}
 }
 
-const updateCurrentUserProfile = ({ fullName, login, avatarId }) => {
+const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage }) => {
 	if (!authState.currentUser) {
 		throw new Error('Brak zalogowanego uzytkownika.')
 	}
@@ -1001,6 +1024,7 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId }) => {
 					fullName: normalizedName,
 					login: normalizedLogin,
 					avatarId: getAvatarPreset(avatarId).id,
+					avatarImage: normalizeAvatarImage(avatarImage),
 					updatedAt: now,
 			  }
 			: user
@@ -1012,9 +1036,22 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId }) => {
 	return sanitizeUser(nextCurrentUser)
 }
 
-const createAvatarMarkup = ({ fullName, avatarId, extraClass = '' } = {}) => {
+const createAvatarMarkup = ({ fullName, avatarId, avatarImage, extraClass = '' } = {}) => {
 	const preset = getAvatarPreset(avatarId)
 	const classes = ['app-user-avatar', extraClass].filter(Boolean).join(' ')
+	const normalizedAvatarImage = normalizeAvatarImage(avatarImage)
+	if (normalizedAvatarImage) {
+		const avatarStyle = [
+			`--app-avatar-gradient: ${preset.gradient}`,
+			`background-image: url('${escapeHtml(normalizedAvatarImage)}')`,
+			'background-size: cover',
+			'background-position: center',
+			'background-repeat: no-repeat',
+		].join('; ')
+
+		return `<span class="${classes} is-image" style="${avatarStyle}" role="img" aria-label="${escapeHtml(fullName || 'Avatar uzytkownika')}"></span>`
+	}
+
 	return `<span class="${classes}" style="--app-avatar-gradient: ${preset.gradient}">${getInitials(fullName)}</span>`
 }
 
@@ -1119,6 +1156,7 @@ const renderPageStatusStrip = () => {
 		${createAvatarMarkup({
 			fullName: currentUser?.fullName || 'Gosc systemu',
 			avatarId: currentUser?.avatarId || AUTH_CONFIG.avatarPresets[0].id,
+			avatarImage: currentUser?.avatarImage || '',
 			extraClass: 'app-page-status-avatar',
 		})}
 		<div class="app-page-status-copy">
@@ -1172,45 +1210,13 @@ const handleUserAction = action => {
 }
 
 const ensurePageStatusStrip = () => {
-	if (systemUiState.pageStatusStrip || !document.body || document.body.classList.contains('dashboard-page')) {
-		return systemUiState.pageStatusStrip
-	}
-
-	const wrapper = document.querySelector('.wrapper')
-	const header = wrapper?.querySelector('.header')
-	const mainContent = wrapper?.querySelector('.main-content')
-
-	if (!wrapper || !header || !mainContent) return null
-
-	const strip = document.createElement('section')
-	strip.className = 'app-page-status-strip'
-	strip.innerHTML = `
-		<div class="app-page-status-main">
-			<div class="app-page-status-identity"></div>
-			<div class="app-page-status-meta">
-				<p class="app-page-status-kicker">Status pracy</p>
-				<p class="app-page-status-text"></p>
-				<div class="app-page-status-tags"></div>
-			</div>
-		</div>
-		<div class="app-page-status-actions"></div>
-	`
-
-	header.insertAdjacentElement('afterend', strip)
-	systemUiState.pageStatusStrip = strip
-	systemUiState.pageStatusIdentity = strip.querySelector('.app-page-status-identity')
-	systemUiState.pageStatusText = strip.querySelector('.app-page-status-text')
-	systemUiState.pageStatusTags = strip.querySelector('.app-page-status-tags')
-	systemUiState.pageStatusActions = strip.querySelector('.app-page-status-actions')
-
-	strip.addEventListener('click', event => {
-		const actionButton = event.target.closest('[data-user-action]')
-		if (!actionButton) return
-		handleUserAction(actionButton.dataset.userAction)
-	})
-
-	renderPageStatusStrip()
-	return strip
+	document.querySelectorAll('.app-page-status-strip').forEach(strip => strip.remove())
+	systemUiState.pageStatusStrip = null
+	systemUiState.pageStatusIdentity = null
+	systemUiState.pageStatusText = null
+	systemUiState.pageStatusTags = null
+	systemUiState.pageStatusActions = null
+	return null
 }
 
 const closeUserPopover = () => {
@@ -1272,6 +1278,151 @@ const renderAvatarChoices = (container, selectedId) => {
 		.join('')
 }
 
+const renderAvatarUploadPreview = (container, { fullName, avatarId, avatarImage, helperText } = {}) => {
+	if (!container) return
+
+	const hasCustomAvatar = Boolean(normalizeAvatarImage(avatarImage))
+	container.innerHTML = `
+		${createAvatarMarkup({
+			fullName: fullName || 'Uzytkownik',
+			avatarId,
+			avatarImage,
+			extraClass: 'app-user-avatar-xl',
+		})}
+		<div class="app-avatar-upload-copy">
+			<strong>${hasCustomAvatar ? 'Wlasny avatar aktywny' : 'Avatar z palety kolorow'}</strong>
+			<span>${helperText || (hasCustomAvatar ? 'Zdjecie zostanie zapisane lokalnie dla tego konta.' : 'Mozesz zostac przy kolorowym avatarze albo wgrac swoje zdjecie.')}</span>
+		</div>
+	`
+}
+
+const renderRegisterAvatarEditor = () => {
+	renderAvatarChoices(authState.authAvatarGrid, authState.selectedRegisterAvatarId)
+	renderAvatarUploadPreview(authState.authAvatarPreview, {
+		fullName: authState.authFullNameInput?.value || authState.authLoginInput?.value || 'Nowy uzytkownik',
+		avatarId: authState.selectedRegisterAvatarId,
+		avatarImage: authState.customRegisterAvatarImage,
+	})
+
+	if (authState.authAvatarResetBtn) {
+		authState.authAvatarResetBtn.hidden = !authState.customRegisterAvatarImage
+	}
+}
+
+const renderProfileAvatarEditor = () => {
+	renderAvatarChoices(authState.profileAvatarGrid, authState.selectedProfileAvatarId)
+	renderAvatarUploadPreview(authState.profileAvatarPreview, {
+		fullName: authState.profileNameInput?.value || authState.profileLoginInput?.value || authState.currentUser?.fullName || 'Uzytkownik',
+		avatarId: authState.selectedProfileAvatarId,
+		avatarImage: authState.customProfileAvatarImage,
+	})
+
+	if (authState.profileAvatarResetBtn) {
+		authState.profileAvatarResetBtn.hidden = !authState.customProfileAvatarImage
+	}
+}
+
+const resetRegisterAvatarEditor = () => {
+	authState.selectedRegisterAvatarId = AUTH_CONFIG.avatarPresets[0].id
+	authState.customRegisterAvatarImage = ''
+	if (authState.authAvatarUploadInput) {
+		authState.authAvatarUploadInput.value = ''
+	}
+	renderRegisterAvatarEditor()
+}
+
+const clearCustomAvatar = scope => {
+	if (scope === 'profile') {
+		authState.customProfileAvatarImage = ''
+		if (authState.profileAvatarUploadInput) {
+			authState.profileAvatarUploadInput.value = ''
+		}
+		renderProfileAvatarEditor()
+		return
+	}
+
+	authState.customRegisterAvatarImage = ''
+	if (authState.authAvatarUploadInput) {
+		authState.authAvatarUploadInput.value = ''
+	}
+	renderRegisterAvatarEditor()
+}
+
+const buildAvatarImageFromFile = file =>
+	new Promise((resolve, reject) => {
+		if (!file) {
+			reject(new Error('Nie wybrano pliku avatara.'))
+			return
+		}
+
+		if (!String(file.type || '').startsWith('image/')) {
+			reject(new Error('Avatar musi byc plikiem graficznym.'))
+			return
+		}
+
+		if (Number(file.size || 0) > AUTH_CONFIG.maxAvatarUploadSizeBytes) {
+			reject(new Error('Wybrany plik jest za duzy. Uzyj obrazu do 10 MB.'))
+			return
+		}
+
+		const reader = new FileReader()
+		reader.onerror = () => reject(new Error('Nie udalo sie odczytac pliku avatara.'))
+		reader.onload = () => {
+			const image = new Image()
+			image.onerror = () => reject(new Error('Nie udalo sie przetworzyc obrazu avatara.'))
+			image.onload = () => {
+				const cropSize = Math.max(1, Math.min(image.width, image.height))
+				const cropOffsetX = Math.max(0, Math.floor((image.width - cropSize) / 2))
+				const cropOffsetY = Math.max(0, Math.floor((image.height - cropSize) / 2))
+				const canvas = document.createElement('canvas')
+				const targetSize = AUTH_CONFIG.avatarOutputSize
+
+				canvas.width = targetSize
+				canvas.height = targetSize
+
+				const context = canvas.getContext('2d')
+				if (!context) {
+					reject(new Error('Przegladarka nie pozwala przygotowac avatara.'))
+					return
+				}
+
+				context.drawImage(
+					image,
+					cropOffsetX,
+					cropOffsetY,
+					cropSize,
+					cropSize,
+					0,
+					0,
+					targetSize,
+					targetSize
+				)
+
+				try {
+					resolve(canvas.toDataURL('image/jpeg', AUTH_CONFIG.avatarOutputQuality))
+				} catch (error) {
+					reject(new Error('Nie udalo sie zapisac przygotowanego avatara.'))
+				}
+			}
+
+			image.src = String(reader.result || '')
+		}
+
+		reader.readAsDataURL(file)
+	})
+
+const handleAvatarFileSelection = async (scope, file) => {
+	const avatarImage = await buildAvatarImageFromFile(file)
+	if (scope === 'profile') {
+		authState.customProfileAvatarImage = avatarImage
+		renderProfileAvatarEditor()
+		return
+	}
+
+	authState.customRegisterAvatarImage = avatarImage
+	renderRegisterAvatarEditor()
+}
+
 const updateAuthMode = mode => {
 	authState.mode = mode === 'register' ? 'register' : 'login'
 	if (!authState.authModal || !authState.authForm) return
@@ -1295,6 +1446,7 @@ const updateAuthMode = mode => {
 	authState.authPasswordRepeatInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
 	authState.authRoleHint?.classList.toggle('is-hidden', !isRegister)
 	authState.authAvatarGrid?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
+	authState.authAvatarPreview?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
 }
 
 const openAuthModal = mode => {
@@ -1315,6 +1467,7 @@ const populateProfileForm = () => {
 	if (!authState.currentUser || !authState.profileForm) return
 
 	authState.selectedProfileAvatarId = authState.currentUser.avatarId
+	authState.customProfileAvatarImage = normalizeAvatarImage(authState.currentUser.avatarImage)
 	if (authState.profileNameInput) authState.profileNameInput.value = authState.currentUser.fullName || ''
 	if (authState.profileLoginInput) authState.profileLoginInput.value = authState.currentUser.login || ''
 	if (authState.profileRoleBadge) {
@@ -1322,7 +1475,7 @@ const populateProfileForm = () => {
 		authState.profileRoleBadge.classList.toggle('is-admin', authState.currentUser.role === 'admin')
 	}
 
-	renderAvatarChoices(authState.profileAvatarGrid, authState.selectedProfileAvatarId)
+	renderProfileAvatarEditor()
 }
 
 const openProfileModal = () => {
@@ -1384,6 +1537,20 @@ const ensureAuthUi = () => {
 					<span>Wybierz styl avatara</span>
 					<div class="app-avatar-choice-grid" id="app-auth-avatar-grid"></div>
 				</div>
+				<div class="app-auth-field is-hidden">
+					<span>Wlasny avatar</span>
+					<div class="app-avatar-upload">
+						<div class="app-avatar-upload-preview" id="app-auth-avatar-preview"></div>
+						<div class="app-avatar-upload-actions">
+							<input type="file" id="app-auth-avatar-upload" accept="image/*" hidden>
+							<div class="app-avatar-upload-btn-row">
+								<button type="button" class="app-avatar-upload-btn" id="app-auth-avatar-browse-btn">Przegladaj</button>
+								<button type="button" class="app-avatar-upload-btn" id="app-auth-avatar-reset-btn" hidden>Usun avatar</button>
+							</div>
+							<small>PNG, JPG lub WebP. Zdjecie zostanie przyciete do kwadratu i zapisane lokalnie.</small>
+						</div>
+					</div>
+				</div>
 				<p class="app-auth-role-hint is-hidden" id="app-auth-role-hint">Pierwsze zalozone konto otrzyma role administratora.</p>
 				<div class="app-auth-actions">
 					<button type="submit" class="app-auth-submit">Zaloguj sie</button>
@@ -1423,6 +1590,20 @@ const ensureAuthUi = () => {
 					<span>Avatar</span>
 					<div class="app-avatar-choice-grid" id="app-profile-avatar-grid"></div>
 				</div>
+				<div class="app-auth-field">
+					<span>Wlasny avatar</span>
+					<div class="app-avatar-upload">
+						<div class="app-avatar-upload-preview" id="app-profile-avatar-preview"></div>
+						<div class="app-avatar-upload-actions">
+							<input type="file" id="app-profile-avatar-upload" accept="image/*" hidden>
+							<div class="app-avatar-upload-btn-row">
+								<button type="button" class="app-avatar-upload-btn" id="app-profile-avatar-browse-btn">Przegladaj</button>
+								<button type="button" class="app-avatar-upload-btn" id="app-profile-avatar-reset-btn" hidden>Usun avatar</button>
+							</div>
+							<small>PNG, JPG lub WebP. Zdjecie zostanie przyciete do kwadratu i zapisane lokalnie.</small>
+						</div>
+					</div>
+				</div>
 				<div class="app-auth-actions">
 					<button type="submit" class="app-auth-submit">Zapisz zmiany</button>
 					<button type="button" class="app-auth-switch app-auth-switch-danger" id="app-profile-logout-btn">Wyloguj</button>
@@ -1444,13 +1625,17 @@ const ensureAuthUi = () => {
 	authState.authModal = authModal
 	authState.authTitle = authModal.querySelector('#app-auth-title')
 	authState.authForm = authModal.querySelector('.app-auth-form')
-	authState.authSwitchBtn = authModal.querySelector('.app-auth-switch')
+	authState.authSwitchBtn = authModal.querySelector('.app-auth-actions .app-auth-switch')
 	authState.authFullNameInput = authModal.querySelector('#app-auth-full-name')
 	authState.authLoginInput = authModal.querySelector('#app-auth-login')
 	authState.authPasswordInput = authModal.querySelector('#app-auth-password')
 	authState.authPasswordRepeatInput = authModal.querySelector('#app-auth-password-repeat')
 	authState.authRoleHint = authModal.querySelector('#app-auth-role-hint')
 	authState.authAvatarGrid = authModal.querySelector('#app-auth-avatar-grid')
+	authState.authAvatarPreview = authModal.querySelector('#app-auth-avatar-preview')
+	authState.authAvatarUploadInput = authModal.querySelector('#app-auth-avatar-upload')
+	authState.authAvatarBrowseBtn = authModal.querySelector('#app-auth-avatar-browse-btn')
+	authState.authAvatarResetBtn = authModal.querySelector('#app-auth-avatar-reset-btn')
 	authState.authSubmitBtn = authModal.querySelector('.app-auth-submit')
 	authState.profileModal = profileModal
 	authState.profileForm = profileModal.querySelector('.app-profile-form')
@@ -1458,9 +1643,13 @@ const ensureAuthUi = () => {
 	authState.profileLoginInput = profileModal.querySelector('#app-profile-login')
 	authState.profileRoleBadge = profileModal.querySelector('#app-profile-role-badge')
 	authState.profileAvatarGrid = profileModal.querySelector('#app-profile-avatar-grid')
+	authState.profileAvatarPreview = profileModal.querySelector('#app-profile-avatar-preview')
+	authState.profileAvatarUploadInput = profileModal.querySelector('#app-profile-avatar-upload')
+	authState.profileAvatarBrowseBtn = profileModal.querySelector('#app-profile-avatar-browse-btn')
+	authState.profileAvatarResetBtn = profileModal.querySelector('#app-profile-avatar-reset-btn')
 	authState.profileLogoutBtn = profileModal.querySelector('#app-profile-logout-btn')
 
-	renderAvatarChoices(authState.authAvatarGrid, authState.selectedRegisterAvatarId)
+	renderRegisterAvatarEditor()
 	renderAuthUi()
 	updateAuthMode('login')
 
@@ -1500,7 +1689,8 @@ const ensureAuthUi = () => {
 		if (!choice) return
 
 		authState.selectedRegisterAvatarId = choice.dataset.avatarId
-		renderAvatarChoices(authState.authAvatarGrid, authState.selectedRegisterAvatarId)
+		authState.customRegisterAvatarImage = ''
+		renderRegisterAvatarEditor()
 	})
 
 	authState.profileAvatarGrid?.addEventListener('click', event => {
@@ -1508,8 +1698,50 @@ const ensureAuthUi = () => {
 		if (!choice) return
 
 		authState.selectedProfileAvatarId = choice.dataset.avatarId
-		renderAvatarChoices(authState.profileAvatarGrid, authState.selectedProfileAvatarId)
+		authState.customProfileAvatarImage = ''
+		renderProfileAvatarEditor()
 	})
+
+	authState.authAvatarBrowseBtn?.addEventListener('click', () => authState.authAvatarUploadInput?.click())
+	authState.profileAvatarBrowseBtn?.addEventListener('click', () => authState.profileAvatarUploadInput?.click())
+
+	authState.authAvatarResetBtn?.addEventListener('click', () => clearCustomAvatar('register'))
+	authState.profileAvatarResetBtn?.addEventListener('click', () => clearCustomAvatar('profile'))
+
+	authState.authAvatarUploadInput?.addEventListener('change', async event => {
+		const file = event.target.files?.[0]
+		if (!file) return
+
+		try {
+			await handleAvatarFileSelection('register', file)
+		} catch (error) {
+			notify({
+				type: 'error',
+				title: 'Avatar nie zostal wgrany',
+				message: error.message || 'Nie udalo sie przygotowac avatara.',
+			})
+		}
+	})
+
+	authState.profileAvatarUploadInput?.addEventListener('change', async event => {
+		const file = event.target.files?.[0]
+		if (!file) return
+
+		try {
+			await handleAvatarFileSelection('profile', file)
+		} catch (error) {
+			notify({
+				type: 'error',
+				title: 'Avatar nie zostal wgrany',
+				message: error.message || 'Nie udalo sie przygotowac avatara.',
+			})
+		}
+	})
+
+	authState.authFullNameInput?.addEventListener('input', renderRegisterAvatarEditor)
+	authState.authLoginInput?.addEventListener('input', renderRegisterAvatarEditor)
+	authState.profileNameInput?.addEventListener('input', renderProfileAvatarEditor)
+	authState.profileLoginInput?.addEventListener('input', renderProfileAvatarEditor)
 
 	authState.authForm?.addEventListener('submit', event => {
 		event.preventDefault()
@@ -1527,6 +1759,7 @@ const ensureAuthUi = () => {
 						login: authState.authLoginInput?.value || '',
 						password,
 						avatarId: authState.selectedRegisterAvatarId,
+						avatarImage: authState.customRegisterAvatarImage,
 					})
 					notify({
 						type: 'success',
@@ -1546,8 +1779,7 @@ const ensureAuthUi = () => {
 				}
 
 				authState.authForm.reset()
-				authState.selectedRegisterAvatarId = AUTH_CONFIG.avatarPresets[0].id
-				renderAvatarChoices(authState.authAvatarGrid, authState.selectedRegisterAvatarId)
+				resetRegisterAvatarEditor()
 				closeModal(authModal)
 			} catch (error) {
 				notify({
@@ -1566,6 +1798,7 @@ const ensureAuthUi = () => {
 				fullName: authState.profileNameInput?.value || '',
 				login: authState.profileLoginInput?.value || '',
 				avatarId: authState.selectedProfileAvatarId,
+				avatarImage: authState.customProfileAvatarImage,
 			})
 
 			closeModal(profileModal)

@@ -1,3 +1,4 @@
+(function initializeExchangesPage() {
 /* === Exchanges State And References: Start === */
 let exchanges = []
 let editIndex = null
@@ -797,3 +798,4 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadData()
 })
 /* === Exchanges Init: End === */
+})()

@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const taskStatusSelect = document.getElementById('notes-task-status')
 	const taskSubmitBtn = document.getElementById('notes-task-submit')
 	const taskCancelBtn = document.getElementById('notes-task-cancel')
+	const taskFormHint = document.getElementById('notes-task-form-hint')
 
 	const announcementsList = document.getElementById('notes-announcements-list')
 	const notesList = document.getElementById('notes-notes-list')
@@ -91,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		!taskStatusSelect ||
 		!taskSubmitBtn ||
 		!taskCancelBtn ||
+		!taskFormHint ||
 		!announcementsList ||
 		!notesList ||
 		!tasksList ||
@@ -174,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				login: String(user.login || '').trim(),
 				role: user.role === 'admin' ? 'admin' : 'user',
 				avatarId: String(user.avatarId || 'blue'),
+				avatarImage: String(user.avatarImage || '').trim(),
 			}))
 	}
 
@@ -191,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			return AppUtils.createAvatarMarkup({
 				fullName: label,
 				avatarId: user?.avatarId || 'blue',
+				avatarImage: user?.avatarImage || '',
 				extraClass,
 			})
 		}
@@ -333,6 +337,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function populateTaskAssigneeOptions(users, selectedUserId = '') {
+		const hasAssignableUsers = users.length > 0
+		taskAssigneeSelect.disabled = !hasAssignableUsers
+		taskSubmitBtn.disabled = !hasAssignableUsers
+
 		if (users.length === 0) {
 			taskAssigneeSelect.innerHTML = '<option value="">Brak aktywnych uzytkownikow</option>'
 			return
@@ -391,10 +399,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	function updateTaskComposer(currentUser) {
 		const users = loadUsers()
+		const hasAssignableUsers = users.length > 0
 		taskForm.hidden = !canManageTasks(currentUser) || !state.taskComposerOpen
 		taskSubmitBtn.textContent = state.editingTaskId ? 'Zapisz zadanie' : 'Dodaj zadanie'
 		taskCancelBtn.hidden = !canManageTasks(currentUser) || !state.taskComposerOpen
 		populateTaskAssigneeOptions(users, taskAssigneeSelect.value || '')
+		taskFormHint.hidden = true
+		taskFormHint.textContent = ''
 
 		if (!currentUser) {
 			taskToggleBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj sie, aby dodac</span>'
@@ -404,6 +415,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!canManageTasks(currentUser)) {
 			taskToggleBtn.innerHTML = '<i class="fa-solid fa-lock"></i><span>Zadania tylko dla admina</span>'
 			return
+		}
+
+		if (state.taskComposerOpen && !hasAssignableUsers) {
+			taskFormHint.hidden = false
+			taskFormHint.textContent = 'Brakuje aktywnych kont w systemie. Dodaj lub przywroc uzytkownika, zanim przypiszesz zadanie.'
 		}
 
 		if (state.editingTaskId) {
@@ -905,6 +921,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (!canManageTasks(currentUser)) {
 			showFeedbackMessage('Tylko administrator moze tworzyc i przypisywac zadania.', 'error')
+			return
+		}
+
+		if (taskSubmitBtn.disabled || !taskAssigneeSelect.value) {
+			showFeedbackMessage('Brakuje aktywnego uzytkownika do przypisania zadania.', 'error')
 			return
 		}
 

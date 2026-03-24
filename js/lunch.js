@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			authCallout.classList.add('is-active-user')
 			authTitle.textContent = `Pracujesz jako ${currentUser.fullName || `@${currentUser.login}`}`
 			authText.textContent =
-				'Możesz zapisać się na jeden slot dziennie, anulować własną rezerwację i podejrzeć zajętość wszystkich godzin.'
+				'Mozesz zapisac sie na jeden slot dziennie, anulowac wlasna rezerwacje i podejrzec zajetosc wszystkich godzin.'
 			authBtn.innerHTML = '<i class="fa-solid fa-user-gear"></i><span>Otworz profil</span>'
 			return
 		}
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		authCallout.classList.remove('is-active-user')
 		authTitle.textContent = 'Podglad slotow jest dostepny dla wszystkich'
 		authText.textContent =
-			'Zaloguj sie, aby zapisac sie na wybrana godzine albo anulowac swoja rezerwacje. Bez logowania widzisz tylko zajetosc slotow.'
+			'Zaloguj sie z paska statusu u gory, aby zapisac sie na wybrana godzine albo anulowac swoja rezerwacje.'
 		authBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj sie</span>'
 	}
 
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!currentUser) {
 			myReservationBox.innerHTML = `
 				<strong>Nie jestes zalogowany</strong>
-				<p>Zaloguj sie z panelu uzytkownika, aby wybrac godzine obiadu dla konta lokalnego.</p>
+				<p>Zaloguj sie z paska statusu u gory, aby wybrac godzine obiadu dla swojego konta demo.</p>
 			`
 			return
 		}
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		myReservationBox.innerHTML = `
-			<strong>${escapeHtml(myReservation.timeSlot)} · ${escapeHtml(formatDateLabel(selectedDate))}</strong>
+			<strong>${escapeHtml(myReservation.timeSlot)} | ${escapeHtml(formatDateLabel(selectedDate))}</strong>
 			<p>Twoj lunch jest zapisany w tym slocie. Mozesz go anulowac z tej karty albo bezposrednio z siatki terminow.</p>
 			<button type="button" class="lunch-summary-btn" data-summary-action="cancel" data-reservation-id="${escapeHtml(
 				myReservation.id
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		openSlotsStat.textContent = String(openSlotCount)
 		userStat.textContent = currentUser ? currentUser.fullName || `@${currentUser.login}` : 'Gosc'
 		userMetaStat.textContent = currentUser
-			? `${currentUser.role === 'admin' ? 'Administrator' : 'Uzytkownik'} · konto lokalne aktywne`
+			? `${currentUser.role === 'admin' ? 'Administrator' : 'Uzytkownik'} | konto demo aktywne`
 			: 'Podglad bez mozliwosci zapisu'
 	}
 
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 					<p class="lunch-slot-meta">
 						Zajetosc: <strong>${slotReservations.length}/${MAX_CAPACITY_PER_SLOT}</strong>
-						${isOwnReservation ? ' · to jest Twoj termin' : ''}
+						${isOwnReservation ? ' | to jest Twoj termin' : ''}
 					</p>
 
 					<div class="lunch-slot-list-wrap">
@@ -292,8 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		const occupiedSlots = new Set(reservationsForDate.map(reservation => reservation.timeSlot)).size
 		daySummary.textContent =
 			reservationsForDate.length > 0
-				? `${formatDateLabel(selectedDate)} · aktywne rezerwacje: ${reservationsForDate.length}, zajete sloty: ${occupiedSlots}/${TIME_SLOTS.length}.`
-				: `${formatDateLabel(selectedDate)} · na ten dzien nie ma jeszcze zadnych rezerwacji obiadowych.`
+				? `${formatDateLabel(selectedDate)} | aktywne rezerwacje: ${reservationsForDate.length}, zajete sloty: ${occupiedSlots}/${TIME_SLOTS.length}.`
+				: `${formatDateLabel(selectedDate)} | na ten dzien nie ma jeszcze zadnych rezerwacji obiadowych.`
 
 		renderAuthCallout(currentUser)
 		renderMyReservation(currentUser, myReservation)
