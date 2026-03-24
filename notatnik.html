@@ -148,8 +148,8 @@
                     </div>
 
                     <div id="notes-task-admin-callout" class="notes-task-admin-callout">
-                        <strong id="notes-task-admin-title">Tylko admin moze przypisywac zadania</strong>
-                        <p id="notes-task-admin-text">Po zalogowaniu jako administrator mozesz tworzyc zadania, przypisywac je do ludzi i nadawac im priorytet.</p>
+                        <strong id="notes-task-admin-title">Tylko lider moze przypisywac zadania</strong>
+                        <p id="notes-task-admin-text">Po zalogowaniu jako lider mozesz tworzyc zadania, przypisywac je do ludzi i nadawac im priorytet.</p>
                     </div>
 
                     <form id="notes-task-form" class="notes-composer" hidden>
@@ -257,8 +257,8 @@
                         <ul class="notes-rule-list">
                             <li>Wazne tematy sa wyswietlane na gorze i maja osobna sekcje.</li>
                             <li>Notatki oraz tablica dzialaja na lokalnym storage tej przegladarki.</li>
-                            <li>Kazdy zalogowany uzytkownik moze dodac wpis, a autor lub admin moze go edytowac albo usunac.</li>
-                            <li>Tylko admin przypisuje zadania innym uzytkownikom, a osoba przypisana moze zmienic status swojego zadania.</li>
+                            <li>Kazdy zalogowany uzytkownik moze dodac wpis, a autor lub lider moze go edytowac albo usunac.</li>
+                            <li>Tylko lider przypisuje zadania innym uzytkownikom, a osoba przypisana moze zmienic status swojego zadania.</li>
                             <li>Przy kazdym rekordzie widac autora oraz czas utworzenia i ostatniej edycji.</li>
                         </ul>
                     </article>
@@ -279,6 +279,10 @@
     </div>
 
     <script src="./js/app-storage.js" charset="utf-8"></script>
+    <script src="./js/shared/base.js" charset="utf-8"></script>
+    <script src="./js/shared/auth.js" charset="utf-8"></script>
+    <script src="./js/shared/public-api.js" charset="utf-8"></script>
+    <script src="./js/shared/global-ui.js" charset="utf-8"></script>
     <script src="./js/script.js" charset="utf-8"></script>
     <script src="./js/app-domain-services.js" charset="utf-8"></script>
     <script src="./js/notes.js" charset="utf-8"></script>

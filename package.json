@@ -1,0 +1,16 @@
+{
+	"name": "dashboardit",
+	"private": true,
+	"scripts": {
+		"build:css": "sass sass/style.scss css/style.css",
+		"watch:css": "sass --watch sass/style.scss css/style.css",
+		"lint:js": "eslint \"js/**/*.js\"",
+		"check": "npm run lint:js && npm run build:css"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.23.0",
+		"eslint": "^9.23.0",
+		"globals": "^16.0.0",
+		"sass": "^1.86.0"
+	}
+}

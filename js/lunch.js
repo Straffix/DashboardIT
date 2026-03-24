@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		openSlotsStat.textContent = String(openSlotCount)
 		userStat.textContent = currentUser ? currentUser.fullName || `@${currentUser.login}` : 'Gosc'
 		userMetaStat.textContent = currentUser
-			? `${currentUser.role === 'admin' ? 'Administrator' : 'Uzytkownik'} | konto demo aktywne`
+			? `${AppUtils.auth.getRoleLabel?.(currentUser.role) || (currentUser.role === 'admin' ? 'Lider' : 'Czlonek')} | konto demo aktywne`
 			: 'Podglad bez mozliwosci zapisu'
 	}
 

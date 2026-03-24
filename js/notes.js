@@ -167,6 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		return AppUtils.auth.getCurrentUser()
 	}
 
+	function getRoleLabel(role) {
+		return AppUtils.auth.getRoleLabel?.(role) || (role === 'admin' ? 'Lider' : 'Czlonek')
+	}
+
 	function loadUsers() {
 		return (usersService?.getAll?.() || [])
 			.filter(user => user && user.id)
@@ -254,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		authCallout.classList.remove('is-active-user')
 		authTitle.textContent = 'Podglad tablicy jest dostepny dla wszystkich'
 		authText.textContent =
-			'Zaloguj sie, aby dodawac wpisy, a jako admin rowniez przypisywac zadania do innych osob.'
+			'Zaloguj sie, aby dodawac wpisy, a jako lider rowniez przypisywac zadania do innych osob.'
 		authBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj sie</span>'
 	}
 
@@ -282,8 +286,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const description = currentUser.role === 'admin'
-			? 'Administrator moze zarzadzac wszystkimi wpisami i przypisywac zadania innym uzytkownikom.'
-			: 'Uzytkownik moze dodawac swoje wpisy i aktualizowac status zadan przypisanych do siebie.'
+			? 'Lider moze zarzadzac wszystkimi wpisami i przypisywac zadania innym uzytkownikom.'
+			: 'Czlonek zespolu moze dodawac swoje wpisy i aktualizowac status zadan przypisanych do siebie.'
 
 		userStatusBox.innerHTML = `
 			<strong>${escapeHtml(currentUser.fullName || `@${currentUser.login}`)}</strong>
@@ -316,22 +320,22 @@ document.addEventListener('DOMContentLoaded', () => {
 		taskAdminCallout.classList.remove('is-admin', 'is-member')
 
 		if (!currentUser) {
-			taskAdminTitle.textContent = 'Zaloguj sie jako admin, aby przypisywac zadania'
+			taskAdminTitle.textContent = 'Zaloguj sie jako lider, aby przypisywac zadania'
 			taskAdminText.textContent =
-				'Kazdy moze podejrzec liste zadan, ale ich tworzenie i przypisywanie do ludzi jest dostepne tylko dla administratora.'
+				'Kazdy moze podejrzec liste zadan, ale ich tworzenie i przypisywanie do ludzi jest dostepne tylko dla lidera.'
 			return
 		}
 
 		if (currentUser.role === 'admin') {
 			taskAdminCallout.classList.add('is-admin')
-			taskAdminTitle.textContent = 'Pracujesz jako administrator'
+			taskAdminTitle.textContent = 'Pracujesz jako lider'
 			taskAdminText.textContent =
 				'Mozesz tworzyc zadania, przypisywac je do uzytkownikow, ustawiac priorytet oraz edytowac cala tablice zadan.'
 			return
 		}
 
 		taskAdminCallout.classList.add('is-member')
-		taskAdminTitle.textContent = 'Tylko admin przypisuje zadania innym osobom'
+		taskAdminTitle.textContent = 'Tylko lider przypisuje zadania innym osobom'
 		taskAdminText.textContent =
 			'Widzisz cala liste zadan. Jesli jakies zadanie jest przypisane do Ciebie, mozesz samodzielnie zaktualizowac jego status.'
 	}
@@ -348,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		taskAssigneeSelect.innerHTML = users
 			.map(user => {
-				const roleLabel = user.role === 'admin' ? 'admin' : 'user'
+				const roleLabel = getRoleLabel(user.role)
 				return `<option value="${escapeHtml(user.id)}">${escapeHtml(user.fullName || `@${user.login}`)} (${escapeHtml(roleLabel)})</option>`
 			})
 			.join('')
@@ -503,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (!canManageTasks(currentUser)) {
-			showFeedbackMessage('Tylko administrator moze tworzyc i przypisywac zadania.', 'info')
+			showFeedbackMessage('Tylko lider moze tworzyc i przypisywac zadania.', 'info')
 			return
 		}
 
@@ -699,7 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				title: 'Brak zadan zespolowych',
 				copy: currentUser?.role === 'admin'
 					? 'Dodaj pierwsze zadanie i przypisz je do jednej z osob w zespole.'
-					: 'Lista zadan pojawi sie tutaj, gdy administrator przypisze pierwsze zadanie.',
+					: 'Lista zadan pojawi sie tutaj, gdy lider przypisze pierwsze zadanie.',
 				accent: 'task',
 			})
 			return
@@ -828,7 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (!canManageTasks(currentUser)) {
-			showFeedbackMessage('Tylko administrator moze tworzyc i przypisywac zadania.', 'info')
+			showFeedbackMessage('Tylko lider moze tworzyc i przypisywac zadania.', 'info')
 			return
 		}
 
@@ -920,7 +924,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (!canManageTasks(currentUser)) {
-			showFeedbackMessage('Tylko administrator moze tworzyc i przypisywac zadania.', 'error')
+			showFeedbackMessage('Tylko lider moze tworzyc i przypisywac zadania.', 'error')
 			return
 		}
 
@@ -984,7 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (!canManageEntry(entry, currentUser)) {
-			showFeedbackMessage('Tylko autor wpisu lub admin moze wykonac te akcje.', 'error')
+			showFeedbackMessage('Tylko autor wpisu lub lider moze wykonac te akcje.', 'error')
 			return
 		}
 
@@ -1048,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (!canManageTasks(currentUser)) {
-			showFeedbackMessage('Tylko administrator moze edytowac lub usuwac zadania.', 'error')
+			showFeedbackMessage('Tylko lider moze edytowac lub usuwac zadania.', 'error')
 			return
 		}
 

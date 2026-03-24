@@ -439,7 +439,7 @@
 		},
 		createTask({ title, description, assignedToUserId, priority, status, actor }) {
 			if (!canManageTasks(actor)) {
-				throw new Error('Tylko administrator moze tworzyc i przypisywac zadania.')
+				throw new Error('Tylko lider moze tworzyc i przypisywac zadania.')
 			}
 
 			const normalizedTitle = String(title || '').trim()
@@ -481,7 +481,7 @@
 		},
 		updateTask({ taskId, title, description, assignedToUserId, priority, status, actor }) {
 			if (!canManageTasks(actor)) {
-				throw new Error('Tylko administrator moze edytowac zadania.')
+				throw new Error('Tylko lider moze edytowac zadania.')
 			}
 
 			const normalizedTaskId = String(taskId || '')
@@ -550,7 +550,7 @@
 		},
 		deleteTask({ taskId, actor }) {
 			if (!canManageTasks(actor)) {
-				throw new Error('Tylko administrator moze usuwac zadania.')
+				throw new Error('Tylko lider moze usuwac zadania.')
 			}
 
 			const normalizedTaskId = String(taskId || '')
