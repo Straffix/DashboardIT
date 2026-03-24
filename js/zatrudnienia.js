@@ -3,7 +3,7 @@ let hires = []
 let editIndex = null
 let drawerInitialState = ''
 let searchQuery = ''
-const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.HIRES
+const hiresService = window.AppServices?.hiresService
 
 const hiresForm = document.getElementById('device-form')
 const tableBody = document.getElementById('table-body')
@@ -47,8 +47,7 @@ const monthPicker = AppUtils.createMonthPicker({
 
 /* === Hires Storage: Start === */
 function loadData() {
-	const saved = localStorage.getItem(STORAGE_KEY)
-	const parsedHires = saved ? JSON.parse(saved) : []
+	const parsedHires = hiresService?.getAll?.() || []
 	let hasUpdates = false
 
 	hires = parsedHires.map(hire => {
@@ -87,14 +86,14 @@ function loadData() {
 	}
 
 	if (hasUpdates) {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(hires))
+		hiresService?.saveAll?.(hires)
 	}
 
 	renderTable()
 }
 
 function saveData() {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(hires))
+	hiresService?.saveAll?.(hires)
 	renderTable()
 }
 /* === Hires Storage: End === */

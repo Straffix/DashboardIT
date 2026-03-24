@@ -75,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		reminderKey: 'dashboard-task-reminders',
 		autoclearKey: 'dashboard-task-autoclear',
 	}
+	const storageService = window.AppServices?.storageService
+	const preferencesService = window.AppServices?.preferencesService
 
 	const priorityMap = {
 		high: { label: 'Wysoki', className: 'is-high' },
@@ -235,12 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const compareTasks = (left, right) => getTaskDateTime(left) - getTaskDateTime(right)
 
 	const loadTasks = () => {
-		try {
-			const storedTasks = JSON.parse(localStorage.getItem(taskConfig.storageKey) || '[]')
-			return Array.isArray(storedTasks) ? storedTasks.sort(compareTasks) : []
-		} catch (error) {
-			return []
-		}
+		const storedTasks = preferencesService?.getDashboardTasks?.() || storageService?.readJson?.(taskConfig.storageKey, []) || []
+		return Array.isArray(storedTasks) ? storedTasks.sort(compareTasks) : []
 	}
 
 	let tasks = loadTasks()
@@ -255,31 +253,27 @@ document.addEventListener('DOMContentLoaded', () => {
 	let hasUnlockedReminderAudio = false
 	let hasRequestedNotificationPermission = false
 	const activeTaskNotifications = new Map()
-	let autoClearEnabled = localStorage.getItem(taskConfig.autoclearKey) === 'true'
+	let autoClearEnabled = preferencesService?.getDashboardTaskAutoclear?.() ?? storageService?.getBoolean?.(taskConfig.autoclearKey, false) || false
 	let lastClockMinuteKey = ''
 	let lastClockDateKey = ''
 
 	const loadRemindedTasks = () => {
-		try {
-			const storedReminders = JSON.parse(localStorage.getItem(taskConfig.reminderKey) || '[]')
-			return new Set(Array.isArray(storedReminders) ? storedReminders : [])
-		} catch (error) {
-			return new Set()
-		}
+		const storedReminders = preferencesService?.getDashboardTaskReminders?.() || storageService?.readJson?.(taskConfig.reminderKey, []) || []
+		return new Set(Array.isArray(storedReminders) ? storedReminders : [])
 	}
 
 	let remindedTaskIds = loadRemindedTasks()
 
 	const saveTasks = () => {
-		localStorage.setItem(taskConfig.storageKey, JSON.stringify(tasks))
+		preferencesService?.saveDashboardTasks?.(tasks) || storageService?.writeJson?.(taskConfig.storageKey, tasks)
 	}
 
 	const saveRemindedTasks = () => {
-		localStorage.setItem(taskConfig.reminderKey, JSON.stringify([...remindedTaskIds]))
+		preferencesService?.saveDashboardTaskReminders?.([...remindedTaskIds]) || storageService?.writeJson?.(taskConfig.reminderKey, [...remindedTaskIds])
 	}
 
 	const saveAutoclearPreference = () => {
-		localStorage.setItem(taskConfig.autoclearKey, String(autoClearEnabled))
+		preferencesService?.setDashboardTaskAutoclear?.(autoClearEnabled) || storageService?.setBoolean?.(taskConfig.autoclearKey, autoClearEnabled)
 	}
 
 	const createTaskId = () => `task-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
@@ -1144,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			const resolvedName = [result.name, result.country].filter(Boolean).join(', ')
-			localStorage.setItem(weatherConfig.storageKey, trimmedLocation)
+			preferencesService?.setWeatherLocation?.(trimmedLocation) || storageService?.setText?.(weatherConfig.storageKey, trimmedLocation)
 			fetchWeather(result.latitude, result.longitude, resolvedName)
 		} catch (error) {
 			setWeatherState({
@@ -1319,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (weatherLocationInput) {
 				weatherLocationInput.value = locationDetails.searchLabel
 			}
-			localStorage.setItem(weatherConfig.storageKey, locationDetails.searchLabel)
+			preferencesService?.setWeatherLocation?.(locationDetails.searchLabel) || storageService?.setText?.(weatherConfig.storageKey, locationDetails.searchLabel)
 		} catch (error) {
 			const geolocationErrors = {
 				1: {
@@ -1362,14 +1356,20 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!weatherLocationInput) return
 
 			document.body.classList.add('weather-editor-open')
-			weatherLocationInput.value = localStorage.getItem(weatherConfig.storageKey) || weatherConfig.fallbackName
+			weatherLocationInput.value =
+				preferencesService?.getWeatherLocation?.(weatherConfig.fallbackName) ||
+				storageService?.getText?.(weatherConfig.storageKey, weatherConfig.fallbackName) ||
+				weatherConfig.fallbackName
 			window.setTimeout(() => {
 				weatherLocationInput.focus()
 				weatherLocationInput.select()
 			}, 20)
 		}
 
-		const savedLocation = localStorage.getItem(weatherConfig.storageKey) || weatherConfig.fallbackName
+		const savedLocation =
+			preferencesService?.getWeatherLocation?.(weatherConfig.fallbackName) ||
+			storageService?.getText?.(weatherConfig.storageKey, weatherConfig.fallbackName) ||
+			weatherConfig.fallbackName
 		if (weatherLocationInput) {
 			weatherLocationInput.value = savedLocation
 		}

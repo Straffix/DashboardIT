@@ -546,44 +546,37 @@ body.theme-dark.lunch-page .lunch-attendee-badge {
   .lunch-content {
     grid-template-columns: minmax(0, 1fr);
   }
-
   .lunch-sidebar {
     width: 100%;
   }
 }
-
 @media (max-width: 760px) {
   .lunch-hero,
   .lunch-auth-callout {
     flex-direction: column;
     align-items: stretch;
   }
-
   .lunch-hero-actions {
     min-width: 0;
   }
-
   .lunch-slot-grid {
     grid-template-columns: 1fr;
   }
 }
-
 @media (max-width: 640px) {
   .lunch-hero,
   .lunch-slot-card,
   .lunch-side-card {
     padding: 18px;
   }
-
   .lunch-slot-top {
     flex-direction: column;
     align-items: flex-start;
   }
-
   .lunch-today-btn,
   .lunch-auth-btn,
   .lunch-summary-btn,
   .lunch-slot-action {
     width: 100%;
   }
-}
+}/*# sourceMappingURL=lunch.css.map */

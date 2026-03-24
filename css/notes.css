@@ -860,7 +860,6 @@ body.notes-page.theme-dark .notes-icon-btn.is-danger {
     grid-template-columns: 1fr;
   }
 }
-
 @media (max-width: 920px) {
   .notes-hero,
   .notes-auth-callout,
@@ -869,23 +868,19 @@ body.notes-page.theme-dark .notes-icon-btn.is-danger {
     flex-direction: column;
     align-items: stretch;
   }
-
   .notes-hero-actions {
     min-width: 100%;
   }
-
   .notes-task-main,
   .notes-task-meta-row,
   .notes-field-row {
     grid-template-columns: 1fr;
   }
-
   .notes-entry-timestamps {
     justify-items: start;
     text-align: left;
   }
 }
-
 @media (max-width: 720px) {
   .notes-hero,
   .notes-board-section,
@@ -893,20 +888,16 @@ body.notes-page.theme-dark .notes-icon-btn.is-danger {
     padding: 18px;
     border-radius: 20px;
   }
-
   .notes-hero-copy h2 {
     font-size: 2.05rem;
   }
-
   .notes-section-copy h3 {
     font-size: 1.78rem;
   }
-
   .notes-composer-actions {
     flex-direction: column;
     align-items: stretch;
   }
-
   .notes-hero-btn,
   .notes-auth-btn,
   .notes-submit-btn,
@@ -914,20 +905,17 @@ body.notes-page.theme-dark .notes-icon-btn.is-danger {
     width: 100%;
   }
 }
-
 @media (max-width: 560px) {
   .notes-entry-top,
   .notes-task-top {
     flex-direction: column;
     align-items: stretch;
   }
-
   .notes-entry-actions {
     justify-content: flex-end;
   }
-
   .notes-author-chip,
   .notes-task-assignee {
     width: 100%;
   }
-}
+}/*# sourceMappingURL=notes.css.map */

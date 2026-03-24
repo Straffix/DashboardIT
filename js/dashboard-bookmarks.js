@@ -16,17 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		return
 	}
 
-	const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.BOOKMARKS
+	const bookmarksService = window.AppServices?.bookmarksService
+	const escapeHtml = AppUtils.escapeHtml
 	let editingBookmarkId = null
 	let bookmarks = loadBookmarks()
 
 	function loadBookmarks() {
-		try {
-			const storedBookmarks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-			return Array.isArray(storedBookmarks) ? storedBookmarks.map(normalizeBookmarkRecord) : []
-		} catch (error) {
-			return []
-		}
+		const storedBookmarks = bookmarksService?.getAll?.() || []
+		return Array.isArray(storedBookmarks) ? storedBookmarks.map(normalizeBookmarkRecord) : []
 	}
 
 	function normalizeBookmarkRecord(record) {
@@ -42,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function saveBookmarks() {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks))
+		bookmarksService?.saveAll?.(bookmarks)
 	}
 
 	function getCurrentUser() {
@@ -98,15 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		} catch (error) {
 			return bookmark.url
 		}
-	}
-
-	function escapeHtml(value) {
-		return String(value || '')
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#39;')
 	}
 
 	function resetBookmarkForm() {

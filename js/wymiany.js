@@ -3,7 +3,8 @@ let exchanges = []
 let editIndex = null
 let drawerInitialState = ''
 let searchQuery = ''
-const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.EXCHANGES
+const exchangesService = window.AppServices?.exchangesService
+const monitorService = window.AppServices?.monitorService
 
 const exchangeForm = document.getElementById('exchange-form')
 const tableBody = document.getElementById('table-body')
@@ -47,8 +48,7 @@ const monthPicker = AppUtils.createMonthPicker({
 
 /* === Exchanges Storage: Start === */
 function loadData() {
-	const saved = localStorage.getItem(STORAGE_KEY)
-	const parsedExchanges = saved ? JSON.parse(saved) : []
+	const parsedExchanges = exchangesService?.getAll?.() || []
 	let hasUpdates = false
 
 	exchanges = parsedExchanges.map(exchange => {
@@ -87,14 +87,14 @@ function loadData() {
 	}
 
 	if (hasUpdates) {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(exchanges))
+		exchangesService?.saveAll?.(exchanges)
 	}
 
 	renderTable()
 }
 
 function saveData() {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(exchanges))
+	exchangesService?.saveAll?.(exchanges)
 	renderTable()
 }
 /* === Exchanges Storage: End === */
@@ -538,8 +538,7 @@ async function completeExchange(index) {
 	)
 		return
 
-	const monitorKey = AppUtils.config.STORAGE_KEYS.MONITOR
-	let monitorData = JSON.parse(localStorage.getItem(monitorKey)) || []
+	let monitorData = monitorService?.getAll?.() || []
 	const actor = getAuditActor()
 	const now = new Date().toISOString()
 
@@ -564,7 +563,7 @@ async function completeExchange(index) {
 		})
 	}
 
-	localStorage.setItem(monitorKey, JSON.stringify(monitorData))
+	monitorService?.saveAll?.(monitorData)
 	exchanges[index].status = 'done'
 	exchanges[index].updatedBy = actor
 	exchanges[index].updatedAt = now

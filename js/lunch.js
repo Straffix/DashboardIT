@@ -1,8 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-	const TIME_SLOTS = ['11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00']
-	const MAX_CAPACITY_PER_SLOT = 4
+	const lunchDomainConfig = window.AppServices?.lunchDomainConfig
+	const TIME_SLOTS = Array.isArray(lunchDomainConfig?.TIME_SLOTS) ? lunchDomainConfig.TIME_SLOTS : []
+	const MAX_CAPACITY_PER_SLOT = Number(lunchDomainConfig?.MAX_CAPACITY_PER_SLOT || 0)
 	const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.LUNCH
-	const USERS_STORAGE_KEY = AppUtils.config.STORAGE_KEYS.USERS
+	const usersService = window.AppServices?.usersService
+	const lunchService = window.AppServices?.lunchService
+	const getInitials = AppUtils.getInitials
+	const escapeHtml = AppUtils.escapeHtml
 
 	const dateInput = document.getElementById('lunch-date')
 	const todayBtn = document.getElementById('lunch-today-btn')
@@ -33,6 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		return
 	}
 
+	if (
+		!lunchService ||
+		TIME_SLOTS.length === 0 ||
+		MAX_CAPACITY_PER_SLOT <= 0 ||
+		typeof getInitials !== 'function' ||
+		typeof escapeHtml !== 'function'
+	) {
+		console.error('Lunch module is missing required domain services or config.')
+		return
+	}
+
 	let selectedDate = getTodayDate()
 	let feedbackTimeoutId = null
 
@@ -40,151 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		return AppUtils.formatDate(new Date())
 	}
 
-	function readJsonStorage(key, fallback = []) {
-		try {
-			const rawValue = localStorage.getItem(key)
-			if (!rawValue) return fallback
-
-			const parsedValue = JSON.parse(rawValue)
-			return Array.isArray(parsedValue) ? parsedValue : fallback
-		} catch (error) {
-			return fallback
-		}
-	}
-
-	function normalizeReservationRecord(record) {
-		const normalizedSlot = TIME_SLOTS.includes(record.timeSlot) ? record.timeSlot : ''
-		const normalizedDate = AppUtils.formatDate(record.date)
-
-		return {
-			id: String(record.id || ''),
-			date: normalizedDate || '',
-			timeSlot: normalizedSlot,
-			userId: String(record.userId || ''),
-			createdAt: record.createdAt || new Date().toISOString(),
-			updatedAt: record.updatedAt || record.createdAt || new Date().toISOString(),
-			status: record.status === 'cancelled' ? 'cancelled' : 'active',
-		}
-	}
-
-	const lunchService = {
-		loadReservations() {
-			return readJsonStorage(STORAGE_KEY).map(normalizeReservationRecord)
-		},
-
-		saveReservations(reservations) {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(reservations))
-		},
-
-		getReservationsForDate(date) {
-			const normalizedDate = AppUtils.formatDate(date)
-			return this.loadReservations()
-				.filter(reservation => reservation.status === 'active' && reservation.date === normalizedDate)
-				.sort((left, right) => {
-					const leftSlotIndex = TIME_SLOTS.indexOf(left.timeSlot)
-					const rightSlotIndex = TIME_SLOTS.indexOf(right.timeSlot)
-					if (leftSlotIndex !== rightSlotIndex) return leftSlotIndex - rightSlotIndex
-
-					const leftTime = Date.parse(left.createdAt) || 0
-					const rightTime = Date.parse(right.createdAt) || 0
-					return leftTime - rightTime
-				})
-		},
-
-		getReservationsForSlot(date, timeSlot) {
-			return this.getReservationsForDate(date).filter(reservation => reservation.timeSlot === timeSlot)
-		},
-
-		getUserReservationForDate(date, userId) {
-			return this.getReservationsForDate(date).find(reservation => reservation.userId === String(userId || '')) || null
-		},
-
-		// TODO: replace this localStorage implementation with fetch/API calls once backend auth is ready.
-		reserveSlot({ date, timeSlot, userId }) {
-			const normalizedDate = AppUtils.formatDate(date)
-			const normalizedUserId = String(userId || '')
-			if (!normalizedUserId) {
-				throw new Error('Musisz byc zalogowany, aby zapisac sie na obiad.')
-			}
-
-			if (!normalizedDate) {
-				throw new Error('Wybierz poprawna date rezerwacji.')
-			}
-
-			if (!TIME_SLOTS.includes(timeSlot)) {
-				throw new Error('Wybrany slot nie istnieje w harmonogramie.')
-			}
-
-			const reservations = this.loadReservations()
-			const activeReservations = reservations.filter(
-				reservation => reservation.status === 'active' && reservation.date === normalizedDate
-			)
-
-			const existingReservation = activeReservations.find(reservation => reservation.userId === normalizedUserId)
-			if (existingReservation) {
-				if (existingReservation.timeSlot === timeSlot) {
-					throw new Error(`Masz juz aktywna rezerwacje na ${timeSlot}.`)
-				}
-
-				throw new Error(`Masz juz aktywna rezerwacje na ${existingReservation.timeSlot}. Najpierw ja anuluj.`)
-			}
-
-			const activeSlotReservations = activeReservations.filter(reservation => reservation.timeSlot === timeSlot)
-			if (activeSlotReservations.length >= MAX_CAPACITY_PER_SLOT) {
-				throw new Error(`Slot ${timeSlot} jest juz pelny.`)
-			}
-
-			const now = new Date().toISOString()
-			const nextReservation = {
-				id: `lunch-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-				date: normalizedDate,
-				timeSlot,
-				userId: normalizedUserId,
-				createdAt: now,
-				updatedAt: now,
-				status: 'active',
-			}
-
-			reservations.push(nextReservation)
-			this.saveReservations(reservations)
-			return nextReservation
-		},
-
-		cancelReservation({ reservationId, userId }) {
-			const normalizedReservationId = String(reservationId || '')
-			const normalizedUserId = String(userId || '')
-			const reservations = this.loadReservations()
-			const reservationIndex = reservations.findIndex(
-				reservation =>
-					reservation.id === normalizedReservationId &&
-					reservation.userId === normalizedUserId &&
-					reservation.status === 'active'
-			)
-
-			if (reservationIndex === -1) {
-				throw new Error('Nie znaleziono aktywnej rezerwacji do anulowania.')
-			}
-
-			reservations[reservationIndex] = {
-				...reservations[reservationIndex],
-				status: 'cancelled',
-				updatedAt: new Date().toISOString(),
-			}
-
-			this.saveReservations(reservations)
-			return reservations[reservationIndex]
-		},
-	}
-
-	window.AppServices = window.AppServices || {}
-	window.AppServices.lunchService = lunchService
-
 	function getCurrentUser() {
 		return AppUtils.auth.getCurrentUser()
 	}
 
 	function loadUsers() {
-		return readJsonStorage(USERS_STORAGE_KEY)
+		return (usersService?.getAll?.() || [])
 			.filter(user => user && user.id)
 			.map(user => ({
 				id: String(user.id),
@@ -196,26 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	function getUserById(userId) {
 		return loadUsers().find(user => user.id === String(userId || '')) || null
-	}
-
-	function getInitials(label) {
-		const parts = String(label || '')
-			.trim()
-			.split(/\s+/)
-			.filter(Boolean)
-			.slice(0, 2)
-
-		if (parts.length === 0) return 'IT'
-		return parts.map(part => part[0]).join('').toUpperCase()
-	}
-
-	function escapeHtml(value) {
-		return String(value || '')
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#39;')
 	}
 
 	function formatDateLabel(date) {
@@ -574,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	})
 
 	window.addEventListener('storage', event => {
-		if (event.key === STORAGE_KEY || event.key === USERS_STORAGE_KEY || event.key === AppUtils.config.STORAGE_KEYS.SESSION) {
+		if (event.key === STORAGE_KEY || event.key === AppUtils.config.STORAGE_KEYS.USERS || event.key === AppUtils.config.STORAGE_KEYS.SESSION) {
 			syncUi()
 		}
 	})

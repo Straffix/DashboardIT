@@ -2,20 +2,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	const NOTES_STORAGE_KEY = AppUtils.config.STORAGE_KEYS.NOTES
 	const ANNOUNCEMENTS_STORAGE_KEY = AppUtils.config.STORAGE_KEYS.ANNOUNCEMENTS
 	const TASKS_STORAGE_KEY = AppUtils.config.STORAGE_KEYS.TASKS
-	const USERS_STORAGE_KEY = AppUtils.config.STORAGE_KEYS.USERS
 	const SESSION_STORAGE_KEY = AppUtils.config.STORAGE_KEYS.SESSION
-
-	const TASK_STATUS_META = {
-		todo: { label: 'Do zrobienia', order: 0, className: 'is-status-todo' },
-		in_progress: { label: 'W toku', order: 1, className: 'is-status-in-progress' },
-		done: { label: 'Zrobione', order: 2, className: 'is-status-done' },
-	}
-
-	const TASK_PRIORITY_META = {
-		low: { label: 'Niski', order: 2, className: 'is-priority-low' },
-		medium: { label: 'Sredni', order: 1, className: 'is-priority-medium' },
-		high: { label: 'Wysoki', order: 0, className: 'is-priority-high' },
-	}
+	const usersService = window.AppServices?.usersService
+	const notesService = window.AppServices?.notesService
+	const tasksService = window.AppServices?.tasksService
+	const notesDomainConfig = window.AppServices?.notesDomainConfig
+	const TASK_STATUS_META = notesDomainConfig?.TASK_STATUS_META
+	const TASK_PRIORITY_META = notesDomainConfig?.TASK_PRIORITY_META
+	const getInitials = AppUtils.getInitials
+	const escapeHtml = AppUtils.escapeHtml
+	const formatDateTimeLabel = AppUtils.formatDateTimeLabel
 
 	const daySummary = document.getElementById('notes-day-summary')
 	const feedback = document.getElementById('notes-feedback')
@@ -111,6 +107,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		return
 	}
 
+	if (
+		!notesService ||
+		!tasksService ||
+		!TASK_STATUS_META ||
+		!TASK_PRIORITY_META ||
+		typeof getInitials !== 'function' ||
+		typeof escapeHtml !== 'function' ||
+		typeof formatDateTimeLabel !== 'function'
+	) {
+		console.error('Notes module is missing required domain services or config.')
+		return
+	}
+
 	const state = {
 		feedbackTimeoutId: null,
 		announcementComposerOpen: false,
@@ -119,22 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		editingAnnouncementId: '',
 		editingNoteId: '',
 		editingTaskId: '',
-	}
-
-	function readJsonStorage(key, fallback = []) {
-		try {
-			const rawValue = localStorage.getItem(key)
-			if (!rawValue) return fallback
-
-			const parsedValue = JSON.parse(rawValue)
-			return Array.isArray(parsedValue) ? parsedValue : fallback
-		} catch (error) {
-			return fallback
-		}
-	}
-
-	function createEntryId(prefix) {
-		return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
 	}
 
 	function getTimestamp(value) {
@@ -152,44 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	function getTaskPriorityMeta(priority) {
 		return TASK_PRIORITY_META[priority] || TASK_PRIORITY_META.medium
-	}
-
-	function normalizeNoteRecord(record) {
-		return {
-			id: String(record.id || ''),
-			content: String(record.content || '').trim(),
-			authorId: String(record.authorId || ''),
-			createdAt: record.createdAt || new Date().toISOString(),
-			updatedAt: record.updatedAt || record.createdAt || new Date().toISOString(),
-			isPinned: false,
-		}
-	}
-
-	function normalizeAnnouncementRecord(record) {
-		return {
-			id: String(record.id || ''),
-			title: String(record.title || '').trim(),
-			content: String(record.content || '').trim(),
-			authorId: String(record.authorId || ''),
-			createdAt: record.createdAt || new Date().toISOString(),
-			updatedAt: record.updatedAt || record.createdAt || new Date().toISOString(),
-			isPinned: record.isPinned !== false,
-		}
-	}
-
-	function normalizeTaskRecord(record) {
-		return {
-			id: String(record.id || ''),
-			title: String(record.title || '').trim(),
-			description: String(record.description || '').trim(),
-			assignedToUserId: String(record.assignedToUserId || ''),
-			createdBy: String(record.createdBy || ''),
-			updatedBy: String(record.updatedBy || record.createdBy || ''),
-			createdAt: record.createdAt || new Date().toISOString(),
-			updatedAt: record.updatedAt || record.createdAt || new Date().toISOString(),
-			status: TASK_STATUS_META[record.status] ? record.status : 'todo',
-			priority: TASK_PRIORITY_META[record.priority] ? record.priority : 'medium',
-		}
 	}
 
 	function canManageEntry(entry, actor) {
@@ -211,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function loadUsers() {
-		return readJsonStorage(USERS_STORAGE_KEY)
+		return (usersService?.getAll?.() || [])
 			.filter(user => user && user.id)
 			.map(user => ({
 				id: String(user.id),
@@ -226,41 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		return loadUsers().find(user => user.id === String(userId || '')) || null
 	}
 
-	function getInitials(label) {
-		const parts = String(label || '')
-			.trim()
-			.split(/\s+/)
-			.filter(Boolean)
-			.slice(0, 2)
-
-		if (parts.length === 0) return 'IT'
-		return parts.map(part => part[0]).join('').toUpperCase()
-	}
-
-	function escapeHtml(value) {
-		return String(value || '')
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#39;')
-	}
-
 	function renderMultilineText(value) {
 		return escapeHtml(value).replace(/\n/g, '<br>')
-	}
-
-	function formatDateTimeLabel(value) {
-		const parsedDate = new Date(value)
-		if (Number.isNaN(parsedDate.getTime())) return '--'
-
-		return parsedDate.toLocaleString('pl-PL', {
-			day: '2-digit',
-			month: '2-digit',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-		})
 	}
 
 	function createUserAvatarMarkup(user, extraClass = '') {
@@ -288,370 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			loginLabel,
 		}
 	}
-
-	const notesService = {
-		loadNotes() {
-			return readJsonStorage(NOTES_STORAGE_KEY).map(normalizeNoteRecord)
-		},
-
-		saveNotes(notes) {
-			localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes))
-		},
-
-		loadAnnouncements() {
-			return readJsonStorage(ANNOUNCEMENTS_STORAGE_KEY).map(normalizeAnnouncementRecord)
-		},
-
-		saveAnnouncements(announcements) {
-			localStorage.setItem(ANNOUNCEMENTS_STORAGE_KEY, JSON.stringify(announcements))
-		},
-
-		getNotes() {
-			return this.loadNotes().filter(note => note.id && note.content && note.authorId).sort(sortByUpdatedDesc)
-		},
-
-		getAnnouncements() {
-			return this.loadAnnouncements()
-				.filter(announcement => announcement.id && announcement.title && announcement.content && announcement.authorId)
-				.sort((leftAnnouncement, rightAnnouncement) => {
-					if (leftAnnouncement.isPinned !== rightAnnouncement.isPinned) {
-						return Number(rightAnnouncement.isPinned) - Number(leftAnnouncement.isPinned)
-					}
-
-					return sortByUpdatedDesc(leftAnnouncement, rightAnnouncement)
-				})
-		},
-
-		getNoteById(noteId) {
-			return this.getNotes().find(note => note.id === String(noteId || '')) || null
-		},
-
-		getAnnouncementById(announcementId) {
-			return this.getAnnouncements().find(announcement => announcement.id === String(announcementId || '')) || null
-		},
-
-		// TODO: replace this localStorage implementation with fetch/API calls once backend auth and notes endpoints are ready.
-		createNote({ content, authorId }) {
-			const normalizedContent = String(content || '').trim()
-			const normalizedAuthorId = String(authorId || '')
-			if (!normalizedAuthorId) {
-				throw new Error('Musisz byc zalogowany, aby dodac notatke.')
-			}
-
-			if (!normalizedContent) {
-				throw new Error('Wpisz tresc notatki przed zapisaniem.')
-			}
-
-			const notes = this.loadNotes()
-			const now = new Date().toISOString()
-			const nextNote = {
-				id: createEntryId('note'),
-				content: normalizedContent,
-				authorId: normalizedAuthorId,
-				createdAt: now,
-				updatedAt: now,
-				isPinned: false,
-			}
-
-			notes.unshift(nextNote)
-			this.saveNotes(notes)
-			return nextNote
-		},
-
-		updateNote({ noteId, content, actor }) {
-			const normalizedNoteId = String(noteId || '')
-			const normalizedContent = String(content || '').trim()
-			const notes = this.loadNotes()
-			const noteIndex = notes.findIndex(note => note.id === normalizedNoteId)
-
-			if (noteIndex === -1) {
-				throw new Error('Nie znaleziono notatki do edycji.')
-			}
-
-			if (!normalizedContent) {
-				throw new Error('Notatka nie moze byc pusta.')
-			}
-
-			if (!canManageEntry(notes[noteIndex], actor)) {
-				throw new Error('Nie masz uprawnien do edycji tej notatki.')
-			}
-
-			notes[noteIndex] = {
-				...notes[noteIndex],
-				content: normalizedContent,
-				updatedAt: new Date().toISOString(),
-			}
-
-			this.saveNotes(notes)
-			return notes[noteIndex]
-		},
-
-		deleteNote({ noteId, actor }) {
-			const normalizedNoteId = String(noteId || '')
-			const notes = this.loadNotes()
-			const noteToDelete = notes.find(note => note.id === normalizedNoteId)
-
-			if (!noteToDelete) {
-				throw new Error('Nie znaleziono notatki do usuniecia.')
-			}
-
-			if (!canManageEntry(noteToDelete, actor)) {
-				throw new Error('Nie masz uprawnien do usuniecia tej notatki.')
-			}
-
-			this.saveNotes(notes.filter(note => note.id !== normalizedNoteId))
-			return noteToDelete
-		},
-
-		createAnnouncement({ title, content, authorId }) {
-			const normalizedTitle = String(title || '').trim()
-			const normalizedContent = String(content || '').trim()
-			const normalizedAuthorId = String(authorId || '')
-			if (!normalizedAuthorId) {
-				throw new Error('Musisz byc zalogowany, aby dodac wazny temat.')
-			}
-
-			if (!normalizedTitle) {
-				throw new Error('Uzupelnij tytul waznego tematu.')
-			}
-
-			if (!normalizedContent) {
-				throw new Error('Uzupelnij tresc waznego tematu.')
-			}
-
-			const announcements = this.loadAnnouncements()
-			const now = new Date().toISOString()
-			const nextAnnouncement = {
-				id: createEntryId('announcement'),
-				title: normalizedTitle,
-				content: normalizedContent,
-				authorId: normalizedAuthorId,
-				createdAt: now,
-				updatedAt: now,
-				isPinned: true,
-			}
-
-			announcements.unshift(nextAnnouncement)
-			this.saveAnnouncements(announcements)
-			return nextAnnouncement
-		},
-
-		updateAnnouncement({ announcementId, title, content, actor }) {
-			const normalizedAnnouncementId = String(announcementId || '')
-			const normalizedTitle = String(title || '').trim()
-			const normalizedContent = String(content || '').trim()
-			const announcements = this.loadAnnouncements()
-			const announcementIndex = announcements.findIndex(announcement => announcement.id === normalizedAnnouncementId)
-
-			if (announcementIndex === -1) {
-				throw new Error('Nie znaleziono waznego tematu do edycji.')
-			}
-
-			if (!normalizedTitle) {
-				throw new Error('Uzupelnij tytul waznego tematu.')
-			}
-
-			if (!normalizedContent) {
-				throw new Error('Uzupelnij tresc waznego tematu.')
-			}
-
-			if (!canManageEntry(announcements[announcementIndex], actor)) {
-				throw new Error('Nie masz uprawnien do edycji tego wpisu.')
-			}
-
-			announcements[announcementIndex] = {
-				...announcements[announcementIndex],
-				title: normalizedTitle,
-				content: normalizedContent,
-				isPinned: true,
-				updatedAt: new Date().toISOString(),
-			}
-
-			this.saveAnnouncements(announcements)
-			return announcements[announcementIndex]
-		},
-
-		deleteAnnouncement({ announcementId, actor }) {
-			const normalizedAnnouncementId = String(announcementId || '')
-			const announcements = this.loadAnnouncements()
-			const announcementToDelete = announcements.find(announcement => announcement.id === normalizedAnnouncementId)
-
-			if (!announcementToDelete) {
-				throw new Error('Nie znaleziono waznego tematu do usuniecia.')
-			}
-
-			if (!canManageEntry(announcementToDelete, actor)) {
-				throw new Error('Nie masz uprawnien do usuniecia tego wpisu.')
-			}
-
-			this.saveAnnouncements(announcements.filter(announcement => announcement.id !== normalizedAnnouncementId))
-			return announcementToDelete
-		},
-	}
-
-	const tasksService = {
-		loadTasks() {
-			return readJsonStorage(TASKS_STORAGE_KEY).map(normalizeTaskRecord)
-		},
-
-		saveTasks(tasks) {
-			localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks))
-		},
-
-		getTasks() {
-			return this.loadTasks()
-				.filter(task => task.id && task.title && task.description && task.assignedToUserId && task.createdBy)
-				.sort((leftTask, rightTask) => {
-					const statusDiff = getTaskStatusMeta(leftTask.status).order - getTaskStatusMeta(rightTask.status).order
-					if (statusDiff !== 0) return statusDiff
-
-					const priorityDiff = getTaskPriorityMeta(leftTask.priority).order - getTaskPriorityMeta(rightTask.priority).order
-					if (priorityDiff !== 0) return priorityDiff
-
-					return sortByUpdatedDesc(leftTask, rightTask)
-				})
-		},
-
-		getTaskById(taskId) {
-			return this.getTasks().find(task => task.id === String(taskId || '')) || null
-		},
-
-		// TODO: replace this localStorage implementation with fetch/API calls once backend auth and task endpoints are ready.
-		createTask({ title, description, assignedToUserId, priority, status, actor }) {
-			if (!canManageTasks(actor)) {
-				throw new Error('Tylko administrator moze tworzyc i przypisywac zadania.')
-			}
-
-			const normalizedTitle = String(title || '').trim()
-			const normalizedDescription = String(description || '').trim()
-			const normalizedAssigneeId = String(assignedToUserId || '')
-			const normalizedPriority = TASK_PRIORITY_META[priority] ? priority : 'medium'
-			const normalizedStatus = TASK_STATUS_META[status] ? status : 'todo'
-
-			if (!normalizedTitle) {
-				throw new Error('Uzupelnij tytul zadania.')
-			}
-
-			if (!normalizedDescription) {
-				throw new Error('Uzupelnij opis zadania.')
-			}
-
-			if (!normalizedAssigneeId || !getUserById(normalizedAssigneeId)) {
-				throw new Error('Wybierz poprawnego uzytkownika do przypisania.')
-			}
-
-			const tasks = this.loadTasks()
-			const now = new Date().toISOString()
-			const nextTask = {
-				id: createEntryId('task'),
-				title: normalizedTitle,
-				description: normalizedDescription,
-				assignedToUserId: normalizedAssigneeId,
-				createdBy: String(actor.id),
-				updatedBy: String(actor.id),
-				createdAt: now,
-				updatedAt: now,
-				status: normalizedStatus,
-				priority: normalizedPriority,
-			}
-
-			tasks.unshift(nextTask)
-			this.saveTasks(tasks)
-			return nextTask
-		},
-
-		updateTask({ taskId, title, description, assignedToUserId, priority, status, actor }) {
-			if (!canManageTasks(actor)) {
-				throw new Error('Tylko administrator moze edytowac zadania.')
-			}
-
-			const normalizedTaskId = String(taskId || '')
-			const tasks = this.loadTasks()
-			const taskIndex = tasks.findIndex(task => task.id === normalizedTaskId)
-
-			if (taskIndex === -1) {
-				throw new Error('Nie znaleziono zadania do edycji.')
-			}
-
-			const normalizedTitle = String(title || '').trim()
-			const normalizedDescription = String(description || '').trim()
-			const normalizedAssigneeId = String(assignedToUserId || '')
-			const normalizedPriority = TASK_PRIORITY_META[priority] ? priority : 'medium'
-			const normalizedStatus = TASK_STATUS_META[status] ? status : 'todo'
-
-			if (!normalizedTitle) {
-				throw new Error('Uzupelnij tytul zadania.')
-			}
-
-			if (!normalizedDescription) {
-				throw new Error('Uzupelnij opis zadania.')
-			}
-
-			if (!normalizedAssigneeId || !getUserById(normalizedAssigneeId)) {
-				throw new Error('Wybierz poprawnego uzytkownika do przypisania.')
-			}
-
-			tasks[taskIndex] = {
-				...tasks[taskIndex],
-				title: normalizedTitle,
-				description: normalizedDescription,
-				assignedToUserId: normalizedAssigneeId,
-				priority: normalizedPriority,
-				status: normalizedStatus,
-				updatedBy: String(actor.id),
-				updatedAt: new Date().toISOString(),
-			}
-
-			this.saveTasks(tasks)
-			return tasks[taskIndex]
-		},
-
-		updateTaskStatus({ taskId, status, actor }) {
-			const normalizedTaskId = String(taskId || '')
-			const normalizedStatus = TASK_STATUS_META[status] ? status : 'todo'
-			const tasks = this.loadTasks()
-			const taskIndex = tasks.findIndex(task => task.id === normalizedTaskId)
-
-			if (taskIndex === -1) {
-				throw new Error('Nie znaleziono zadania do aktualizacji statusu.')
-			}
-
-			if (!canUpdateTaskStatus(tasks[taskIndex], actor)) {
-				throw new Error('Nie masz uprawnien do zmiany statusu tego zadania.')
-			}
-
-			tasks[taskIndex] = {
-				...tasks[taskIndex],
-				status: normalizedStatus,
-				updatedBy: String(actor.id),
-				updatedAt: new Date().toISOString(),
-			}
-
-			this.saveTasks(tasks)
-			return tasks[taskIndex]
-		},
-
-		deleteTask({ taskId, actor }) {
-			if (!canManageTasks(actor)) {
-				throw new Error('Tylko administrator moze usuwac zadania.')
-			}
-
-			const normalizedTaskId = String(taskId || '')
-			const tasks = this.loadTasks()
-			const taskToDelete = tasks.find(task => task.id === normalizedTaskId)
-
-			if (!taskToDelete) {
-				throw new Error('Nie znaleziono zadania do usuniecia.')
-			}
-
-			this.saveTasks(tasks.filter(task => task.id !== normalizedTaskId))
-			return taskToDelete
-		},
-	}
-
-	window.AppServices = window.AppServices || {}
-	window.AppServices.notesService = notesService
-	window.AppServices.tasksService = tasksService
 
 	function getBoardEntries() {
 		return [...notesService.getAnnouncements(), ...notesService.getNotes(), ...tasksService.getTasks()]
@@ -1532,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	document.addEventListener('app-auth-changed', refreshView)
 	window.addEventListener('storage', event => {
-		if ([NOTES_STORAGE_KEY, ANNOUNCEMENTS_STORAGE_KEY, TASKS_STORAGE_KEY, USERS_STORAGE_KEY, SESSION_STORAGE_KEY].includes(event.key)) {
+		if ([NOTES_STORAGE_KEY, ANNOUNCEMENTS_STORAGE_KEY, TASKS_STORAGE_KEY, AppUtils.config.STORAGE_KEYS.USERS, SESSION_STORAGE_KEY].includes(event.key)) {
 			refreshView()
 		}
 	})

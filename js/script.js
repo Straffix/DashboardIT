@@ -138,6 +138,27 @@ const matchesSearchQuery = (fields, query) => {
 	const values = Array.isArray(fields) ? fields : [fields]
 	return values.some(value => normalizeSearchText(value).includes(normalizedQuery))
 }
+
+const escapeHtml = value =>
+	String(value || '')
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;')
+
+const formatDateTimeLabel = value => {
+	const parsedDate = parseDate(value) || new Date(String(value || ''))
+	if (Number.isNaN(parsedDate.getTime())) return '--'
+
+	return parsedDate.toLocaleString('pl-PL', {
+		day: '2-digit',
+		month: '2-digit',
+		year: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+	})
+}
 /* === Shared Formatters: End === */
 
 /* === Shared Accessory Rendering: Start === */
@@ -697,6 +718,15 @@ const systemUiState = {
 }
 
 const cloneValue = value => JSON.parse(JSON.stringify(value))
+const appServices = (window.AppServices = window.AppServices || {})
+const storageService = appServices.storageService
+const usersService = appServices.usersService
+const sessionService = appServices.sessionService
+const hiresService = appServices.hiresService
+const monitorService = appServices.monitorService
+const exchangesService = appServices.exchangesService
+const bookmarksService = appServices.bookmarksService
+const preferencesService = appServices.preferencesService
 
 const getAvatarPreset = avatarId => AUTH_CONFIG.avatarPresets.find(preset => preset.id === avatarId) || AUTH_CONFIG.avatarPresets[0]
 
@@ -752,44 +782,27 @@ const sanitizeUser = user => {
 }
 
 const loadUsers = () => {
-	try {
-		const storedUsers = JSON.parse(localStorage.getItem(APP_CONFIG.STORAGE_KEYS.USERS) || '[]')
-		return Array.isArray(storedUsers) ? storedUsers.map(mapStoredUser) : []
-	} catch (error) {
-		return []
-	}
+	return (usersService?.getAll?.() || []).map(mapStoredUser)
 }
 
 const saveUsers = users => {
 	authState.users = users.map(mapStoredUser)
-	localStorage.setItem(APP_CONFIG.STORAGE_KEYS.USERS, JSON.stringify(authState.users))
+	usersService?.saveAll?.(authState.users)
 }
 
 const loadSession = () => {
-	try {
-		const storedSession = JSON.parse(localStorage.getItem(APP_CONFIG.STORAGE_KEYS.SESSION) || 'null')
-		if (!storedSession || typeof storedSession !== 'object' || !storedSession.userId) {
-			return null
-		}
-
-		return {
-			userId: String(storedSession.userId),
-			loginAt: storedSession.loginAt || new Date().toISOString(),
-		}
-	} catch (error) {
-		return null
-	}
+	return sessionService?.getCurrent?.() || null
 }
 
 const saveSession = session => {
 	authState.session = session ? cloneValue(session) : null
 
 	if (!session) {
-		localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.SESSION)
+		sessionService?.clear?.()
 		return
 	}
 
-	localStorage.setItem(APP_CONFIG.STORAGE_KEYS.SESSION, JSON.stringify(authState.session))
+	sessionService?.save?.(authState.session)
 }
 
 const findUserByLogin = login => authState.users.find(user => user.login === normalizeUserLogin(login))
@@ -1612,6 +1625,18 @@ const getAuditActorLabel = actor => {
 	if (actor.login) return `@${actor.login}`
 	return 'Brak danych historycznych'
 }
+
+appServices.authService = {
+	// TODO: replace these local auth flows with backend auth endpoints and token/session handling.
+	register: registerUser,
+	login: loginUser,
+	logout: logoutUser,
+	updateProfile: updateCurrentUserProfile,
+	getCurrentUser,
+	isAuthenticated,
+	isCurrentUserAdmin,
+	syncCurrentUserFromSession,
+}
 /* === Shared Auth And Session: End === */
 
 /* === Shared Global UI: Start === */
@@ -1620,7 +1645,7 @@ const applyTheme = theme => {
 	document.body.classList.toggle('theme-dark', isDark)
 }
 
-const getStoredTheme = () => localStorage.getItem(APP_CONFIG.THEME_KEY) || 'light'
+const getStoredTheme = () => preferencesService?.getTheme?.() || storageService?.getText(APP_CONFIG.THEME_KEY, 'light') || 'light'
 
 const createThemeToggle = () => {
 	if (document.querySelector('.theme-toggle-btn')) return null
@@ -1645,7 +1670,7 @@ const createThemeToggle = () => {
 	toggle.addEventListener('click', () => {
 		const nextTheme = document.body.classList.contains('theme-dark') ? 'light' : 'dark'
 		applyTheme(nextTheme)
-		localStorage.setItem(APP_CONFIG.THEME_KEY, nextTheme)
+		preferencesService?.setTheme?.(nextTheme) || storageService?.setText?.(APP_CONFIG.THEME_KEY, nextTheme)
 		updateToggle(nextTheme === 'dark')
 	})
 
@@ -1726,10 +1751,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		fullscreenBtn.addEventListener('click', () => {
 			const isWide = !document.body.classList.contains('wide-mode')
 			updateWideMode(isWide)
-			localStorage.setItem('dashboard-wide-mode', String(isWide))
+			preferencesService?.setWideMode?.(isWide) || storageService?.setBoolean?.('dashboard-wide-mode', isWide)
 		})
 
-			updateWideMode(localStorage.getItem('dashboard-wide-mode') === 'true')
+			updateWideMode(preferencesService?.getWideMode?.() ?? storageService?.getBoolean?.('dashboard-wide-mode', false))
 		}
 
 	window.addEventListener('storage', event => {
@@ -1755,6 +1780,9 @@ window.AppUtils = {
 	normalizeSN,
 	normalizeSearchText,
 	matchesSearchQuery,
+	escapeHtml,
+	formatDateTimeLabel,
+	getInitials,
 	confirmDialog,
 	renderAccessoryIcons,
 	createMonthPicker,

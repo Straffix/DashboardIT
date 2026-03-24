@@ -347,7 +347,7 @@ body.theme-dark .app-confirm-btn-secondary:hover {
   z-index: 1700;
   display: grid;
   gap: 12px;
-  width: min(380px, calc(100vw - 24px));
+  width: min(380px, 100vw - 24px);
   pointer-events: none;
 }
 
@@ -366,9 +366,20 @@ body.theme-dark .app-confirm-btn-secondary:hover {
   pointer-events: auto;
   animation: app-toast-in 0.18s ease forwards;
 }
-
 .app-toast.is-leaving {
   animation: app-toast-out 0.18s ease forwards;
+}
+.app-toast.is-success .app-toast-icon {
+  background: rgba(34, 197, 94, 0.14);
+  color: var(--success);
+}
+.app-toast.is-warning .app-toast-icon {
+  background: rgba(245, 158, 11, 0.16);
+  color: var(--warning);
+}
+.app-toast.is-error .app-toast-icon {
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--danger);
 }
 
 .app-toast-icon {
@@ -383,35 +394,17 @@ body.theme-dark .app-confirm-btn-secondary:hover {
   font-size: 1.5rem;
 }
 
-.app-toast.is-success .app-toast-icon {
-  background: rgba(34, 197, 94, 0.14);
-  color: var(--success);
-}
-
-.app-toast.is-warning .app-toast-icon {
-  background: rgba(245, 158, 11, 0.16);
-  color: var(--warning);
-}
-
-.app-toast.is-error .app-toast-icon {
-  background: rgba(239, 68, 68, 0.14);
-  color: var(--danger);
-}
-
 .app-toast-copy {
   min-width: 0;
 }
-
 .app-toast-copy strong,
 .app-toast-copy span {
   display: block;
 }
-
 .app-toast-copy strong {
   color: var(--text-main);
   font-size: 1.22rem;
 }
-
 .app-toast-copy span {
   margin-top: 4px;
   color: var(--text-muted);
@@ -432,7 +425,6 @@ body.theme-dark .app-confirm-btn-secondary:hover {
   cursor: pointer;
   transition: transform 0.2s ease, color 0.2s ease, background-color 0.2s ease;
 }
-
 .app-toast-close:hover {
   transform: translateY(-1px);
   color: var(--text-main);
@@ -454,7 +446,6 @@ body.theme-dark .app-toast {
     transform: translateY(0) scale(1);
   }
 }
-
 @keyframes app-toast-out {
   from {
     opacity: 1;
@@ -928,17 +919,14 @@ body.theme-dark .app-auth-modal-backdrop {
 .app-page-status-copy {
   min-width: 0;
 }
-
 .app-page-status-copy strong,
 .app-page-status-copy span {
   display: block;
 }
-
 .app-page-status-copy strong {
   color: var(--text-main);
   font-size: 1.32rem;
 }
-
 .app-page-status-copy span {
   overflow: hidden;
   color: var(--text-muted);
@@ -986,17 +974,14 @@ body.theme-dark .app-auth-modal-backdrop {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-
 .app-page-status-tag.is-admin {
   background: rgba(16, 185, 129, 0.16);
   color: #059669;
 }
-
 .app-page-status-tag.is-demo {
   background: rgba(245, 158, 11, 0.16);
   color: #b45309;
 }
-
 .app-page-status-tag.is-neutral {
   background: rgba(148, 163, 184, 0.16);
   color: #475569;
@@ -1026,18 +1011,15 @@ body.theme-dark .app-auth-modal-backdrop {
   box-shadow: 0 14px 24px rgba(99, 102, 241, 0.16);
   transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
-
 .app-page-status-btn:hover {
   transform: translateY(-1px);
 }
-
 .app-page-status-btn.is-secondary {
   border-color: var(--border);
   background: var(--bg-panel);
   box-shadow: none;
   color: var(--text-main);
 }
-
 .app-page-status-btn.is-secondary:hover {
   border-color: var(--border-strong);
   background: var(--bg-panel-hover);
@@ -1051,11 +1033,9 @@ body.theme-dark .app-page-status-strip {
 body.theme-dark .app-page-status-tag.is-admin {
   color: #34d399;
 }
-
 body.theme-dark .app-page-status-tag.is-demo {
   color: #fbbf24;
 }
-
 body.theme-dark .app-page-status-tag.is-neutral {
   color: #cbd5e1;
 }
@@ -1068,7 +1048,6 @@ body.theme-dark .app-page-status-tag.is-neutral {
     justify-content: flex-start;
   }
 }
-
 @media (max-width: 640px) {
   .app-toast-stack {
     right: 12px;

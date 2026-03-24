@@ -23,6 +23,11 @@ Aktualnie aplikacja zawiera następujące moduły:
 - `Nowe zatrudnienia`
 - `Monitor laptopów`
 - `Wymiana sprzętu`
+- `Rezerwacja obiadów`
+- `Notatnik`
+- `Zadania zespołu`
+- `Prywatne zakładki użytkownika`
+- `Lokalne logowanie / profil / sesja / role`
 
 Pliki wejściowe:
 
@@ -30,27 +35,40 @@ Pliki wejściowe:
 - `nowe_zatrudnienia.html`
 - `monitor_laptopow.html`
 - `wymiana_sprzetu.html`
+- `rezerwacja_obiadow.html`
+- `notatnik.html`
 
 Pliki JS:
 
-- `js/script.js` - wspólne utilities i logika współdzielona
+- `js/app-storage.js` - wspólna warstwa storage/service dla demo localStorage
+- `js/app-domain-services.js` - wspólne serwisy domenowe lunch/notatki/zadania
+- `js/script.js` - wspólne utilities, auth UI i logika współdzielona
 - `js/dashboard.js`
+- `js/dashboard-bookmarks.js`
 - `js/zatrudnienia.js`
 - `js/monitor.js`
 - `js/wymiany.js`
+- `js/lunch.js`
+- `js/notes.js`
 
 Aktualnie dane są trzymane lokalnie pod kluczami:
 
 - `monitor_laptopow_dane`
 - `nowe_zatrudnienia_dane`
 - `wymiana_sprzetu_dane`
+- `dashboard_users`
+- `dashboard_user_session`
+- `dashboard_user_bookmarks`
+- `dashboard_lunch_reservations`
+- `dashboard_notes_entries`
+- `dashboard_notes_announcements`
+- `dashboard_notes_tasks`
 
-Docelowo dojdą kolejne moduły:
+Stan obecny:
 
-- użytkownicy / logowanie / sesja / role
-- rezerwacja obiadów
-- notatnik / tablica / zadania
-- prywatne zakładki użytkownika na dashboardzie
+- moduły użytkownika, lunchu, notatnika, zadań i zakładek są już wdrożone w wersji demo
+- bezpośrednie użycia `localStorage` zostały ograniczone do wspólnej warstwy serwisów
+- logika UI nadal działa na statycznych plikach HTML/CSS/JS bez backendu
 
 ---
 
@@ -70,6 +88,23 @@ Frontend powinien korzystać z warstwy pośredniej typu serwisy:
 
 Na dziś serwisy mogą mieć implementację opartą o `localStorage`.
 Docelowo implementacja powinna zostać podmieniona na komunikację z API.
+
+Aktualnie warstwa demo jest już wydzielona do:
+
+- `window.AppServices.storageService`
+- `window.AppServices.usersService`
+- `window.AppServices.sessionService`
+- `window.AppServices.authService`
+- `window.AppServices.hiresService`
+- `window.AppServices.monitorService`
+- `window.AppServices.exchangesService`
+- `window.AppServices.bookmarksService`
+- `window.AppServices.preferencesService`
+- `window.AppServices.lunchDomainConfig`
+- `window.AppServices.notesDomainConfig`
+
+Serwisy domenowe `lunchService`, `notesService` i `tasksService` są już wydzielone do `js/app-domain-services.js`.
+Pliki `js/lunch.js` i `js/notes.js` pełnią głównie rolę warstwy UI, korzystając z gotowych kontraktów domenowych i współdzielonej konfiguracji.
 
 Zalecenie:
 
@@ -486,7 +521,7 @@ Poniżej przykładowy kierunek, nie jest to sztywne wymaganie technologiczne.
 Najbezpieczniejsza ścieżka migracji:
 
 1. Zachować obecny frontend
-2. Wydzielić lub utrzymać serwisy danych po stronie frontu
+2. Utrzymać wspólną warstwę serwisów po stronie frontu
 3. Ustalić finalne modele danych
 4. Przygotować backend i endpointy
 5. Podmienić implementację serwisów z `localStorage` na `fetch/API`

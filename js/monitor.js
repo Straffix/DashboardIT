@@ -3,7 +3,7 @@ let devices = []
 let editingDeviceIndex = null
 let drawerInitialState = ''
 let searchQuery = ''
-const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.MONITOR
+const monitorService = window.AppServices?.monitorService
 
 const deviceForm = document.getElementById('device-form')
 const tableBody = document.getElementById('table-body')
@@ -34,8 +34,7 @@ const searchInput = document.getElementById('monitor-search-input')
 
 /* === Monitor Storage: Start === */
 function loadData() {
-	const saved = localStorage.getItem(STORAGE_KEY)
-	const parsedDevices = saved ? JSON.parse(saved) : []
+	const parsedDevices = monitorService?.getAll?.() || []
 	let hasUpdates = false
 
 	devices = parsedDevices.map(device => {
@@ -64,14 +63,14 @@ function loadData() {
 	})
 
 	if (hasUpdates) {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(devices))
+		monitorService?.saveAll?.(devices)
 	}
 
 	renderTable()
 }
 
 function saveData() {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(devices))
+	monitorService?.saveAll?.(devices)
 	renderTable()
 }
 /* === Monitor Storage: End === */
