@@ -2,6 +2,7 @@
 	"name": "dashboardit",
 	"private": true,
 	"scripts": {
+		"serve": "node scripts/dev-server.js",
 		"build:css": "sass sass/style.scss css/style.css",
 		"watch:css": "sass --watch sass/style.scss css/style.css",
 		"lint:js": "eslint \"js/**/*.js\"",

@@ -118,7 +118,7 @@ const formatProfileDateTime = value => {
 
 const normalizeUserRole = role => (role === 'admin' ? 'admin' : 'user')
 
-const getRoleLabel = role => (normalizeUserRole(role) === 'admin' ? 'Lider' : 'Czlonek')
+const getRoleLabel = role => (normalizeUserRole(role) === 'admin' ? 'Lider' : 'Pracownik')
 
 const getAllPermissionIds = () => AUTH_CONFIG.permissionOptions.map(option => option.id)
 
@@ -819,7 +819,7 @@ const renderTeamManagement = () => {
 						<label class="app-team-member-control">
 							<span>Poziom dostepu</span>
 							<select data-team-role>
-								<option value="user" ${user.role === 'user' ? 'selected' : ''}>Czlonek</option>
+								<option value="user" ${user.role === 'user' ? 'selected' : ''}>Pracownik</option>
 								<option value="admin" ${isLeaderRole ? 'selected' : ''}>Lider</option>
 							</select>
 						</label>

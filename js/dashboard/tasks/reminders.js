@@ -71,6 +71,20 @@
 	const supportsTaskSystemNotifications = () =>
 		typeof window.Notification !== 'undefined' && (window.isSecureContext || window.location.protocol === 'file:')
 
+	const supportsTaskServiceWorkerNotifications = () =>
+		typeof window.Notification !== 'undefined' &&
+		typeof navigator !== 'undefined' &&
+		'serviceWorker' in navigator &&
+		window.isSecureContext
+
+	const buildTaskReminderHeading = (task, reminderState) =>
+		reminderState === 'overdue' ? `Przypomnienie: ${task.title}` : `Za 5 minut: ${task.title}`
+
+	const buildTaskReminderSubtitle = (task, reminderState) => {
+		const description = task.description?.trim() || 'Zaplanowane zadanie'
+		return reminderState === 'overdue' ? `Zaplanowane na ${task.time} - ${description}` : `${task.time} - ${description}`
+	}
+
 	dashboardModules.createTaskReminderController = ({ taskToastStack, onTaskSelected } = {}) => {
 		let reminderAudioContext = null
 		let reminderAudioElement = null
@@ -78,11 +92,13 @@
 		let lastTaskReminderSoundAt = 0
 		let isTaskReminderSoundPending = false
 		let hasRequestedNotificationPermission = false
+		let serviceWorkerRegistration = null
+		let serviceWorkerRegistrationPromise = null
 		const activeTaskNotifications = new Map()
+		const reminderAppUrl = new URL('./index.html', window.location.href).toString()
+		const reminderAudioUnlockEvents = ['pointerdown', 'keydown', 'touchstart']
 
 		const getReminderId = task => `${task.id}-${task.date}-${task.time}`
-
-		const buildTaskReminderSubtitle = task => `${task.time} - ${task.description?.trim() || 'Zaplanowane zadanie'}`
 
 		const getReminderAudioElement = () => {
 			if (!reminderAudioElement) {
@@ -119,6 +135,55 @@
 			}
 
 			return audioContext.state === 'running' ? audioContext : null
+		}
+
+		const registerReminderServiceWorker = async () => {
+			if (!supportsTaskServiceWorkerNotifications()) return null
+			if (serviceWorkerRegistration) return serviceWorkerRegistration
+			if (serviceWorkerRegistrationPromise) return serviceWorkerRegistrationPromise
+
+			serviceWorkerRegistrationPromise = navigator.serviceWorker
+				.register('./sw.js', { scope: './' })
+				.then(() => navigator.serviceWorker.ready)
+				.then(registration => {
+					serviceWorkerRegistration = registration
+					return registration
+				})
+				.catch(() => null)
+				.finally(() => {
+					serviceWorkerRegistrationPromise = null
+				})
+
+			return serviceWorkerRegistrationPromise
+		}
+
+		const closeServiceWorkerNotifications = async reminderId => {
+			const registration = serviceWorkerRegistration || (await registerReminderServiceWorker())
+			if (!registration?.getNotifications) return
+
+			const notifications = await registration.getNotifications(reminderId ? { tag: reminderId } : undefined)
+			notifications.forEach(notification => notification.close())
+		}
+
+		const handleServiceWorkerMessage = event => {
+			const payload = event.data
+			if (payload?.type !== 'dashboard-task-notification-click' || !payload.task) return
+
+			window.focus()
+			onTaskSelected?.(payload.task)
+		}
+
+		const detachReminderAudioUnlockListeners = () => {
+			reminderAudioUnlockEvents.forEach(eventName => {
+				document.removeEventListener(eventName, handleReminderAudioUnlockAttempt, true)
+			})
+		}
+
+		const handleReminderAudioUnlockAttempt = () => {
+			void unlockReminderAudio().then(audioContext => {
+				if (!audioContext) return
+				detachReminderAudioUnlockListeners()
+			})
 		}
 
 		const playTaskReminderAudioElement = async () => {
@@ -182,6 +247,7 @@
 
 		const requestNotificationPermission = async () => {
 			if (!supportsTaskSystemNotifications()) return 'unsupported'
+			await registerReminderServiceWorker()
 			if (Notification.permission !== 'default') return Notification.permission
 			if (hasRequestedNotificationPermission) return Notification.permission
 
@@ -194,7 +260,9 @@
 			}
 		}
 
-		const closeTaskSystemNotification = reminderId => {
+		const closeTaskSystemNotification = async reminderId => {
+			await closeServiceWorkerNotifications(reminderId)
+
 			const notification = activeTaskNotifications.get(reminderId)
 			if (!notification) return
 
@@ -203,7 +271,9 @@
 			notification.close()
 		}
 
-		const closeActiveSystemNotifications = () => {
+		const closeActiveSystemNotifications = async () => {
+			await closeServiceWorkerNotifications()
+
 			activeTaskNotifications.forEach((notification, reminderId) => {
 				activeTaskNotifications.delete(reminderId)
 				notification.onclose = null
@@ -211,19 +281,45 @@
 			})
 		}
 
-		const showTaskSystemNotification = task => {
+		const showTaskSystemNotification = async (task, { reminderState = 'upcoming' } = {}) => {
 			if (!supportsTaskSystemNotifications()) return
 			if (Notification.permission !== 'granted') return
 			if (document.visibilityState === 'visible' && document.hasFocus()) return
 
 			const reminderId = getReminderId(task)
-			closeTaskSystemNotification(reminderId)
+			await closeTaskSystemNotification(reminderId)
+
+			const title = buildTaskReminderHeading(task, reminderState)
+			const body = buildTaskReminderSubtitle(task, reminderState)
+			const registration = await registerReminderServiceWorker()
+			if (registration?.showNotification) {
+				try {
+					await registration.showNotification(title, {
+						body,
+						tag: reminderId,
+						renotify: true,
+						requireInteraction: true,
+						silent: false,
+						data: {
+							type: 'dashboard-task-reminder',
+							task,
+							url: reminderAppUrl,
+						},
+					})
+					window.setTimeout(() => {
+						void closeServiceWorkerNotifications(reminderId)
+					}, 16000)
+					return
+				} catch (error) {
+					// Fall back to the page-level Notifications API when service workers are unavailable.
+				}
+			}
 
 			let notification = null
 
 			try {
-				notification = new Notification(`Za 5 minut: ${task.title}`, {
-					body: buildTaskReminderSubtitle(task),
+				notification = new Notification(title, {
+					body,
 					tag: reminderId,
 					renotify: true,
 					requireInteraction: true,
@@ -244,16 +340,11 @@
 			}
 
 			window.setTimeout(() => {
-				closeTaskSystemNotification(reminderId)
+				void closeTaskSystemNotification(reminderId)
 			}, 16000)
 		}
 
-		const shouldPlayTaskReminderSound = () => {
-			const isForeground = document.visibilityState === 'visible' && document.hasFocus()
-			if (isForeground) return true
-
-			return !supportsTaskSystemNotifications() || Notification.permission !== 'granted'
-		}
+		const shouldPlayTaskReminderSound = () => true
 
 		const playTaskReminderSound = async () => {
 			const now = Date.now()
@@ -276,7 +367,7 @@
 		const showTaskToast = task => {
 			if (!taskToastStack) return
 
-			const subtitle = buildTaskReminderSubtitle(task)
+			const subtitle = buildTaskReminderSubtitle(task, 'upcoming')
 			const priorityClass =
 				task?.priority === 'low' ? 'is-low' : task?.priority === 'medium' ? 'is-medium' : 'is-high'
 			const toast = document.createElement('article')
@@ -302,18 +393,66 @@
 			window.setTimeout(removeToast, 9000)
 		}
 
-		const notify = task => {
-			showTaskToast(task)
-			showTaskSystemNotification(task)
+		const showLateTaskToast = task => {
+			if (!taskToastStack) return
+
+			const subtitle = buildTaskReminderSubtitle(task, 'overdue')
+			const priorityClass =
+				task?.priority === 'low' ? 'is-low' : task?.priority === 'medium' ? 'is-medium' : 'is-high'
+			const toast = document.createElement('article')
+			toast.className = `task-toast ${priorityClass}`
+			toast.innerHTML = `
+				<div class="task-toast-dot ${priorityClass}"></div>
+				<div class="task-toast-copy">
+					<strong>Przypomnienie: ${escapeHtml(task.title)}</strong>
+					<span>${escapeHtml(subtitle)}</span>
+				</div>
+				<button type="button" class="task-toast-close" aria-label="Zamknij przypomnienie">
+					<i class="fa-solid fa-xmark"></i>
+				</button>
+			`
+
+			const removeToast = () => {
+				toast.classList.add('is-leaving')
+				window.setTimeout(() => toast.remove(), 220)
+			}
+
+			taskToastStack.appendChild(toast)
+			toast.querySelector('.task-toast-close')?.addEventListener('click', removeToast)
+			window.setTimeout(removeToast, 9000)
+		}
+
+		const notify = (task, { reminderState = 'upcoming' } = {}) => {
+			if (reminderState === 'overdue') {
+				showLateTaskToast(task)
+			} else {
+				showTaskToast(task)
+			}
+
+			void showTaskSystemNotification(task, { reminderState })
 			void playTaskReminderSound()
 		}
 
 		const prepareForPlannerInteraction = () => {
-			void unlockReminderAudio()
+			void registerReminderServiceWorker()
+			handleReminderAudioUnlockAttempt()
 		}
 
+		if (supportsTaskServiceWorkerNotifications()) {
+			navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage)
+			void registerReminderServiceWorker()
+		}
+
+		reminderAudioUnlockEvents.forEach(eventName => {
+			document.addEventListener(eventName, handleReminderAudioUnlockAttempt, true)
+		})
+
 		const destroy = () => {
-			closeActiveSystemNotifications()
+			void closeActiveSystemNotifications()
+			if (supportsTaskServiceWorkerNotifications()) {
+				navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage)
+			}
+			detachReminderAudioUnlockListeners()
 
 			if (reminderAudioElement) {
 				reminderAudioElement.pause()

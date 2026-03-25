@@ -21,6 +21,8 @@
 		storageKey: 'dashboard-tasks',
 		reminderKey: 'dashboard-task-reminders',
 		autoclearKey: 'dashboard-task-autoclear',
+		reminderLeadMinutes: 5,
+		reminderGraceMinutes: 10,
 	}
 
 	const padNumber = value => String(value).padStart(2, '0')
@@ -348,11 +350,13 @@
 				if (remindedTaskIds.has(reminderId)) return
 
 				const minutesUntilTask = (getTaskDateTime(task) - now) / 60000
-				if (minutesUntilTask > 5 || minutesUntilTask < 0) return
+				if (minutesUntilTask > taskConfig.reminderLeadMinutes || minutesUntilTask < -taskConfig.reminderGraceMinutes) return
 
 				remindedTaskIds.add(reminderId)
 				saveRemindedTasks()
-				reminderController?.notify(task)
+				reminderController?.notify(task, {
+					reminderState: minutesUntilTask <= 0 ? 'overdue' : 'upcoming',
+				})
 			})
 		}
 
