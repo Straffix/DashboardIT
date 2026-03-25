@@ -80,7 +80,8 @@
                 <div class="dashboard-header-copy">
                     <p class="dashboard-kicker">Centrum operacyjne IT</p>
                     <h1>IT Management Dashboard</h1>
-                    <p class="dashboard-subtitle">Wybierz moduł operacyjny i przejdź do pracy w odpowiednim obszarze.</p>
+                    <p class="dashboard-subtitle">Wybierz moduł operacyjny i przejdź do pracy w odpowiednim obszarze.
+                    </p>
                 </div>
                 <button type="button" class="dashboard-scroll-cue" id="dashboard-scroll-cue"
                     aria-label="Przewiń do modułów dashboardu">
@@ -133,7 +134,8 @@
                             </div>
                             <div class="card-copy">
                                 <span>Rezerwacja Obiadow</span>
-                                <small>Sloty od 11:00 do 15:00, lista zapisow i lokalny limit 4 osob na kazdy termin.</small>
+                                <small>Sloty od 11:00 do 15:00, lista zapisow i lokalny limit 4 osob na kazdy
+                                    termin.</small>
                             </div>
                         </article>
                     </a>
@@ -145,7 +147,46 @@
                             </div>
                             <div class="card-copy">
                                 <span>Notatnik</span>
-                                <small>Wspolne notatki, wazne tematy i komunikacja operacyjna zespolu w jednej tablicy.</small>
+                                <small>Wspolne notatki, wazne tematy i komunikacja operacyjna zespolu w jednej
+                                    tablicy.</small>
+                            </div>
+                        </article>
+                    </a>
+
+                    <!-- Zakładki w przyszłości -->
+
+                    <a href="#" target="_blank" class="menu-item">
+                        <article class="dashboard-card">
+                            <div class="card-icon-shell">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <div class="card-copy">
+                                <span>Pusta zakładka</span>
+                                <small>Możliwość dodania zakładki z nową finkcjonalnościa w przyszłości.</small>
+                            </div>
+                        </article>
+                    </a>
+
+                    <a href="#" target="_blank" class="menu-item">
+                        <article class="dashboard-card">
+                            <div class="card-icon-shell">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <div class="card-copy">
+                                <span>Pusta zakładka</span>
+                                <small>Możliwość dodania zakładki z nową finkcjonalnościa w przyszłości.</small>
+                            </div>
+                        </article>
+                    </a>
+
+                    <a href="#" target="_blank" class="menu-item">
+                        <article class="dashboard-card">
+                            <div class="card-icon-shell">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <div class="card-copy">
+                                <span>Pusta zakładka</span>
+                                <small>Możliwość dodania zakładki z nową finkcjonalnościa w przyszłości.</small>
                             </div>
                         </article>
                     </a>
@@ -155,9 +196,7 @@
             <section class="dashboard-bookmarks-stage" aria-labelledby="dashboard-bookmarks-title">
                 <div class="dashboard-bookmarks-head">
                     <div class="dashboard-bookmarks-copy">
-                        <p class="dashboard-kicker">Prywatne zakladki</p>
-                        <h2 id="dashboard-bookmarks-title">Szybki dostep</h2>
-                        <p id="dashboard-bookmarks-summary">Przypnij najwazniejsze linki do SharePointa, plikow i narzedzi tylko dla swojego konta.</p>
+                        <h2 id="dashboard-bookmarks-title">Pasek zakladek</h2>
                     </div>
                     <button type="button" class="dashboard-bookmarks-add-btn" id="dashboard-bookmark-add-btn">
                         <i class="fa-solid fa-bookmark"></i>
@@ -169,13 +208,27 @@
                 </div>
             </section>
 
+            <section class="dashboard-demo-panel" id="dashboard-demo-panel" aria-label="Panel danych testowych">
+                <p class="dashboard-demo-status" id="dashboard-demo-status">tryb pusty</p>
+                <div class="dashboard-demo-actions">
+                    <button type="button" class="dashboard-demo-btn" id="dashboard-demo-seed-btn"
+                        title="Wgraj dane demo">
+                        Demo
+                    </button>
+                    <button type="button" class="dashboard-demo-btn is-danger" id="dashboard-demo-clear-btn"
+                        title="Usun dane demo">
+                        Reset
+                    </button>
+                </div>
+            </section>
+
             <footer class="main-footer">
                 <div class="footer-content">
                     <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
                     <div class="footer-separator"></div>
                     <p class="footer-status">
                         <span class="status-dot"></span>
-                        arkadiusz-lisiecki.pl
+                        lisieckidev.pl
                     </p>
                 </div>
             </footer>
@@ -208,11 +261,13 @@
                 <div class="task-modal-layout">
                     <section class="task-calendar-panel" aria-label="Kalendarz zadań">
                         <div class="task-calendar-head">
-                            <button type="button" class="task-calendar-nav" id="task-calendar-prev" aria-label="Poprzedni miesiąc">
+                            <button type="button" class="task-calendar-nav" id="task-calendar-prev"
+                                aria-label="Poprzedni miesiąc">
                                 <i class="fa-solid fa-chevron-left"></i>
                             </button>
                             <div class="task-calendar-month" id="task-calendar-month">--</div>
-                            <button type="button" class="task-calendar-nav" id="task-calendar-next" aria-label="Następny miesiąc">
+                            <button type="button" class="task-calendar-nav" id="task-calendar-next"
+                                aria-label="Następny miesiąc">
                                 <i class="fa-solid fa-chevron-right"></i>
                             </button>
                         </div>
@@ -224,7 +279,8 @@
                         <form class="task-form" id="task-form">
                             <label class="task-field">
                                 <span>Tytuł</span>
-                                <input type="text" id="task-title" maxlength="80" placeholder="Np. Przegląd ticketów" required>
+                                <input type="text" id="task-title" maxlength="80" placeholder="Np. Przegląd ticketów"
+                                    required>
                             </label>
 
                             <div class="task-field-row">
@@ -299,8 +355,8 @@
                 <form class="dashboard-bookmark-form" id="dashboard-bookmark-form" novalidate>
                     <label class="dashboard-bookmark-field">
                         <span>Nazwa</span>
-                        <input type="text" id="dashboard-bookmark-label" maxlength="60"
-                            placeholder="Np. Raport wymian" required>
+                        <input type="text" id="dashboard-bookmark-label" maxlength="60" placeholder="Np. Raport wymian"
+                            required>
                     </label>
 
                     <label class="dashboard-bookmark-field">
@@ -316,8 +372,10 @@
                     </label>
 
                     <div class="dashboard-bookmark-form-actions">
-                        <button type="button" class="dashboard-bookmark-secondary-btn" id="dashboard-bookmark-cancel-btn">Anuluj</button>
-                        <button type="submit" class="dashboard-bookmark-primary-btn" id="dashboard-bookmark-submit-btn">Zapisz zakladke</button>
+                        <button type="button" class="dashboard-bookmark-secondary-btn"
+                            id="dashboard-bookmark-cancel-btn">Anuluj</button>
+                        <button type="submit" class="dashboard-bookmark-primary-btn"
+                            id="dashboard-bookmark-submit-btn">Zapisz zakladke</button>
                     </div>
                 </form>
             </section>
@@ -338,6 +396,8 @@
     <script src="./js/dashboard/tasks/planner.js" charset="utf-8"></script>
     <script src="./js/dashboard.js" charset="utf-8"></script>
     <script src="./js/dashboard-bookmarks.js" charset="utf-8"></script>
+    <script src="./trash/dashboard-demo-seed-bulk-data.js" charset="utf-8"></script>
+    <script src="./js/dashboard-demo-controls.js" charset="utf-8"></script>
 </body>
 
 </html>

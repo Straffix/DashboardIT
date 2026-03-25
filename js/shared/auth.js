@@ -32,8 +32,10 @@ const authState = {
 	popoverActions: null,
 	authModal: null,
 	authTitle: null,
+	authCopy: null,
 	authForm: null,
 	authSwitchBtn: null,
+	authResetBtn: null,
 	authFullNameInput: null,
 	authLoginInput: null,
 	authPasswordInput: null,
@@ -245,11 +247,13 @@ const renderAuthUi = () => {
 		</div>
 	`
 
-	authState.popoverMeta.textContent = currentUser
-		? 'Konto lokalne aktywne w tej przegladarce.'
+	const popoverMetaText = currentUser
+		? ''
 		: authState.users.length === 0
 			? 'Zaloz pierwsze konto. Otrzyma ono role lidera.'
 			: 'Zaloguj sie lub zaloz nowe konto lokalne.'
+	authState.popoverMeta.textContent = popoverMetaText
+	authState.popoverMeta.hidden = !popoverMetaText
 
 	authState.popoverActions.innerHTML = currentUser
 		? `
@@ -361,6 +365,39 @@ const loginUser = ({ login, password }) => {
 	saveSession({ userId: matchedUser.id, loginAt: now })
 	setCurrentUser(matchedUser)
 	return sanitizeUser(matchedUser)
+}
+
+const resetUserPassword = ({ login, password }) => {
+	const matchedUser = findUserByLogin(login)
+	const normalizedPassword = String(password || '')
+
+	if (!matchedUser) {
+		throw new Error('Nie znaleziono konta o podanym loginie.')
+	}
+
+	if (normalizedPassword.length < AUTH_CONFIG.minPasswordLength) {
+		throw new Error(`Haslo musi miec co najmniej ${AUTH_CONFIG.minPasswordLength} znaki.`)
+	}
+
+	const now = new Date().toISOString()
+	let updatedUser = null
+
+	const updatedUsers = authState.users.map(user => {
+		if (user.id !== matchedUser.id) return user
+
+		updatedUser = {
+			...user,
+			passwordHash: encodeLocalPassword(normalizedPassword),
+			updatedAt: now,
+		}
+
+		return updatedUser
+	})
+
+	saveUsers(updatedUsers)
+	saveSession({ userId: matchedUser.id, loginAt: now })
+	setCurrentUser(updatedUser)
+	return sanitizeUser(updatedUser)
 }
 
 const logoutUser = ({ silent = false } = {}) => {
@@ -967,26 +1004,50 @@ const handleAvatarFileSelection = async (scope, file) => {
 }
 
 const updateAuthMode = mode => {
-	authState.mode = mode === 'register' ? 'register' : 'login'
+	authState.mode = mode === 'register' ? 'register' : mode === 'reset' ? 'reset' : 'login'
 	if (!authState.authModal || !authState.authForm) return
 
 	const isRegister = authState.mode === 'register'
+	const isReset = authState.mode === 'reset'
 	authState.authModal.dataset.mode = authState.mode
 
 	if (authState.authTitle) {
-		authState.authTitle.textContent = isRegister ? 'Zaloz konto lokalne' : 'Zaloguj sie do systemu'
+		authState.authTitle.textContent = isRegister
+			? 'Zaloz konto lokalne'
+			: isReset
+				? 'Reset lokalnego hasla'
+				: 'Zaloguj sie do systemu'
+	}
+
+	if (authState.authCopy) {
+		authState.authCopy.textContent = isRegister
+			? 'Konto zostanie zapisane lokalnie w tej przegladarce. Pierwsze konto otrzyma role lidera.'
+			: isReset
+				? 'Podaj login i ustaw nowe haslo dla lokalnego konta w tej przegladarce.'
+				: 'Konta sa lokalne dla tej przegladarki. Pozniej warstwa danych moze zostac podlaczona do backendu.'
 	}
 
 	if (authState.authSwitchBtn) {
-		authState.authSwitchBtn.textContent = isRegister ? 'Masz konto? Zaloguj sie' : 'Nie masz konta? Zarejestruj sie'
+		authState.authSwitchBtn.textContent = isRegister || isReset ? 'Wroc do logowania' : 'Nie masz konta? Zarejestruj sie'
+	}
+
+	if (authState.authResetBtn) {
+		authState.authResetBtn.hidden = isRegister || isReset || authState.users.length === 0
 	}
 
 	if (authState.authSubmitBtn) {
-		authState.authSubmitBtn.textContent = isRegister ? 'Utworz konto' : 'Zaloguj sie'
+		authState.authSubmitBtn.textContent = isRegister ? 'Utworz konto' : isReset ? 'Ustaw nowe haslo' : 'Zaloguj sie'
 	}
 
 	authState.authFullNameInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
-	authState.authPasswordRepeatInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
+	if (authState.authPasswordInput) {
+		authState.authPasswordInput.placeholder = isReset ? 'Wpisz nowe haslo' : 'Minimum 4 znaki'
+		authState.authPasswordInput.autocomplete = isRegister || isReset ? 'new-password' : 'current-password'
+	}
+	authState.authPasswordRepeatInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !(isRegister || isReset))
+	if (authState.authPasswordRepeatInput) {
+		authState.authPasswordRepeatInput.placeholder = isReset ? 'Powtorz nowe haslo' : 'Powtorz haslo'
+	}
 	authState.authRoleHint?.classList.toggle('is-hidden', !isRegister)
 	authState.authAvatarPreview?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
 }
@@ -1070,7 +1131,7 @@ const ensureAuthUi = () => {
 			</button>
 			<p class="app-auth-kicker">Panel uzytkownika</p>
 			<h2 id="app-auth-title">Zaloguj sie do systemu</h2>
-			<p class="app-auth-copy">Konta sa lokalne dla tej przegladarki. Pozniej warstwa danych moze zostac podlaczona do backendu.</p>
+			<p class="app-auth-copy" id="app-auth-copy">Konta sa lokalne dla tej przegladarki. Pozniej warstwa danych moze zostac podlaczona do backendu.</p>
 			<form class="app-auth-form" novalidate>
 				<label class="app-auth-field is-hidden">
 					<span>Imie i nazwisko</span>
@@ -1112,6 +1173,7 @@ const ensureAuthUi = () => {
 				<div class="app-auth-actions">
 					<button type="submit" class="app-auth-submit">Zaloguj sie</button>
 					<button type="button" class="app-auth-switch">Nie masz konta? Zarejestruj sie</button>
+					<button type="button" class="app-auth-switch" id="app-auth-reset-btn">Nie pamietasz hasla?</button>
 				</div>
 			</form>
 		</section>
@@ -1219,8 +1281,10 @@ const ensureAuthUi = () => {
 	authState.popoverActions = hub.querySelector('.app-user-popover-actions')
 	authState.authModal = authModal
 	authState.authTitle = authModal.querySelector('#app-auth-title')
+	authState.authCopy = authModal.querySelector('#app-auth-copy')
 	authState.authForm = authModal.querySelector('.app-auth-form')
 	authState.authSwitchBtn = authModal.querySelector('.app-auth-actions .app-auth-switch')
+	authState.authResetBtn = authModal.querySelector('#app-auth-reset-btn')
 	authState.authFullNameInput = authModal.querySelector('#app-auth-full-name')
 	authState.authLoginInput = authModal.querySelector('#app-auth-login')
 	authState.authPasswordInput = authModal.querySelector('#app-auth-password')
@@ -1284,6 +1348,11 @@ const ensureAuthUi = () => {
 
 	authState.authSwitchBtn?.addEventListener('click', () => {
 		updateAuthMode(authState.mode === 'login' ? 'register' : 'login')
+	})
+
+	authState.authResetBtn?.addEventListener('click', () => {
+		updateAuthMode('reset')
+		window.setTimeout(() => authState.authLoginInput?.focus(), 40)
 	})
 
 	authState.profileTeamList?.addEventListener('change', event => {
@@ -1367,25 +1436,37 @@ const ensureAuthUi = () => {
 		event.preventDefault()
 
 		try {
-			if (authState.mode === 'register') {
+			if (authState.mode === 'register' || authState.mode === 'reset') {
 				const password = authState.authPasswordInput?.value || ''
 				const repeatedPassword = authState.authPasswordRepeatInput?.value || ''
 				if (password !== repeatedPassword) {
 					throw new Error('Hasla musza byc identyczne.')
 				}
 
-				registerUser({
-					fullName: authState.authFullNameInput?.value || '',
-					login: authState.authLoginInput?.value || '',
-					password,
-					avatarId: authState.selectedRegisterAvatarId,
-					avatarImage: authState.customRegisterAvatarImage,
-				})
-				notify({
-					type: 'success',
-					title: 'Konto utworzone',
-					message: 'Nowe konto lokalne zostalo zalozone i od razu aktywowane w tej przegladarce.',
-				})
+				if (authState.mode === 'register') {
+					registerUser({
+						fullName: authState.authFullNameInput?.value || '',
+						login: authState.authLoginInput?.value || '',
+						password,
+						avatarId: authState.selectedRegisterAvatarId,
+						avatarImage: authState.customRegisterAvatarImage,
+					})
+					notify({
+						type: 'success',
+						title: 'Konto utworzone',
+						message: 'Nowe konto lokalne zostalo zalozone i od razu aktywowane w tej przegladarce.',
+					})
+				} else {
+					resetUserPassword({
+						login: authState.authLoginInput?.value || '',
+						password,
+					})
+					notify({
+						type: 'success',
+						title: 'Haslo zresetowane',
+						message: 'Nowe haslo zostalo zapisane lokalnie, a konto jest juz zalogowane.',
+					})
+				}
 			} else {
 				loginUser({
 					login: authState.authLoginInput?.value || '',
@@ -1404,7 +1485,12 @@ const ensureAuthUi = () => {
 		} catch (error) {
 			notify({
 				type: 'error',
-				title: authState.mode === 'register' ? 'Nie udalo sie zalozyc konta' : 'Nie udalo sie zalogowac',
+				title:
+					authState.mode === 'register'
+						? 'Nie udalo sie zalozyc konta'
+						: authState.mode === 'reset'
+							? 'Reset hasla nieudany'
+							: 'Nie udalo sie zalogowac',
 				message: error.message || 'Nie udalo sie zapisac zmian.',
 			})
 		}
@@ -1486,6 +1572,7 @@ const getAuditActorLabel = actor => {
 appServices.authService = {
 	register: registerUser,
 	login: loginUser,
+	resetPassword: resetUserPassword,
 	logout: logoutUser,
 	updateProfile: updateCurrentUserProfile,
 	updateUserAccess,

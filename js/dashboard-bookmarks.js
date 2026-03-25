@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 	const bookmarkList = document.getElementById('dashboard-bookmarks-list')
-	const bookmarkSummary = document.getElementById('dashboard-bookmarks-summary')
 	const addBookmarkBtn = document.getElementById('dashboard-bookmark-add-btn')
 	const bookmarkModal = document.getElementById('dashboard-bookmark-modal')
 	const bookmarkForm = document.getElementById('dashboard-bookmark-form')
@@ -12,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const bookmarkModalText = document.getElementById('dashboard-bookmark-modal-text')
 	const bookmarkCancelBtn = document.getElementById('dashboard-bookmark-cancel-btn')
 
-	if (!bookmarkList || !bookmarkSummary || !addBookmarkBtn || !bookmarkModal || !bookmarkForm) {
+	if (!bookmarkList || !addBookmarkBtn || !bookmarkModal || !bookmarkForm) {
 		return
 	}
 
@@ -97,6 +96,69 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	function getBookmarkFaviconSources(bookmark) {
+		const normalizedTarget = normalizeLinkTarget(bookmark.url)
+
+		try {
+			const parsedUrl = new URL(normalizedTarget)
+			if (!/^https?:$/i.test(parsedUrl.protocol)) {
+				return []
+			}
+
+			return [
+				`https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(parsedUrl.origin)}&sz=64`,
+				`https://icons.duckduckgo.com/ip3/${parsedUrl.hostname}.ico`,
+				`${parsedUrl.origin}/favicon.ico`,
+			]
+		} catch (error) {
+			return []
+		}
+	}
+
+	function enhanceBookmarkFavicons() {
+		bookmarkList.querySelectorAll('[data-bookmark-favicon]').forEach(image => {
+			const iconShell = image.closest('[data-bookmark-icon]')
+			if (!iconShell) return
+
+			const showFallback = () => {
+				iconShell.classList.remove('has-image')
+				image.remove()
+			}
+
+			const fallbackSources = String(image.dataset.faviconSources || '')
+				.split('||')
+				.map(source => source.trim())
+				.filter(Boolean)
+
+			const tryNextSource = () => {
+				const nextSource = fallbackSources.shift()
+				if (!nextSource) {
+					showFallback()
+					return
+				}
+
+				image.dataset.faviconSources = fallbackSources.join('||')
+				image.src = nextSource
+			}
+
+			const handleLoad = () => {
+				iconShell.classList.add('has-image')
+			}
+
+			image.addEventListener('load', handleLoad)
+			image.addEventListener('error', tryNextSource)
+
+			if (image.complete) {
+				if (image.naturalWidth > 0) {
+					handleLoad()
+				} else {
+					tryNextSource()
+				}
+				return
+			}
+		})
+	}
+
 	function resetBookmarkForm() {
 		editingBookmarkId = null
 		bookmarkForm.reset()
@@ -156,8 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		addBookmarkBtn.disabled = false
 
 		if (!currentUser) {
-			bookmarkSummary.textContent =
-				'Po zalogowaniu zobaczysz swoje prywatne skroty do SharePointa, raportow i plikow.'
 			addBookmarkBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj sie, aby dodawac</span>'
 			bookmarkList.innerHTML = `
 				<article class="dashboard-bookmark-empty">
@@ -165,8 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
 						<i class="fa-solid fa-user-lock"></i>
 					</div>
 					<div class="dashboard-bookmark-empty-copy">
-						<strong>Prywatne zakladki sa powiazane z kontem</strong>
-						<p>Zaloguj sie z panelu uzytkownika w prawym gornym rogu, a potem przypnij tutaj swoje najwazniejsze linki.</p>
+						<strong>Zaloguj sie, aby uruchomic pasek zakladek</strong>
+						<p>Po zalogowaniu przypniesz tutaj swoje linki i pliki.</p>
 					</div>
 				</article>
 			`
@@ -174,10 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		addBookmarkBtn.innerHTML = '<i class="fa-solid fa-bookmark"></i><span>Dodaj zakladke</span>'
-		bookmarkSummary.textContent =
-			userBookmarks.length > 0
-				? `Masz zapisane ${userBookmarks.length} prywatnych ${userBookmarks.length === 1 ? 'zakladke' : 'zakladek'} dla konta @${currentUser.login}.`
-				: `Nie masz jeszcze prywatnych zakladek dla konta @${currentUser.login}.`
 
 		if (userBookmarks.length === 0) {
 			bookmarkList.innerHTML = `
@@ -186,8 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
 						<i class="fa-solid fa-bookmark"></i>
 					</div>
 					<div class="dashboard-bookmark-empty-copy">
-						<strong>Dodaj pierwszy szybki skrot</strong>
-						<p>Moze to byc SharePoint, raport, plik xlsx albo lokalna sciezka do najwazniejszych materialow.</p>
+						<strong>Dodaj pierwszy element do paska</strong>
+						<p>Przypnij SharePoint, raport albo lokalny plik.</p>
 					</div>
 				</article>
 			`
@@ -199,27 +255,24 @@ document.addEventListener('DOMContentLoaded', () => {
 				const href = normalizeLinkTarget(bookmark.url)
 				const description = escapeHtml(bookmark.description || 'Prywatny skrot zapisany dla Twojego konta.')
 				const metaLabel = escapeHtml(getBookmarkMetaLabel(bookmark))
+				const faviconSources = getBookmarkFaviconSources(bookmark)
+				const initialFaviconUrl = escapeHtml(faviconSources[0] || '')
+				const fallbackFaviconSources = escapeHtml(faviconSources.slice(1).join('||'))
 				const label = escapeHtml(bookmark.label)
 				const safeHref = escapeHtml(href)
 				return `
-					<article class="dashboard-bookmark-card" data-bookmark-id="${bookmark.id}">
-						<div class="dashboard-bookmark-card-copy">
-							<div class="dashboard-bookmark-card-top">
-								<span class="dashboard-bookmark-icon">
-									<i class="fa-solid fa-bookmark"></i>
-								</span>
-								<div>
-									<strong>${label}</strong>
-									<p>${description}</p>
-								</div>
-							</div>
-							<div class="dashboard-bookmark-meta">${metaLabel}</div>
-						</div>
+					<article class="dashboard-bookmark-tab" data-bookmark-id="${bookmark.id}">
+						<a class="dashboard-bookmark-tab-main" href="${safeHref}" target="_blank" rel="noopener noreferrer" title="${description}">
+							<span class="dashboard-bookmark-icon${initialFaviconUrl ? '' : ' is-fallback'}" data-bookmark-icon>
+								${initialFaviconUrl ? `<img class="dashboard-bookmark-favicon" src="${initialFaviconUrl}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-bookmark-favicon data-favicon-sources="${fallbackFaviconSources}">` : ''}
+								<i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+							</span>
+							<span class="dashboard-bookmark-tab-copy">
+								<strong>${label}</strong>
+								<span class="dashboard-bookmark-meta">${metaLabel}</span>
+							</span>
+						</a>
 						<div class="dashboard-bookmark-actions">
-							<a class="dashboard-bookmark-open-btn" href="${safeHref}" target="_blank" rel="noopener noreferrer">
-								<i class="fa-solid fa-arrow-up-right-from-square"></i>
-								<span>Otworz</span>
-							</a>
 							<button type="button" class="dashboard-bookmark-icon-btn" data-bookmark-action="edit" data-bookmark-id="${bookmark.id}" aria-label="Edytuj zakladke">
 								<i class="fa-solid fa-pen"></i>
 							</button>
@@ -231,6 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				`
 			})
 			.join('')
+
+		enhanceBookmarkFavicons()
 	}
 
 	async function handleAddBookmarkClick() {

@@ -37,7 +37,8 @@
 
                 <div>
                     <h1>Notatnik</h1>
-                    <p>Wspolne notatki, wazne tematy, zadania i komunikacja operacyjna zespolu <span>demo-ready localStorage</span></p>
+                    <p>Wspolne notatki, wazne tematy, zadania i komunikacja operacyjna zespolu. <span>Tylko nie pisz
+                            głupot!</span></p>
                 </div>
             </div>
         </header>
@@ -74,7 +75,8 @@
                 <div id="notes-auth-callout" class="notes-auth-callout">
                     <div class="notes-auth-copy">
                         <strong id="notes-auth-title">Podglad tablicy jest dostepny dla wszystkich</strong>
-                        <p id="notes-auth-text">Zaloguj sie, aby dodawac wpisy, edytowac swoje notatki i utrzymywac wazne tematy na gorze ekranu.</p>
+                        <p id="notes-auth-text">Zaloguj sie, aby dodawac wpisy, edytowac swoje notatki i utrzymywac
+                            wazne tematy na gorze ekranu.</p>
                     </div>
 
                     <button type="button" id="notes-auth-btn" class="notes-auth-btn">
@@ -83,7 +85,8 @@
                     </button>
                 </div>
 
-                <section class="notes-board-section notes-board-section-announcements" aria-labelledby="notes-announcements-title">
+                <section class="notes-board-section notes-board-section-announcements"
+                    aria-labelledby="notes-announcements-title">
                     <div class="notes-section-head">
                         <div class="notes-section-copy">
                             <span class="notes-kicker">Wazne tematy</span>
@@ -95,18 +98,22 @@
                     <form id="notes-announcement-form" class="notes-composer" hidden>
                         <label class="notes-field" for="notes-announcement-title">
                             <span>Tytul tematu</span>
-                            <input type="text" id="notes-announcement-title" maxlength="90" placeholder="Np. Awaria drukarki na 3 pietrze" required>
+                            <input type="text" id="notes-announcement-title" maxlength="90"
+                                placeholder="Np. Awaria drukarki na 3 pietrze" required>
                         </label>
 
                         <label class="notes-field" for="notes-announcement-content">
                             <span>Tresc</span>
                             <textarea id="notes-announcement-content" maxlength="1200"
-                                placeholder="Dodaj najwazniejsza informacje, status lub instrukcje dla zespolu." required></textarea>
+                                placeholder="Dodaj najwazniejsza informacje, status lub instrukcje dla zespolu."
+                                required></textarea>
                         </label>
 
                         <div class="notes-composer-actions">
-                            <button type="submit" class="notes-submit-btn" id="notes-announcement-submit">Opublikuj temat</button>
-                            <button type="button" class="notes-secondary-btn" id="notes-announcement-cancel">Anuluj</button>
+                            <button type="submit" class="notes-submit-btn" id="notes-announcement-submit">Opublikuj
+                                temat</button>
+                            <button type="button" class="notes-secondary-btn"
+                                id="notes-announcement-cancel">Anuluj</button>
                         </div>
                     </form>
 
@@ -118,7 +125,8 @@
                         <div class="notes-section-copy">
                             <span class="notes-kicker">Wspolne notatki</span>
                             <h3 id="notes-list-title">Gotowe teksty, checklisty i komunikacja operacyjna</h3>
-                            <p>Zapisywane wpisy sa widoczne dla wszystkich i podpisane autorem oraz czasem utworzenia i edycji.</p>
+                            <p>Zapisywane wpisy sa widoczne dla wszystkich i podpisane autorem oraz czasem utworzenia i
+                                edycji.</p>
                         </div>
                     </div>
 
@@ -126,7 +134,8 @@
                         <label class="notes-field" for="notes-note-content">
                             <span>Tresc notatki</span>
                             <textarea id="notes-note-content" maxlength="1600"
-                                placeholder="Np. Zwrot do zamykania SD, lista kontrolna na poranny dyzur albo szybka instrukcja dla zespolu." required></textarea>
+                                placeholder="Np. Zwrot do zamykania SD, lista kontrolna na poranny dyzur albo szybka instrukcja dla zespolu."
+                                required></textarea>
                         </label>
 
                         <div class="notes-composer-actions">
@@ -143,25 +152,29 @@
                         <div class="notes-section-copy">
                             <span class="notes-kicker">Zadania zespolu</span>
                             <h3 id="notes-tasks-title">Zadania przypisane do konkretnych osob</h3>
-                            <p>Admin przypisuje zadania do uzytkownikow, a osoba przypisana moze aktualizowac status swojego zadania.</p>
+                            <p>Admin przypisuje zadania do uzytkownikow, a osoba przypisana moze aktualizowac status
+                                swojego zadania.</p>
                         </div>
                     </div>
 
                     <div id="notes-task-admin-callout" class="notes-task-admin-callout">
                         <strong id="notes-task-admin-title">Tylko lider moze przypisywac zadania</strong>
-                        <p id="notes-task-admin-text">Po zalogowaniu jako lider mozesz tworzyc zadania, przypisywac je do ludzi i nadawac im priorytet.</p>
+                        <p id="notes-task-admin-text">Po zalogowaniu jako lider mozesz tworzyc zadania, przypisywac je
+                            do ludzi i nadawac im priorytet.</p>
                     </div>
 
                     <form id="notes-task-form" class="notes-composer" hidden>
                         <label class="notes-field" for="notes-task-title">
                             <span>Tytul zadania</span>
-                            <input type="text" id="notes-task-title" maxlength="90" placeholder="Np. Zweryfikowac status laptopa i domeny" required>
+                            <input type="text" id="notes-task-title" maxlength="90"
+                                placeholder="Np. Zweryfikowac status laptopa i domeny" required>
                         </label>
 
                         <label class="notes-field" for="notes-task-description">
                             <span>Opis</span>
                             <textarea id="notes-task-description" maxlength="1400"
-                                placeholder="Dodaj kontekst zadania, kroki do wykonania albo link do zgloszenia." required></textarea>
+                                placeholder="Dodaj kontekst zadania, kroki do wykonania albo link do zgloszenia."
+                                required></textarea>
                         </label>
 
                         <div class="notes-field-row">
@@ -257,8 +270,10 @@
                         <ul class="notes-rule-list">
                             <li>Wazne tematy sa wyswietlane na gorze i maja osobna sekcje.</li>
                             <li>Notatki oraz tablica dzialaja na lokalnym storage tej przegladarki.</li>
-                            <li>Kazdy zalogowany uzytkownik moze dodac wpis, a autor lub lider moze go edytowac albo usunac.</li>
-                            <li>Tylko lider przypisuje zadania innym uzytkownikom, a osoba przypisana moze zmienic status swojego zadania.</li>
+                            <li>Kazdy zalogowany uzytkownik moze dodac wpis, a autor lub lider moze go edytowac albo
+                                usunac.</li>
+                            <li>Tylko lider przypisuje zadania innym uzytkownikom, a osoba przypisana moze zmienic
+                                status swojego zadania.</li>
                             <li>Przy kazdym rekordzie widac autora oraz czas utworzenia i ostatniej edycji.</li>
                         </ul>
                     </article>
@@ -286,6 +301,8 @@
     <script src="./js/script.js" charset="utf-8"></script>
     <script src="./js/app-domain-services.js" charset="utf-8"></script>
     <script src="./js/notes.js" charset="utf-8"></script>
+    <script src="./trash/dashboard-demo-seed-bulk-data.js" charset="utf-8"></script>
+    <script src="./js/dashboard-demo-controls.js" charset="utf-8"></script>
 
 </body>
 
