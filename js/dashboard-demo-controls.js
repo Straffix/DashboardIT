@@ -85,12 +85,12 @@
 		panel.setAttribute('aria-label', 'Panel danych testowych')
 		panel.innerHTML = `
 			<p class="dashboard-demo-status" id="dashboard-demo-status">tryb pusty</p>
-			<div class="dashboard-demo-actions">
+			<div class="dashboard-demo-actions" role="group" aria-label="Sterowanie danymi demo">
 				<button type="button" class="dashboard-demo-btn" id="dashboard-demo-seed-btn" title="Wgraj dane demo">
-					Demo
+					<span>Demo</span>
 				</button>
 				<button type="button" class="dashboard-demo-btn is-danger" id="dashboard-demo-clear-btn" title="Usun dane demo">
-					Reset
+					<span>Reset</span>
 				</button>
 			</div>
 		`
@@ -113,6 +113,8 @@
 			const isSeeded = Boolean(localStorage.getItem(DEMO_MARKER_KEY))
 			statusLabel.textContent = isSeeded ? 'demo.admin / admin123' : 'tryb pusty'
 			clearButton.disabled = !isSeeded
+			seedButton.setAttribute('aria-pressed', String(!isSeeded))
+			clearButton.setAttribute('aria-pressed', String(isSeeded))
 			panel.dataset.state = isSeeded ? 'seeded' : 'empty'
 		}
 

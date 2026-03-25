@@ -6,31 +6,41 @@
 		fallbackName: 'Warszawa',
 		geoapifyApiKeyMetaName: 'geoapify-api-key',
 		requestTimeoutMs: 6500,
+		workdayStartHour: 8,
+		workdayEndHour: 17,
+		workdayDisplayHours: [8, 10, 12, 14, 16, 17],
 	}
 
 	const weatherCodeMap = {
-		0: { label: 'Bezchmurnie', icon: 'fa-sun' },
-		1: { label: 'Glownie slonecznie', icon: 'fa-cloud-sun' },
-		2: { label: 'Czesciowe zachmurzenie', icon: 'fa-cloud-sun' },
-		3: { label: 'Pochmurno', icon: 'fa-cloud' },
-		45: { label: 'Mgla', icon: 'fa-smog' },
-		48: { label: 'Osadzajaca sie mgla', icon: 'fa-smog' },
-		51: { label: 'Lekka mzawka', icon: 'fa-cloud-rain' },
-		53: { label: 'Mzawka', icon: 'fa-cloud-rain' },
-		55: { label: 'Intensywna mzawka', icon: 'fa-cloud-rain' },
-		61: { label: 'Lekki deszcz', icon: 'fa-cloud-rain' },
-		63: { label: 'Deszcz', icon: 'fa-cloud-showers-heavy' },
-		65: { label: 'Ulewa', icon: 'fa-cloud-showers-heavy' },
-		71: { label: 'Lekki snieg', icon: 'fa-snowflake' },
-		73: { label: 'Snieg', icon: 'fa-snowflake' },
-		75: { label: 'Intensywny snieg', icon: 'fa-snowflake' },
-		80: { label: 'Przelotny deszcz', icon: 'fa-cloud-sun-rain' },
-		81: { label: 'Przelotny deszcz', icon: 'fa-cloud-sun-rain' },
-		82: { label: 'Silny przelotny deszcz', icon: 'fa-cloud-showers-heavy' },
-		95: { label: 'Burza', icon: 'fa-cloud-bolt' },
-		96: { label: 'Burza z gradem', icon: 'fa-cloud-bolt' },
-		99: { label: 'Silna burza z gradem', icon: 'fa-cloud-bolt' },
+		0: { label: 'Bezchmurnie', icon: 'fa-sun', tone: 'sun' },
+		1: { label: 'Glownie slonecznie', icon: 'fa-cloud-sun', tone: 'partly' },
+		2: { label: 'Czesciowe zachmurzenie', icon: 'fa-cloud-sun', tone: 'partly' },
+		3: { label: 'Pochmurno', icon: 'fa-cloud', tone: 'cloudy' },
+		45: { label: 'Mgla', icon: 'fa-smog', tone: 'fog' },
+		48: { label: 'Osadzajaca sie mgla', icon: 'fa-smog', tone: 'fog' },
+		51: { label: 'Lekka mzawka', icon: 'fa-cloud-rain', tone: 'rain' },
+		53: { label: 'Mzawka', icon: 'fa-cloud-rain', tone: 'rain' },
+		55: { label: 'Intensywna mzawka', icon: 'fa-cloud-rain', tone: 'rain' },
+		61: { label: 'Lekki deszcz', icon: 'fa-cloud-rain', tone: 'rain' },
+		63: { label: 'Deszcz', icon: 'fa-cloud-showers-heavy', tone: 'rain' },
+		65: { label: 'Ulewa', icon: 'fa-cloud-showers-heavy', tone: 'rain' },
+		71: { label: 'Lekki snieg', icon: 'fa-snowflake', tone: 'snow' },
+		73: { label: 'Snieg', icon: 'fa-snowflake', tone: 'snow' },
+		75: { label: 'Intensywny snieg', icon: 'fa-snowflake', tone: 'snow' },
+		80: { label: 'Przelotny deszcz', icon: 'fa-cloud-sun-rain', tone: 'showers' },
+		81: { label: 'Przelotny deszcz', icon: 'fa-cloud-sun-rain', tone: 'showers' },
+		82: { label: 'Silny przelotny deszcz', icon: 'fa-cloud-showers-heavy', tone: 'rain' },
+		95: { label: 'Burza', icon: 'fa-cloud-bolt', tone: 'storm' },
+		96: { label: 'Burza z gradem', icon: 'fa-cloud-bolt', tone: 'storm' },
+		99: { label: 'Silna burza z gradem', icon: 'fa-cloud-bolt', tone: 'storm' },
 	}
+
+	const getWeatherDetails = (weatherCode, fallbackLabel = 'Warunki lokalne', fallbackTone = 'cloudy') =>
+		weatherCodeMap[weatherCode] || {
+			label: fallbackLabel,
+			icon: 'fa-cloud-sun',
+			tone: fallbackTone,
+		}
 
 	const normalizeSearchValue = value =>
 		String(value || '')
@@ -199,11 +209,301 @@
 	}
 
 	dashboardModules.createWeatherController = ({ elements, services } = {}) => {
-		const { weatherTemp, weatherLocation, weatherDescription, weatherWind, weatherIcon, weatherSearchForm, weatherLocationInput, weatherCurrentLocationBtn, weatherWidget } =
+		const {
+			weatherTemp,
+			weatherLocation,
+			weatherDescription,
+			weatherWind,
+			weatherIcon,
+			weatherWorkdayPanel,
+			weatherWorkdayLabel,
+			weatherWorkdayRange,
+			weatherWorkdayTrack,
+			weatherSearchForecast,
+			weatherSearchForm,
+			weatherLocationInput,
+			weatherCurrentLocationBtn,
+			weatherWidget,
+		} =
 			elements || {}
 		const { storageService, preferencesService } = services || {}
+		let latestForecastData = null
+		let selectedForecastDate = ''
+		let selectedForecastLabel = ''
 
-		const setWeatherState = ({ temperature, location, description, wind, icon }) => {
+		const formatHourLabel = hour => `${String(hour).padStart(2, '0')}:00`
+		const forecastDayLabels = ['Dzis', 'Jutro', 'Pojutrze']
+
+		const formatForecastDateLabel = (dateValue, index) => {
+			if (forecastDayLabels[index]) return forecastDayLabels[index]
+
+			const parsedDate = new Date(`${dateValue}T12:00:00`)
+			if (Number.isNaN(parsedDate.getTime())) return 'Dzien'
+
+			return parsedDate.toLocaleDateString('pl-PL', { weekday: 'short' })
+		}
+
+		const setWorkdayPanelVisibility = isVisible => {
+			if (!weatherWorkdayPanel) return
+
+			weatherWorkdayPanel.hidden = !isVisible
+		}
+
+		const renderThreeDayForecast = (days, activeDate = '') => {
+			if (!weatherSearchForecast) return
+
+			weatherSearchForecast.innerHTML = days
+				.map(day => {
+					const details = day.isUnavailable
+						? { label: 'Brak danych', icon: 'fa-minus', tone: 'cloudy' }
+						: getWeatherDetails(day.weatherCode)
+					const classes = ['weather-forecast-card']
+					if (day.isUnavailable) classes.push('is-unavailable')
+					if (day.date && day.date === activeDate) classes.push('is-selected')
+					const tempLabel = day.maxTempLabel && day.minTempLabel ? `${day.maxTempLabel} / ${day.minTempLabel}` : '--'
+					const titleParts = [day.label, details.label, tempLabel]
+					if (day.precipitationLabel) titleParts.push(day.precipitationLabel)
+
+					return `
+						<button type="button" class="${classes.join(' ')}" data-weather-day="${day.date || ''}" data-weather-day-label="${day.label}" ${day.isUnavailable ? 'disabled' : ''} title="${titleParts.join(' | ')}">
+							<span class="weather-forecast-day">${day.label}</span>
+							<span class="weather-forecast-icon weather-tone-${details.tone}"><i class="fa-solid ${details.icon}"></i></span>
+							<span class="weather-forecast-temps">
+								<strong>${day.maxTempLabel || '--'}</strong>
+								<small>${day.minTempLabel || '--'}</small>
+							</span>
+						</button>
+					`
+				})
+				.join('')
+		}
+
+		const setThreeDayFallbackState = () => {
+			renderThreeDayForecast(
+				forecastDayLabels.map(label => ({
+					date: '',
+					label,
+					weatherCode: null,
+					maxTempLabel: '--',
+					minTempLabel: '--',
+					precipitationLabel: '',
+					isUnavailable: true,
+				})),
+				''
+			)
+		}
+
+		const getActiveWorkdayHour = currentTime => {
+			const hour = Number(String(currentTime || '').slice(11, 13))
+			if (!Number.isFinite(hour)) return null
+			if (hour < weatherConfig.workdayStartHour || hour > weatherConfig.workdayEndHour) return null
+
+			return weatherConfig.workdayDisplayHours.reduce((closestHour, nextHour) => {
+				if (closestHour === null) return nextHour
+
+				return Math.abs(nextHour - hour) < Math.abs(closestHour - hour) ? nextHour : closestHour
+			}, null)
+		}
+
+		const renderWorkdayTimeline = slots => {
+			if (!weatherWorkdayTrack) return
+
+			weatherWorkdayTrack.innerHTML = slots
+				.map(slot => {
+					const details = slot.isUnavailable
+						? { label: 'Brak danych', icon: 'fa-minus', tone: 'cloudy' }
+						: getWeatherDetails(slot.weatherCode)
+					const classes = ['weather-workday-slot']
+					if (slot.isCurrent) classes.push('is-current')
+					if (slot.isUnavailable) classes.push('is-unavailable')
+					const titleParts = [formatHourLabel(slot.hour), details.label, slot.temperatureLabel]
+					if (slot.precipitationLabel) titleParts.push(slot.precipitationLabel)
+
+					return `
+						<div class="${classes.join(' ')}" title="${titleParts.join(' | ')}">
+							<span class="weather-workday-time">${formatHourLabel(slot.hour).slice(0, 5)}</span>
+							<span class="weather-workday-icon weather-tone-${details.tone}"><i class="fa-solid ${details.icon}"></i></span>
+							<span class="weather-workday-temp">${slot.temperatureLabel}</span>
+						</div>
+					`
+				})
+				.join('')
+		}
+
+		const enableWorkdayTrackDrag = () => {
+			if (!weatherWorkdayTrack || weatherWorkdayTrack.dataset.dragReady === 'true') return
+
+			let isDragging = false
+			let startPointerX = 0
+			let startScrollLeft = 0
+
+			const stopDragging = () => {
+				if (!isDragging) return
+
+				isDragging = false
+				weatherWorkdayTrack.classList.remove('is-dragging')
+			}
+
+			weatherWorkdayTrack.dataset.dragReady = 'true'
+
+			weatherWorkdayTrack.addEventListener('pointerdown', event => {
+				if (event.pointerType === 'mouse' && event.button !== 0) return
+				if (weatherWorkdayTrack.scrollWidth <= weatherWorkdayTrack.clientWidth) return
+
+				isDragging = true
+				startPointerX = event.clientX
+				startScrollLeft = weatherWorkdayTrack.scrollLeft
+				weatherWorkdayTrack.classList.add('is-dragging')
+				weatherWorkdayTrack.setPointerCapture?.(event.pointerId)
+				event.preventDefault()
+			})
+
+			weatherWorkdayTrack.addEventListener('pointermove', event => {
+				if (!isDragging) return
+
+				const deltaX = event.clientX - startPointerX
+				weatherWorkdayTrack.scrollLeft = startScrollLeft - deltaX
+				event.preventDefault()
+			})
+
+			weatherWorkdayTrack.addEventListener('pointerup', stopDragging)
+			weatherWorkdayTrack.addEventListener('pointercancel', stopDragging)
+			weatherWorkdayTrack.addEventListener('lostpointercapture', stopDragging)
+			weatherWorkdayTrack.addEventListener('pointerleave', event => {
+				if (!isDragging || event.pointerType !== 'mouse') return
+				stopDragging()
+			})
+		}
+
+		const setWorkdayFallbackState = (
+			rangeLabel = `${formatHourLabel(weatherConfig.workdayStartHour)}-${formatHourLabel(weatherConfig.workdayEndHour)}`,
+			label = 'Godzinowo'
+		) => {
+			if (weatherWorkdayLabel) weatherWorkdayLabel.textContent = label
+			if (weatherWorkdayRange) weatherWorkdayRange.textContent = rangeLabel
+
+			renderWorkdayTimeline(
+				weatherConfig.workdayDisplayHours.map(hour => ({
+					hour,
+					weatherCode: null,
+					temperatureLabel: '--',
+					precipitationLabel: '',
+					isCurrent: false,
+					isUnavailable: true,
+				}))
+			)
+		}
+
+		const renderWorkdayForecast = (data, selectedDate, label) => {
+			if (!weatherWorkdayTrack) return
+
+			const currentTime = String(data?.current?.time || '')
+			const currentDate = currentTime.split('T')[0]
+			const targetDate = selectedDate || currentDate
+			const activeHour = targetDate === currentDate ? getActiveWorkdayHour(currentTime) : null
+			const times = Array.isArray(data?.hourly?.time) ? data.hourly.time : []
+			const temperatures = Array.isArray(data?.hourly?.temperature_2m) ? data.hourly.temperature_2m : []
+			const weatherCodes = Array.isArray(data?.hourly?.weather_code) ? data.hourly.weather_code : []
+			const precipitationProbabilities = Array.isArray(data?.hourly?.precipitation_probability) ? data.hourly.precipitation_probability : []
+			const workdayRangeLabel = `${formatHourLabel(weatherConfig.workdayStartHour)}-${formatHourLabel(weatherConfig.workdayEndHour)}`
+
+			if (!targetDate || times.length === 0) {
+				setWorkdayFallbackState(workdayRangeLabel, label || 'Godzinowo')
+				return
+			}
+
+			const hourlyMap = new Map()
+			times.forEach((time, index) => {
+				if (!String(time).startsWith(`${targetDate}T`)) return
+
+				const hour = Number(String(time).slice(11, 13))
+				if (!Number.isFinite(hour)) return
+
+				hourlyMap.set(hour, {
+					temperature: temperatures[index],
+					weatherCode: weatherCodes[index],
+					precipitationProbability: precipitationProbabilities[index],
+				})
+			})
+
+			if (weatherWorkdayLabel) weatherWorkdayLabel.textContent = label || 'Godzinowo'
+			if (weatherWorkdayRange) weatherWorkdayRange.textContent = workdayRangeLabel
+
+			renderWorkdayTimeline(
+				weatherConfig.workdayDisplayHours.map(hour => {
+					const slot = hourlyMap.get(hour)
+					return {
+						hour,
+						weatherCode: slot?.weatherCode,
+						temperatureLabel: Number.isFinite(slot?.temperature) ? `${Math.round(slot.temperature)} C` : '--',
+						precipitationLabel: Number.isFinite(slot?.precipitationProbability)
+							? `Opad ${Math.round(slot.precipitationProbability)}%`
+							: '',
+						isCurrent: activeHour === hour,
+						isUnavailable: !slot,
+					}
+				})
+			)
+		}
+
+		const renderDailyForecast = (data, activeDate = '') => {
+			if (!weatherSearchForecast) return
+
+			const times = Array.isArray(data?.daily?.time) ? data.daily.time.slice(0, 3) : []
+			const weatherCodes = Array.isArray(data?.daily?.weather_code) ? data.daily.weather_code : []
+			const maxTemps = Array.isArray(data?.daily?.temperature_2m_max) ? data.daily.temperature_2m_max : []
+			const minTemps = Array.isArray(data?.daily?.temperature_2m_min) ? data.daily.temperature_2m_min : []
+			const precipitationMax = Array.isArray(data?.daily?.precipitation_probability_max) ? data.daily.precipitation_probability_max : []
+
+			if (times.length === 0) {
+				setThreeDayFallbackState()
+				return
+			}
+
+			renderThreeDayForecast(
+				times.map((time, index) => ({
+					date: time,
+					label: formatForecastDateLabel(time, index),
+					weatherCode: weatherCodes[index],
+					maxTempLabel: Number.isFinite(maxTemps[index]) ? `${Math.round(maxTemps[index])} C` : '--',
+					minTempLabel: Number.isFinite(minTemps[index]) ? `${Math.round(minTemps[index])} C` : '--',
+					precipitationLabel: Number.isFinite(precipitationMax[index]) ? `Opad ${Math.round(precipitationMax[index])}%` : '',
+					isUnavailable: false,
+				})),
+				activeDate
+			)
+		}
+
+		const resetSelectedForecast = () => {
+			selectedForecastDate = ''
+			selectedForecastLabel = ''
+			setWorkdayFallbackState()
+			setWorkdayPanelVisibility(false)
+		}
+
+		const showSelectedForecastDay = (date, label) => {
+			if (!latestForecastData || !date) return
+
+			selectedForecastDate = date
+			selectedForecastLabel = label || 'Godzinowo'
+			renderDailyForecast(latestForecastData, selectedForecastDate)
+			renderWorkdayForecast(latestForecastData, selectedForecastDate, selectedForecastLabel)
+			setWorkdayPanelVisibility(true)
+		}
+
+		const toggleSelectedForecastDay = (date, label) => {
+			if (!latestForecastData || !date) return
+
+			if (selectedForecastDate === date && !weatherWorkdayPanel?.hidden) {
+				resetSelectedForecast()
+				renderDailyForecast(latestForecastData)
+				return
+			}
+
+			showSelectedForecastDay(date, label)
+		}
+
+		const setWeatherState = ({ temperature, location, description, wind, icon, tone = 'cloudy' }) => {
 			if (weatherTemp) weatherTemp.textContent = temperature
 			if (weatherLocation) {
 				const compactLocation = window.innerWidth <= 640 ? location.split(',')[0].trim() : location
@@ -212,6 +512,7 @@
 			if (weatherDescription) weatherDescription.textContent = description
 			if (weatherWind) weatherWind.textContent = wind
 			if (weatherIcon) {
+				weatherIcon.className = `weather-icon weather-tone-${tone}`
 				weatherIcon.innerHTML = `<i class="fa-solid ${icon}"></i>`
 			}
 		}
@@ -224,19 +525,21 @@
 				wind: 'Tryb demo offline',
 				icon: 'fa-cloud',
 			})
+			latestForecastData = null
+			setThreeDayFallbackState()
+			resetSelectedForecast()
 		}
 
 		const fetchWeather = async (latitude, longitude, locationName) => {
 			try {
 				const data = await fetchJsonWithTimeout(
-					`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`,
+					`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`,
 					{ cache: 'no-store' }
 				)
 				const current = data.current || {}
-				const weatherDetails = weatherCodeMap[current.weather_code] || {
-					label: 'Warunki lokalne',
-					icon: 'fa-cloud-sun',
-				}
+				const weatherDetails = getWeatherDetails(current.weather_code)
+				latestForecastData = data
+				resetSelectedForecast()
 
 				setWeatherState({
 					temperature: `${Math.round(current.temperature_2m ?? 0)} C`,
@@ -244,7 +547,9 @@
 					description: weatherDetails.label,
 					wind: `Wiatr ${Math.round(current.wind_speed_10m ?? 0)} km/h`,
 					icon: weatherDetails.icon,
+					tone: weatherDetails.tone,
 				})
+				renderDailyForecast(data)
 			} catch (error) {
 				setOfflineWeatherState(locationName, 'Brak danych pogodowych')
 			}
@@ -261,6 +566,9 @@
 				wind: 'Prosze czekac',
 				icon: 'fa-cloud-sun',
 			})
+			latestForecastData = null
+			setThreeDayFallbackState()
+			resetSelectedForecast()
 
 			try {
 				const data = await fetchJsonWithTimeout(
@@ -400,6 +708,8 @@
 					wind: 'Twoja przegladarka jej nie wspiera',
 					icon: 'fa-location-crosshairs',
 				})
+				setThreeDayFallbackState()
+				resetSelectedForecast()
 				return
 			}
 
@@ -411,6 +721,8 @@
 					wind: 'Uruchom przez HTTPS albo localhost',
 					icon: 'fa-location-crosshairs',
 				})
+				setThreeDayFallbackState()
+				resetSelectedForecast()
 				return
 			}
 
@@ -421,6 +733,9 @@
 				wind: 'Prosze czekac',
 				icon: 'fa-location-crosshairs',
 			})
+			latestForecastData = null
+			setThreeDayFallbackState()
+			resetSelectedForecast()
 
 			try {
 				const position = await requestBestCurrentPosition()
@@ -461,6 +776,8 @@
 					wind: message.wind,
 					icon: 'fa-location-crosshairs',
 				})
+				setThreeDayFallbackState()
+				resetSelectedForecast()
 			}
 		}
 
@@ -494,9 +811,20 @@
 				weatherLocationInput.value = savedLocation
 			}
 
+			setThreeDayFallbackState()
+			resetSelectedForecast()
+			enableWorkdayTrackDrag()
+
 			fetchWeatherForLocation(savedLocation)
 
 			if (weatherSearchForm && weatherLocationInput) {
+				weatherSearchForm.addEventListener('pointerdown', event => {
+					event.stopPropagation()
+				})
+				weatherSearchForm.addEventListener('click', event => {
+					event.stopPropagation()
+				})
+
 				weatherSearchForm.addEventListener('submit', event => {
 					event.preventDefault()
 					fetchWeatherForLocation(weatherLocationInput.value)
@@ -507,6 +835,13 @@
 			weatherCurrentLocationBtn?.addEventListener('click', () => {
 				fetchWeatherForCurrentLocation()
 				closeWeatherEditor()
+			})
+
+			weatherSearchForecast?.addEventListener('click', event => {
+				const forecastButton = event.target.closest('[data-weather-day]')
+				if (!forecastButton) return
+
+				toggleSelectedForecastDay(forecastButton.dataset.weatherDay || '', forecastButton.dataset.weatherDayLabel || 'Godzinowo')
 			})
 
 			if (weatherWidget && weatherLocationInput) {

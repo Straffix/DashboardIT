@@ -31,18 +31,6 @@
             <section class="dashboard-topbar" aria-label="Panel informacji">
                 <article class="dashboard-widget weather-widget" aria-live="polite" role="button" tabindex="0"
                     aria-haspopup="dialog" aria-controls="weather-search-form">
-                    <form class="weather-search" id="weather-search-form">
-                        <label class="weather-search-label" for="weather-location-input">Wybierz miasto</label>
-                        <div class="weather-search-row">
-                            <input type="text" id="weather-location-input" placeholder="Wpisz miasto" value="Warszawa"
-                                autocomplete="off">
-                            <button type="submit" id="weather-search-btn">Zmień</button>
-                        </div>
-                        <button type="button" class="weather-location-btn" id="weather-current-location-btn">
-                            <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
-                            <span>Użyj aktualnej lokalizacji</span>
-                        </button>
-                    </form>
                     <div class="weather-main">
                         <div class="weather-icon" id="weather-icon">
                             <i class="fa-solid fa-cloud-sun"></i>
@@ -56,6 +44,27 @@
                         <span id="weather-description">Ładowanie danych...</span>
                         <span id="weather-wind">Wiatr -- km/h</span>
                     </div>
+                    <form class="weather-search" id="weather-search-form">
+                        <label class="weather-search-label" for="weather-location-input">Wybierz miasto</label>
+                        <p class="weather-search-hint">Kliknij dzień, aby zobaczyć prognozę godzinową.</p>
+                        <div class="weather-search-forecast" id="weather-search-forecast" aria-live="polite"></div>
+                        <div class="weather-workday" id="weather-workday-panel" aria-label="Pogoda godzinowa dla wybranego dnia" hidden>
+                            <div class="weather-workday-head">
+                                <span class="weather-workday-label" id="weather-workday-label">Godzinowo</span>
+                                <span class="weather-workday-range" id="weather-workday-range">08:00-17:00</span>
+                            </div>
+                            <div class="weather-workday-track" id="weather-workday-track" aria-live="polite"></div>
+                        </div>
+                        <div class="weather-search-row">
+                            <input type="text" id="weather-location-input" placeholder="Wpisz miasto" value="Warszawa"
+                                autocomplete="off">
+                            <button type="submit" id="weather-search-btn">Zmień</button>
+                        </div>
+                        <button type="button" class="weather-location-btn" id="weather-current-location-btn">
+                            <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                            <span>Użyj aktualnej lokalizacji</span>
+                        </button>
+                    </form>
                 </article>
 
                 <article class="dashboard-widget clock-widget" id="clock-widget-trigger" aria-label="Zegar lokalny"
@@ -210,14 +219,14 @@
 
             <section class="dashboard-demo-panel" id="dashboard-demo-panel" aria-label="Panel danych testowych">
                 <p class="dashboard-demo-status" id="dashboard-demo-status">tryb pusty</p>
-                <div class="dashboard-demo-actions">
+                <div class="dashboard-demo-actions" role="group" aria-label="Sterowanie danymi demo">
                     <button type="button" class="dashboard-demo-btn" id="dashboard-demo-seed-btn"
                         title="Wgraj dane demo">
-                        Demo
+                        <span>Demo</span>
                     </button>
                     <button type="button" class="dashboard-demo-btn is-danger" id="dashboard-demo-clear-btn"
                         title="Usun dane demo">
-                        Reset
+                        <span>Reset</span>
                     </button>
                 </div>
             </section>
