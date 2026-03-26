@@ -617,9 +617,17 @@ const ensureConfirmDialog = () => {
 	appConfirmState.confirmBtn?.addEventListener('click', () => closeConfirmDialog(true))
 
 	window.addEventListener('keydown', event => {
-		if (event.key === 'Escape' && appConfirmState.shell?.classList.contains('is-open')) {
+		if (!appConfirmState.shell?.classList.contains('is-open')) return
+
+		if (event.key === 'Escape') {
 			event.preventDefault()
 			closeConfirmDialog(false)
+			return
+		}
+
+		if (event.key === 'Enter' && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing) {
+			event.preventDefault()
+			closeConfirmDialog(true)
 		}
 	})
 
@@ -654,7 +662,7 @@ const confirmDialog = ({
 	dialog.shell.setAttribute('aria-hidden', 'false')
 	document.body.classList.add('app-confirm-open')
 
-	window.setTimeout(() => dialog.cancelBtn?.focus(), 50)
+	window.setTimeout(() => dialog.confirmBtn?.focus(), 50)
 
 	return new Promise(resolve => {
 		dialog.resolver = resolve

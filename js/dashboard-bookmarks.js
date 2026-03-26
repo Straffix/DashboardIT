@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const addBookmarkBtn = document.getElementById('dashboard-bookmark-add-btn')
 	const bookmarkModal = document.getElementById('dashboard-bookmark-modal')
 	const bookmarkForm = document.getElementById('dashboard-bookmark-form')
+	const bookmarkPanel = document.querySelector('.dashboard-bookmarks-panel')
 	const bookmarkLabelInput = document.getElementById('dashboard-bookmark-label')
 	const bookmarkUrlInput = document.getElementById('dashboard-bookmark-url')
 	const bookmarkDescriptionInput = document.getElementById('dashboard-bookmark-description')
@@ -106,8 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			return [
+				`https://www.google.com/s2/favicons?domain=${encodeURIComponent(parsedUrl.hostname)}&sz=64`,
 				`https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(parsedUrl.origin)}&sz=64`,
 				`https://icons.duckduckgo.com/ip3/${parsedUrl.hostname}.ico`,
+				`https://icon.horse/icon/${parsedUrl.hostname}`,
 				`${parsedUrl.origin}/favicon.ico`,
 			]
 		} catch (error) {
@@ -211,6 +214,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		resetBookmarkForm()
 	}
 
+	function setBookmarkPanelVisibility(isVisible) {
+		if (!bookmarkPanel) return
+
+		bookmarkPanel.hidden = !isVisible
+	}
+
 	function renderBookmarks() {
 		const currentUser = getCurrentUser()
 		const userBookmarks = getCurrentUserBookmarks()
@@ -219,36 +228,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (!currentUser) {
 			addBookmarkBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj sie, aby dodawac</span>'
-			bookmarkList.innerHTML = `
-				<article class="dashboard-bookmark-empty">
-					<div class="dashboard-bookmark-empty-icon">
-						<i class="fa-solid fa-user-lock"></i>
-					</div>
-					<div class="dashboard-bookmark-empty-copy">
-						<strong>Zaloguj sie, aby uruchomic pasek zakladek</strong>
-						<p>Po zalogowaniu przypniesz tutaj swoje linki i pliki.</p>
-					</div>
-				</article>
-			`
+			bookmarkList.innerHTML = ''
+			setBookmarkPanelVisibility(false)
 			return
 		}
 
 		addBookmarkBtn.innerHTML = '<i class="fa-solid fa-bookmark"></i><span>Dodaj zakladke</span>'
 
 		if (userBookmarks.length === 0) {
-			bookmarkList.innerHTML = `
-				<article class="dashboard-bookmark-empty">
-					<div class="dashboard-bookmark-empty-icon">
-						<i class="fa-solid fa-bookmark"></i>
-					</div>
-					<div class="dashboard-bookmark-empty-copy">
-						<strong>Dodaj pierwszy element do paska</strong>
-						<p>Przypnij SharePoint, raport albo lokalny plik.</p>
-					</div>
-				</article>
-			`
+			bookmarkList.innerHTML = ''
+			setBookmarkPanelVisibility(false)
 			return
 		}
+
+		setBookmarkPanelVisibility(true)
 
 		bookmarkList.innerHTML = userBookmarks
 			.map(bookmark => {

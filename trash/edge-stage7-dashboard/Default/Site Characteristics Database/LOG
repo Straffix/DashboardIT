@@ -1,2 +1,3 @@
-2026/03/25-16:09:35.741 45b8 Creating DB c:\DashboardIT\trash\edge-stage7-dashboard\Default\Site Characteristics Database since it was missing.
-2026/03/25-16:09:35.748 45b8 Reusing MANIFEST c:\DashboardIT\trash\edge-stage7-dashboard\Default\Site Characteristics Database/MANIFEST-000001
+2026/03/26-11:19:55.365 6324 Reusing MANIFEST c:\DashboardIT\trash\edge-stage7-dashboard\Default\Site Characteristics Database/MANIFEST-000001
+2026/03/26-11:19:55.366 6324 Recovering log #3
+2026/03/26-11:19:55.367 6324 Reusing old log c:\DashboardIT\trash\edge-stage7-dashboard\Default\Site Characteristics Database/000003.log 

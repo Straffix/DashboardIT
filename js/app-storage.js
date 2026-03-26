@@ -22,6 +22,7 @@
 		THEME: 'dashboard-theme',
 		WIDE_MODE: 'dashboard-wide-mode',
 		WEATHER_LOCATION: 'dashboard-weather-location',
+		DASHBOARD_MENU_ORDER: 'dashboard-menu-order',
 		DASHBOARD_TASKS: 'dashboard-tasks',
 		DASHBOARD_TASK_REMINDERS: 'dashboard-task-reminders',
 		DASHBOARD_TASK_AUTOCLEAR: 'dashboard-task-autoclear',
@@ -152,6 +153,13 @@
 		},
 		setWeatherLocation(location) {
 			storageService.setText(PREFERENCE_KEYS.WEATHER_LOCATION, location)
+		},
+		getDashboardMenuOrder() {
+			const menuOrder = storageService.readJson(PREFERENCE_KEYS.DASHBOARD_MENU_ORDER, [])
+			return Array.isArray(menuOrder) ? menuOrder : []
+		},
+		saveDashboardMenuOrder(menuOrder) {
+			storageService.writeJson(PREFERENCE_KEYS.DASHBOARD_MENU_ORDER, Array.isArray(menuOrder) ? menuOrder : [])
 		},
 		getDashboardTasks() {
 			const tasks = storageService.readJson(PREFERENCE_KEYS.DASHBOARD_TASKS, [])

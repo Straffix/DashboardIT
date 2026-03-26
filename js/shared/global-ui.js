@@ -57,24 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (themeToggle) {
 		const dashboardBookmarkSlot = document.querySelector('.dashboard-theme-bookmark-slot')
 		const dashboardTopbar = document.querySelector('.dashboard-topbar')
-		const weatherWidget = dashboardTopbar?.querySelector('.weather-widget')
 		if (document.body.classList.contains('dashboard-page') && dashboardTopbar) {
-			const mobileQuery = window.matchMedia('(max-width: 640px)')
-			const moveThemeToggle = () => {
-				if (mobileQuery.matches || !dashboardBookmarkSlot) {
-					if (weatherWidget) {
-						weatherWidget.insertAdjacentElement('afterend', themeToggle)
-					} else {
-						dashboardTopbar.prepend(themeToggle)
-					}
-					return
-				}
-
+			if (dashboardBookmarkSlot) {
 				dashboardBookmarkSlot.appendChild(themeToggle)
+			} else {
+				dashboardTopbar.prepend(themeToggle)
 			}
-
-			moveThemeToggle()
-			mobileQuery.addEventListener('change', moveThemeToggle)
 		} else {
 			document.body.appendChild(themeToggle)
 		}

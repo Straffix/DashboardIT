@@ -69,59 +69,65 @@
 		return Promise.resolve(window.confirm(options?.message || 'Czy na pewno chcesz kontynuowac?'))
 	}
 
-	const ensureDemoPanel = () => {
-		const existingPanel = document.getElementById('dashboard-demo-panel')
-		if (existingPanel) {
-			return existingPanel
+	const ensureDemoButton = () => {
+		const existingButton = document.getElementById('dashboard-demo-toggle-btn')
+		if (existingButton) {
+			return existingButton
 		}
 
 		if (!document.body) {
 			return null
 		}
 
-		const panel = document.createElement('section')
-		panel.className = 'dashboard-demo-panel'
-		panel.id = 'dashboard-demo-panel'
-		panel.setAttribute('aria-label', 'Panel danych testowych')
-		panel.innerHTML = `
-			<p class="dashboard-demo-status" id="dashboard-demo-status">tryb pusty</p>
-			<div class="dashboard-demo-actions" role="group" aria-label="Sterowanie danymi demo">
-				<button type="button" class="dashboard-demo-btn" id="dashboard-demo-seed-btn" title="Wgraj dane demo">
-					<span>Demo</span>
-				</button>
-				<button type="button" class="dashboard-demo-btn is-danger" id="dashboard-demo-clear-btn" title="Usun dane demo">
-					<span>Reset</span>
-				</button>
-			</div>
-		`
+		const button = document.createElement('button')
+		button.type = 'button'
+		button.className = 'dashboard-demo-toggle-btn'
+		button.id = 'dashboard-demo-toggle-btn'
+		button.setAttribute('aria-live', 'polite')
+		button.innerHTML = '<span>Wgraj przykladowe dane</span>'
 
-		document.body.appendChild(panel)
-		return panel
+		const dashboardBookmarkSlot = document.querySelector('.dashboard-theme-bookmark-slot')
+		const dashboardTopbar = document.querySelector('.dashboard-topbar')
+		const themeToggle = document.querySelector('.theme-toggle-btn')
+
+		if (dashboardBookmarkSlot) {
+			dashboardBookmarkSlot.appendChild(button)
+		} else if (themeToggle) {
+			themeToggle.insertAdjacentElement('afterend', button)
+		} else if (dashboardTopbar) {
+			dashboardTopbar.prepend(button)
+		} else {
+			document.body.appendChild(button)
+		}
+
+		return button
 	}
 
 	onReady(() => {
-		const panel = ensureDemoPanel()
-		const statusLabel = document.getElementById('dashboard-demo-status')
-		const seedButton = document.getElementById('dashboard-demo-seed-btn')
-		const clearButton = document.getElementById('dashboard-demo-clear-btn')
+		const demoButton = ensureDemoButton()
 
-		if (!panel || !statusLabel || !seedButton || !clearButton) {
+		if (!demoButton) {
 			return
 		}
 
-		const refreshPanelState = () => {
+		const refreshButtonState = () => {
 			const isSeeded = Boolean(localStorage.getItem(DEMO_MARKER_KEY))
-			statusLabel.textContent = isSeeded ? 'demo.admin / admin123' : 'tryb pusty'
-			clearButton.disabled = !isSeeded
-			seedButton.setAttribute('aria-pressed', String(!isSeeded))
-			clearButton.setAttribute('aria-pressed', String(isSeeded))
-			panel.dataset.state = isSeeded ? 'seeded' : 'empty'
+			demoButton.dataset.state = isSeeded ? 'seeded' : 'empty'
+			demoButton.setAttribute('aria-pressed', String(isSeeded))
+			demoButton.title = isSeeded ? 'Usun przykladowe dane' : 'Wgraj przykladowe dane'
+			demoButton.querySelector('span')?.replaceChildren(
+				document.createTextNode(isSeeded ? 'Usun przykladowe dane' : 'Wgraj przykladowe dane'),
+			)
 		}
 
 		const setBusyState = isBusy => {
-			seedButton.disabled = isBusy
-			clearButton.disabled = isBusy || !localStorage.getItem(DEMO_MARKER_KEY)
-			panel.setAttribute('aria-busy', String(isBusy))
+			demoButton.disabled = isBusy
+			demoButton.setAttribute('aria-busy', String(isBusy))
+			if (isBusy) {
+				demoButton.querySelector('span')?.replaceChildren(document.createTextNode('Przetwarzanie...'))
+			} else {
+				refreshButtonState()
+			}
 		}
 
 		const reloadDashboard = () => {
@@ -169,47 +175,49 @@
 			].forEach(removeKey)
 		}
 
-		seedButton.addEventListener('click', async () => {
-			const shouldSeed = await confirmAction({
-				title: 'Wgrac dane demo?',
-				message: 'To nadpisze lokalne dane testowe w tabelach, notatkach, obiadach, zakladkach i koncie uzytkownika.',
-				confirmLabel: 'Wgraj demo',
-				cancelLabel: 'Anuluj',
-			})
+		demoButton.addEventListener('click', async () => {
+			const isSeeded = Boolean(localStorage.getItem(DEMO_MARKER_KEY))
 
-			if (!shouldSeed) {
+			if (!isSeeded) {
+				const shouldSeed = await confirmAction({
+					title: 'Wgrac przykladowe dane?',
+					message: 'To nadpisze lokalne dane testowe w tabelach, notatkach, obiadach, zakladkach i koncie uzytkownika.',
+					confirmLabel: 'Wgraj dane',
+					cancelLabel: 'Anuluj',
+				})
+
+				if (!shouldSeed) {
+					return
+				}
+
+				const payload = window.DashboardDemoSeedData?.buildSeedPayload?.()
+				if (!payload) {
+					window.AppUtils?.notify?.({
+						type: 'error',
+						title: 'Brak danych demo',
+						message: 'Nie znaleziono pliku z danymi testowymi w folderze trash.',
+					})
+					return
+				}
+
+				try {
+					setBusyState(true)
+					writeSeedData(payload)
+					reloadDashboard()
+				} catch (error) {
+					setBusyState(false)
+					window.AppUtils?.notify?.({
+						type: 'error',
+						title: 'Blad danych demo',
+						message: error?.message || 'Nie udalo sie zapisac danych demo.',
+					})
+				}
+
 				return
 			}
 
-			const payload = window.DashboardDemoSeedData?.buildSeedPayload?.()
-			if (!payload) {
-				window.AppUtils?.notify?.({
-					type: 'error',
-					title: 'Brak danych demo',
-					message: 'Nie znaleziono pliku z danymi testowymi w folderze trash.',
-				})
-				return
-			}
-
-			try {
-				setBusyState(true)
-				writeSeedData(payload)
-				statusLabel.textContent = 'odswiezanie...'
-				reloadDashboard()
-			} catch (error) {
-				setBusyState(false)
-				refreshPanelState()
-				window.AppUtils?.notify?.({
-					type: 'error',
-					title: 'Blad danych demo',
-					message: error?.message || 'Nie udalo sie zapisac danych demo.',
-				})
-			}
-		})
-
-		clearButton.addEventListener('click', async () => {
 			const shouldClear = await confirmAction({
-				title: 'Usunac dane demo?',
+				title: 'Usunac przykladowe dane?',
 				message: 'To wyczysci lokalne dane testowe ze wszystkich modulow oraz konto demo zapisane w tej przegladarce.',
 				confirmLabel: 'Usun dane',
 				cancelLabel: 'Anuluj',
@@ -222,11 +230,9 @@
 			try {
 				setBusyState(true)
 				clearSeedData()
-				statusLabel.textContent = 'czyszczenie...'
 				reloadDashboard()
 			} catch (error) {
 				setBusyState(false)
-				refreshPanelState()
 				window.AppUtils?.notify?.({
 					type: 'error',
 					title: 'Blad czyszczenia',
@@ -235,6 +241,12 @@
 			}
 		})
 
-		refreshPanelState()
+		window.addEventListener('storage', event => {
+			if (event.key === DEMO_MARKER_KEY) {
+				refreshButtonState()
+			}
+		})
+
+		refreshButtonState()
 	})
 })()

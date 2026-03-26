@@ -85,6 +85,16 @@ body.dashboard-page .wrapper {
   align-items: center;
 }
 
+.dashboard-menu-stage {
+  position: relative;
+  z-index: 2;
+  transition: margin-top 0.22s ease;
+}
+
+body.weather-editor-open .dashboard-menu-stage {
+  margin-top: 88px;
+}
+
 .dashboard-scroll-cue {
   display: none;
 }
@@ -154,6 +164,18 @@ body.dashboard-page .wrapper {
   margin-bottom: 18px;
 }
 
+.dashboard-theme-bookmark-slot {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: calc(100vw - 40px);
+}
+
 .dashboard-widget {
   position: relative;
   padding: 8px 10px;
@@ -194,6 +216,48 @@ body.dashboard-page .dashboard-topbar .theme-toggle-btn span {
 
 body.dashboard-page .dashboard-topbar .theme-toggle-btn i {
   font-size: 1.12rem;
+}
+
+body.dashboard-page .dashboard-theme-bookmark-slot .theme-toggle-btn {
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
+}
+
+.dashboard-demo-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-main);
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+.dashboard-demo-toggle-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  background: var(--bg-panel-hover);
+}
+.dashboard-demo-toggle-btn:disabled {
+  opacity: 0.64;
+  cursor: default;
+}
+.dashboard-demo-toggle-btn[data-state=seeded] {
+  border-color: rgba(248, 113, 113, 0.32);
+  background: rgba(254, 242, 242, 0.95);
+  color: #b91c1c;
 }
 
 body.dashboard-page .dashboard-container > .theme-toggle-btn {
@@ -242,10 +306,15 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn i {
 }
 
 .weather-search {
-  position: static;
-  display: none;
-  width: min(380px, 100%);
-  margin-top: 12px;
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  z-index: 14;
+  display: block;
+  width: min(380px, 100vw - 32px);
+  max-height: min(68vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 14px;
   border-radius: 18px;
   border: 1px solid rgba(191, 219, 254, 0.72);
@@ -254,6 +323,12 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn i {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   cursor: default;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.985);
+  transform-origin: top left;
+  transition: opacity 0.18s ease, transform 0.22s ease, visibility 0s linear 0.22s;
 }
 
 .weather-search-label {
@@ -556,6 +631,7 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn i {
   padding: 2px 1px 4px;
   scrollbar-width: none;
   cursor: var(--weather-cursor-grab);
+  touch-action: pan-y;
   -moz-user-select: none;
        user-select: none;
   -webkit-user-select: none;
@@ -673,18 +749,24 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn i {
 }
 
 body.weather-editor-open .weather-search {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
 }
 
 body.weather-editor-open .weather-widget {
-  width: min(380px, 100%);
+  z-index: 8;
 }
 
 .clock-widget {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   margin-left: auto;
+  padding-right: 46px;
   text-align: left;
   background: transparent;
   cursor: pointer;
@@ -1376,8 +1458,90 @@ body.task-modal-open {
     transform: translateY(0);
   }
 }
+@keyframes dashboardTileJiggle {
+  from {
+    transform: rotate(-0.85deg);
+  }
+  to {
+    transform: rotate(0.85deg);
+  }
+}
+@keyframes dashboardDropSlotPulse {
+  from {
+    transform: scale(0.985);
+    opacity: 0.82;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 /* === Dashboard Topbar: End === */
 /* === Dashboard Navigation Tiles: Start === */
+.dashboard-menu-toolbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.dashboard-menu-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dashboard-menu-edit-actions[hidden] {
+  display: none;
+}
+
+.dashboard-menu-toolbar .dashboard-menu-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  background: rgba(248, 250, 252, 0.92);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 8px 18px rgba(15, 23, 42, 0.06);
+  color: #475569;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.dashboard-menu-toolbar .dashboard-menu-edit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+.dashboard-menu-toolbar .dashboard-menu-edit-btn i {
+  font-size: 0.9rem;
+}
+
+.dashboard-menu-toolbar #dashboard-menu-cancel-btn {
+  border-color: rgba(252, 165, 165, 0.9);
+  background: rgba(254, 242, 242, 0.96);
+  color: #b91c1c;
+}
+
+.dashboard-menu-toolbar #dashboard-menu-cancel-btn:hover:not(:disabled) {
+  background: rgba(254, 226, 226, 0.98);
+}
+
+.dashboard-menu-toolbar #dashboard-menu-save-btn {
+  border-color: rgba(134, 239, 172, 0.9);
+  background: rgba(240, 253, 244, 0.96);
+  color: #15803d;
+}
+
+.dashboard-menu-toolbar #dashboard-menu-save-btn:hover:not(:disabled) {
+  background: rgba(220, 252, 231, 0.98);
+}
+
 .menu-grid {
   position: relative;
   z-index: 2;
@@ -1388,14 +1552,33 @@ body.task-modal-open {
   align-items: stretch;
 }
 
-.dashboard-menu-stage {
-  position: relative;
-  z-index: 2;
-}
-
 .menu-item {
   text-decoration: none;
   color: #1e293b;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease;
+}
+.menu-item.is-reorderable {
+  cursor: grab;
+}
+.menu-item.is-dragging {
+  cursor: grabbing;
+  pointer-events: none;
+}
+.menu-item.is-floating-drag {
+  transition: none;
+}
+.menu-item.is-floating-drag .dashboard-card {
+  transform: rotate(-1.25deg) scale(1.015);
+  box-shadow: 0 28px 56px rgba(15, 23, 42, 0.22), 0 10px 24px rgba(99, 102, 241, 0.14);
+}
+.menu-item.is-drag-source-hidden {
+  display: none;
+}
+
+.menu-item-drop-slot {
+  display: block;
+  align-self: stretch;
+  pointer-events: none;
 }
 
 .dashboard-card {
@@ -1531,6 +1714,104 @@ body.task-modal-open {
 .menu-item.notatnik .card-icon-shell {
   color: #0f766e;
   background: rgba(236, 254, 255, 0.88);
+}
+
+.menu-item-placeholder {
+  cursor: default;
+}
+
+.menu-item-placeholder .dashboard-card {
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.92) 0%, rgba(226, 232, 240, 0.9) 100%);
+  border: 1px dashed rgba(148, 163, 184, 0.46);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+.menu-item-placeholder .dashboard-card::before {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.42) 0%, rgba(203, 213, 225, 0.12) 100%);
+}
+
+.dashboard-card-drop-slot {
+  height: 100%;
+  min-height: 100%;
+  min-height: 300px;
+  border-radius: 24px;
+  border: 1px dashed rgba(99, 102, 241, 0.34);
+  background: linear-gradient(180deg, rgba(238, 242, 255, 0.66) 0%, rgba(224, 231, 255, 0.42) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.62), inset 0 18px 34px rgba(255, 255, 255, 0.36);
+  animation: dashboardDropSlotPulse 0.9s ease-in-out infinite alternate;
+}
+.dashboard-card-drop-slot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0) 62%);
+  pointer-events: none;
+}
+
+.dashboard-menu-stage.is-editing .menu-item:not(.is-dragging):not(.menu-item-drop-slot) .dashboard-card {
+  animation: dashboardTileJiggle 0.26s ease-in-out infinite alternate;
+}
+
+.dashboard-menu-stage.is-editing .menu-item.is-reorderable {
+  touch-action: none;
+  -moz-user-select: none;
+       user-select: none;
+  -webkit-user-select: none;
+}
+
+.dashboard-menu-stage.is-editing .menu-item:hover .dashboard-card,
+.dashboard-menu-stage.is-editing .menu-item:focus-visible .dashboard-card {
+  transform: none;
+}
+
+.menu-item-placeholder:hover .dashboard-card,
+.menu-item-placeholder:focus-visible .dashboard-card {
+  transform: none;
+  border-color: rgba(148, 163, 184, 0.46);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-card-placeholder {
+  position: relative;
+  isolation: isolate;
+}
+
+.card-placeholder-plus,
+.card-placeholder-badge {
+  position: relative;
+  z-index: 1;
+}
+
+.card-placeholder-plus {
+  font-size: clamp(6.8rem, 8vw, 9.6rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.08em;
+  color: rgba(100, 116, 139, 0.22);
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+
+.card-placeholder-badge {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  background: rgba(255, 255, 255, 0.56);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #64748b;
 }
 
 /* === Dashboard Navigation Tiles: End === */
@@ -1748,6 +2029,195 @@ body.dashboard-page.dashboard-bookmark-modal-open {
   color: #475569;
 }
 
+.dashboard-bookmarks-stage {
+  margin-top: 34px;
+}
+.dashboard-bookmarks-head {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.dashboard-bookmarks-copy h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+}
+.dashboard-bookmarks-add-btn {
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border-color: rgba(203, 213, 225, 0.88);
+  background: rgba(248, 250, 252, 0.92);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 8px 18px rgba(15, 23, 42, 0.06);
+  color: #475569;
+  font-size: 0.92rem;
+}
+.dashboard-bookmarks-add-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+.dashboard-bookmarks-panel {
+  padding: 10px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  overflow: hidden;
+}
+.dashboard-bookmarks-list {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+.dashboard-bookmark-tab {
+  position: relative;
+  flex: 0 0 auto;
+  width: 196px;
+  max-width: calc(100vw - 150px);
+  scroll-snap-align: start;
+}
+.dashboard-bookmark-tab-main {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 66px 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(203, 213, 225, 0.84);
+  background: linear-gradient(180deg, rgba(250, 251, 253, 0.98) 0%, rgba(240, 244, 249, 0.92) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 6px 18px rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+.dashboard-bookmark-tab-main:hover {
+  transform: translateY(-1px);
+  border-color: rgba(148, 163, 184, 0.94);
+  background: linear-gradient(180deg, rgb(255, 255, 255) 0%, rgba(244, 247, 252, 0.96) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.94), 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+.dashboard-bookmark-tab-copy {
+  min-width: 0;
+  display: block;
+}
+.dashboard-bookmark-tab-copy strong {
+  display: block;
+  overflow: hidden;
+  font-size: 1.12rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #0f172a;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-bookmark-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  color: #64748b;
+  font-size: 0.92rem;
+  flex: 0 0 auto;
+}
+.dashboard-bookmark-icon i {
+  font-size: 0.86rem;
+}
+.dashboard-bookmark-icon.has-image i {
+  display: none;
+}
+.dashboard-bookmark-favicon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.dashboard-bookmark-actions {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease;
+}
+.dashboard-bookmark-tab:hover .dashboard-bookmark-actions,
+.dashboard-bookmark-tab:focus-within .dashboard-bookmark-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.dashboard-bookmark-icon-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(203, 213, 225, 0.82);
+  color: #334155;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+.dashboard-bookmark-icon-btn i {
+  font-size: 0.82rem;
+}
+.dashboard-bookmark-icon-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(148, 163, 184, 0.96);
+  background: #ffffff;
+}
+.dashboard-bookmark-meta {
+  display: none;
+}
+.dashboard-bookmark-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.88);
+  border: 1px solid rgba(203, 213, 225, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+.dashboard-bookmark-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.16) 0%, rgba(147, 197, 253, 0.24) 100%);
+  color: #1d4ed8;
+  font-size: 1rem;
+}
+.dashboard-bookmark-empty .dashboard-bookmark-empty-copy strong {
+  font-size: 1.08rem;
+  line-height: 1.25;
+}
+.dashboard-bookmark-empty .dashboard-bookmark-empty-copy p {
+  margin-top: 3px;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
 .dashboard-bookmark-modal-shell {
   position: fixed;
   inset: 0;
@@ -1920,6 +2390,12 @@ body.dashboard-page.dashboard-bookmark-modal-open {
   .dashboard-scroll-cue {
     animation: none;
   }
+  .dashboard-menu-stage.is-editing .menu-item:not(.is-dragging):not(.menu-item-drop-slot) .dashboard-card {
+    animation: none;
+  }
+  .dashboard-card-drop-slot {
+    animation: none;
+  }
 }
 body.dashboard-page.theme-dark {
   background: radial-gradient(circle at 18% 16%, rgba(94, 231, 255, 0.18) 0%, rgba(94, 231, 255, 0) 22%), radial-gradient(circle at 82% 14%, rgba(124, 92, 255, 0.24) 0%, rgba(124, 92, 255, 0) 28%), radial-gradient(circle at 50% 100%, rgba(34, 197, 94, 0.14) 0%, rgba(34, 197, 94, 0) 24%), linear-gradient(135deg, #060b17 0%, #0b1430 42%, #121e46 72%, #0a1228 100%);
@@ -2001,6 +2477,21 @@ body.dashboard-page.theme-dark .weather-search input::placeholder,
 body.dashboard-page.theme-dark .task-field input::placeholder,
 body.dashboard-page.theme-dark .task-field textarea::placeholder {
   color: #7f93b5;
+}
+body.dashboard-page.theme-dark .dashboard-demo-toggle-btn {
+  border-color: rgba(124, 140, 255, 0.2);
+  background: rgba(15, 24, 42, 0.88);
+  box-shadow: 0 16px 30px rgba(2, 8, 23, 0.34);
+  color: #dbe7ff;
+}
+body.dashboard-page.theme-dark .dashboard-demo-toggle-btn:hover:not(:disabled) {
+  border-color: rgba(94, 231, 255, 0.26);
+  background: rgba(20, 31, 56, 0.94);
+}
+body.dashboard-page.theme-dark .dashboard-demo-toggle-btn[data-state=seeded] {
+  border-color: rgba(248, 113, 113, 0.28);
+  background: rgba(69, 18, 18, 0.86);
+  color: #fecaca;
 }
 body.dashboard-page.theme-dark .weather-search-row button,
 body.dashboard-page.theme-dark .weather-location-btn i,
@@ -2209,20 +2700,49 @@ body.dashboard-page.theme-dark .menu-item.notatnik .card-icon-shell {
   background: rgba(15, 71, 76, 0.88);
   color: #8cf4ff;
 }
+body.dashboard-page.theme-dark .dashboard-card-drop-slot {
+  border-color: rgba(94, 231, 255, 0.26);
+  background: linear-gradient(180deg, rgba(12, 19, 34, 0.74) 0%, rgba(17, 26, 44, 0.54) 100%);
+  box-shadow: inset 0 0 0 1px rgba(94, 231, 255, 0.08), inset 0 20px 36px rgba(94, 231, 255, 0.05);
+}
+body.dashboard-page.theme-dark .dashboard-card-drop-slot::before {
+  background: radial-gradient(circle at 50% 50%, rgba(94, 231, 255, 0.12) 0%, rgba(94, 231, 255, 0) 62%);
+}
+body.dashboard-page.theme-dark .menu-item-placeholder .dashboard-card {
+  background: linear-gradient(180deg, rgba(12, 19, 34, 0.94) 0%, rgba(17, 26, 44, 0.88) 100%);
+  border-color: rgba(127, 147, 181, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 38px rgba(2, 8, 23, 0.24);
+}
+body.dashboard-page.theme-dark .menu-item-placeholder .dashboard-card::before {
+  background: linear-gradient(90deg, rgba(127, 147, 181, 0.34) 0%, rgba(127, 147, 181, 0.08) 100%);
+}
+body.dashboard-page.theme-dark .menu-item-placeholder:hover .dashboard-card,
+body.dashboard-page.theme-dark .menu-item-placeholder:focus-visible .dashboard-card {
+  border-color: rgba(127, 147, 181, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 38px rgba(2, 8, 23, 0.24);
+}
+body.dashboard-page.theme-dark .card-placeholder-plus {
+  color: rgba(148, 163, 184, 0.18);
+}
+body.dashboard-page.theme-dark .card-placeholder-badge {
+  border-color: rgba(127, 147, 181, 0.24);
+  background: rgba(30, 41, 59, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: #9db0cf;
+}
 body.dashboard-page.theme-dark .dashboard-bookmarks-copy h2,
-body.dashboard-page.theme-dark .dashboard-bookmark-card-top strong,
+body.dashboard-page.theme-dark .dashboard-bookmark-tab-copy strong,
 body.dashboard-page.theme-dark .dashboard-bookmark-empty-copy strong,
 body.dashboard-page.theme-dark .dashboard-bookmark-modal-copy h2 {
   color: #f8fafc;
 }
-body.dashboard-page.theme-dark .dashboard-bookmarks-copy p:last-child,
-body.dashboard-page.theme-dark .dashboard-bookmark-card-top p,
+body.dashboard-page.theme-dark .dashboard-bookmark-tab-main,
 body.dashboard-page.theme-dark .dashboard-bookmark-empty-copy p,
 body.dashboard-page.theme-dark .dashboard-bookmark-modal-copy p:last-child {
   color: rgba(226, 232, 240, 0.78);
 }
 body.dashboard-page.theme-dark .dashboard-bookmarks-panel,
-body.dashboard-page.theme-dark .dashboard-bookmark-card,
+body.dashboard-page.theme-dark .dashboard-bookmark-tab-main,
 body.dashboard-page.theme-dark .dashboard-bookmark-empty,
 body.dashboard-page.theme-dark .dashboard-bookmark-modal-card,
 body.dashboard-page.theme-dark .dashboard-bookmark-field input,
@@ -2234,9 +2754,16 @@ body.dashboard-page.theme-dark .dashboard-bookmark-modal-close {
   border-color: rgba(124, 140, 255, 0.2);
   box-shadow: 0 20px 40px rgba(2, 8, 23, 0.22);
 }
+body.dashboard-page.theme-dark .dashboard-bookmark-tab-main {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.86) 0%, rgba(20, 31, 56, 0.78) 100%);
+}
+body.dashboard-page.theme-dark .dashboard-bookmark-icon {
+  color: #9db0cf;
+}
 body.dashboard-page.theme-dark .dashboard-bookmark-icon-btn,
 body.dashboard-page.theme-dark .dashboard-bookmark-secondary-btn,
 body.dashboard-page.theme-dark .dashboard-bookmark-modal-close {
+  background: rgba(15, 23, 42, 0.78);
   color: #e2e8f0;
 }
 body.dashboard-page.theme-dark .dashboard-bookmark-field span {
@@ -2298,6 +2825,46 @@ body.dashboard-page.theme-dark .dashboard-bookmark-modal-backdrop {
     padding: 0 8px;
     margin-bottom: 10px;
   }
+  .dashboard-theme-bookmark-slot {
+    top: 14px;
+    left: 14px;
+    gap: 8px;
+    max-width: calc(100vw - 28px);
+  }
+  body.dashboard-page .dashboard-theme-bookmark-slot .theme-toggle-btn {
+    width: auto;
+    height: 40px;
+    padding: 0 14px;
+    gap: 8px;
+    border-radius: 999px;
+  }
+  body.dashboard-page .dashboard-theme-bookmark-slot .theme-toggle-btn span {
+    display: inline;
+  }
+  .dashboard-demo-toggle-btn {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 0.92rem;
+  }
+  .dashboard-menu-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .dashboard-menu-edit-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .dashboard-menu-edit-actions .dashboard-bookmarks-add-btn {
+    width: 100%;
+  }
+  .dashboard-menu-toolbar .dashboard-menu-edit-btn {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 0.92rem;
+  }
   .dashboard-orb,
   .dashboard-grid-glow {
     display: none;
@@ -2313,9 +2880,19 @@ body.dashboard-page.theme-dark .dashboard-bookmark-modal-backdrop {
     cursor: pointer;
   }
   .weather-search {
+    position: static;
+    display: none;
     width: min(320px, 100%);
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
     margin-top: 10px;
     padding: 10px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition: none;
   }
   .weather-search-label {
     margin-bottom: 6px;
@@ -2399,6 +2976,12 @@ body.dashboard-page.theme-dark .dashboard-bookmark-modal-backdrop {
   }
   body.weather-editor-open .weather-widget {
     max-width: none;
+  }
+  body.weather-editor-open .weather-search {
+    display: block;
+  }
+  body.weather-editor-open .dashboard-menu-stage {
+    margin-top: 0;
   }
   body.weather-editor-open .weather-main {
     margin-top: 2px;
@@ -2569,23 +3152,25 @@ body.dashboard-page.theme-dark .dashboard-bookmark-modal-backdrop {
     width: 100%;
   }
   .dashboard-bookmarks-panel {
-    padding: 18px;
-    border-radius: 20px;
+    padding: 10px;
+    border-radius: 18px;
   }
   .dashboard-bookmarks-list {
-    grid-template-columns: 1fr;
+    gap: 6px;
   }
-  .dashboard-bookmark-card,
+  .dashboard-bookmark-tab {
+    width: 176px;
+    max-width: calc(100vw - 120px);
+  }
+  .dashboard-bookmark-tab-main,
   .dashboard-bookmark-empty {
-    min-height: 0;
-    padding: 18px;
+    min-height: 44px;
     border-radius: 18px;
   }
   .dashboard-bookmark-actions,
   .dashboard-bookmark-form-actions {
-    flex-direction: column;
+    flex-direction: row;
   }
-  .dashboard-bookmark-open-btn,
   .dashboard-bookmark-primary-btn,
   .dashboard-bookmark-secondary-btn {
     width: 100%;
@@ -2612,6 +3197,20 @@ body.dashboard-page.theme-dark .dashboard-bookmark-modal-backdrop {
     min-height: 0;
     padding: 6px 10px;
     border-radius: 12px;
+  }
+  .menu-item-placeholder .dashboard-card {
+    justify-content: center;
+    padding: 6px 10px;
+  }
+  .card-placeholder-plus {
+    font-size: 3.2rem;
+  }
+  .card-placeholder-badge {
+    left: 10px;
+    bottom: 10px;
+    padding: 6px 8px;
+    font-size: 0.54rem;
+    letter-spacing: 0.18em;
   }
   .card-icon-shell {
     flex: 0 0 38px;

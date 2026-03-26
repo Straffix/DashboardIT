@@ -6,9 +6,17 @@
 		fallbackName: 'Warszawa',
 		geoapifyApiKeyMetaName: 'geoapify-api-key',
 		requestTimeoutMs: 6500,
-		workdayStartHour: 8,
-		workdayEndHour: 17,
-		workdayDisplayHours: [8, 10, 12, 14, 16, 17],
+		hourlyStartHour: 0,
+		hourlyEndHour: 23,
+		defaultHourlyFocusStart: 8,
+		defaultHourlyFocusEnd: 16,
+		hourlyDragMultiplier: 1.45,
+		hourlyDragEasing: 0.62,
+		hourlyReleaseEasing: 0.3,
+		hourlyVelocityBlend: 0.34,
+		hourlyReleaseFriction: 0.92,
+		hourlyReleaseBoost: 14,
+		hourlyMaxReleaseVelocity: 34,
 	}
 
 	const weatherCodeMap = {
@@ -230,9 +238,22 @@
 		let latestForecastData = null
 		let selectedForecastDate = ''
 		let selectedForecastLabel = ''
+		let activeInputPointerId = null
+		let didDragSelectionOutsideWidget = false
+		let ignoreNextOutsideClick = false
+		const hourlyDisplayHours = Array.from(
+			{ length: weatherConfig.hourlyEndHour - weatherConfig.hourlyStartHour + 1 },
+			(_, index) => weatherConfig.hourlyStartHour + index
+		)
 
 		const formatHourLabel = hour => `${String(hour).padStart(2, '0')}:00`
 		const forecastDayLabels = ['Dzis', 'Jutro', 'Pojutrze']
+		const isPointInsideElement = (element, clientX, clientY) => {
+			if (!element) return false
+
+			const bounds = element.getBoundingClientRect()
+			return clientX >= bounds.left && clientX <= bounds.right && clientY >= bounds.top && clientY <= bounds.bottom
+		}
 
 		const formatForecastDateLabel = (dateValue, index) => {
 			if (forecastDayLabels[index]) return forecastDayLabels[index]
@@ -296,9 +317,9 @@
 		const getActiveWorkdayHour = currentTime => {
 			const hour = Number(String(currentTime || '').slice(11, 13))
 			if (!Number.isFinite(hour)) return null
-			if (hour < weatherConfig.workdayStartHour || hour > weatherConfig.workdayEndHour) return null
+			if (hour < weatherConfig.hourlyStartHour || hour > weatherConfig.hourlyEndHour) return null
 
-			return weatherConfig.workdayDisplayHours.reduce((closestHour, nextHour) => {
+			return hourlyDisplayHours.reduce((closestHour, nextHour) => {
 				if (closestHour === null) return nextHour
 
 				return Math.abs(nextHour - hour) < Math.abs(closestHour - hour) ? nextHour : closestHour
@@ -320,7 +341,7 @@
 					if (slot.precipitationLabel) titleParts.push(slot.precipitationLabel)
 
 					return `
-						<div class="${classes.join(' ')}" title="${titleParts.join(' | ')}">
+						<div class="${classes.join(' ')}" data-weather-hour="${slot.hour}" title="${titleParts.join(' | ')}">
 							<span class="weather-workday-time">${formatHourLabel(slot.hour).slice(0, 5)}</span>
 							<span class="weather-workday-icon weather-tone-${details.tone}"><i class="fa-solid ${details.icon}"></i></span>
 							<span class="weather-workday-temp">${slot.temperatureLabel}</span>
@@ -330,29 +351,122 @@
 				.join('')
 		}
 
+		const scrollWorkdayTrackToDefaultFocus = () => {
+			if (!weatherWorkdayTrack) return
+
+			const startSlot = weatherWorkdayTrack.querySelector(`[data-weather-hour="${weatherConfig.defaultHourlyFocusStart}"]`)
+			const endSlot = weatherWorkdayTrack.querySelector(`[data-weather-hour="${weatherConfig.defaultHourlyFocusEnd}"]`)
+			if (!startSlot || !endSlot) {
+				weatherWorkdayTrack.weatherTrackSyncScroll?.(0) || (weatherWorkdayTrack.scrollLeft = 0)
+				return
+			}
+
+			window.requestAnimationFrame(() => {
+				const focusStart = startSlot.offsetLeft
+				const focusEnd = endSlot.offsetLeft + endSlot.offsetWidth
+				const focusCenter = (focusStart + focusEnd) / 2
+				const maxScrollLeft = Math.max(weatherWorkdayTrack.scrollWidth - weatherWorkdayTrack.clientWidth, 0)
+				const nextScrollLeft = Math.min(Math.max(focusCenter - weatherWorkdayTrack.clientWidth / 2, 0), maxScrollLeft)
+
+				weatherWorkdayTrack.weatherTrackSyncScroll?.(nextScrollLeft) || (weatherWorkdayTrack.scrollLeft = nextScrollLeft)
+			})
+		}
+
 		const enableWorkdayTrackDrag = () => {
 			if (!weatherWorkdayTrack || weatherWorkdayTrack.dataset.dragReady === 'true') return
 
 			let isDragging = false
 			let startPointerX = 0
 			let startScrollLeft = 0
+			let targetScrollLeft = weatherWorkdayTrack.scrollLeft
+			let animatedScrollLeft = weatherWorkdayTrack.scrollLeft
+			let animationFrameId = 0
+			let releaseVelocity = 0
+			let lastPointerX = 0
+			let lastPointerTime = 0
+
+			const getMaxScrollLeft = () => Math.max(weatherWorkdayTrack.scrollWidth - weatherWorkdayTrack.clientWidth, 0)
+			const clampScrollLeft = value =>
+				Math.min(Math.max(value, 0), getMaxScrollLeft())
+
+			const cancelTrackAnimation = () => {
+				if (animationFrameId) {
+					window.cancelAnimationFrame(animationFrameId)
+					animationFrameId = 0
+				}
+			}
+
+			const syncTrackScroll = nextScrollLeft => {
+				cancelTrackAnimation()
+				const clampedScrollLeft = clampScrollLeft(nextScrollLeft)
+
+				targetScrollLeft = clampedScrollLeft
+				animatedScrollLeft = clampedScrollLeft
+				releaseVelocity = 0
+				weatherWorkdayTrack.scrollLeft = clampedScrollLeft
+			}
+
+			const animateTrackScroll = () => {
+				animationFrameId = 0
+				const easing = isDragging ? weatherConfig.hourlyDragEasing : weatherConfig.hourlyReleaseEasing
+
+				if (!isDragging && Math.abs(releaseVelocity) > 0.01) {
+					targetScrollLeft = clampScrollLeft(targetScrollLeft + releaseVelocity)
+
+					if (targetScrollLeft <= 0 || targetScrollLeft >= getMaxScrollLeft()) {
+						releaseVelocity *= 0.65
+					}
+
+					releaseVelocity *= weatherConfig.hourlyReleaseFriction
+				}
+
+				animatedScrollLeft += (targetScrollLeft - animatedScrollLeft) * easing
+
+				if (Math.abs(targetScrollLeft - animatedScrollLeft) < 0.35) {
+					animatedScrollLeft = targetScrollLeft
+				}
+
+				weatherWorkdayTrack.scrollLeft = animatedScrollLeft
+
+				if (Math.abs(releaseVelocity) < 0.05) {
+					releaseVelocity = 0
+				}
+
+				if (isDragging || Math.abs(targetScrollLeft - animatedScrollLeft) >= 0.35 || releaseVelocity !== 0) {
+					animationFrameId = window.requestAnimationFrame(animateTrackScroll)
+				}
+			}
+
+			const requestTrackAnimation = () => {
+				if (animationFrameId) return
+
+				animationFrameId = window.requestAnimationFrame(animateTrackScroll)
+			}
 
 			const stopDragging = () => {
 				if (!isDragging) return
 
 				isDragging = false
 				weatherWorkdayTrack.classList.remove('is-dragging')
+				requestTrackAnimation()
 			}
 
 			weatherWorkdayTrack.dataset.dragReady = 'true'
+			weatherWorkdayTrack.weatherTrackSyncScroll = syncTrackScroll
 
 			weatherWorkdayTrack.addEventListener('pointerdown', event => {
 				if (event.pointerType === 'mouse' && event.button !== 0) return
 				if (weatherWorkdayTrack.scrollWidth <= weatherWorkdayTrack.clientWidth) return
 
+				cancelTrackAnimation()
 				isDragging = true
 				startPointerX = event.clientX
 				startScrollLeft = weatherWorkdayTrack.scrollLeft
+				targetScrollLeft = startScrollLeft
+				animatedScrollLeft = startScrollLeft
+				releaseVelocity = 0
+				lastPointerX = event.clientX
+				lastPointerTime = performance.now()
 				weatherWorkdayTrack.classList.add('is-dragging')
 				weatherWorkdayTrack.setPointerCapture?.(event.pointerId)
 				event.preventDefault()
@@ -362,7 +476,21 @@
 				if (!isDragging) return
 
 				const deltaX = event.clientX - startPointerX
-				weatherWorkdayTrack.scrollLeft = startScrollLeft - deltaX
+				targetScrollLeft = clampScrollLeft(startScrollLeft - deltaX * weatherConfig.hourlyDragMultiplier)
+				const now = performance.now()
+				const elapsedMs = Math.max(now - lastPointerTime, 1)
+				const pointerDelta = lastPointerX - event.clientX
+				const nextVelocity = (pointerDelta * weatherConfig.hourlyDragMultiplier * weatherConfig.hourlyReleaseBoost) / elapsedMs
+
+				releaseVelocity =
+					releaseVelocity * (1 - weatherConfig.hourlyVelocityBlend) + nextVelocity * weatherConfig.hourlyVelocityBlend
+				releaseVelocity = Math.min(
+					Math.max(releaseVelocity, -weatherConfig.hourlyMaxReleaseVelocity),
+					weatherConfig.hourlyMaxReleaseVelocity
+				)
+				lastPointerX = event.clientX
+				lastPointerTime = now
+				requestTrackAnimation()
 				event.preventDefault()
 			})
 
@@ -376,14 +504,14 @@
 		}
 
 		const setWorkdayFallbackState = (
-			rangeLabel = `${formatHourLabel(weatherConfig.workdayStartHour)}-${formatHourLabel(weatherConfig.workdayEndHour)}`,
+			rangeLabel = `${formatHourLabel(weatherConfig.hourlyStartHour)}-${formatHourLabel(weatherConfig.hourlyEndHour)}`,
 			label = 'Godzinowo'
 		) => {
 			if (weatherWorkdayLabel) weatherWorkdayLabel.textContent = label
 			if (weatherWorkdayRange) weatherWorkdayRange.textContent = rangeLabel
 
 			renderWorkdayTimeline(
-				weatherConfig.workdayDisplayHours.map(hour => ({
+				hourlyDisplayHours.map(hour => ({
 					hour,
 					weatherCode: null,
 					temperatureLabel: '--',
@@ -392,6 +520,7 @@
 					isUnavailable: true,
 				}))
 			)
+			scrollWorkdayTrackToDefaultFocus()
 		}
 
 		const renderWorkdayForecast = (data, selectedDate, label) => {
@@ -405,7 +534,7 @@
 			const temperatures = Array.isArray(data?.hourly?.temperature_2m) ? data.hourly.temperature_2m : []
 			const weatherCodes = Array.isArray(data?.hourly?.weather_code) ? data.hourly.weather_code : []
 			const precipitationProbabilities = Array.isArray(data?.hourly?.precipitation_probability) ? data.hourly.precipitation_probability : []
-			const workdayRangeLabel = `${formatHourLabel(weatherConfig.workdayStartHour)}-${formatHourLabel(weatherConfig.workdayEndHour)}`
+			const workdayRangeLabel = `${formatHourLabel(weatherConfig.hourlyStartHour)}-${formatHourLabel(weatherConfig.hourlyEndHour)}`
 
 			if (!targetDate || times.length === 0) {
 				setWorkdayFallbackState(workdayRangeLabel, label || 'Godzinowo')
@@ -430,7 +559,7 @@
 			if (weatherWorkdayRange) weatherWorkdayRange.textContent = workdayRangeLabel
 
 			renderWorkdayTimeline(
-				weatherConfig.workdayDisplayHours.map(hour => {
+				hourlyDisplayHours.map(hour => {
 					const slot = hourlyMap.get(hour)
 					return {
 						hour,
@@ -444,6 +573,7 @@
 					}
 				})
 			)
+			scrollWorkdayTrackToDefaultFocus()
 		}
 
 		const renderDailyForecast = (data, activeDate = '') => {
@@ -783,12 +913,23 @@
 
 		const closeWeatherEditor = () => {
 			document.body.classList.remove('weather-editor-open')
+			weatherWidget?.setAttribute('aria-expanded', 'false')
+		}
+
+		const toggleWeatherEditor = () => {
+			if (document.body.classList.contains('weather-editor-open')) {
+				closeWeatherEditor()
+				return
+			}
+
+			openWeatherEditor()
 		}
 
 		const openWeatherEditor = () => {
 			if (!weatherLocationInput) return
 
 			document.body.classList.add('weather-editor-open')
+			weatherWidget?.setAttribute('aria-expanded', 'true')
 			weatherLocationInput.value =
 				preferencesService?.getWeatherLocation?.(weatherConfig.fallbackName) ||
 				storageService?.getText?.(weatherConfig.storageKey, weatherConfig.fallbackName) ||
@@ -797,6 +938,9 @@
 				weatherLocationInput.focus()
 				weatherLocationInput.select()
 			}, 20)
+			if (!weatherWorkdayPanel?.hidden) {
+				scrollWorkdayTrackToDefaultFocus()
+			}
 		}
 
 		const init = () => {
@@ -830,6 +974,13 @@
 					fetchWeatherForLocation(weatherLocationInput.value)
 					closeWeatherEditor()
 				})
+
+				weatherLocationInput.addEventListener('pointerdown', event => {
+					if (event.pointerType === 'mouse' && event.button !== 0) return
+
+					activeInputPointerId = event.pointerId
+					didDragSelectionOutsideWidget = false
+				})
 			}
 
 			weatherCurrentLocationBtn?.addEventListener('click', () => {
@@ -845,24 +996,54 @@
 			})
 
 			if (weatherWidget && weatherLocationInput) {
+				weatherWidget.setAttribute('aria-expanded', 'false')
+
 				weatherWidget.addEventListener('click', event => {
 					if (event.target.closest('.weather-search')) return
-					openWeatherEditor()
+					toggleWeatherEditor()
 				})
 
 				weatherWidget.addEventListener('keydown', event => {
 					if (event.key !== 'Enter' && event.key !== ' ') return
-					if (document.body.classList.contains('weather-editor-open')) return
+					if (event.target.closest('.weather-search')) return
 
 					event.preventDefault()
-					openWeatherEditor()
+					toggleWeatherEditor()
 				})
 
 				document.addEventListener('click', event => {
 					if (!document.body.classList.contains('weather-editor-open')) return
 					if (weatherWidget.contains(event.target)) return
+					if (ignoreNextOutsideClick) {
+						ignoreNextOutsideClick = false
+						return
+					}
 					closeWeatherEditor()
 				})
+
+				document.addEventListener('pointermove', event => {
+					if (activeInputPointerId === null || event.pointerId !== activeInputPointerId) return
+					if (isPointInsideElement(weatherWidget, event.clientX, event.clientY)) return
+
+					didDragSelectionOutsideWidget = true
+				})
+
+				const finishInputPointerInteraction = event => {
+					if (activeInputPointerId === null || event.pointerId !== activeInputPointerId) return
+
+					if (didDragSelectionOutsideWidget) {
+						ignoreNextOutsideClick = true
+						window.setTimeout(() => {
+							ignoreNextOutsideClick = false
+						}, 250)
+					}
+
+					activeInputPointerId = null
+					didDragSelectionOutsideWidget = false
+				}
+
+				document.addEventListener('pointerup', finishInputPointerInteraction)
+				document.addEventListener('pointercancel', finishInputPointerInteraction)
 
 				weatherLocationInput.addEventListener('keydown', event => {
 					if (event.key !== 'Escape') return

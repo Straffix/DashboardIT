@@ -227,8 +227,9 @@
 		})
 
 		const bookmarks = [
-			['bookmark-demo-1', 'demo-admin', 'Raport wymian', 'https://intranet.example.local/raporty/wymiany', 'Szybki podglad statusu wymian sprzetu.'],
-			['bookmark-demo-2', 'demo-admin', 'Checklist onboarding', '\\\\serwer-it\\onboarding\\checklista.xlsx', 'Arkusz przygotowania stanowisk dla nowych osob.'],
+			['bookmark-demo-7', 'demo-admin', 'Google', 'https://www.google.com', 'Przykladowa zakladka do wyszukiwarki Google.'],
+			['bookmark-demo-8', 'demo-admin', 'Office', 'https://www.office.com', 'Szybkie przejscie do pakietu Microsoft 365.'],
+			['bookmark-demo-9', 'demo-admin', 'Apple', 'https://www.apple.com', 'Przykladowy zewnetrzny link firmowy do Apple.'],
 			['bookmark-demo-3', 'demo-user-1', 'CMDB', 'https://cmdb.example.local', 'Prywatny skrot operatora do ewidencji sprzetu.'],
 			['bookmark-demo-4', 'demo-user-2', 'Plan dyzurow', '\\\\serwer-it\\grafik\\dyzury_marzec.xlsx', 'Grafik zmian i awaryjnych dyzurow zespolu.'],
 			['bookmark-demo-5', 'demo-user-3', 'Drukarki retail', 'https://print.example.local/retail', 'Panel sledzenia zgloszen drukarkowych.'],

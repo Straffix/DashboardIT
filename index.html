@@ -48,10 +48,11 @@
                         <label class="weather-search-label" for="weather-location-input">Wybierz miasto</label>
                         <p class="weather-search-hint">Kliknij dzień, aby zobaczyć prognozę godzinową.</p>
                         <div class="weather-search-forecast" id="weather-search-forecast" aria-live="polite"></div>
-                        <div class="weather-workday" id="weather-workday-panel" aria-label="Pogoda godzinowa dla wybranego dnia" hidden>
+                        <div class="weather-workday" id="weather-workday-panel"
+                            aria-label="Pogoda godzinowa dla wybranego dnia" hidden>
                             <div class="weather-workday-head">
                                 <span class="weather-workday-label" id="weather-workday-label">Godzinowo</span>
-                                <span class="weather-workday-range" id="weather-workday-range">08:00-17:00</span>
+                                <span class="weather-workday-range" id="weather-workday-range">00:00-23:00</span>
                             </div>
                             <div class="weather-workday-track" id="weather-workday-track" aria-live="polite"></div>
                         </div>
@@ -99,8 +100,27 @@
             </header>
 
             <section class="dashboard-menu-stage">
+                <div class="dashboard-menu-toolbar" aria-label="Ustawienia ukladu dashboardu">
+                    <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
+                        id="dashboard-menu-edit-btn">
+                        <i class="fa-solid fa-grip"></i>
+                        <span>Edytuj</span>
+                    </button>
+                    <div class="dashboard-menu-edit-actions" id="dashboard-menu-edit-actions" hidden>
+                        <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
+                            id="dashboard-menu-cancel-btn">
+                            <span>Anuluj</span>
+                        </button>
+                        <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
+                            id="dashboard-menu-save-btn">
+                            <i class="fa-solid fa-check"></i>
+                            <span>Zapisz uklad</span>
+                        </button>
+                    </div>
+                </div>
                 <nav class="menu-grid" id="dashboard-menu" aria-label="Moduły dashboardu">
-                    <a href="nowe_zatrudnienia.html" target="_blank" class="menu-item nowe-zatrudnienia">
+                    <a href="nowe_zatrudnienia.html" target="_blank" class="menu-item nowe-zatrudnienia"
+                        data-menu-item-id="nowe-zatrudnienia">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
                                 <i class="fa-solid fa-user-plus"></i>
@@ -112,19 +132,21 @@
                         </article>
                     </a>
 
-                    <a href="monitor_laptopow.html" target="_blank" class="menu-item monitor-laptopow">
+                    <a href="monitor_laptopow.html" target="_blank" class="menu-item monitor-laptopow"
+                        data-menu-item-id="monitor-laptopow">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
                                 <i class="fa-solid fa-laptop"></i>
                             </div>
                             <div class="card-copy">
-                                <span>Monitor Laptopów</span>
+                                <span>Urządzenia w domenie</span>
                                 <small>Status urządzeń w domenie i kontrola terminów aktywności.</small>
                             </div>
                         </article>
                     </a>
 
-                    <a href="wymiana_sprzetu.html" target="_blank" class="menu-item wymiana-sprzetu">
+                    <a href="wymiana_sprzetu.html" target="_blank" class="menu-item wymiana-sprzetu"
+                        data-menu-item-id="wymiana-sprzetu">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
                                 <i class="fa-solid fa-right-left"></i>
@@ -136,7 +158,8 @@
                         </article>
                     </a>
 
-                    <a href="rezerwacja_obiadow.html" target="_blank" class="menu-item rezerwacja-obiadow">
+                    <a href="rezerwacja_obiadow.html" target="_blank" class="menu-item rezerwacja-obiadow"
+                        data-menu-item-id="rezerwacja-obiadow">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
                                 <i class="fa-solid fa-utensils"></i>
@@ -149,7 +172,7 @@
                         </article>
                     </a>
 
-                    <a href="notatnik.html" target="_blank" class="menu-item notatnik">
+                    <a href="notatnik.html" target="_blank" class="menu-item notatnik" data-menu-item-id="notatnik">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
                                 <i class="fa-solid fa-book-open"></i>
@@ -164,52 +187,40 @@
 
                     <!-- Zakładki w przyszłości -->
 
-                    <a href="#" target="_blank" class="menu-item">
-                        <article class="dashboard-card">
-                            <div class="card-icon-shell">
-                                <i class="fa-solid fa-book-open"></i>
-                            </div>
-                            <div class="card-copy">
-                                <span>Pusta zakładka</span>
-                                <small>Możliwość dodania zakładki z nową finkcjonalnościa w przyszłości.</small>
-                            </div>
+                    <div class="menu-item menu-item-placeholder" aria-label="Nowy panel w budowie"
+                        data-menu-item-id="panel-w-budowie-1">
+                        <article class="dashboard-card dashboard-card-placeholder" aria-hidden="true">
+                            <span class="card-placeholder-plus">+</span>
+                            <span class="card-placeholder-badge">W budowie</span>
                         </article>
-                    </a>
+                    </div>
 
-                    <a href="#" target="_blank" class="menu-item">
-                        <article class="dashboard-card">
-                            <div class="card-icon-shell">
-                                <i class="fa-solid fa-book-open"></i>
-                            </div>
-                            <div class="card-copy">
-                                <span>Pusta zakładka</span>
-                                <small>Możliwość dodania zakładki z nową finkcjonalnościa w przyszłości.</small>
-                            </div>
+                    <div class="menu-item menu-item-placeholder" aria-label="Nowy panel w budowie"
+                        data-menu-item-id="panel-w-budowie-2">
+                        <article class="dashboard-card dashboard-card-placeholder" aria-hidden="true">
+                            <span class="card-placeholder-plus">+</span>
+                            <span class="card-placeholder-badge">W budowie</span>
                         </article>
-                    </a>
+                    </div>
 
-                    <a href="#" target="_blank" class="menu-item">
-                        <article class="dashboard-card">
-                            <div class="card-icon-shell">
-                                <i class="fa-solid fa-book-open"></i>
-                            </div>
-                            <div class="card-copy">
-                                <span>Pusta zakładka</span>
-                                <small>Możliwość dodania zakładki z nową finkcjonalnościa w przyszłości.</small>
-                            </div>
+                    <div class="menu-item menu-item-placeholder" aria-label="Nowy panel w budowie"
+                        data-menu-item-id="panel-w-budowie-3">
+                        <article class="dashboard-card dashboard-card-placeholder" aria-hidden="true">
+                            <span class="card-placeholder-plus">+</span>
+                            <span class="card-placeholder-badge">W budowie</span>
                         </article>
-                    </a>
+                    </div>
                 </nav>
             </section>
 
             <section class="dashboard-bookmarks-stage" aria-labelledby="dashboard-bookmarks-title">
                 <div class="dashboard-bookmarks-head">
                     <div class="dashboard-bookmarks-copy">
-                        <h2 id="dashboard-bookmarks-title">Pasek zakladek</h2>
+                        <h2 id="dashboard-bookmarks-title">Zakładki</h2>
                     </div>
                     <button type="button" class="dashboard-bookmarks-add-btn" id="dashboard-bookmark-add-btn">
                         <i class="fa-solid fa-bookmark"></i>
-                        <span>Dodaj zakladke</span>
+                        <span>Dodaj zakładkę</span>
                     </button>
                 </div>
                 <div class="dashboard-bookmarks-panel">
@@ -217,27 +228,14 @@
                 </div>
             </section>
 
-            <section class="dashboard-demo-panel" id="dashboard-demo-panel" aria-label="Panel danych testowych">
-                <p class="dashboard-demo-status" id="dashboard-demo-status">tryb pusty</p>
-                <div class="dashboard-demo-actions" role="group" aria-label="Sterowanie danymi demo">
-                    <button type="button" class="dashboard-demo-btn" id="dashboard-demo-seed-btn"
-                        title="Wgraj dane demo">
-                        <span>Demo</span>
-                    </button>
-                    <button type="button" class="dashboard-demo-btn is-danger" id="dashboard-demo-clear-btn"
-                        title="Usun dane demo">
-                        <span>Reset</span>
-                    </button>
-                </div>
-            </section>
-
             <footer class="main-footer">
                 <div class="footer-content">
-                    <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
+                    <p>&copy; <span id="current-year"></span> IT Support Dashboard by <span class="creator-name" >Arkadiusz Lisiecki</span>
+                    </p>
                     <div class="footer-separator"></div>
                     <p class="footer-status">
                         <span class="status-dot"></span>
-                        lisieckidev.pl
+                        <a class="footer-link" target="_blank" href="https://lisieckidev.pl">lisieckidev.pl</a>
                     </p>
                 </div>
             </footer>

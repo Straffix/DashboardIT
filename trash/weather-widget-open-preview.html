@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Widget Preview</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body class="dashboard-page weather-editor-open">
+    <div class="wrapper">
+        <div class="dashboard-container" style="padding-top: 24px;">
+            <section class="dashboard-topbar" aria-label="Panel informacji">
+                <article class="dashboard-widget weather-widget" aria-live="polite" role="button" tabindex="0" aria-expanded="true">
+                    <div class="weather-main">
+                        <div class="weather-icon" id="weather-icon">C</div>
+                        <div>
+                            <div class="weather-temp" id="weather-temp">7 C</div>
+                            <div class="weather-location" id="weather-location">Zgierz</div>
+                        </div>
+                    </div>
+                    <div class="weather-meta">
+                        <span id="weather-description">Pochmurno</span>
+                        <span id="weather-wind">Wiatr 12 km/h</span>
+                    </div>
+                    <form class="weather-search" id="weather-search-form">
+                        <label class="weather-search-label" for="weather-location-input">Wybierz miasto</label>
+                        <p class="weather-search-hint">Podglad panelu jako dropdown.</p>
+                        <div class="weather-search-forecast" id="weather-search-forecast">
+                            <button type="button" class="weather-forecast-card is-selected">
+                                <span class="weather-forecast-day">Dzis</span>
+                                <span class="weather-forecast-icon weather-tone-cloudy">C</span>
+                                <span class="weather-forecast-temps">
+                                    <strong>8 C</strong>
+                                    <small>2 C</small>
+                                </span>
+                            </button>
+                            <button type="button" class="weather-forecast-card">
+                                <span class="weather-forecast-day">Jutro</span>
+                                <span class="weather-forecast-icon weather-tone-sun">S</span>
+                                <span class="weather-forecast-temps">
+                                    <strong>11 C</strong>
+                                    <small>4 C</small>
+                                </span>
+                            </button>
+                            <button type="button" class="weather-forecast-card">
+                                <span class="weather-forecast-day">Pojutrze</span>
+                                <span class="weather-forecast-icon weather-tone-rain">R</span>
+                                <span class="weather-forecast-temps">
+                                    <strong>9 C</strong>
+                                    <small>3 C</small>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="weather-workday" id="weather-workday-panel" aria-label="Pogoda godzinowa dla wybranego dnia">
+                            <div class="weather-workday-head">
+                                <span class="weather-workday-label" id="weather-workday-label">Godzinowo</span>
+                                <span class="weather-workday-range" id="weather-workday-range">00:00-23:00</span>
+                            </div>
+                            <div class="weather-workday-track" id="weather-workday-track">
+                                <div class="weather-workday-slot"><span class="weather-workday-time">08:00</span><span class="weather-workday-icon weather-tone-cloudy">C</span><span class="weather-workday-temp">6 C</span></div>
+                                <div class="weather-workday-slot"><span class="weather-workday-time">09:00</span><span class="weather-workday-icon weather-tone-cloudy">C</span><span class="weather-workday-temp">6 C</span></div>
+                                <div class="weather-workday-slot is-current"><span class="weather-workday-time">10:00</span><span class="weather-workday-icon weather-tone-cloudy">C</span><span class="weather-workday-temp">7 C</span></div>
+                                <div class="weather-workday-slot"><span class="weather-workday-time">11:00</span><span class="weather-workday-icon weather-tone-cloudy">C</span><span class="weather-workday-temp">7 C</span></div>
+                                <div class="weather-workday-slot"><span class="weather-workday-time">12:00</span><span class="weather-workday-icon weather-tone-rain">R</span><span class="weather-workday-temp">8 C</span></div>
+                            </div>
+                        </div>
+                        <div class="weather-search-row">
+                            <input type="text" id="weather-location-input" value="Zgierz">
+                            <button type="submit" id="weather-search-btn">Zmien</button>
+                        </div>
+                        <button type="button" class="weather-location-btn" id="weather-current-location-btn">
+                            <span>Uzyj aktualnej lokalizacji</span>
+                        </button>
+                    </form>
+                </article>
+            </section>
+
+            <section style="margin-top: 48px; padding: 28px; border-radius: 24px; background: rgba(255,255,255,0.82); box-shadow: 0 16px 40px rgba(15,23,42,0.08);">
+                <h2 style="font-size: 2.4rem; margin-bottom: 12px;">Reszta strony</h2>
+                <p style="font-size: 1.6rem; color: #475569;">Ten blok powinien zostac na miejscu, a panel pogody ma nachodzic nad nim zamiast przewijac caly uklad.</p>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
