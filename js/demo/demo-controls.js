@@ -52,6 +52,12 @@
 		return Promise.resolve(window.confirm(options?.message || 'Czy na pewno chcesz kontynuowac?'))
 	}
 
+	const getDemoButtonHost = () =>
+		document.querySelector('.theme-toggle-submenu') ||
+		document.querySelector('.dashboard-theme-bookmark-slot') ||
+		document.querySelector('.dashboard-topbar') ||
+		document.body
+
 	const ensureDemoButton = () => {
 		if (!document.body?.classList.contains('dashboard-page')) {
 			document.getElementById('dashboard-demo-toggle-btn')?.remove()
@@ -59,34 +65,32 @@
 		}
 
 		const existingButton = document.getElementById('dashboard-demo-toggle-btn')
+		const host = getDemoButtonHost()
+
 		if (existingButton) {
+			if (host && existingButton.parentElement !== host) {
+				host.appendChild(existingButton)
+			}
 			return existingButton
 		}
 
-		if (!document.body) {
+		if (!document.body || !host) {
 			return null
 		}
 
 		const button = document.createElement('button')
 		button.type = 'button'
-		button.className = 'dashboard-demo-toggle-btn'
+		button.className = 'dashboard-demo-toggle-btn theme-toggle-option'
 		button.id = 'dashboard-demo-toggle-btn'
 		button.setAttribute('aria-live', 'polite')
-		button.innerHTML = '<span>Wgraj przykladowe dane</span>'
+		button.innerHTML = `
+			<span class="theme-toggle-option-badge dashboard-demo-toggle-badge" aria-hidden="true">
+				<i class="fa-solid fa-database"></i>
+			</span>
+			<span>Demo Mode</span>
+		`
 
-		const dashboardBookmarkSlot = document.querySelector('.dashboard-theme-bookmark-slot')
-		const dashboardTopbar = document.querySelector('.dashboard-topbar')
-		const themeToggle = document.querySelector('.theme-toggle-btn')
-
-		if (dashboardBookmarkSlot) {
-			dashboardBookmarkSlot.appendChild(button)
-		} else if (themeToggle) {
-			themeToggle.insertAdjacentElement('afterend', button)
-		} else if (dashboardTopbar) {
-			dashboardTopbar.prepend(button)
-		} else {
-			document.body.appendChild(button)
-		}
+		host.appendChild(button)
 
 		return button
 	}
@@ -102,20 +106,16 @@
 			const isSeeded = Boolean(localStorage.getItem(DEMO_MARKER_KEY))
 			demoButton.dataset.state = isSeeded ? 'seeded' : 'empty'
 			demoButton.setAttribute('aria-pressed', String(isSeeded))
-			demoButton.title = isSeeded ? 'Usun przykladowe dane' : 'Wgraj przykladowe dane'
-			demoButton.querySelector('span')?.replaceChildren(
-				document.createTextNode(isSeeded ? 'Usun przykladowe dane' : 'Wgraj przykladowe dane'),
-			)
+			demoButton.classList.toggle('is-active', isSeeded)
+			demoButton.setAttribute('aria-label', isSeeded ? 'Usun przykladowe dane' : 'Wgraj przykladowe dane')
+			demoButton.removeAttribute('title')
 		}
 
 		const setBusyState = isBusy => {
 			demoButton.disabled = isBusy
 			demoButton.setAttribute('aria-busy', String(isBusy))
-			if (isBusy) {
-				demoButton.querySelector('span')?.replaceChildren(document.createTextNode('Przetwarzanie...'))
-			} else {
-				refreshButtonState()
-			}
+			demoButton.classList.toggle('is-busy', isBusy)
+			if (!isBusy) refreshButtonState()
 		}
 
 		const reloadDashboard = () => {
