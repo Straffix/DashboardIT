@@ -1,5 +1,6 @@
 @use 'sass:meta';
 @use '../abstracts/colors' as *;
+@use '../abstracts/rossmann-colors' as *;
 
 /* === Dashboard Page Background: Start === */
 body.dashboard-page {
@@ -194,6 +195,10 @@ body.weather-editor-open .dashboard-menu-stage {
 	margin-bottom: 18px;
 }
 
+body.weather-editor-open .dashboard-topbar {
+	z-index: 12;
+}
+
 .dashboard-theme-bookmark-slot {
 	position: fixed;
 	top: 20px;
@@ -221,7 +226,7 @@ body.weather-editor-open .dashboard-menu-stage {
 	}
 }
 
-body.dashboard-page .dashboard-topbar .theme-toggle-btn {
+body.dashboard-page .dashboard-topbar .theme-toggle-menu .theme-toggle-btn {
 	position: static;
 	top: auto;
 	right: auto;
@@ -241,21 +246,26 @@ body.dashboard-page .dashboard-topbar .theme-toggle-btn {
 	box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
 
-body.dashboard-page .dashboard-topbar .theme-toggle-btn span {
+body.dashboard-page .dashboard-topbar .theme-toggle-menu .theme-toggle-btn span {
 	display: none;
 }
 
-body.dashboard-page .dashboard-topbar .theme-toggle-btn i {
+body.dashboard-page .dashboard-topbar .theme-toggle-menu .theme-toggle-btn i {
 	font-size: 1.12rem;
 }
 
-body.dashboard-page .dashboard-theme-bookmark-slot .theme-toggle-btn {
+body.dashboard-page .dashboard-theme-bookmark-slot .theme-toggle-menu {
 	position: static;
 	top: auto;
 	right: auto;
 	bottom: auto;
 	left: auto;
 	z-index: auto;
+}
+
+body.dashboard-page .dashboard-theme-bookmark-slot .theme-toggle-menu .theme-toggle-submenu {
+	left: 0;
+	min-width: 180px;
 }
 
 .dashboard-demo-toggle-btn {
@@ -299,12 +309,15 @@ body.dashboard-page .dashboard-theme-bookmark-slot .theme-toggle-btn {
 	}
 }
 
-body.dashboard-page .dashboard-container > .theme-toggle-btn {
+body.dashboard-page .dashboard-container > .theme-toggle-menu {
 	position: absolute;
 	top: 24px;
 	right: 24px;
 	left: auto;
 	z-index: 5;
+}
+
+body.dashboard-page .dashboard-container > .theme-toggle-menu .theme-toggle-btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -1848,6 +1861,14 @@ body.task-modal-open {
 	background: linear-gradient(90deg, rgba(13, 148, 136, 0.78) 0%, rgba(34, 211, 238, 0.34) 100%);
 }
 
+.menu-item.eksperyment .dashboard-card {
+	background: linear-gradient(180deg, #fff8eb 0%, #ffe4bf 100%);
+}
+
+.menu-item.eksperyment .dashboard-card::before {
+	background: linear-gradient(90deg, rgba(217, 119, 6, 0.82) 0%, rgba(244, 114, 182, 0.28) 100%);
+}
+
 .menu-item.nowe-zatrudnienia .card-icon-shell {
 	color: #0f766e;
 	background: rgba(240, 253, 250, 0.82);
@@ -1871,6 +1892,11 @@ body.task-modal-open {
 .menu-item.notatnik .card-icon-shell {
 	color: #0f766e;
 	background: rgba(236, 254, 255, 0.88);
+}
+
+.menu-item.eksperyment .card-icon-shell {
+	color: #b45309;
+	background: rgba(255, 251, 235, 0.88);
 }
 
 .menu-item-placeholder {
@@ -2809,9 +2835,13 @@ body.dashboard-page.theme-dark {
 			background: linear-gradient(180deg, rgba(74, 33, 12, 0.94) 0%, rgba(120, 53, 15, 0.84) 100%);
 		}
 
-		.menu-item.notatnik .dashboard-card {
-			background: linear-gradient(180deg, rgba(8, 36, 38, 0.94) 0%, rgba(12, 62, 66, 0.84) 100%);
-		}
+	.menu-item.notatnik .dashboard-card {
+		background: linear-gradient(180deg, rgba(8, 36, 38, 0.94) 0%, rgba(12, 62, 66, 0.84) 100%);
+	}
+
+	.menu-item.eksperyment .dashboard-card {
+		background: linear-gradient(180deg, rgba(55, 28, 10, 0.94) 0%, rgba(90, 37, 25, 0.84) 100%);
+	}
 
 	.menu-item.nowe-zatrudnienia .card-icon-shell {
 		background: rgba(20, 61, 67, 0.88);
@@ -2836,6 +2866,11 @@ body.dashboard-page.theme-dark {
 	.menu-item.notatnik .card-icon-shell {
 		background: rgba(15, 71, 76, 0.88);
 		color: #8cf4ff;
+	}
+
+	.menu-item.eksperyment .card-icon-shell {
+		background: rgba(120, 53, 15, 0.88);
+		color: #fdba74;
 	}
 
 	.dashboard-card-drop-slot {
@@ -2953,6 +2988,161 @@ body.dashboard-page.theme-dark {
 	}
 }
 
+body.dashboard-page.theme-rossmann {
+	background:
+		radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 22%),
+		radial-gradient(circle at 84% 14%, rgba(195, 0, 45, 0.18) 0%, rgba(195, 0, 45, 0) 28%),
+		radial-gradient(circle at 50% 100%, rgba(220, 181, 136, 0.16) 0%, rgba(220, 181, 136, 0) 24%),
+		linear-gradient(135deg, #fffaf6 0%, #fff0e6 42%, #f7ddcf 72%, #efcdbf 100%);
+
+	&::before {
+		opacity: 0.18;
+	}
+
+	.dashboard-container {
+		background: rgba(255, 250, 246, 0.9);
+		border-color: rgba(195, 0, 45, 0.12);
+		box-shadow:
+			0 28px 80px rgba(150, 74, 60, 0.18),
+			0 0 0 1px rgba(195, 0, 45, 0.04);
+
+		&::before {
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 243, 235, 0.72) 100%);
+			border-color: rgba(195, 0, 45, 0.1);
+			box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+		}
+
+		&::after {
+			opacity: 0.68;
+			box-shadow:
+				-14px 0 24px rgba(255, 255, 255, 0.08),
+				16px 0 32px rgba(195, 0, 45, 0.08);
+		}
+	}
+
+	.dashboard-header h1,
+	.weather-temp,
+	.clock-time,
+	.card-copy span,
+	.task-modal-copy h2,
+	.task-agenda-main h4,
+	.task-calendar-month,
+	.task-agenda-head h3 {
+		color: $rossmann-text-main;
+	}
+
+	.dashboard-subtitle,
+	.weather-location,
+	.weather-meta,
+	.weather-workday-range,
+	.weather-workday-time,
+	.clock-date,
+	.card-copy small,
+	.task-modal-copy p,
+	.task-agenda-main p,
+	.task-agenda-empty,
+	.task-autoclear-copy small,
+	.dashboard-container .footer-content,
+	.dashboard-container .footer-status {
+		color: $rossmann-text-muted;
+	}
+
+	.dashboard-kicker,
+	.task-modal-kicker {
+		color: $rossmann-red;
+	}
+
+	.weather-search input,
+	.weather-search-row button,
+	.weather-location-btn,
+	.weather-icon,
+	.weather-forecast-card,
+	.weather-workday-slot,
+	.clock-face,
+	.card-icon-shell,
+	.task-modal-card,
+	.task-calendar-panel,
+	.task-form-panel,
+	.task-calendar-nav,
+	.task-field input,
+	.task-field select,
+	.task-field textarea,
+	.task-agenda-item,
+	.task-agenda-empty,
+	.task-autoclear-toggle,
+	.task-toast,
+	.dashboard-bookmarks-panel,
+	.dashboard-bookmark-tab-main,
+	.dashboard-bookmark-empty,
+	.dashboard-bookmark-modal-card,
+	.dashboard-bookmark-field input,
+	.dashboard-bookmark-field textarea,
+	.dashboard-bookmark-secondary-btn,
+	.dashboard-bookmark-icon-btn,
+	.dashboard-bookmark-modal-close {
+		background: rgba(255, 252, 249, 0.94);
+		border-color: rgba(195, 0, 45, 0.12);
+		color: $rossmann-text-main;
+		box-shadow: 0 18px 38px rgba(150, 74, 60, 0.12);
+	}
+
+	.dashboard-demo-toggle-btn {
+		border-color: rgba(195, 0, 45, 0.14);
+		background: rgba(255, 251, 248, 0.96);
+		box-shadow: 0 16px 30px rgba(150, 74, 60, 0.14);
+		color: $rossmann-text-main;
+
+		&:hover:not(:disabled) {
+			border-color: rgba(195, 0, 45, 0.24);
+			background: rgba(255, 247, 242, 0.98);
+		}
+
+		&[data-state='seeded'] {
+			border-color: rgba(195, 0, 45, 0.2);
+			background: rgba(195, 0, 45, 0.08);
+			color: $rossmann-red;
+		}
+	}
+
+	.weather-search input::placeholder,
+	.task-field input::placeholder,
+	.task-field textarea::placeholder {
+		color: rgba(140, 90, 97, 0.82);
+	}
+
+	.weather-search-row button,
+	.weather-location-btn i,
+	.card-icon-shell,
+	.task-calendar-nav {
+		color: $rossmann-red;
+	}
+
+	.weather-forecast-temps strong {
+		color: $rossmann-text-main;
+	}
+
+	.weather-search-hint {
+		color: $rossmann-text-muted;
+	}
+
+	.weather-workday {
+		border-top-color: rgba(195, 0, 45, 0.14);
+	}
+
+	.weather-forecast-card.is-selected {
+		border-color: rgba(195, 0, 45, 0.32);
+		background: linear-gradient(180deg, rgba(195, 0, 45, 0.08) 0%, rgba(255, 250, 246, 0.96) 100%);
+		box-shadow:
+			0 16px 28px rgba(150, 74, 60, 0.14),
+			inset 0 1px 0 rgba(255, 255, 255, 0.58);
+	}
+
+	.weather-workday-slot.is-current {
+		background: linear-gradient(180deg, rgba(195, 0, 45, 0.08) 0%, rgba(255, 250, 246, 0.96) 100%);
+		border-color: rgba(195, 0, 45, 0.18);
+	}
+}
+
 @media (max-width: 640px) {
 	body.dashboard-page {
 		padding: 10px 0 20px;
@@ -3006,7 +3196,7 @@ body.dashboard-page.theme-dark {
 		max-width: calc(100vw - 28px);
 	}
 
-	body.dashboard-page .dashboard-theme-bookmark-slot .theme-toggle-btn {
+	body.dashboard-page .dashboard-theme-bookmark-slot .theme-toggle-menu .theme-toggle-btn {
 		width: auto;
 		height: 40px;
 		padding: 0 14px;
@@ -3259,7 +3449,7 @@ body.dashboard-page.theme-dark {
 		line-height: 1.38;
 	}
 
-	body.dashboard-page .dashboard-topbar .theme-toggle-btn {
+	body.dashboard-page .dashboard-topbar .theme-toggle-menu .theme-toggle-btn {
 		width: 38px;
 		height: 38px;
 		border-radius: 12px;

@@ -831,6 +831,31 @@
 		}
 
 		const fetchWeatherForCurrentLocation = async () => {
+			const getLocationPermissionHint = () => {
+				const userAgent = String(navigator.userAgent || '').toLowerCase()
+				const platform = String(navigator.userAgentData?.platform || navigator.platform || '').toLowerCase()
+				const isWindows = userAgent.includes('windows') || platform.includes('win')
+				const isMac = userAgent.includes('mac os') || platform.includes('mac')
+				const isSafari =
+					userAgent.includes('safari') &&
+					!userAgent.includes('chrome') &&
+					!userAgent.includes('crios') &&
+					!userAgent.includes('edg') &&
+					!userAgent.includes('opr') &&
+					!userAgent.includes('firefox') &&
+					!userAgent.includes('fxios')
+
+				if (isSafari && isMac) {
+					return 'Sprawdz ustawienia Safari i uslug lokalizacji w macOS'
+				}
+
+				if (isWindows) {
+					return 'Sprawdz uprawnienia lokalizacji w przegladarce i systemie Windows'
+				}
+
+				return 'Sprawdz uprawnienia lokalizacji w przegladarce i systemie'
+			}
+
 			if (!navigator.geolocation) {
 				setWeatherState({
 					temperature: '-- C',
@@ -848,7 +873,7 @@
 				setWeatherState({
 					temperature: '-- C',
 					location: 'Aktualna lokalizacja',
-					description: 'Safari wymaga bezpiecznego adresu',
+					description: 'Lokalizacja wymaga bezpiecznego adresu',
 					wind: 'Uruchom przez HTTPS albo localhost',
 					icon: 'fa-location-crosshairs',
 				})
@@ -898,7 +923,25 @@
 					description: 'Nie udało się pobrać lokalizacji',
 					wind: 'Sprawdź uprawnienia przeglądarki',
 				}
-				const message = geolocationErrors[error?.code] || fallbackMessage
+				const locationErrorOverrides = {
+					1: {
+						description: 'Dostep do lokalizacji zablokowany',
+						wind: getLocationPermissionHint(),
+					},
+					2: {
+						description: 'Nie udalo sie ustalic pozycji',
+						wind: 'Upewnij sie, ze lokalizacja urzadzenia jest wlaczona i sprobuj ponownie',
+					},
+					3: {
+						description: 'Przekroczono czas pobierania',
+						wind: 'Polaczenie lub uslugi lokalizacji odpowiadaja zbyt dlugo',
+					},
+				}
+				const fallbackLocationError = {
+					description: 'Nie udalo sie pobrac lokalizacji',
+					wind: getLocationPermissionHint(),
+				}
+				const message = locationErrorOverrides[error?.code] || fallbackLocationError
 
 				setWeatherState({
 					temperature: '-- C',
@@ -993,6 +1036,8 @@
 				const forecastButton = event.target.closest('[data-weather-day]')
 				if (!forecastButton) return
 
+				event.preventDefault()
+				event.stopPropagation()
 				toggleSelectedForecastDay(forecastButton.dataset.weatherDay || '', forecastButton.dataset.weatherDayLabel || 'Godzinowo')
 			})
 
@@ -1014,7 +1059,8 @@
 
 				document.addEventListener('click', event => {
 					if (!document.body.classList.contains('weather-editor-open')) return
-					if (weatherWidget.contains(event.target)) return
+					const eventPath = typeof event.composedPath === 'function' ? event.composedPath() : []
+					if (eventPath.includes(weatherWidget) || weatherWidget.contains(event.target)) return
 					if (ignoreNextOutsideClick) {
 						ignoreNextOutsideClick = false
 						return

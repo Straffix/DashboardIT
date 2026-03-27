@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eksperyment - DashboardIT</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous" defer></script>
+
+    <link rel="stylesheet" href="./eksperyment.css">
+</head>
+
+<body class="experiment-page">
+    <div class="experiment-app">
+        <header class="experiment-topbar">
+            <a href="../index.html" class="experiment-back-link">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Powrót do dashboardu</span>
+            </a>
+
+            <div class="experiment-topbar-actions" data-tutorial-target="topbar-actions">
+                <button type="button" class="experiment-action-btn experiment-action-btn-muted"
+                    id="experiment-tutorial-btn">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <span>Instrukcja</span>
+                </button>
+                <button type="button" class="experiment-action-btn experiment-action-btn-muted"
+                    id="experiment-save-btn">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Zapisz</span>
+                </button>
+                <button type="button" class="experiment-action-btn" id="experiment-export-btn">
+                    <i class="fa-solid fa-file-export"></i>
+                    <span>Eksport HTML</span>
+                </button>
+                <button type="button" class="experiment-action-btn experiment-action-btn-danger"
+                    id="experiment-reset-btn">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </header>
+
+        <section class="experiment-hero" data-tutorial-target="hero">
+            <div>
+                <p class="experiment-kicker">Kafelek eksperymentalny</p>
+                <h1>Twoja przestrzeń</h1>
+                <p class="experiment-hero-copy">Ta podstrona działa niezależnie od głównego dashboardu. Możesz tu
+                    układać gotowe moduły stworzone z myślą o Twojej pracy! Kafelek jest eksperymentalny, więc nie
+                    spodziewaj się cudów :)</p>
+            </div>
+
+            <div class="experiment-hero-meta">
+                <span class="experiment-meta-pill" id="experiment-status">Autozapis lokalny jest aktywny!</span>
+                <span class="experiment-meta-pill experiment-meta-pill-soft" id="experiment-block-count">0 bloków</span>
+            </div>
+        </section>
+
+        <main class="experiment-layout">
+            <aside class="experiment-panel">
+                <div class="experiment-panel-head">
+                    <p class="experiment-panel-kicker">Biblioteka</p>
+                    <h2>Gotowe rozwiązania</h2>
+                    <p>Chwyć interesujący Cię blok i przeciagnij do swojego dashboardu!</p>
+                </div>
+
+                <div class="palette-list" id="experiment-palette-list" data-tutorial-target="palette"></div>
+            </aside>
+
+            <section class="experiment-panel experiment-canvas-panel" data-tutorial-target="canvas-panel">
+                <div class="experiment-panel-head">
+                    <p class="experiment-panel-kicker">Twoja przestrzeń</p>
+                    <h2>To jest Twój obszar roboczy!</h2>
+                    <p>Upuszczaj moduły między liniami przerywanymi. Kliknij blok, aby edytować jego zawartość.</p>
+                </div>
+
+                <div class="canvas-shell" id="experiment-canvas"></div>
+            </section>
+
+            <aside class="experiment-panel">
+                <div class="experiment-panel-head">
+                    <p class="experiment-panel-kicker">Właściwości bloku</p>
+                    <h2>Edytor treści</h2>
+                    <p>Zmieniaj ustawienia strony lub aktualnie zaznaczonego bloku.</p>
+                </div>
+
+                <div class="inspector-shell" id="experiment-inspector" data-tutorial-target="inspector"></div>
+            </aside>
+        </main>
+    </div>
+
+    <div class="experiment-tutorial-shell" id="experiment-tutorial" hidden aria-hidden="true">
+        <div class="experiment-tutorial-backdrop"></div>
+        <div class="experiment-tutorial-spotlight" id="experiment-tutorial-spotlight" aria-hidden="true"></div>
+        <section class="experiment-tutorial-card" id="experiment-tutorial-card" role="dialog" aria-modal="true"
+            aria-labelledby="experiment-tutorial-title">
+            <p class="experiment-tutorial-kicker" id="experiment-tutorial-step-label">Krok 1 z 4</p>
+            <h2 id="experiment-tutorial-title">Instrukcja obsługi</h2>
+            <p class="experiment-tutorial-copy" id="experiment-tutorial-description"></p>
+
+            <div class="experiment-tutorial-actions">
+                <button type="button" class="experiment-tutorial-btn experiment-tutorial-btn-muted"
+                    id="experiment-tutorial-skip-btn">Pomiń</button>
+                <button type="button" class="experiment-tutorial-btn experiment-tutorial-btn-muted"
+                    id="experiment-tutorial-prev-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Wstecz</span>
+                </button>
+                <button type="button" class="experiment-tutorial-btn" id="experiment-tutorial-next-btn">
+                    <span>Dalej</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <div class="experiment-notice-shell" id="experiment-test-notice" hidden aria-hidden="true">
+        <div class="experiment-notice-backdrop"></div>
+        <section class="experiment-notice-card" role="dialog" aria-modal="true"
+            aria-labelledby="experiment-test-notice-title">
+            <p class="experiment-tutorial-kicker">Informacja</p>
+            <h2 id="experiment-test-notice-title">To jest wersja eksperymentalna!</h2>
+            <p>Wszelkie propozycje zmian należy zgłaszać do <span>Arkadiusza Lisieckiego</span></p>
+            <button type="button" class="experiment-tutorial-btn"
+                id="experiment-test-notice-close-btn">Rozumiem</button>
+        </section>
+    </div>
+
+    <script src="./eksperyment.js" charset="utf-8"></script>
+</body>
+
+</html>

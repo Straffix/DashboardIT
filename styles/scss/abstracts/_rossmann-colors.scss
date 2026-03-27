@@ -1,0 +1,39 @@
+$rossmann-red: #c3002d;
+$rossmann-white: #ffffff;
+$rossmann-warm-white: #fff6ee;
+$rossmann-warm-white-strong: rgba(255, 249, 244, 0.96);
+$rossmann-panel: rgba(255, 250, 246, 0.82);
+$rossmann-panel-hover: rgba(255, 253, 250, 0.96);
+$rossmann-card: rgba(255, 255, 255, 0.92);
+$rossmann-card-soft: rgba(255, 247, 241, 0.76);
+$rossmann-text-main: #5a2330;
+$rossmann-text-muted: #8c5a61;
+$rossmann-text-soft: #c19297;
+$rossmann-primary-strong: #8f0024;
+$rossmann-success: #4b8f5b;
+$rossmann-warning: #d78a22;
+$rossmann-danger: #c3002d;
+$rossmann-border: rgba(195, 0, 45, 0.14);
+$rossmann-border-strong: rgba(195, 0, 45, 0.28);
+$rossmann-scrollbar-track: rgba(154, 48, 73, 0.12);
+$rossmann-scrollbar-thumb-solid: rgba(195, 0, 45, 0.72);
+$rossmann-scrollbar-thumb:
+	linear-gradient(180deg, rgba(195, 0, 45, 0.92) 0%, rgba(143, 0, 36, 0.96) 100%);
+$rossmann-scrollbar-thumb-hover:
+	linear-gradient(180deg, rgba(212, 25, 72, 0.96) 0%, rgba(143, 0, 36, 1) 100%);
+$rossmann-scrollbar-thumb-border: rgba(255, 246, 238, 0.8);
+$rossmann-dashboard-scrollbar-track: rgba(195, 0, 45, 0.1);
+$rossmann-dashboard-scrollbar-thumb-solid: rgba(195, 0, 45, 0.56);
+$rossmann-dashboard-scrollbar-thumb:
+	linear-gradient(180deg, rgba(195, 0, 45, 0.78) 0%, rgba(143, 0, 36, 0.84) 100%);
+$rossmann-dashboard-scrollbar-thumb-hover:
+	linear-gradient(180deg, rgba(212, 25, 72, 0.84) 0%, rgba(143, 0, 36, 0.9) 100%);
+$rossmann-dashboard-scrollbar-thumb-border: rgba(255, 244, 236, 0.86);
+$rossmann-shadow-lg: 0 24px 62px rgba(150, 74, 60, 0.18);
+$rossmann-shadow-md: 0 14px 32px rgba(150, 74, 60, 0.14);
+$rossmann-shadow-sm: 0 10px 24px rgba(150, 74, 60, 0.12);
+$rossmann-page-gradient:
+	radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 22%),
+	radial-gradient(circle at 84% 16%, rgba(195, 0, 45, 0.16) 0%, rgba(195, 0, 45, 0) 26%),
+	radial-gradient(circle at 50% 100%, rgba(220, 181, 136, 0.14) 0%, rgba(220, 181, 136, 0) 26%),
+	linear-gradient(135deg, #fffaf6 0%, #fff2e9 42%, #f8e0d3 76%, #f4d2c1 100%);

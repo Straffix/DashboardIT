@@ -53,6 +53,11 @@
 	}
 
 	const ensureDemoButton = () => {
+		if (!document.body?.classList.contains('dashboard-page')) {
+			document.getElementById('dashboard-demo-toggle-btn')?.remove()
+			return null
+		}
+
 		const existingButton = document.getElementById('dashboard-demo-toggle-btn')
 		if (existingButton) {
 			return existingButton
