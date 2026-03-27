@@ -4,7 +4,10 @@ const applyTheme = theme => {
 	document.body.classList.toggle('theme-dark', isDark)
 }
 
-const getStoredTheme = () => preferencesService?.getTheme?.() || storageService?.getText(APP_CONFIG.THEME_KEY, 'light') || 'light'
+const THEME_STORAGE_KEY = APP_CONFIG.PREFERENCE_KEYS.THEME
+const WIDE_MODE_STORAGE_KEY = APP_CONFIG.PREFERENCE_KEYS.WIDE_MODE
+
+const getStoredTheme = () => preferencesService?.getTheme?.() || storageService?.getText(THEME_STORAGE_KEY, 'light') || 'light'
 
 const createThemeToggle = () => {
 	if (document.querySelector('.theme-toggle-btn')) return null
@@ -29,12 +32,12 @@ const createThemeToggle = () => {
 	toggle.addEventListener('click', () => {
 		const nextTheme = document.body.classList.contains('theme-dark') ? 'light' : 'dark'
 		applyTheme(nextTheme)
-		preferencesService?.setTheme?.(nextTheme) || storageService?.setText?.(APP_CONFIG.THEME_KEY, nextTheme)
+		preferencesService?.setTheme?.(nextTheme) || storageService?.setText?.(THEME_STORAGE_KEY, nextTheme)
 		updateToggle(nextTheme === 'dark')
 	})
 
 	window.addEventListener('storage', event => {
-		if (event.key === APP_CONFIG.THEME_KEY) {
+		if (event.key === THEME_STORAGE_KEY) {
 			updateToggle(getStoredTheme() === 'dark')
 		}
 	})
@@ -98,10 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		fullscreenBtn.addEventListener('click', () => {
 			const isWide = !document.body.classList.contains('wide-mode')
 			updateWideMode(isWide)
-			preferencesService?.setWideMode?.(isWide) || storageService?.setBoolean?.('dashboard-wide-mode', isWide)
+			preferencesService?.setWideMode?.(isWide) || storageService?.setBoolean?.(WIDE_MODE_STORAGE_KEY, isWide)
 		})
 
-		updateWideMode(preferencesService?.getWideMode?.() ?? storageService?.getBoolean?.('dashboard-wide-mode', false))
+		updateWideMode(preferencesService?.getWideMode?.() ?? storageService?.getBoolean?.(WIDE_MODE_STORAGE_KEY, false))
 	}
 
 	window.addEventListener('storage', event => {
@@ -110,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			syncCurrentUserFromSession()
 		}
 
-		if (event.key === APP_CONFIG.THEME_KEY) {
+		if (event.key === THEME_STORAGE_KEY) {
 			applyTheme(getStoredTheme())
 		}
 	})

@@ -11,9 +11,13 @@ window.AppUtils = {
 	escapeHtml,
 	formatDateTimeLabel,
 	getInitials,
+	getSelectedAccessories,
+	normalizeAuditFields,
+	buildAuditMarkup,
 	confirmDialog,
 	renderAccessoryIcons,
 	createMonthPicker,
+	createSearchController,
 	createAvatarMarkup,
 	notify,
 	auth: {

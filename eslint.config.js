@@ -3,7 +3,7 @@ const globals = require('globals')
 
 module.exports = [
 	{
-		ignores: ['css/**', 'img/**', 'sass/**', 'trash/**'],
+		ignores: ['styles/**', 'assets/**', 'docs/**'],
 	},
 	js.configs.recommended,
 	{

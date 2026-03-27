@@ -1,0 +1,6 @@
+node_modules/
+trash/
+.DS_Store
+
+# Temporary logs
+*.log

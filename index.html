@@ -15,8 +15,8 @@
 
     <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous"></script>
 
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./styles/style.css">
+    <link rel="stylesheet" href="./styles/dashboard.css">
 </head>
 
 <body class="dashboard-page">
@@ -100,7 +100,7 @@
             </header>
 
             <section class="dashboard-menu-stage">
-                <div class="dashboard-menu-toolbar" aria-label="Ustawienia ukladu dashboardu">
+                <div class="dashboard-menu-toolbar" aria-label="Ustawienia układu dashboardu">
                     <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
                         id="dashboard-menu-edit-btn">
                         <i class="fa-solid fa-grip"></i>
@@ -114,7 +114,7 @@
                         <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
                             id="dashboard-menu-save-btn">
                             <i class="fa-solid fa-check"></i>
-                            <span>Zapisz uklad</span>
+                            <span>Zapisz układ</span>
                         </button>
                     </div>
                 </div>
@@ -165,8 +165,8 @@
                                 <i class="fa-solid fa-utensils"></i>
                             </div>
                             <div class="card-copy">
-                                <span>Rezerwacja Obiadow</span>
-                                <small>Sloty od 11:00 do 15:00, lista zapisow i lokalny limit 4 osob na kazdy
+                                <span>Rezerwacja Obiadów</span>
+                                <small>Sloty od 11:00 do 15:00, lista zapisów i lokalny limit 4 osób na każdy
                                     termin.</small>
                             </div>
                         </article>
@@ -179,7 +179,7 @@
                             </div>
                             <div class="card-copy">
                                 <span>Notatnik</span>
-                                <small>Wspolne notatki, wazne tematy i komunikacja operacyjna zespolu w jednej
+                                <small>Wspólne notatki, ważne tematy i komunikacja operacyjna zespołu w jednej
                                     tablicy.</small>
                             </div>
                         </article>
@@ -349,13 +349,13 @@
             <section class="dashboard-bookmark-modal-card" role="dialog" aria-modal="true"
                 aria-labelledby="dashboard-bookmark-modal-title">
                 <button type="button" class="dashboard-bookmark-modal-close" data-bookmark-close
-                    aria-label="Zamknij panel zakladki">
+                    aria-label="Zamknij panel zakładki">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
 
                 <div class="dashboard-bookmark-modal-copy">
-                    <p class="dashboard-kicker">Zakladki uzytkownika</p>
-                    <h2 id="dashboard-bookmark-modal-title">Dodaj zakladke</h2>
+                    <p class="dashboard-kicker">Zakładki użytkownika</p>
+                    <h2 id="dashboard-bookmark-modal-title">Dodaj zakładkę</h2>
                     <p id="dashboard-bookmark-modal-text">Zapisz szybki link tylko dla swojego konta.</p>
                 </div>
 
@@ -367,22 +367,22 @@
                     </label>
 
                     <label class="dashboard-bookmark-field">
-                        <span>Adres lub sciezka</span>
+                        <span>Adres lub ścieżka</span>
                         <input type="text" id="dashboard-bookmark-url"
                             placeholder="https://..., \\\\serwer\\plik.xlsx albo C:\\folder\\plik.xlsx" required>
                     </label>
 
                     <label class="dashboard-bookmark-field">
-                        <span>Krotki opis</span>
+                        <span>Krótki opis</span>
                         <textarea id="dashboard-bookmark-description" rows="3"
-                            placeholder="Opcjonalnie: do czego sluzy ten link"></textarea>
+                            placeholder="Opcjonalnie: do czego służy ten link"></textarea>
                     </label>
 
                     <div class="dashboard-bookmark-form-actions">
                         <button type="button" class="dashboard-bookmark-secondary-btn"
                             id="dashboard-bookmark-cancel-btn">Anuluj</button>
                         <button type="submit" class="dashboard-bookmark-primary-btn"
-                            id="dashboard-bookmark-submit-btn">Zapisz zakladke</button>
+                            id="dashboard-bookmark-submit-btn">Zapisz zakładkę</button>
                     </div>
                 </form>
             </section>
@@ -390,21 +390,20 @@
 
     </div>
 
-    <script src="./js/app-storage.js" charset="utf-8"></script>
     <script src="./js/shared/base.js" charset="utf-8"></script>
+    <script src="./js/core/storage-service.js" charset="utf-8"></script>
     <script src="./js/shared/auth.js" charset="utf-8"></script>
     <script src="./js/shared/public-api.js" charset="utf-8"></script>
     <script src="./js/shared/global-ui.js" charset="utf-8"></script>
-    <script src="./js/script.js" charset="utf-8"></script>
-    <script src="./js/dashboard/clock.js" charset="utf-8"></script>
-    <script src="./js/dashboard/topbar.js" charset="utf-8"></script>
-    <script src="./js/dashboard/weather.js" charset="utf-8"></script>
-    <script src="./js/dashboard/tasks/reminders.js" charset="utf-8"></script>
-    <script src="./js/dashboard/tasks/planner.js" charset="utf-8"></script>
-    <script src="./js/dashboard.js" charset="utf-8"></script>
-    <script src="./js/dashboard-bookmarks.js" charset="utf-8"></script>
-    <script src="./trash/dashboard-demo-seed-bulk-data.js" charset="utf-8"></script>
-    <script src="./js/dashboard-demo-controls.js" charset="utf-8"></script>
+    <script src="./js/pages/dashboard/clock.js" charset="utf-8"></script>
+    <script src="./js/pages/dashboard/topbar.js" charset="utf-8"></script>
+    <script src="./js/pages/dashboard/weather.js" charset="utf-8"></script>
+    <script src="./js/pages/dashboard/tasks/reminders.js" charset="utf-8"></script>
+    <script src="./js/pages/dashboard/tasks/planner.js" charset="utf-8"></script>
+    <script src="./js/pages/dashboard/index.js" charset="utf-8"></script>
+    <script src="./js/pages/dashboard/bookmarks.js" charset="utf-8"></script>
+    <script src="./js/demo/demo-seed-data.js" charset="utf-8"></script>
+    <script src="./js/demo/demo-controls.js" charset="utf-8"></script>
 </body>
 
 </html>

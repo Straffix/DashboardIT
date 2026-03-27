@@ -214,14 +214,14 @@ const renderAuthUi = () => {
 	if (!authState.trigger || !authState.popoverIdentity || !authState.popoverMeta || !authState.popoverActions) return
 
 	const currentUser = authState.currentUser
-	const identityLabel = currentUser ? currentUser.fullName : 'Gosc'
+	const identityLabel = currentUser ? currentUser.fullName : 'Gość'
 	const metaLabel = currentUser
 		? `${getRoleLabel(currentUser.role)} · @${currentUser.login}`
 		: 'Nie zalogowano'
 
 	authState.trigger.innerHTML = `
 		${createAvatarMarkup({
-			fullName: currentUser?.fullName || 'Gosc systemu',
+			fullName: currentUser?.fullName || 'Gość systemu',
 			avatarId: currentUser?.avatarId || AUTH_CONFIG.avatarPresets[0].id,
 			avatarImage: currentUser?.avatarImage || '',
 			extraClass: 'app-user-avatar-lg',
@@ -237,7 +237,7 @@ const renderAuthUi = () => {
 
 	authState.popoverIdentity.innerHTML = `
 		${createAvatarMarkup({
-			fullName: currentUser?.fullName || 'Gosc systemu',
+			fullName: currentUser?.fullName || 'Gość systemu',
 			avatarId: currentUser?.avatarId || AUTH_CONFIG.avatarPresets[0].id,
 			avatarImage: currentUser?.avatarImage || '',
 		})}
@@ -250,8 +250,8 @@ const renderAuthUi = () => {
 	const popoverMetaText = currentUser
 		? ''
 		: authState.users.length === 0
-			? 'Zaloz pierwsze konto. Otrzyma ono role lidera.'
-			: 'Zaloguj sie lub zaloz nowe konto lokalne.'
+			? 'Załóż pierwsze konto. Otrzyma ono rolę lidera.'
+			: 'Zaloguj się lub załóż nowe konto lokalne.'
 	authState.popoverMeta.textContent = popoverMetaText
 	authState.popoverMeta.hidden = !popoverMetaText
 
@@ -269,11 +269,11 @@ const renderAuthUi = () => {
 		: `
 			<button type="button" class="app-user-action-btn" data-user-action="login">
 				<i class="fa-solid fa-right-to-bracket"></i>
-				<span>Zaloguj sie</span>
+				<span>Zaloguj się</span>
 			</button>
 			<button type="button" class="app-user-action-btn" data-user-action="register">
 				<i class="fa-solid fa-user-plus"></i>
-				<span>Zaloz konto</span>
+				<span>Załóż konto</span>
 			</button>
 		`
 
@@ -320,7 +320,7 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 	const normalizedPassword = String(password || '')
 
 	if (!normalizedName) {
-		throw new Error('Wpisz imie i nazwisko.')
+		throw new Error('Wpisz imię i nazwisko.')
 	}
 
 	if (!normalizedLogin) {
@@ -328,11 +328,11 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 	}
 
 	if (normalizedPassword.length < AUTH_CONFIG.minPasswordLength) {
-		throw new Error(`Haslo musi miec co najmniej ${AUTH_CONFIG.minPasswordLength} znaki.`)
+		throw new Error(`Hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaki.`)
 	}
 
 	if (findUserByLogin(normalizedLogin)) {
-		throw new Error('Taki login juz istnieje.')
+		throw new Error('Taki login już istnieje.')
 	}
 
 	const now = new Date().toISOString()
@@ -358,7 +358,7 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 const loginUser = ({ login, password }) => {
 	const matchedUser = findUserByLogin(login)
 	if (!matchedUser || matchedUser.passwordHash !== encodeLocalPassword(password)) {
-		throw new Error('Nieprawidlowy login lub haslo.')
+		throw new Error('Nieprawidłowy login lub hasło.')
 	}
 
 	const now = new Date().toISOString()
@@ -376,7 +376,7 @@ const resetUserPassword = ({ login, password }) => {
 	}
 
 	if (normalizedPassword.length < AUTH_CONFIG.minPasswordLength) {
-		throw new Error(`Haslo musi miec co najmniej ${AUTH_CONFIG.minPasswordLength} znaki.`)
+		throw new Error(`Hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaki.`)
 	}
 
 	const now = new Date().toISOString()
@@ -408,25 +408,25 @@ const logoutUser = ({ silent = false } = {}) => {
 		notify({
 			type: 'info',
 			title: 'Wylogowano',
-			message: 'Sesja lokalna zostala zamknieta dla tej przegladarki.',
+			message: 'Sesja lokalna została zamknięta dla tej przeglądarki.',
 		})
 	}
 }
 
 const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage }) => {
 	if (!authState.currentUser) {
-		throw new Error('Brak zalogowanego uzytkownika.')
+		throw new Error('Brak zalogowanego użytkownika.')
 	}
 
 	const normalizedName = String(fullName || '').trim()
 	const normalizedLogin = normalizeUserLogin(login)
 
 	if (!normalizedName) {
-		throw new Error('Imie i nazwisko nie moze byc puste.')
+		throw new Error('Imię i nazwisko nie może być puste.')
 	}
 
 	if (!normalizedLogin) {
-		throw new Error('Login nie moze byc pusty.')
+		throw new Error('Login nie może być pusty.')
 	}
 
 	const duplicatedUser = authState.users.find(
@@ -434,7 +434,7 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage }) =>
 	)
 
 	if (duplicatedUser) {
-		throw new Error('Ten login jest juz zajety.')
+		throw new Error('Ten login jest już zajęty.')
 	}
 
 	const now = new Date().toISOString()
@@ -460,16 +460,16 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage }) =>
 
 const updateUserAccess = ({ userId, role, permissions } = {}) => {
 	if (!authState.currentUser || authState.currentUser.role !== 'admin') {
-		throw new Error('Tylko lider moze nadawac uprawnienia.')
+		throw new Error('Tylko lider może nadawać uprawnienia.')
 	}
 
 	const normalizedUserId = String(userId || '').trim()
 	if (!normalizedUserId) {
-		throw new Error('Brak wskazanego uzytkownika.')
+		throw new Error('Brak wskazanego użytkownika.')
 	}
 
 	if (normalizedUserId === String(authState.currentUser.id || '')) {
-		throw new Error('W tej wersji nie zmienisz tutaj wlasnych uprawnien lidera.')
+		throw new Error('W tej wersji nie zmienisz tutaj własnych uprawnień lidera.')
 	}
 
 	const normalizedRole = normalizeUserRole(role)
@@ -491,7 +491,7 @@ const updateUserAccess = ({ userId, role, permissions } = {}) => {
 	})
 
 	if (!matchedUser) {
-		throw new Error('Nie znaleziono wskazanego uzytkownika.')
+		throw new Error('Nie znaleziono wskazanego użytkownika.')
 	}
 
 	saveUsers(updatedUsers)
@@ -511,7 +511,7 @@ const createAvatarMarkup = ({ fullName, avatarId, avatarImage, extraClass = '' }
 			'background-repeat: no-repeat',
 		].join('; ')
 
-		return `<span class="${classes} is-image" style="${avatarStyle}" role="img" aria-label="${escapeHtml(fullName || 'Avatar uzytkownika')}"></span>`
+		return `<span class="${classes} is-image" style="${avatarStyle}" role="img" aria-label="${escapeHtml(fullName || 'Avatar użytkownika')}"></span>`
 	}
 
 	return `<span class="${classes}" style="--app-avatar-gradient: ${preset.gradient}">${getInitials(fullName)}</span>`
@@ -609,14 +609,14 @@ const renderPageStatusStrip = () => {
 
 	const currentUser = authState.currentUser
 	const moduleLabel = getCurrentModuleLabel()
-	const identityLabel = currentUser ? currentUser.fullName : 'Gosc systemu'
+	const identityLabel = currentUser ? currentUser.fullName : 'Gość systemu'
 	const metaLabel = currentUser
 		? `${getRoleLabel(currentUser.role)} · @${currentUser.login}`
-		: 'Tryb podgladu bez lokalnej sesji'
+		: 'Tryb podglądu bez lokalnej sesji'
 
 	systemUiState.pageStatusIdentity.innerHTML = `
 		${createAvatarMarkup({
-			fullName: currentUser?.fullName || 'Gosc systemu',
+			fullName: currentUser?.fullName || 'Gość systemu',
 			avatarId: currentUser?.avatarId || AUTH_CONFIG.avatarPresets[0].id,
 			avatarImage: currentUser?.avatarImage || '',
 			extraClass: 'app-page-status-avatar',
@@ -628,12 +628,12 @@ const renderPageStatusStrip = () => {
 	`
 
 	systemUiState.pageStatusText.textContent = currentUser
-		? `Pracujesz w module ${moduleLabel}. Konto lokalne jest aktywne w tej przegladarce i gotowe do dalszej pracy.`
-		: `Przegladasz modul ${moduleLabel} jako gosc. Zaloguj sie, aby korzystac z funkcji zapisujacych dane i historii zmian.`
+		? `Pracujesz w module ${moduleLabel}. Konto lokalne jest aktywne w tej przeglądarce i gotowe do dalszej pracy.`
+		: `Przeglądasz moduł ${moduleLabel} jako gość. Zaloguj się, aby korzystać z funkcji zapisujących dane i historii zmian.`
 
 	systemUiState.pageStatusTags.innerHTML = `
 		<span class="app-page-status-tag ${currentUser?.role === 'admin' ? 'is-admin' : 'is-neutral'}">
-			${currentUser ? getRoleLabel(currentUser.role) : 'Gosc'}
+			${currentUser ? getRoleLabel(currentUser.role) : 'Gość'}
 		</span>
 		<span class="app-page-status-tag is-demo">Demo localStorage</span>
 		<span class="app-page-status-tag is-neutral">Frontend ready for API</span>
@@ -653,11 +653,11 @@ const renderPageStatusStrip = () => {
 		: `
 			<button type="button" class="app-page-status-btn" data-user-action="login">
 				<i class="fa-solid fa-right-to-bracket"></i>
-				<span>Zaloguj sie</span>
+				<span>Zaloguj się</span>
 			</button>
 			<button type="button" class="app-page-status-btn is-secondary" data-user-action="register">
 				<i class="fa-solid fa-user-plus"></i>
-				<span>Zaloz konto</span>
+				<span>Załóż konto</span>
 			</button>
 		`
 }
@@ -727,26 +727,26 @@ const renderAvatarUploadPreview = (container, { fullName, avatarId, avatarImage,
 	const hasCustomAvatar = Boolean(normalizeAvatarImage(avatarImage))
 	container.innerHTML = `
 		${createAvatarMarkup({
-			fullName: fullName || 'Uzytkownik',
+			fullName: fullName || 'Użytkownik',
 			avatarId,
 			avatarImage,
 			extraClass: 'app-user-avatar-xl',
 		})}
 		<div class="app-avatar-upload-copy">
-			<strong>${hasCustomAvatar ? 'Wlasne zdjecie aktywne' : 'Domyslny avatar z inicjalami'}</strong>
-			<span>${helperText || (hasCustomAvatar ? 'Zdjecie zostanie zapisane lokalnie dla tego konta.' : 'Jesli nie wgrasz zdjecia, system pokaze avatar z inicjalami.')}</span>
+			<strong>${hasCustomAvatar ? 'Własne zdjęcie aktywne' : 'Domyślny avatar z inicjałami'}</strong>
+			<span>${helperText || (hasCustomAvatar ? 'Zdjęcie zostanie zapisane lokalnie dla tego konta.' : 'Jeśli nie wgrasz zdjęcia, system pokaże avatar z inicjałami.')}</span>
 		</div>
 	`
 }
 
 const renderRegisterAvatarEditor = () => {
 	renderAvatarUploadPreview(authState.authAvatarPreview, {
-		fullName: authState.authFullNameInput?.value || authState.authLoginInput?.value || 'Nowy uzytkownik',
+		fullName: authState.authFullNameInput?.value || authState.authLoginInput?.value || 'Nowy użytkownik',
 		avatarId: authState.selectedRegisterAvatarId,
 		avatarImage: authState.customRegisterAvatarImage,
 		helperText: authState.customRegisterAvatarImage
-			? 'To zdjecie bedzie zapisane lokalnie i przypisane do nowego konta.'
-			: 'Mozesz od razu wgrac swoje zdjecie profilowe albo zostawic domyslny avatar z inicjalami.',
+			? 'To zdjęcie będzie zapisane lokalnie i przypisane do nowego konta.'
+			: 'Możesz od razu wgrać swoje zdjęcie profilowe albo zostawić domyślny avatar z inicjałami.',
 	})
 
 	if (authState.authAvatarResetBtn) {
@@ -756,12 +756,12 @@ const renderRegisterAvatarEditor = () => {
 
 const renderProfileAvatarEditor = () => {
 	renderAvatarUploadPreview(authState.profileAvatarPreview, {
-		fullName: authState.profileNameInput?.value || authState.profileLoginInput?.value || authState.currentUser?.fullName || 'Uzytkownik',
+		fullName: authState.profileNameInput?.value || authState.profileLoginInput?.value || authState.currentUser?.fullName || 'Użytkownik',
 		avatarId: authState.selectedProfileAvatarId,
 		avatarImage: authState.customProfileAvatarImage,
 		helperText: authState.customProfileAvatarImage
-			? 'To zdjecie jest aktywne dla Twojego konta w tej przegladarce.'
-			: 'Mozesz wgrac nowe zdjecie albo zostawic domyslny avatar z inicjalami.',
+			? 'To zdjęcie jest aktywne dla Twojego konta w tej przeglądarce.'
+			: 'Możesz wgrać nowe zdjęcie albo zostawić domyślny avatar z inicjałami.',
 	})
 
 	if (authState.profileAvatarResetBtn) {
@@ -804,7 +804,7 @@ const syncTeamMemberCardState = card => {
 	if (!summary) return
 
 	if (isLeader) {
-		summary.textContent = 'Pelny dostep do wszystkich specjalizacji i zarzadzania kontami.'
+		summary.textContent = 'Pełny dostęp do wszystkich specjalizacji i zarządzania kontami.'
 		return
 	}
 
@@ -828,7 +828,7 @@ const renderTeamManagement = () => {
 		authState.profileTeamList.innerHTML = `
 			<div class="app-team-empty">
 				<strong>Brak innych kont do konfiguracji</strong>
-				<p>Gdy kolejne osoby zaloza konto lokalne, pojawia sie tutaj i bedziesz mogl nadac im role oraz specjalizacje.</p>
+				<p>Gdy kolejne osoby założą konto lokalne, pojawią się tutaj i będziesz mógł nadać im role oraz specjalizacje.</p>
 			</div>
 		`
 		return
@@ -844,7 +844,7 @@ const renderTeamManagement = () => {
 					<div class="app-team-member-head">
 						<div class="app-team-member-identity">
 							${createAvatarMarkup({
-								fullName: user.fullName || user.login || 'Uzytkownik',
+								fullName: user.fullName || user.login || 'Użytkownik',
 								avatarId: user.avatarId,
 								avatarImage: user.avatarImage,
 							})}
@@ -854,7 +854,7 @@ const renderTeamManagement = () => {
 							</div>
 						</div>
 						<label class="app-team-member-control">
-							<span>Poziom dostepu</span>
+							<span>Poziom dostępu</span>
 							<select data-team-role>
 								<option value="user" ${user.role === 'user' ? 'selected' : ''}>Pracownik</option>
 								<option value="admin" ${isLeaderRole ? 'selected' : ''}>Lider</option>
@@ -884,7 +884,7 @@ const renderTeamManagement = () => {
 					<div class="app-team-member-footer">
 						<p class="app-team-member-summary" data-team-summary>${
 							isLeaderRole
-								? 'Pelny dostep do wszystkich specjalizacji i zarzadzania kontami.'
+								? 'Pełny dostęp do wszystkich specjalizacji i zarządzania kontami.'
 								: permissions.length > 0
 									? `Specjalizacje: ${permissions.map(getPermissionLabel).join(', ')}`
 									: 'Brak nadanych specjalizacji.'
@@ -946,10 +946,10 @@ const buildAvatarImageFromFile = file =>
 		}
 
 		const reader = new FileReader()
-		reader.onerror = () => reject(new Error('Nie udalo sie odczytac pliku avatara.'))
+		reader.onerror = () => reject(new Error('Nie udało się odczytać pliku avatara.'))
 		reader.onload = () => {
 			const image = new Image()
-			image.onerror = () => reject(new Error('Nie udalo sie przetworzyc obrazu avatara.'))
+			image.onerror = () => reject(new Error('Nie udało się przetworzyć obrazu avatara.'))
 			image.onload = () => {
 				const cropSize = Math.max(1, Math.min(image.width, image.height))
 				const cropOffsetX = Math.max(0, Math.floor((image.width - cropSize) / 2))
@@ -962,7 +962,7 @@ const buildAvatarImageFromFile = file =>
 
 				const context = canvas.getContext('2d')
 				if (!context) {
-					reject(new Error('Przegladarka nie pozwala przygotowac avatara.'))
+					reject(new Error('Przeglądarka nie pozwala przygotować avatara.'))
 					return
 				}
 
@@ -981,7 +981,7 @@ const buildAvatarImageFromFile = file =>
 				try {
 					resolve(canvas.toDataURL('image/jpeg', AUTH_CONFIG.avatarOutputQuality))
 				} catch (error) {
-					reject(new Error('Nie udalo sie zapisac przygotowanego avatara.'))
+					reject(new Error('Nie udało się zapisać przygotowanego avatara.'))
 				}
 			}
 
@@ -1013,22 +1013,22 @@ const updateAuthMode = mode => {
 
 	if (authState.authTitle) {
 		authState.authTitle.textContent = isRegister
-			? 'Zaloz konto lokalne'
+			? 'Załóż konto lokalne'
 			: isReset
-				? 'Reset lokalnego hasla'
-				: 'Zaloguj sie do systemu'
+				? 'Reset lokalnego hasła'
+				: 'Zaloguj się do systemu'
 	}
 
 	if (authState.authCopy) {
 		authState.authCopy.textContent = isRegister
-			? 'Konto zostanie zapisane lokalnie w tej przegladarce. Pierwsze konto otrzyma role lidera.'
+			? 'Konto zostanie zapisane lokalnie w tej przeglądarce. Pierwsze konto otrzyma rolę lidera.'
 			: isReset
-				? 'Podaj login i ustaw nowe haslo dla lokalnego konta w tej przegladarce.'
-				: 'Konta sa lokalne dla tej przegladarki. Pozniej warstwa danych moze zostac podlaczona do backendu.'
+				? 'Podaj login i ustaw nowe hasło dla lokalnego konta w tej przeglądarce.'
+				: 'Konta są lokalne dla tej przeglądarki. Później warstwa danych może zostać podłączona do backendu.'
 	}
 
 	if (authState.authSwitchBtn) {
-		authState.authSwitchBtn.textContent = isRegister || isReset ? 'Wroc do logowania' : 'Nie masz konta? Zarejestruj sie'
+		authState.authSwitchBtn.textContent = isRegister || isReset ? 'Wróć do logowania' : 'Nie masz konta? Zarejestruj się'
 	}
 
 	if (authState.authResetBtn) {
@@ -1036,17 +1036,17 @@ const updateAuthMode = mode => {
 	}
 
 	if (authState.authSubmitBtn) {
-		authState.authSubmitBtn.textContent = isRegister ? 'Utworz konto' : isReset ? 'Ustaw nowe haslo' : 'Zaloguj sie'
+		authState.authSubmitBtn.textContent = isRegister ? 'Utwórz konto' : isReset ? 'Ustaw nowe hasło' : 'Zaloguj się'
 	}
 
 	authState.authFullNameInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
 	if (authState.authPasswordInput) {
-		authState.authPasswordInput.placeholder = isReset ? 'Wpisz nowe haslo' : 'Minimum 4 znaki'
+		authState.authPasswordInput.placeholder = isReset ? 'Wpisz nowe hasło' : 'Minimum 4 znaki'
 		authState.authPasswordInput.autocomplete = isRegister || isReset ? 'new-password' : 'current-password'
 	}
 	authState.authPasswordRepeatInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !(isRegister || isReset))
 	if (authState.authPasswordRepeatInput) {
-		authState.authPasswordRepeatInput.placeholder = isReset ? 'Powtorz nowe haslo' : 'Powtorz haslo'
+		authState.authPasswordRepeatInput.placeholder = isReset ? 'Powtórz nowe hasło' : 'Powtórz hasło'
 	}
 	authState.authRoleHint?.classList.toggle('is-hidden', !isRegister)
 	authState.authAvatarPreview?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
@@ -1111,7 +1111,7 @@ const ensureAuthUi = () => {
 	const hub = document.createElement('div')
 	hub.className = 'app-user-hub'
 	hub.innerHTML = `
-		<button type="button" class="app-user-trigger" aria-label="Otworz panel uzytkownika" aria-expanded="false"></button>
+		<button type="button" class="app-user-trigger" aria-label="Otwórz panel użytkownika" aria-expanded="false"></button>
 		<div class="app-user-popover" hidden>
 			<div class="app-user-popover-identity"></div>
 			<p class="app-user-popover-meta"></p>
@@ -1129,12 +1129,12 @@ const ensureAuthUi = () => {
 			<button type="button" class="app-auth-close" data-auth-close aria-label="Zamknij panel logowania">
 				<i class="fa-solid fa-xmark"></i>
 			</button>
-			<p class="app-auth-kicker">Panel uzytkownika</p>
-			<h2 id="app-auth-title">Zaloguj sie do systemu</h2>
-			<p class="app-auth-copy" id="app-auth-copy">Konta sa lokalne dla tej przegladarki. Pozniej warstwa danych moze zostac podlaczona do backendu.</p>
+			<p class="app-auth-kicker">Panel użytkownika</p>
+			<h2 id="app-auth-title">Zaloguj się do systemu</h2>
+			<p class="app-auth-copy" id="app-auth-copy">Konta są lokalne dla tej przeglądarki. Później warstwa danych może zostać podłączona do backendu.</p>
 			<form class="app-auth-form" novalidate>
 				<label class="app-auth-field is-hidden">
-					<span>Imie i nazwisko</span>
+					<span>Imię i nazwisko</span>
 					<input type="text" id="app-auth-full-name" placeholder="Np. Jan Kowalski" autocomplete="name">
 				</label>
 				<label class="app-auth-field">
@@ -1142,15 +1142,15 @@ const ensureAuthUi = () => {
 					<input type="text" id="app-auth-login" placeholder="Np. jkowalski" autocomplete="username" required>
 				</label>
 				<label class="app-auth-field">
-					<span>Haslo</span>
+					<span>Hasło</span>
 					<input type="password" id="app-auth-password" placeholder="Minimum 4 znaki" autocomplete="current-password" required>
 				</label>
 				<label class="app-auth-field is-hidden">
-					<span>Powtorz haslo</span>
-					<input type="password" id="app-auth-password-repeat" placeholder="Powtorz haslo" autocomplete="new-password">
+					<span>Powtórz hasło</span>
+					<input type="password" id="app-auth-password-repeat" placeholder="Powtórz hasło" autocomplete="new-password">
 				</label>
 				<div class="app-auth-field is-hidden">
-					<span>Zdjecie profilowe</span>
+					<span>Zdjęcie profilowe</span>
 					<div class="app-avatar-upload">
 						<div class="app-avatar-upload-preview" id="app-auth-avatar-preview"></div>
 						<div class="app-avatar-upload-actions">
@@ -1158,22 +1158,22 @@ const ensureAuthUi = () => {
 							<div class="app-avatar-upload-btn-row">
 								<button type="button" class="app-avatar-upload-btn is-primary" id="app-auth-avatar-browse-btn">
 									<i class="fa-solid fa-image"></i>
-									<span>Przegladaj</span>
+									<span>Przeglądaj</span>
 								</button>
 								<button type="button" class="app-avatar-upload-btn is-secondary" id="app-auth-avatar-reset-btn" hidden>
 									<i class="fa-solid fa-trash-can"></i>
-									<span>Usun zdjecie</span>
+									<span>Usuń zdjęcie</span>
 								</button>
 							</div>
-							<small>PNG, JPG lub WebP do 10 MB. Zdjecie zostanie przyciete do kwadratu i zapisane lokalnie.</small>
+							<small>PNG, JPG lub WebP do 10 MB. Zdjęcie zostanie przycięte do kwadratu i zapisane lokalnie.</small>
 						</div>
 					</div>
 				</div>
-				<p class="app-auth-role-hint is-hidden" id="app-auth-role-hint">Pierwsze zalozone konto otrzyma role lidera.</p>
+				<p class="app-auth-role-hint is-hidden" id="app-auth-role-hint">Pierwsze założone konto otrzyma rolę lidera.</p>
 				<div class="app-auth-actions">
-					<button type="submit" class="app-auth-submit">Zaloguj sie</button>
-					<button type="button" class="app-auth-switch">Nie masz konta? Zarejestruj sie</button>
-					<button type="button" class="app-auth-switch" id="app-auth-reset-btn">Nie pamietasz hasla?</button>
+					<button type="submit" class="app-auth-submit">Zaloguj się</button>
+					<button type="button" class="app-auth-switch">Nie masz konta? Zarejestruj się</button>
+					<button type="button" class="app-auth-switch" id="app-auth-reset-btn">Nie pamiętasz hasła?</button>
 				</div>
 			</form>
 		</section>
@@ -1189,17 +1189,17 @@ const ensureAuthUi = () => {
 			<button type="button" class="app-auth-close" data-profile-close aria-label="Zamknij profil">
 				<i class="fa-solid fa-xmark"></i>
 			</button>
-			<p class="app-auth-kicker">Twoj profil</p>
-			<h2 id="app-profile-title">Dane uzytkownika</h2>
-			<p class="app-auth-copy">Tutaj mozesz zmienic nazwe, login i zdjecie profilowe. Dodatkowo widac najwazniejsze informacje o koncie.</p>
+			<p class="app-auth-kicker">Twój profil</p>
+			<h2 id="app-profile-title">Dane użytkownika</h2>
+			<p class="app-auth-copy">Tutaj możesz zmienić nazwę, login i zdjęcie profilowe. Dodatkowo widać najważniejsze informacje o koncie.</p>
 			<form class="app-auth-form app-profile-form" novalidate>
 				<div class="app-profile-role-row">
 					<span>Rola</span>
-					<strong class="app-role-badge" id="app-profile-role-badge">Uzytkownik</strong>
+					<strong class="app-role-badge" id="app-profile-role-badge">Użytkownik</strong>
 				</div>
 				<div class="app-profile-meta-grid">
 					<div class="app-profile-meta-item">
-						<span>Aktywny modul</span>
+						<span>Aktywny moduł</span>
 						<strong id="app-profile-module">-</strong>
 					</div>
 					<div class="app-profile-meta-item">
@@ -1218,15 +1218,15 @@ const ensureAuthUi = () => {
 				<section class="app-profile-team-section is-hidden" id="app-profile-team-section">
 					<div class="app-profile-team-head">
 						<div>
-							<p class="app-auth-kicker">Zespol i uprawnienia</p>
-							<h3>Konfiguracja dostepow</h3>
-							<p class="app-auth-copy">Lider moze nadawac role oraz specjalizacje pozostalym zarejestrowanym osobom.</p>
+							<p class="app-auth-kicker">Zespół i uprawnienia</p>
+							<h3>Konfiguracja dostępów</h3>
+							<p class="app-auth-copy">Lider może nadawać role oraz specjalizacje pozostałym zarejestrowanym osobom.</p>
 						</div>
 					</div>
 					<div class="app-profile-team-list" id="app-profile-team-list"></div>
 				</section>
 				<label class="app-auth-field">
-					<span>Imie i nazwisko</span>
+					<span>Imię i nazwisko</span>
 					<input type="text" id="app-profile-name" placeholder="Np. Jan Kowalski" autocomplete="name" required>
 				</label>
 				<label class="app-auth-field">
@@ -1234,7 +1234,7 @@ const ensureAuthUi = () => {
 					<input type="text" id="app-profile-login" placeholder="Np. jkowalski" autocomplete="username" required>
 				</label>
 				<div class="app-auth-field">
-					<span>Zdjecie profilowe</span>
+					<span>Zdjęcie profilowe</span>
 					<div class="app-avatar-upload">
 						<div class="app-avatar-upload-preview" id="app-profile-avatar-preview"></div>
 						<div class="app-avatar-upload-actions">
@@ -1242,14 +1242,14 @@ const ensureAuthUi = () => {
 							<div class="app-avatar-upload-btn-row">
 								<button type="button" class="app-avatar-upload-btn is-primary" id="app-profile-avatar-browse-btn">
 									<i class="fa-solid fa-image"></i>
-									<span>Przegladaj</span>
+									<span>Przeglądaj</span>
 								</button>
 								<button type="button" class="app-avatar-upload-btn is-secondary" id="app-profile-avatar-reset-btn" hidden>
 									<i class="fa-solid fa-trash-can"></i>
-									<span>Usun zdjecie</span>
+									<span>Usuń zdjęcie</span>
 								</button>
 							</div>
-							<small>PNG, JPG lub WebP do 10 MB. Zdjecie zostanie przyciete do kwadratu i zapisane lokalnie.</small>
+							<small>PNG, JPG lub WebP do 10 MB. Zdjęcie zostanie przycięte do kwadratu i zapisane lokalnie.</small>
 						</div>
 					</div>
 				</div>
@@ -1380,13 +1380,13 @@ const ensureAuthUi = () => {
 			notify({
 				type: 'success',
 				title: 'Uprawnienia zapisane',
-				message: 'Rola i specjalizacje tego konta zostaly zaktualizowane.',
+				message: 'Rola i specjalizacje tego konta zostały zaktualizowane.',
 			})
 		} catch (error) {
 			notify({
 				type: 'error',
 				title: 'Zmiana nieudana',
-				message: error.message || 'Nie udalo sie zapisac uprawnien uzytkownika.',
+				message: error.message || 'Nie udało się zapisać uprawnień użytkownika.',
 			})
 		}
 	})
@@ -1406,8 +1406,8 @@ const ensureAuthUi = () => {
 		} catch (error) {
 			notify({
 				type: 'error',
-				title: 'Avatar nie zostal wgrany',
-				message: error.message || 'Nie udalo sie przygotowac avatara.',
+				title: 'Avatar nie został wgrany',
+				message: error.message || 'Nie udało się przygotować avatara.',
 			})
 		}
 	})
@@ -1421,8 +1421,8 @@ const ensureAuthUi = () => {
 		} catch (error) {
 			notify({
 				type: 'error',
-				title: 'Avatar nie zostal wgrany',
-				message: error.message || 'Nie udalo sie przygotowac avatara.',
+				title: 'Avatar nie został wgrany',
+				message: error.message || 'Nie udało się przygotować avatara.',
 			})
 		}
 	})
@@ -1440,7 +1440,7 @@ const ensureAuthUi = () => {
 				const password = authState.authPasswordInput?.value || ''
 				const repeatedPassword = authState.authPasswordRepeatInput?.value || ''
 				if (password !== repeatedPassword) {
-					throw new Error('Hasla musza byc identyczne.')
+					throw new Error('Hasła muszą być identyczne.')
 				}
 
 				if (authState.mode === 'register') {
@@ -1454,7 +1454,7 @@ const ensureAuthUi = () => {
 					notify({
 						type: 'success',
 						title: 'Konto utworzone',
-						message: 'Nowe konto lokalne zostalo zalozone i od razu aktywowane w tej przegladarce.',
+						message: 'Nowe konto lokalne zostało założone i od razu aktywowane w tej przeglądarce.',
 					})
 				} else {
 					resetUserPassword({
@@ -1463,8 +1463,8 @@ const ensureAuthUi = () => {
 					})
 					notify({
 						type: 'success',
-						title: 'Haslo zresetowane',
-						message: 'Nowe haslo zostalo zapisane lokalnie, a konto jest juz zalogowane.',
+						title: 'Hasło zresetowane',
+						message: 'Nowe hasło zostało zapisane lokalnie, a konto jest już zalogowane.',
 					})
 				}
 			} else {
@@ -1475,7 +1475,7 @@ const ensureAuthUi = () => {
 				notify({
 					type: 'success',
 					title: 'Zalogowano',
-					message: 'Sesja uzytkownika jest aktywna i gotowa do pracy we wszystkich modulach.',
+					message: 'Sesja użytkownika jest aktywna i gotowa do pracy we wszystkich modułach.',
 				})
 			}
 
@@ -1487,11 +1487,11 @@ const ensureAuthUi = () => {
 				type: 'error',
 				title:
 					authState.mode === 'register'
-						? 'Nie udalo sie zalozyc konta'
+						? 'Nie udało się założyć konta'
 						: authState.mode === 'reset'
-							? 'Reset hasla nieudany'
-							: 'Nie udalo sie zalogowac',
-				message: error.message || 'Nie udalo sie zapisac zmian.',
+							? 'Reset hasła nieudany'
+							: 'Nie udało się zalogować',
+				message: error.message || 'Nie udało się zapisać zmian.',
 			})
 		}
 	})
@@ -1511,13 +1511,13 @@ const ensureAuthUi = () => {
 			notify({
 				type: 'success',
 				title: 'Profil zaktualizowany',
-				message: 'Zmiany profilu zostaly zapisane i sa widoczne we wszystkich modulach.',
+				message: 'Zmiany profilu zostały zapisane i są widoczne we wszystkich modułach.',
 			})
 		} catch (error) {
 			notify({
 				type: 'error',
 				title: 'Aktualizacja nieudana',
-				message: error.message || 'Nie udalo sie zaktualizowac profilu.',
+				message: error.message || 'Nie udało się zaktualizować profilu.',
 			})
 		}
 	})

@@ -40,7 +40,15 @@ const APP_CONFIG = {
 		ANNOUNCEMENTS: 'dashboard_notes_announcements',
 		TASKS: 'dashboard_notes_tasks',
 	},
-	THEME_KEY: 'dashboard-theme',
+	PREFERENCE_KEYS: {
+		THEME: 'dashboard-theme',
+		WIDE_MODE: 'dashboard-wide-mode',
+		WEATHER_LOCATION: 'dashboard-weather-location',
+		DASHBOARD_MENU_ORDER: 'dashboard-menu-order',
+		DASHBOARD_TASKS: 'dashboard-tasks',
+		DASHBOARD_TASK_REMINDERS: 'dashboard-task-reminders',
+		DASHBOARD_TASK_AUTOCLEAR: 'dashboard-task-autoclear',
+	},
 }
 /* === Shared Config: End === */
 
@@ -162,6 +170,11 @@ const formatDateTimeLabel = value => {
 /* === Shared Formatters: End === */
 
 /* === Shared Accessory Rendering: Start === */
+const getSelectedAccessories = (selector = '.accessory-item.active') =>
+	Array.from(document.querySelectorAll(selector))
+		.map(item => item.dataset.item)
+		.filter(Boolean)
+
 const getAccessorySizeClass = size => {
 	if (size === '1rem') return 'acc-size-sm'
 	return 'acc-size-md'
@@ -320,7 +333,7 @@ const createMonthPicker = ({
 		const popover = document.createElement('div')
 		popover.className = 'month-fallback-popover'
 		popover.setAttribute('role', 'dialog')
-		popover.setAttribute('aria-label', 'Wybor roku i miesiaca')
+		popover.setAttribute('aria-label', 'Wybór roku i miesiąca')
 		popover.style.visibility = 'hidden'
 
 		let yearOptions = ''
@@ -331,14 +344,14 @@ const createMonthPicker = ({
 		}
 
 		popover.innerHTML = `
-			<div class="month-fallback-title">Wybierz rok i miesiac</div>
+			<div class="month-fallback-title">Wybierz rok i miesiąc</div>
 			<div class="month-fallback-grid">
 				<label class="month-fallback-field">
 					<span>Rok</span>
 					<select id="fallback-year-select">${yearOptions}</select>
 				</label>
 			</div>
-			<div class="month-fallback-months" id="fallback-months" aria-label="Lista miesiecy"></div>
+			<div class="month-fallback-months" id="fallback-months" aria-label="Lista miesięcy"></div>
 		`
 
 		document.body.appendChild(popover)
@@ -561,6 +574,77 @@ const createMonthPicker = ({
 	}
 }
 /* === Shared Month Picker Factory: End === */
+
+/* === Shared Audit Helpers: Start === */
+const normalizeAuditFields = record => ({
+	createdBy: record?.createdBy || null,
+	updatedBy: record?.updatedBy || record?.createdBy || null,
+	createdAt: record?.createdAt || '',
+	updatedAt: record?.updatedAt || record?.createdAt || '',
+})
+
+const buildAuditMarkup = record => {
+	const authUtils = window.AppUtils?.auth
+	const createdByLabel = authUtils?.getAuditActorLabel?.(record?.createdBy) || 'Nieznany'
+	const updatedByLabel = authUtils?.getAuditActorLabel?.(record?.updatedBy || record?.createdBy) || createdByLabel
+	const createdAtLabel = formatDate(record?.createdAt)
+	const updatedAtLabel = formatDate(record?.updatedAt)
+	const createdLine = createdAtLabel ? `${createdByLabel} · ${createdAtLabel}` : createdByLabel
+	const updatedLine = updatedAtLabel ? `${updatedByLabel} · ${updatedAtLabel}` : updatedByLabel
+	const shouldShowUpdate = Boolean(record?.updatedBy || record?.updatedAt) && updatedLine !== createdLine
+
+	return `
+		<div class="record-audit">
+			<span class="record-audit-line"><strong>Dodal:</strong> ${createdLine}</span>
+			${shouldShowUpdate ? `<span class="record-audit-line"><strong>Edytowal:</strong> ${updatedLine}</span>` : ''}
+		</div>
+	`
+}
+/* === Shared Audit Helpers: End === */
+
+/* === Shared Search Controller: Start === */
+const createSearchController = ({ panel, workspaceActions, toggleButton, input, onClear } = {}) => {
+	const setOpen = isOpen => {
+		if (!panel) return
+
+		panel.hidden = !isOpen
+		workspaceActions?.classList.toggle('is-search-open', isOpen)
+		toggleButton?.setAttribute('aria-expanded', String(isOpen))
+
+		if (isOpen) {
+			window.setTimeout(() => input?.focus(), 40)
+		}
+	}
+
+	const close = ({ clearValue = true } = {}) => {
+		if (clearValue) {
+			if (input) {
+				input.value = ''
+			}
+
+			onClear?.()
+		}
+
+		setOpen(false)
+	}
+
+	const toggle = () => {
+		if (Boolean(panel) && !panel.hidden) {
+			close()
+			return
+		}
+
+		setOpen(true)
+	}
+
+	return {
+		setOpen,
+		close,
+		toggle,
+		isOpen: () => Boolean(panel) && !panel.hidden,
+	}
+}
+/* === Shared Search Controller: End === */
 
 /* === Shared Confirm Dialog: Start === */
 const appConfirmState = {

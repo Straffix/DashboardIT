@@ -2,11 +2,11 @@
 	"name": "dashboardit",
 	"private": true,
 	"scripts": {
-		"serve": "node scripts/dev-server.js",
-		"build:css": "sass sass/style.scss css/style.css",
-		"watch:css": "sass --watch sass/style.scss css/style.css",
-		"lint:js": "eslint \"js/**/*.js\"",
-		"check": "npm run lint:js && npm run build:css"
+		"start": "node tools/dev-server.js",
+		"build:styles": "sass styles/scss/style.scss:styles/style.css styles/scss/pages/dashboard.scss:styles/dashboard.css styles/scss/pages/monitor.scss:styles/monitor.css styles/scss/pages/notes.scss:styles/notes.css styles/scss/pages/lunch.scss:styles/lunch.css styles/scss/pages/wymiany.scss:styles/wymiany.css styles/scss/pages/zatrudnienia.scss:styles/zatrudnienia.css",
+		"watch:styles": "sass --watch styles/scss/style.scss:styles/style.css styles/scss/pages/dashboard.scss:styles/dashboard.css styles/scss/pages/monitor.scss:styles/monitor.css styles/scss/pages/notes.scss:styles/notes.css styles/scss/pages/lunch.scss:styles/lunch.css styles/scss/pages/wymiany.scss:styles/wymiany.css styles/scss/pages/zatrudnienia.scss:styles/zatrudnienia.css",
+		"lint:scripts": "eslint \"js/**/*.js\"",
+		"check": "npm run lint:scripts && npm run build:styles"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.23.0",
