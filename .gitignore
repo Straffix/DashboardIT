@@ -4,3 +4,7 @@ trash/
 
 # Temporary logs
 *.log
+
+# Runtime file storage
+storage/data/*.json
+!storage/data/.htaccess

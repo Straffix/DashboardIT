@@ -798,7 +798,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			if (editIndex !== null) {
-				exchanges[editIndex] = exchangeData
+				exchanges[editIndex] = {
+					...exchanges[editIndex],
+					...exchangeData,
+				}
 			} else {
 				exchanges.push(exchangeData)
 			}

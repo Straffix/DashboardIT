@@ -11,8 +11,24 @@
 	}
 
 	const getStorageService = () => window.AppServices?.storageService
+	const getRemoteApi = () => window.AppServices?.remoteApi
 	const getStorageKeys = () => window.AppUtils.config.STORAGE_KEYS
 	const getPreferenceKeys = () => window.AppUtils.config.PREFERENCE_KEYS
+	const isRemoteMode = () => Boolean(getStorageService()?.isRemoteEnabled?.())
+
+	const getJson = (key, fallback) => {
+		const storageService = getStorageService()
+		if (storageService?.readJson) {
+			return storageService.readJson(key, fallback)
+		}
+
+		try {
+			const storedValue = localStorage.getItem(key)
+			return storedValue ? JSON.parse(storedValue) : fallback
+		} catch (error) {
+			return fallback
+		}
+	}
 
 	const setJson = (key, value) => {
 		const storageService = getStorageService()
@@ -50,6 +66,50 @@
 		}
 
 		return Promise.resolve(window.confirm(options?.message || 'Czy na pewno chcesz kontynuowac?'))
+	}
+
+	const requestRemoteDemo = ({ method = 'GET', payload = null } = {}) => {
+		const response = getRemoteApi()?.request?.({
+			method,
+			path: 'demo.php',
+			body: payload,
+		})
+
+		if (!response?.ok) {
+			throw new Error(response?.message || 'Nie udalo sie obsluzyc danych demo na serwerze.')
+		}
+
+		return response
+	}
+
+	const markLocalDemoRecords = records =>
+		Array.isArray(records)
+			? records
+					.filter(record => record && typeof record === 'object')
+					.map(record => ({
+						...record,
+						isDemo: true,
+					}))
+			: []
+
+	const mergeLocalDemoRecords = (existingRecords, demoRecords) => {
+		const safeExistingRecords = Array.isArray(existingRecords)
+			? existingRecords.filter(record => record && typeof record === 'object')
+			: []
+		const cleanExistingRecords = safeExistingRecords.filter(record => !record.isDemo)
+		return [...cleanExistingRecords, ...markLocalDemoRecords(demoRecords)]
+	}
+
+	const isSessionBoundToDemoUser = (session, users) => {
+		if (!session || typeof session !== 'object') {
+			return false
+		}
+
+		const matchedUser = Array.isArray(users)
+			? users.find(user => String(user?.id || '') === String(session.userId || ''))
+			: null
+
+		return Boolean(matchedUser?.isDemo)
 	}
 
 	const getDemoButtonHost = () =>
@@ -103,11 +163,22 @@
 		}
 
 		const refreshButtonState = () => {
-			const isSeeded = Boolean(localStorage.getItem(DEMO_MARKER_KEY))
+			let isSeeded = false
+
+			if (isRemoteMode()) {
+				try {
+					isSeeded = Boolean(requestRemoteDemo().seeded)
+				} catch (error) {
+					isSeeded = false
+				}
+			} else {
+				isSeeded = Boolean(localStorage.getItem(DEMO_MARKER_KEY))
+			}
+
 			demoButton.dataset.state = isSeeded ? 'seeded' : 'empty'
 			demoButton.setAttribute('aria-pressed', String(isSeeded))
 			demoButton.classList.toggle('is-active', isSeeded)
-			demoButton.setAttribute('aria-label', isSeeded ? 'Usun przykladowe dane' : 'Wgraj przykladowe dane')
+			demoButton.setAttribute('aria-label', isSeeded ? 'Usun przykladowe dane demo' : 'Wgraj przykladowe dane demo')
 			demoButton.removeAttribute('title')
 		}
 
@@ -124,54 +195,112 @@
 			}, 180)
 		}
 
-		const writeSeedData = payload => {
-			const storageKeys = getStorageKeys()
+		const applyLocalDemoPreferences = payload => {
 			const preferenceKeys = getPreferenceKeys()
-
-			setJson(storageKeys.USERS, payload.users || [])
-			setJson(storageKeys.SESSION, payload.session || null)
-			setJson(storageKeys.HIRES, payload.hires || [])
-			setJson(storageKeys.MONITOR, payload.monitor || [])
-			setJson(storageKeys.EXCHANGES, payload.exchanges || [])
-			setJson(storageKeys.BOOKMARKS, payload.bookmarks || [])
-			setJson(storageKeys.LUNCH, payload.lunchReservations || [])
-			setJson(storageKeys.NOTES, payload.notes || [])
-			setJson(storageKeys.ANNOUNCEMENTS, payload.announcements || [])
-			setJson(storageKeys.TASKS, payload.noteTasks || [])
 			setJson(preferenceKeys.DASHBOARD_TASKS, payload.plannerTasks || [])
 			setJson(preferenceKeys.DASHBOARD_TASK_REMINDERS, payload.plannerReminders || [])
 			setText(preferenceKeys.DASHBOARD_TASK_AUTOCLEAR, String(Boolean(payload.plannerAutoclear)))
+		}
+
+		const clearLocalDemoPreferences = () => {
+			const preferenceKeys = getPreferenceKeys()
+			;[
+				preferenceKeys.DASHBOARD_TASKS,
+				preferenceKeys.DASHBOARD_TASK_REMINDERS,
+				preferenceKeys.DASHBOARD_TASK_AUTOCLEAR,
+			].forEach(removeKey)
+		}
+
+		const writeSeedData = payload => {
+			if (isRemoteMode()) {
+				applyLocalDemoPreferences(payload)
+				requestRemoteDemo({
+					method: 'POST',
+					payload,
+				})
+				return
+			}
+
+			const storageKeys = getStorageKeys()
+			const existingUsers = getJson(storageKeys.USERS, [])
+			const existingSession = getJson(storageKeys.SESSION, null)
+			const nextUsers = mergeLocalDemoRecords(existingUsers, payload.users || [])
+			const shouldReplaceSession = !existingSession || isSessionBoundToDemoUser(existingSession, existingUsers)
+
+			setJson(storageKeys.USERS, nextUsers)
+			if (shouldReplaceSession) {
+				setJson(storageKeys.SESSION, payload.session || null)
+			}
+			setJson(storageKeys.HIRES, mergeLocalDemoRecords(getJson(storageKeys.HIRES, []), payload.hires || []))
+			setJson(storageKeys.MONITOR, mergeLocalDemoRecords(getJson(storageKeys.MONITOR, []), payload.monitor || []))
+			setJson(storageKeys.EXCHANGES, mergeLocalDemoRecords(getJson(storageKeys.EXCHANGES, []), payload.exchanges || []))
+			setJson(storageKeys.BOOKMARKS, mergeLocalDemoRecords(getJson(storageKeys.BOOKMARKS, []), payload.bookmarks || []))
+			setJson(storageKeys.LUNCH, mergeLocalDemoRecords(getJson(storageKeys.LUNCH, []), payload.lunchReservations || []))
+			setJson(storageKeys.NOTES, mergeLocalDemoRecords(getJson(storageKeys.NOTES, []), payload.notes || []))
+			setJson(
+				storageKeys.ANNOUNCEMENTS,
+				mergeLocalDemoRecords(getJson(storageKeys.ANNOUNCEMENTS, []), payload.announcements || [])
+			)
+			setJson(storageKeys.TASKS, mergeLocalDemoRecords(getJson(storageKeys.TASKS, []), payload.noteTasks || []))
+			applyLocalDemoPreferences(payload)
 			setText(DEMO_MARKER_KEY, new Date().toISOString())
 		}
 
 		const clearSeedData = () => {
+			if (isRemoteMode()) {
+				clearLocalDemoPreferences()
+				requestRemoteDemo({
+					method: 'DELETE',
+				})
+				return
+			}
+
 			const storageKeys = getStorageKeys()
-			const preferenceKeys = getPreferenceKeys()
-			;[
-				storageKeys.USERS,
-				storageKeys.SESSION,
-				storageKeys.HIRES,
-				storageKeys.MONITOR,
-				storageKeys.EXCHANGES,
-				storageKeys.BOOKMARKS,
-				storageKeys.LUNCH,
-				storageKeys.NOTES,
-				storageKeys.ANNOUNCEMENTS,
-				storageKeys.TASKS,
-				preferenceKeys.DASHBOARD_TASKS,
-				preferenceKeys.DASHBOARD_TASK_REMINDERS,
-				preferenceKeys.DASHBOARD_TASK_AUTOCLEAR,
-				DEMO_MARKER_KEY,
-			].forEach(removeKey)
+			const existingUsers = getJson(storageKeys.USERS, [])
+			const existingSession = getJson(storageKeys.SESSION, null)
+			const nextUsers = mergeLocalDemoRecords(existingUsers, [])
+			clearLocalDemoPreferences()
+			setJson(storageKeys.USERS, nextUsers)
+			setJson(storageKeys.HIRES, mergeLocalDemoRecords(getJson(storageKeys.HIRES, []), []))
+			setJson(storageKeys.MONITOR, mergeLocalDemoRecords(getJson(storageKeys.MONITOR, []), []))
+			setJson(storageKeys.EXCHANGES, mergeLocalDemoRecords(getJson(storageKeys.EXCHANGES, []), []))
+			setJson(storageKeys.BOOKMARKS, mergeLocalDemoRecords(getJson(storageKeys.BOOKMARKS, []), []))
+			setJson(storageKeys.LUNCH, mergeLocalDemoRecords(getJson(storageKeys.LUNCH, []), []))
+			setJson(storageKeys.NOTES, mergeLocalDemoRecords(getJson(storageKeys.NOTES, []), []))
+			setJson(storageKeys.ANNOUNCEMENTS, mergeLocalDemoRecords(getJson(storageKeys.ANNOUNCEMENTS, []), []))
+			setJson(storageKeys.TASKS, mergeLocalDemoRecords(getJson(storageKeys.TASKS, []), []))
+
+			if (isSessionBoundToDemoUser(existingSession, existingUsers)) {
+				removeKey(storageKeys.SESSION)
+			}
+
+			removeKey(DEMO_MARKER_KEY)
 		}
 
 		demoButton.addEventListener('click', async () => {
-			const isSeeded = Boolean(localStorage.getItem(DEMO_MARKER_KEY))
+			let isSeeded = false
+
+			if (isRemoteMode()) {
+				try {
+					isSeeded = Boolean(requestRemoteDemo().seeded)
+				} catch (error) {
+					window.AppUtils?.notify?.({
+						type: 'error',
+						title: 'Brak polaczenia z demo',
+						message: error?.message || 'Nie udalo sie sprawdzic statusu danych demo na serwerze.',
+					})
+					return
+				}
+			} else {
+				isSeeded = Boolean(localStorage.getItem(DEMO_MARKER_KEY))
+			}
 
 			if (!isSeeded) {
 				const shouldSeed = await confirmAction({
 					title: 'Wgrac przykladowe dane?',
-					message: 'To nadpisze lokalne dane testowe w tabelach, notatkach, obiadach, zakladkach i koncie uzytkownika.',
+					message: isRemoteMode()
+						? 'To doda lub odswiezy tylko rekordy oznaczone jako demo. Prawdziwe konta i normalne wpisy pozostana bez zmian.'
+						: 'To nadpisze lokalne dane testowe w tabelach, notatkach, obiadach, zakladkach i koncie uzytkownika.',
 					confirmLabel: 'Wgraj dane',
 					cancelLabel: 'Anuluj',
 				})
@@ -208,7 +337,9 @@
 
 			const shouldClear = await confirmAction({
 				title: 'Usunac przykladowe dane?',
-				message: 'To wyczysci lokalne dane testowe ze wszystkich modulow oraz konto demo zapisane w tej przegladarce.',
+				message: isRemoteMode()
+					? 'To usunie tylko rekordy i konta oznaczone jako demo. Prawdziwi uzytkownicy oraz normalne wpisy zostana nienaruszone.'
+					: 'To wyczysci lokalne dane testowe ze wszystkich modulow oraz konto demo zapisane w tej przegladarce.',
 				confirmLabel: 'Usun dane',
 				cancelLabel: 'Anuluj',
 			})
@@ -232,11 +363,12 @@
 		})
 
 		window.addEventListener('storage', event => {
-			if (event.key === DEMO_MARKER_KEY) {
+			if (!isRemoteMode() && event.key === DEMO_MARKER_KEY) {
 				refreshButtonState()
 			}
 		})
 
+		window.addEventListener('focus', refreshButtonState)
 		refreshButtonState()
 	})
 })()

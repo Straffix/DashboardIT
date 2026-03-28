@@ -84,6 +84,27 @@ const storageService = appServices.storageService
 const usersService = appServices.usersService
 const sessionService = appServices.sessionService
 const preferencesService = appServices.preferencesService
+const remoteApi = appServices.remoteApi
+
+const isRemoteAuthMode = () => Boolean(storageService?.isRemoteEnabled?.())
+
+const getAccountStorageLabel = () => (isRemoteAuthMode() ? 'na serwerze' : 'lokalnie w tej przegladarce')
+
+const getStorageModeTagLabel = () => (isRemoteAuthMode() ? 'Serwer plikowy PHP' : 'Lokalna przegladarka')
+
+const requestRemoteAuth = ({ path = '', method = 'GET', payload = null } = {}) => {
+	const response = remoteApi?.requestAuth?.({
+		method,
+		path,
+		body: payload,
+	})
+
+	if (!response?.ok) {
+		throw new Error(response?.message || 'Nie udalo sie polaczyc z serwerem aplikacji.')
+	}
+
+	return response
+}
 
 const getAvatarPreset = avatarId => AUTH_CONFIG.avatarPresets.find(preset => preset.id === avatarId) || AUTH_CONFIG.avatarPresets[0]
 
@@ -250,8 +271,12 @@ const renderAuthUi = () => {
 	const popoverMetaText = currentUser
 		? ''
 		: authState.users.length === 0
-			? 'Załóż pierwsze konto. Otrzyma ono rolę lidera.'
-			: 'Zaloguj się lub załóż nowe konto lokalne.'
+			? isRemoteAuthMode()
+				? 'Zaloz pierwsze konto na serwerze. Otrzyma ono role lidera.'
+				: 'Załóż pierwsze konto. Otrzyma ono rolę lidera.'
+			: isRemoteAuthMode()
+				? 'Zaloguj sie lub zaloz nowe konto wspoldzielone na serwerze.'
+				: 'Zaloguj się lub załóż nowe konto lokalne.'
 	authState.popoverMeta.textContent = popoverMetaText
 	authState.popoverMeta.hidden = !popoverMetaText
 
@@ -331,6 +356,23 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 		throw new Error(`Hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaki.`)
 	}
 
+	if (isRemoteAuthMode()) {
+		requestRemoteAuth({
+			path: 'register.php',
+			method: 'POST',
+			payload: {
+				fullName: normalizedName,
+				login: normalizedLogin,
+				password: normalizedPassword,
+				avatarId: getAvatarPreset(avatarId).id,
+				avatarImage: normalizeAvatarImage(avatarImage),
+			},
+		})
+
+		syncCurrentUserFromSession()
+		return sanitizeUser(authState.currentUser)
+	}
+
 	if (findUserByLogin(normalizedLogin)) {
 		throw new Error('Taki login już istnieje.')
 	}
@@ -356,6 +398,20 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 }
 
 const loginUser = ({ login, password }) => {
+	if (isRemoteAuthMode()) {
+		requestRemoteAuth({
+			path: 'login.php',
+			method: 'POST',
+			payload: {
+				login: normalizeUserLogin(login),
+				password: String(password || ''),
+			},
+		})
+
+		syncCurrentUserFromSession()
+		return sanitizeUser(authState.currentUser)
+	}
+
 	const matchedUser = findUserByLogin(login)
 	if (!matchedUser || matchedUser.passwordHash !== encodeLocalPassword(password)) {
 		throw new Error('Nieprawidłowy login lub hasło.')
@@ -368,6 +424,10 @@ const loginUser = ({ login, password }) => {
 }
 
 const resetUserPassword = ({ login, password }) => {
+	if (isRemoteAuthMode()) {
+		throw new Error('Reset hasla jest w trybie serwerowym wylaczony. Skontaktuj sie z administratorem.')
+	}
+
 	const matchedUser = findUserByLogin(login)
 	const normalizedPassword = String(password || '')
 
@@ -401,14 +461,21 @@ const resetUserPassword = ({ login, password }) => {
 }
 
 const logoutUser = ({ silent = false } = {}) => {
-	saveSession(null)
-	setCurrentUser(null)
+	if (isRemoteAuthMode()) {
+		sessionService?.clear?.()
+		syncCurrentUserFromSession()
+	} else {
+		saveSession(null)
+		setCurrentUser(null)
+	}
 
 	if (!silent) {
 		notify({
 			type: 'info',
 			title: 'Wylogowano',
-			message: 'Sesja lokalna została zamknięta dla tej przeglądarki.',
+			message: isRemoteAuthMode()
+				? 'Sesja serwerowa zostala zamknieta dla tego urzadzenia.'
+				: 'Sesja lokalna została zamknięta dla tej przeglądarki.',
 		})
 	}
 }
@@ -427,6 +494,22 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage }) =>
 
 	if (!normalizedLogin) {
 		throw new Error('Login nie może być pusty.')
+	}
+
+	if (isRemoteAuthMode()) {
+		requestRemoteAuth({
+			path: 'profile.php',
+			method: 'POST',
+			payload: {
+				fullName: normalizedName,
+				login: normalizedLogin,
+				avatarId: getAvatarPreset(avatarId).id,
+				avatarImage: normalizeAvatarImage(avatarImage),
+			},
+		})
+
+		syncCurrentUserFromSession()
+		return sanitizeUser(authState.currentUser)
 	}
 
 	const duplicatedUser = authState.users.find(
@@ -470,6 +553,21 @@ const updateUserAccess = ({ userId, role, permissions } = {}) => {
 
 	if (normalizedUserId === String(authState.currentUser.id || '')) {
 		throw new Error('W tej wersji nie zmienisz tutaj własnych uprawnień lidera.')
+	}
+
+	if (isRemoteAuthMode()) {
+		const response = requestRemoteAuth({
+			path: 'access.php',
+			method: 'POST',
+			payload: {
+				userId: normalizedUserId,
+				role: normalizeUserRole(role),
+				permissions: normalizeUserPermissions(permissions),
+			},
+		})
+
+		authState.users = loadUsers()
+		return sanitizeUser(response.user || authState.users.find(user => String(user.id || '') === normalizedUserId) || null)
 	}
 
 	const normalizedRole = normalizeUserRole(role)
@@ -612,7 +710,9 @@ const renderPageStatusStrip = () => {
 	const identityLabel = currentUser ? currentUser.fullName : 'Gość systemu'
 	const metaLabel = currentUser
 		? `${getRoleLabel(currentUser.role)} · @${currentUser.login}`
-		: 'Tryb podglądu bez lokalnej sesji'
+		: isRemoteAuthMode()
+			? 'Tryb podgladu bez aktywnej sesji serwerowej'
+			: 'Tryb podgladu bez lokalnej sesji'
 
 	systemUiState.pageStatusIdentity.innerHTML = `
 		${createAvatarMarkup({
@@ -628,15 +728,19 @@ const renderPageStatusStrip = () => {
 	`
 
 	systemUiState.pageStatusText.textContent = currentUser
-		? `Pracujesz w module ${moduleLabel}. Konto lokalne jest aktywne w tej przeglądarce i gotowe do dalszej pracy.`
-		: `Przeglądasz moduł ${moduleLabel} jako gość. Zaloguj się, aby korzystać z funkcji zapisujących dane i historii zmian.`
+		? isRemoteAuthMode()
+			? `Pracujesz w module ${moduleLabel}. Konto i dane sa wspoldzielone na serwerze i gotowe do pracy zespolowej.`
+			: `Pracujesz w module ${moduleLabel}. Konto lokalne jest aktywne w tej przeglądarce i gotowe do dalszej pracy.`
+		: isRemoteAuthMode()
+			? `Przegladasz modul ${moduleLabel} jako gosc. Zaloguj sie, aby pracowac na wspolnych danych serwerowych.`
+			: `Przeglądasz moduł ${moduleLabel} jako gość. Zaloguj się, aby korzystać z funkcji zapisujących dane i historii zmian.`
 
 	systemUiState.pageStatusTags.innerHTML = `
 		<span class="app-page-status-tag ${currentUser?.role === 'admin' ? 'is-admin' : 'is-neutral'}">
 			${currentUser ? getRoleLabel(currentUser.role) : 'Gość'}
 		</span>
-		<span class="app-page-status-tag is-demo">Demo localStorage</span>
-		<span class="app-page-status-tag is-neutral">Frontend ready for API</span>
+		<span class="app-page-status-tag is-demo">${getStorageModeTagLabel()}</span>
+		<span class="app-page-status-tag is-neutral">${isRemoteAuthMode() ? 'Wspolne dane zespolowe' : 'Frontend ready for API'}</span>
 	`
 
 	systemUiState.pageStatusActions.innerHTML = currentUser
@@ -734,7 +838,12 @@ const renderAvatarUploadPreview = (container, { fullName, avatarId, avatarImage,
 		})}
 		<div class="app-avatar-upload-copy">
 			<strong>${hasCustomAvatar ? 'Własne zdjęcie aktywne' : 'Domyślny neutralny avatar'}</strong>
-			<span>${helperText || (hasCustomAvatar ? 'Zdjęcie zostanie zapisane lokalnie dla tego konta.' : 'Jeśli nie wgrasz zdjęcia, system pokaże neutralny avatar z sylwetką.')}</span>
+			<span>${
+				helperText ||
+				(hasCustomAvatar
+					? `Zdjecie zostanie zapisane ${getAccountStorageLabel()} dla tego konta.`
+					: 'Jesli nie wgrasz zdjecia, system pokaze neutralny avatar z sylwetka.')
+			}</span>
 		</div>
 	`
 }
@@ -745,7 +854,7 @@ const renderRegisterAvatarEditor = () => {
 		avatarId: authState.selectedRegisterAvatarId,
 		avatarImage: authState.customRegisterAvatarImage,
 		helperText: authState.customRegisterAvatarImage
-			? 'To zdjęcie będzie zapisane lokalnie i przypisane do nowego konta.'
+			? `To zdjecie bedzie zapisane ${getAccountStorageLabel()} i przypisane do nowego konta.`
 			: 'Możesz od razu wgrać swoje zdjęcie profilowe albo zostawić neutralny avatar z sylwetką.',
 	})
 
@@ -760,7 +869,7 @@ const renderProfileAvatarEditor = () => {
 		avatarId: authState.selectedProfileAvatarId,
 		avatarImage: authState.customProfileAvatarImage,
 		helperText: authState.customProfileAvatarImage
-			? 'To zdjęcie jest aktywne dla Twojego konta w tej przeglądarce.'
+			? `To zdjecie jest aktywne dla Twojego konta ${getAccountStorageLabel()}.`
 			: 'Możesz wgrać nowe zdjęcie albo zostawić neutralny avatar z sylwetką.',
 	})
 
@@ -828,7 +937,11 @@ const renderTeamManagement = () => {
 		authState.profileTeamList.innerHTML = `
 			<div class="app-team-empty">
 				<strong>Brak innych kont do konfiguracji</strong>
-				<p>Gdy kolejne osoby założą konto lokalne, pojawią się tutaj i będziesz mógł nadać im role oraz specjalizacje.</p>
+				<p>${
+					isRemoteAuthMode()
+						? 'Gdy kolejne osoby zaloza konto na serwerze, pojawia sie tutaj i bedziesz mogl nadac im role oraz specjalizacje.'
+						: 'Gdy kolejne osoby zaloza konto lokalne, pojawia sie tutaj i bedziesz mogl nadac im role oraz specjalizacje.'
+				}</p>
 			</div>
 		`
 		return
@@ -1004,7 +1117,8 @@ const handleAvatarFileSelection = async (scope, file) => {
 }
 
 const updateAuthMode = mode => {
-	authState.mode = mode === 'register' ? 'register' : mode === 'reset' ? 'reset' : 'login'
+	const allowPasswordReset = !isRemoteAuthMode()
+	authState.mode = mode === 'register' ? 'register' : allowPasswordReset && mode === 'reset' ? 'reset' : 'login'
 	if (!authState.authModal || !authState.authForm) return
 
 	const isRegister = authState.mode === 'register'
@@ -1013,7 +1127,9 @@ const updateAuthMode = mode => {
 
 	if (authState.authTitle) {
 		authState.authTitle.textContent = isRegister
-			? 'Załóż konto lokalne'
+			? isRemoteAuthMode()
+				? 'Zaloz konto zespolowe'
+				: 'Załóż konto lokalne'
 			: isReset
 				? 'Reset lokalnego hasła'
 				: 'Zaloguj się do systemu'
@@ -1021,10 +1137,14 @@ const updateAuthMode = mode => {
 
 	if (authState.authCopy) {
 		authState.authCopy.textContent = isRegister
-			? 'Konto zostanie zapisane lokalnie w tej przeglądarce. Pierwsze konto otrzyma rolę lidera.'
+			? isRemoteAuthMode()
+				? 'Konto zostanie zapisane na serwerze i bedzie widoczne dla wszystkich uzytkownikow tej aplikacji. Pierwsze konto otrzyma role lidera.'
+				: 'Konto zostanie zapisane lokalnie w tej przeglądarce. Pierwsze konto otrzyma rolę lidera.'
 			: isReset
 				? 'Podaj login i ustaw nowe hasło dla lokalnego konta w tej przeglądarce.'
-				: 'Konta są lokalne dla tej przeglądarki. Później warstwa danych może zostać podłączona do backendu.'
+				: isRemoteAuthMode()
+					? 'Konta i dane sa wspoldzielone na serwerze. Zalogowanie odblokowuje prace na wspolnej bazie rekordow.'
+					: 'Konta są lokalne dla tej przeglądarki. Później warstwa danych może zostać podłączona do backendu.'
 	}
 
 	if (authState.authSwitchBtn) {
@@ -1032,7 +1152,7 @@ const updateAuthMode = mode => {
 	}
 
 	if (authState.authResetBtn) {
-		authState.authResetBtn.hidden = isRegister || isReset || authState.users.length === 0
+		authState.authResetBtn.hidden = isRemoteAuthMode() || isRegister || isReset || authState.users.length === 0
 	}
 
 	if (authState.authSubmitBtn) {
@@ -1165,7 +1285,7 @@ const ensureAuthUi = () => {
 									<span>Usuń zdjęcie</span>
 								</button>
 							</div>
-							<small>PNG, JPG lub WebP do 10 MB. Zdjęcie zostanie przycięte do kwadratu i zapisane lokalnie.</small>
+							<small>PNG, JPG lub WebP do 10 MB. Zdjecie zostanie przyciete do kwadratu i przypisane do tego konta.</small>
 						</div>
 					</div>
 				</div>
@@ -1249,7 +1369,7 @@ const ensureAuthUi = () => {
 									<span>Usuń zdjęcie</span>
 								</button>
 							</div>
-							<small>PNG, JPG lub WebP do 10 MB. Zdjęcie zostanie przycięte do kwadratu i zapisane lokalnie.</small>
+							<small>PNG, JPG lub WebP do 10 MB. Zdjecie zostanie przyciete do kwadratu i przypisane do tego konta.</small>
 						</div>
 					</div>
 				</div>
@@ -1454,7 +1574,9 @@ const ensureAuthUi = () => {
 					notify({
 						type: 'success',
 						title: 'Konto utworzone',
-						message: 'Nowe konto lokalne zostało założone i od razu aktywowane w tej przeglądarce.',
+						message: isRemoteAuthMode()
+							? 'Nowe konto zostalo zalozone na serwerze i od razu aktywowane.'
+							: 'Nowe konto lokalne zostało założone i od razu aktywowane w tej przeglądarce.',
 					})
 				} else {
 					resetUserPassword({
@@ -1475,7 +1597,9 @@ const ensureAuthUi = () => {
 				notify({
 					type: 'success',
 					title: 'Zalogowano',
-					message: 'Sesja użytkownika jest aktywna i gotowa do pracy we wszystkich modułach.',
+					message: isRemoteAuthMode()
+						? 'Sesja uzytkownika jest aktywna, a dane sa wspoldzielone we wszystkich modulach.'
+						: 'Sesja użytkownika jest aktywna i gotowa do pracy we wszystkich modułach.',
 				})
 			}
 
