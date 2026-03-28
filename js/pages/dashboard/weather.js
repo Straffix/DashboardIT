@@ -732,6 +732,7 @@
 				let isSettled = false
 				let watchId = null
 				let timeoutId = null
+				let fallbackRequestStarted = false
 
 				const finish = (callback, value) => {
 					if (isSettled) return
@@ -758,6 +759,19 @@
 					}
 				}
 
+				const requestLowAccuracyFallback = fallbackError => {
+					if (fallbackRequestStarted) return
+
+					fallbackRequestStarted = true
+					requestCurrentPosition({
+						enableHighAccuracy: false,
+						timeout: 10000,
+						maximumAge: 900000,
+					})
+						.then(position => finish(resolve, position))
+						.catch(error => finish(reject, error?.code ? error : fallbackError))
+				}
+
 				watchId = navigator.geolocation.watchPosition(
 					position => {
 						rememberBestPosition(position)
@@ -772,7 +786,12 @@
 							return
 						}
 
-						finish(reject, error)
+						if (error?.code === 1) {
+							finish(reject, error)
+							return
+						}
+
+						requestLowAccuracyFallback(error)
 					},
 					{
 						enableHighAccuracy: true,
@@ -787,13 +806,7 @@
 						return
 					}
 
-					requestCurrentPosition({
-						enableHighAccuracy: false,
-						timeout: 10000,
-						maximumAge: 300000,
-					})
-						.then(position => finish(resolve, position))
-						.catch(error => finish(reject, error))
+					requestLowAccuracyFallback()
 				}, timeout)
 			})
 

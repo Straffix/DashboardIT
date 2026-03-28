@@ -11,7 +11,7 @@ const AUTH_CONFIG = {
 		{ id: 'rooms', label: 'Salkowy' },
 	],
 	avatarPresets: [
-		{ id: 'violet', label: 'Fiolet', gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' },
+		{ id: 'violet', label: 'Neutralny', gradient: 'linear-gradient(135deg, #64748b 0%, #94a3b8 100%)' },
 		{ id: 'blue', label: 'Niebieski', gradient: 'linear-gradient(135deg, #2563eb 0%, #38bdf8 100%)' },
 		{ id: 'emerald', label: 'Zielony', gradient: 'linear-gradient(135deg, #10b981 0%, #22c55e 100%)' },
 		{ id: 'amber', label: 'Pomaranczowy', gradient: 'linear-gradient(135deg, #f59e0b 0%, #fb7185 100%)' },
@@ -733,8 +733,8 @@ const renderAvatarUploadPreview = (container, { fullName, avatarId, avatarImage,
 			extraClass: 'app-user-avatar-xl',
 		})}
 		<div class="app-avatar-upload-copy">
-			<strong>${hasCustomAvatar ? 'Własne zdjęcie aktywne' : 'Domyślny avatar z inicjałami'}</strong>
-			<span>${helperText || (hasCustomAvatar ? 'Zdjęcie zostanie zapisane lokalnie dla tego konta.' : 'Jeśli nie wgrasz zdjęcia, system pokaże avatar z inicjałami.')}</span>
+			<strong>${hasCustomAvatar ? 'Własne zdjęcie aktywne' : 'Domyślny neutralny avatar'}</strong>
+			<span>${helperText || (hasCustomAvatar ? 'Zdjęcie zostanie zapisane lokalnie dla tego konta.' : 'Jeśli nie wgrasz zdjęcia, system pokaże neutralny avatar z sylwetką.')}</span>
 		</div>
 	`
 }
@@ -746,7 +746,7 @@ const renderRegisterAvatarEditor = () => {
 		avatarImage: authState.customRegisterAvatarImage,
 		helperText: authState.customRegisterAvatarImage
 			? 'To zdjęcie będzie zapisane lokalnie i przypisane do nowego konta.'
-			: 'Możesz od razu wgrać swoje zdjęcie profilowe albo zostawić domyślny avatar z inicjałami.',
+			: 'Możesz od razu wgrać swoje zdjęcie profilowe albo zostawić neutralny avatar z sylwetką.',
 	})
 
 	if (authState.authAvatarResetBtn) {
@@ -761,7 +761,7 @@ const renderProfileAvatarEditor = () => {
 		avatarImage: authState.customProfileAvatarImage,
 		helperText: authState.customProfileAvatarImage
 			? 'To zdjęcie jest aktywne dla Twojego konta w tej przeglądarce.'
-			: 'Możesz wgrać nowe zdjęcie albo zostawić domyślny avatar z inicjałami.',
+			: 'Możesz wgrać nowe zdjęcie albo zostawić neutralny avatar z sylwetką.',
 	})
 
 	if (authState.profileAvatarResetBtn) {
