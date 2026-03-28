@@ -35,6 +35,7 @@
 		linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
 }
 
+html.theme-dark,
 body.theme-dark {
 	--bg-color: #{$bg-color-dark};
 	--bg-surface: #{$bg-surface-dark};
@@ -64,6 +65,7 @@ body.theme-dark {
 	--page-gradient: #1b191c;
 }
 
+html.theme-rossmann,
 body.theme-rossmann {
 	--bg-color: #{$rossmann-warm-white};
 	--bg-surface: rgba(255, 250, 246, 0.92);
@@ -145,6 +147,7 @@ body.theme-dark * {
 	scrollbar-color: var(--scrollbar-thumb-solid) var(--scrollbar-track);
 }
 
+html.dashboard-page,
 body.dashboard-page {
 	--scrollbar-track: #{$dashboard-scrollbar-track};
 	--scrollbar-thumb-solid: #{$dashboard-scrollbar-thumb-solid};
@@ -153,6 +156,7 @@ body.dashboard-page {
 	--scrollbar-thumb-border: #{$dashboard-scrollbar-thumb-border};
 }
 
+html.dashboard-page.theme-dark,
 body.dashboard-page.theme-dark {
 	--scrollbar-track: #{$dashboard-scrollbar-track-dark};
 	--scrollbar-thumb-solid: #{$dashboard-scrollbar-thumb-solid-dark};
@@ -161,6 +165,7 @@ body.dashboard-page.theme-dark {
 	--scrollbar-thumb-border: #{$dashboard-scrollbar-thumb-border-dark};
 }
 
+html.dashboard-page.theme-rossmann,
 body.dashboard-page.theme-rossmann {
 	--scrollbar-track: #{$rossmann-dashboard-scrollbar-track};
 	--scrollbar-thumb-solid: #{$rossmann-dashboard-scrollbar-thumb-solid};
@@ -2969,6 +2974,10 @@ body.theme-dark .month-fallback-popover {
 	}
 
 	.footer-link {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.08rem 0.14rem;
+		border-radius: 999px;
 		font-size: 1rem;
 		color: var(--text-main);
 		text-decoration: none;
@@ -2981,12 +2990,38 @@ body.theme-dark .month-fallback-popover {
 			color: var(--primary);
 			opacity: 0.92;
 		}
+
+		&:focus-visible {
+			outline: none;
+			color: var(--primary);
+			box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+		}
 	}
 
 	.creator-name {
+		margin-left: 0.2rem;
 		color: var(--text-main);
 		font-weight: 700;
-		letter-spacing: 0.1rem;
+		letter-spacing: 0.08rem;
+		text-decoration: none;
+		white-space: nowrap;
+		transition:
+			color 0.2s ease,
+			text-decoration-color 0.2s ease;
+
+		&:hover {
+			color: var(--primary);
+			text-decoration: underline;
+			text-decoration-thickness: 0.08em;
+			text-underline-offset: 0.18em;
+		}
+
+		&:focus-visible {
+			outline: none;
+			color: var(--primary);
+			box-shadow:
+				0 0 0 4px rgba(99, 102, 241, 0.14);
+		}
 	}
 }
 /* === Shared Footer: End === */

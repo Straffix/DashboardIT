@@ -1,10 +1,20 @@
 /* === Shared Global UI: Start === */
+const syncRootThemeState = () => {
+	if (!document.body) return
+
+	const root = document.documentElement
+	root.classList.toggle('dashboard-page', document.body.classList.contains('dashboard-page'))
+	root.classList.toggle('theme-dark', document.body.classList.contains('theme-dark'))
+	root.classList.toggle('theme-rossmann', document.body.classList.contains('theme-rossmann'))
+}
+
 const applyTheme = theme => {
 	const normalizedTheme = ['light', 'dark', 'rossmann'].includes(theme) ? theme : 'light'
 	const isDark = normalizedTheme === 'dark'
 	const isRossmann = normalizedTheme === 'rossmann'
 	document.body.classList.toggle('theme-dark', isDark)
 	document.body.classList.toggle('theme-rossmann', isRossmann)
+	syncRootThemeState()
 	document.documentElement.setAttribute('data-theme', normalizedTheme)
 }
 
@@ -93,6 +103,7 @@ const createThemeToggle = () => {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+	syncRootThemeState()
 	applyTheme(getStoredTheme())
 	ensureAuthUi()
 	ensurePageStatusStrip()

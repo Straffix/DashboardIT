@@ -2582,6 +2582,15 @@ body.dashboard-page.theme-dark {
 		text-shadow: none;
 	}
 
+	.dashboard-container .creator-name:hover {
+		color: #eee7ff;
+	}
+
+	.dashboard-container .creator-name:focus-visible {
+		color: #eee7ff;
+		box-shadow: 0 0 0 4px rgba(169, 92, 255, 0.16);
+	}
+
 	.dashboard-container .footer-status {
 		background: none;
 		border-color: transparent;
@@ -2593,6 +2602,10 @@ body.dashboard-page.theme-dark {
 
 		&:hover {
 			color: #eee7ff;
+		}
+
+		&:focus-visible {
+			box-shadow: 0 0 0 4px rgba(169, 92, 255, 0.16);
 		}
 	}
 
@@ -3137,6 +3150,31 @@ body.dashboard-page.theme-rossmann {
 	.dashboard-container .footer-content,
 	.dashboard-container .footer-status {
 		color: $rossmann-text-muted;
+	}
+
+	.dashboard-container .creator-name {
+		color: #7a2c39;
+	}
+
+	.dashboard-container .creator-name:hover {
+		color: #c3002d;
+	}
+
+	.dashboard-container .creator-name:focus-visible {
+		color: #c3002d;
+		box-shadow: 0 0 0 4px rgba(195, 0, 45, 0.12);
+	}
+
+	.dashboard-container .footer-link {
+		color: #7a2c39;
+
+		&:hover {
+			color: #c3002d;
+		}
+
+		&:focus-visible {
+			box-shadow: 0 0 0 4px rgba(195, 0, 45, 0.12);
+		}
 	}
 
 	.dashboard-kicker,

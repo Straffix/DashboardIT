@@ -16,8 +16,8 @@
   --danger: #ef4444;
   --border: #e2e8f0;
   --border-strong: rgba(99, 102, 241, 0.25);
-  --scrollbar-track: #1e293b;
-  --scrollbar-thumb-solid: #ef4444;
+  --scrollbar-track: rgba(59, 130, 246, 0.14);
+  --scrollbar-thumb-solid: rgba(79, 70, 229, 0.72);
   --scrollbar-thumb: linear-gradient(180deg, rgba(99, 102, 241, 0.92) 0%, rgba(37, 99, 235, 0.96) 100%);
   --scrollbar-thumb-hover: linear-gradient(180deg, rgba(79, 70, 229, 0.96) 0%, rgb(29, 78, 216) 100%);
   --scrollbar-thumb-border: rgba(255, 255, 255, 0.72);
@@ -31,6 +31,7 @@
   	linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
 }
 
+html.theme-dark,
 body.theme-dark {
   --bg-color: #19181c;
   --bg-surface: rgba(11, 13, 24, 0.92);
@@ -60,6 +61,7 @@ body.theme-dark {
   --page-gradient: #1b191c;
 }
 
+html.theme-rossmann,
 body.theme-rossmann {
   --bg-color: #fff6ee;
   --bg-surface: rgba(255, 250, 246, 0.92);
@@ -141,6 +143,7 @@ body.theme-dark * {
   scrollbar-color: var(--scrollbar-thumb-solid) var(--scrollbar-track);
 }
 
+html.dashboard-page,
 body.dashboard-page {
   --scrollbar-track: rgba(17, 35, 72, 0.18);
   --scrollbar-thumb-solid: rgba(46, 86, 150, 0.58);
@@ -149,6 +152,7 @@ body.dashboard-page {
   --scrollbar-thumb-border: rgba(13, 28, 60, 0.82);
 }
 
+html.dashboard-page.theme-dark,
 body.dashboard-page.theme-dark {
   --scrollbar-track: rgba(17, 16, 28, 0.28);
   --scrollbar-thumb-solid: rgba(108, 92, 179, 0.58);
@@ -157,6 +161,7 @@ body.dashboard-page.theme-dark {
   --scrollbar-thumb-border: rgba(9, 10, 18, 0.92);
 }
 
+html.dashboard-page.theme-rossmann,
 body.dashboard-page.theme-rossmann {
   --scrollbar-track: rgba(195, 0, 45, 0.1);
   --scrollbar-thumb-solid: rgba(195, 0, 45, 0.56);
@@ -2644,6 +2649,10 @@ body.theme-dark .month-fallback-popover {
   animation: pulseStatus 2.2s ease-in-out infinite;
 }
 .main-footer .footer-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.08rem 0.14rem;
+  border-radius: 999px;
   font-size: 1rem;
   color: var(--text-main);
   text-decoration: none;
@@ -2654,10 +2663,30 @@ body.theme-dark .month-fallback-popover {
   color: var(--primary);
   opacity: 0.92;
 }
+.main-footer .footer-link:focus-visible {
+  outline: none;
+  color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
 .main-footer .creator-name {
+  margin-left: 0.2rem;
   color: var(--text-main);
   font-weight: 700;
-  letter-spacing: 0.1rem;
+  letter-spacing: 0.08rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+.main-footer .creator-name:hover {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+.main-footer .creator-name:focus-visible {
+  outline: none;
+  color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
 }
 
 /* === Shared Footer: End === */
