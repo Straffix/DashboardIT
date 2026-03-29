@@ -106,6 +106,8 @@ const requestRemoteAuth = ({ path = '', method = 'GET', payload = null } = {}) =
 	return response
 }
 
+const getEventTargetElement = eventTarget => (eventTarget instanceof Element ? eventTarget : eventTarget?.parentElement || null)
+
 const getAvatarPreset = avatarId => AUTH_CONFIG.avatarPresets.find(preset => preset.id === avatarId) || AUTH_CONFIG.avatarPresets[0]
 
 const normalizeAvatarImage = value => {
@@ -791,6 +793,7 @@ const closeUserPopover = () => {
 	authState.hub.classList.remove('is-open')
 	authState.trigger?.setAttribute('aria-expanded', 'false')
 	authState.popover.hidden = true
+	document.body.classList.remove('app-user-popover-open')
 }
 
 const openUserPopover = () => {
@@ -800,6 +803,7 @@ const openUserPopover = () => {
 	authState.hub.classList.add('is-open')
 	authState.trigger?.setAttribute('aria-expanded', 'true')
 	authState.popover.hidden = false
+	document.body.classList.add('app-user-popover-open')
 }
 
 const toggleUserPopover = () => {
@@ -1442,7 +1446,7 @@ const ensureAuthUi = () => {
 	})
 
 	hub.addEventListener('click', event => {
-		const actionButton = event.target.closest('[data-user-action]')
+		const actionButton = getEventTargetElement(event.target)?.closest('[data-user-action]')
 		if (!actionButton) return
 
 		handleUserAction(actionButton.dataset.userAction)
@@ -1455,13 +1459,13 @@ const ensureAuthUi = () => {
 	})
 
 	authModal.addEventListener('click', event => {
-		if (event.target.closest('[data-auth-close]')) {
+		if (getEventTargetElement(event.target)?.closest('[data-auth-close]')) {
 			closeModal(authModal)
 		}
 	})
 
 	profileModal.addEventListener('click', event => {
-		if (event.target.closest('[data-profile-close]')) {
+		if (getEventTargetElement(event.target)?.closest('[data-profile-close]')) {
 			closeModal(profileModal)
 		}
 	})
@@ -1476,14 +1480,14 @@ const ensureAuthUi = () => {
 	})
 
 	authState.profileTeamList?.addEventListener('change', event => {
-		const teamControl = event.target.closest('[data-team-role], [data-team-permission]')
+		const teamControl = getEventTargetElement(event.target)?.closest('[data-team-role], [data-team-permission]')
 		if (!teamControl) return
 
 		syncTeamMemberCardState(teamControl.closest('.app-team-member-card'))
 	})
 
 	authState.profileTeamList?.addEventListener('click', event => {
-		const saveButton = event.target.closest('[data-team-save]')
+		const saveButton = getEventTargetElement(event.target)?.closest('[data-team-save]')
 		if (!saveButton) return
 
 		const memberCard = saveButton.closest('.app-team-member-card')

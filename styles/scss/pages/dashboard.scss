@@ -186,7 +186,7 @@ body.weather-editor-open .dashboard-menu-stage {
 /* === Dashboard Topbar: Start === */
 .dashboard-topbar {
 	position: relative;
-	z-index: 2;
+	z-index: 20;
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
@@ -196,7 +196,7 @@ body.weather-editor-open .dashboard-menu-stage {
 }
 
 body.weather-editor-open .dashboard-topbar {
-	z-index: 12;
+	z-index: 24;
 }
 
 .dashboard-theme-bookmark-slot {
@@ -223,6 +223,21 @@ body.weather-editor-open .dashboard-topbar {
 
 	&::after {
 		display: none;
+	}
+}
+
+body.dashboard-page.app-user-popover-open {
+	.weather-widget,
+	.clock-widget,
+	.dashboard-topbar .theme-toggle-menu,
+	.dashboard-demo-toggle-btn {
+		pointer-events: none;
+	}
+
+	.app-user-hub,
+	.app-user-popover,
+	.app-user-popover * {
+		pointer-events: auto;
 	}
 }
 

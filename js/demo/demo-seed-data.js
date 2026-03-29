@@ -95,7 +95,7 @@
 		const exchangeMonthlyVolumes = [18, 6, 24, 4, 11, 5, 15, 7, 13, 20, 8, 10]
 
 		const users = [
-			['demo-admin', 'Arkadiusz Test', 'demo.admin', 'admin123', 'admin', permissionIds, 'blue'],
+			['demo-admin', 'Arek Tester', 'demoarek', 'demo123', 'admin', permissionIds, 'blue'],
 			['demo-user-1', 'Katarzyna Nowak', 'k.nowak', 'demo123', 'user', ['it_support', 'network'], 'emerald'],
 			['demo-user-2', 'Michal Zielinski', 'm.zielinski', 'demo123', 'user', ['it_support'], 'amber'],
 			['demo-user-3', 'Ola Borkowska', 'o.borkowska', 'demo123', 'user', ['printers'], 'rose'],
@@ -330,7 +330,7 @@
 		].map(([id, title, date, time, priority, description]) => ({ id, title, date, time, priority, description }))
 
 		return {
-			credentials: { login: 'demo.admin', password: 'admin123' },
+			credentials: { login: 'demoarek', password: 'demo123' },
 			users,
 			session: { userId: 'demo-admin', loginAt: toIso(createCalendarDate(seedYear, currentMonth, currentDay, 8, 5)) },
 			hires,

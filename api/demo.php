@@ -3,6 +3,26 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_auth.php';
 
+function dashboard_find_demo_session_user_id(array $sessionPayload, array $users): ?string
+{
+	$userId = trim((string) ($sessionPayload['userId'] ?? ''));
+	if ($userId === '') {
+		return null;
+	}
+
+	foreach ($users as $user) {
+		if (!is_array($user)) {
+			continue;
+		}
+
+		if ((string) ($user['id'] ?? '') === $userId && !empty($user['isDemo'])) {
+			return $userId;
+		}
+	}
+
+	return null;
+}
+
 function dashboard_mark_demo_records(array $records): array
 {
 	$markedRecords = [];
@@ -102,6 +122,7 @@ if ($method === 'GET') {
 if ($method === 'POST') {
 	try {
 		$payload = dashboard_get_json_body();
+		$currentSession = dashboard_get_session_payload();
 
 		dashboard_merge_demo_records(dashboard_users_path(), is_array($payload['users'] ?? null) ? $payload['users'] : [], true);
 		dashboard_merge_demo_records(dashboard_storage_file_for_key('nowe_zatrudnienia_dane'), is_array($payload['hires'] ?? null) ? $payload['hires'] : []);
@@ -112,11 +133,22 @@ if ($method === 'POST') {
 		dashboard_merge_demo_records(dashboard_storage_file_for_key('dashboard_notes_entries'), is_array($payload['notes'] ?? null) ? $payload['notes'] : []);
 		dashboard_merge_demo_records(dashboard_storage_file_for_key('dashboard_notes_announcements'), is_array($payload['announcements'] ?? null) ? $payload['announcements'] : []);
 		dashboard_merge_demo_records(dashboard_storage_file_for_key('dashboard_notes_tasks'), is_array($payload['noteTasks'] ?? null) ? $payload['noteTasks'] : []);
+
+		$sessionPayload = is_array($payload['session'] ?? null) ? $payload['session'] : [];
+		$seededUsers = dashboard_load_users();
+		$shouldReplaceSession = $currentSession === null || dashboard_find_demo_session_user_id($currentSession, $seededUsers) !== null;
+		$demoSessionUserId = dashboard_find_demo_session_user_id($sessionPayload, $seededUsers);
+
+		if ($shouldReplaceSession && $demoSessionUserId !== null) {
+			dashboard_set_session($demoSessionUserId);
+		}
+
 		dashboard_set_demo_marker(true);
 
 		dashboard_json_response([
 			'ok' => true,
 			'seeded' => true,
+			'sessionAssigned' => $shouldReplaceSession && $demoSessionUserId !== null,
 		]);
 	} catch (Throwable $error) {
 		dashboard_json_response([
