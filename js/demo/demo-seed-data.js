@@ -244,19 +244,28 @@
 			updatedAt: toIso(createCalendarDate(seedYear, 3, 19 + index, 10 + (index % 2), 35)),
 		}))
 
-		const lunchReservations = [
-			['2026-03-25', '11:30', 'demo-user-1'], ['2026-03-25', '11:30', 'demo-user-5'], ['2026-03-25', '12:00', 'demo-user-2'],
-			['2026-03-25', '12:00', 'demo-user-6'], ['2026-03-25', '12:30', 'demo-admin'], ['2026-03-25', '12:30', 'demo-user-3'],
-			['2026-03-25', '13:00', 'demo-user-4'], ['2026-03-25', '13:00', 'demo-user-7'], ['2026-03-25', '13:30', 'demo-user-8'],
-			['2026-03-26', '11:00', 'demo-user-1'], ['2026-03-26', '11:00', 'demo-user-2'], ['2026-03-26', '12:00', 'demo-admin'],
-			['2026-03-26', '12:00', 'demo-user-4'], ['2026-03-26', '12:30', 'demo-user-5'], ['2026-03-26', '13:30', 'demo-user-6'],
-			['2026-03-27', '11:30', 'demo-user-3'], ['2026-03-27', '12:00', 'demo-user-7'], ['2026-03-27', '12:30', 'demo-user-8'],
-			['2026-03-27', '13:00', 'demo-admin'], ['2026-03-28', '11:00', 'demo-user-5'], ['2026-03-28', '11:30', 'demo-user-6'],
-			['2026-03-28', '12:00', 'demo-user-1'], ['2026-03-28', '12:30', 'demo-user-2'],
-		].map(([date, timeSlot, userId], index) => {
-			const [year, month, day] = date.split('-').map(Number)
-			const stamp = createCalendarDate(year, month, day, 8 + (index % 4), 5 + (index % 3) * 7)
-			return { id: `lunch-demo-${index + 1}`, date, timeSlot, userId, createdAt: toIso(stamp), updatedAt: toIso(stamp), status: 'active' }
+		const lunchSeedBaseDate = createCalendarDate(seedYear, currentMonth, currentDay, 12, 0)
+		const lunchReservationPlan = [
+			[-1, '11:30', 'demo-user-1'], [-1, '11:30', 'demo-user-5'], [-1, '12:00', 'demo-user-2'],
+			[-1, '12:00', 'demo-user-6'], [-1, '12:30', 'demo-user-3'], [-1, '13:00', 'demo-user-4'],
+			[0, '11:30', 'demo-admin'], [0, '11:30', 'demo-user-8'], [0, '12:00', 'demo-user-7'],
+			[0, '12:30', 'demo-user-1'], [0, '13:00', 'demo-user-2'], [0, '13:30', 'demo-user-6'],
+			[1, '11:00', 'demo-user-3'], [1, '11:00', 'demo-user-4'], [1, '12:00', 'demo-admin'],
+			[1, '12:30', 'demo-user-5'], [1, '13:30', 'demo-user-7'], [2, '11:30', 'demo-user-8'],
+			[2, '12:00', 'demo-user-1'], [2, '12:30', 'demo-user-2'], [2, '13:00', 'demo-user-5'],
+		]
+		const lunchReservations = lunchReservationPlan.map(([dayOffset, timeSlot, userId], index) => {
+			const reservationDate = shiftDate(lunchSeedBaseDate, dayOffset, 12, 0)
+			const stamp = shiftDate(reservationDate, -1, 8 + (index % 4), 5 + (index % 3) * 7)
+			return {
+				id: `lunch-demo-${index + 1}`,
+				date: formatDate(reservationDate),
+				timeSlot,
+				userId,
+				createdAt: toIso(stamp),
+				updatedAt: toIso(stamp),
+				status: 'active',
+			}
 		})
 
 		const announcements = [

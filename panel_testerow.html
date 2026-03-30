@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Testerów - DashboardIT</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous" defer></script>
+
+    <link rel="stylesheet" href="./styles/style.css">
+    <link rel="stylesheet" href="./styles/testers.css">
+</head>
+
+<body class="tester-feedback-page">
+
+    <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pełnoekranowy">
+        <i class="fa-solid fa-expand"></i>
+    </button>
+
+    <div class="wrapper">
+        <header class="header">
+            <a href="index.html" class="menu-btn">
+                <i class="fa-solid fa-chevron-left"></i> Powrót do Dashboardu
+            </a>
+
+            <div class="logo-section">
+                <div class="icon-box tester-icon-box">
+                    <i class="fa-solid fa-bug"></i>
+                </div>
+
+                <div>
+                    <h1>Panel Testerów</h1>
+                    <p>Wspólna tablica na uwagi po testach, błędy, UX i szybkie pomysły. <span>Wpisy są widoczne dla
+                            wszystkich, ale nowe rekordy dodają tylko zalogowani użytkownicy.</span></p>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content tester-content">
+            <section class="tester-workspace">
+                <div class="tester-hero">
+                    <div class="tester-hero-copy">
+                        <span class="tester-kicker">Publiczna tablica testów</span>
+                        <h2>Zgłaszaj uwagi po testach i trzymaj wszystko w jednym wspólnym miejscu</h2>
+                        <p id="tester-board-summary">Ładowanie wpisów testerów...</p>
+                    </div>
+
+                    <div class="tester-hero-stats">
+                        <div class="tester-hero-stat">
+                            <span>Wszystkie wpisy</span>
+                            <strong id="tester-stat-total">0</strong>
+                        </div>
+
+                        <div class="tester-hero-stat">
+                            <span>Krytyczne</span>
+                            <strong id="tester-stat-critical">0</strong>
+                        </div>
+
+                        <div class="tester-hero-stat">
+                            <span>Ostatnia zmiana</span>
+                            <strong id="tester-stat-updated">--</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tester-feedback" class="tester-feedback is-hidden" aria-live="polite"></div>
+
+                <section class="tester-board-section" aria-labelledby="tester-form-title">
+                    <div class="tester-section-head">
+                        <div class="tester-section-copy">
+                            <span class="tester-kicker">Nowy wpis</span>
+                            <h3 id="tester-form-title">Dodaj uwagę po testach</h3>
+                            <p>Podgląd jest publiczny, ale nowe wpisy mogą dodawać wyłącznie zalogowani użytkownicy.</p>
+                        </div>
+                    </div>
+
+                    <div id="tester-auth-callout" class="tester-auth-callout">
+                        <div class="tester-auth-copy">
+                            <strong id="tester-auth-title">Podgląd tablicy jest dostępny dla wszystkich</strong>
+                            <p id="tester-auth-text">Zaloguj się, aby dodawać uwagi po testach. Osoby bez aktywnej
+                                sesji mogą tylko przeglądać zapisane wpisy.</p>
+                        </div>
+
+                        <button type="button" id="tester-auth-btn" class="tester-auth-btn">
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                            <span>Zaloguj się</span>
+                        </button>
+                    </div>
+
+                    <form id="tester-entry-form" class="tester-composer" novalidate>
+                        <label class="tester-field" for="tester-author-name">
+                            <span>Autor zgłoszenia</span>
+                            <input type="text" id="tester-author-name" maxlength="60"
+                                placeholder="Zaloguj się, aby dodać wpis" required>
+                        </label>
+
+                        <div class="tester-field-row">
+                            <label class="tester-field" for="tester-area">
+                                <span>Obszar</span>
+                                <input type="text" id="tester-area" maxlength="80"
+                                    placeholder="Np. logowanie, dashboard, formularz">
+                            </label>
+
+                            <label class="tester-field" for="tester-category">
+                                <span>Typ</span>
+                                <select id="tester-category" required>
+                                    <option value="bug" selected>Bug</option>
+                                    <option value="ux">UX</option>
+                                    <option value="idea">Pomysł</option>
+                                    <option value="note">Informacja</option>
+                                </select>
+                            </label>
+
+                            <label class="tester-field" for="tester-severity">
+                                <span>Waga</span>
+                                <select id="tester-severity" required>
+                                    <option value="critical">Krytyczny</option>
+                                    <option value="high" selected>Wysoki</option>
+                                    <option value="medium">Średni</option>
+                                    <option value="low">Niski</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <label class="tester-field" for="tester-message">
+                            <span>Treść uwagi</span>
+                            <textarea id="tester-message" maxlength="2000"
+                                placeholder="Opisz, co zostało znalezione, jak odtworzyć problem albo jaki jest kontekst testu."
+                                required></textarea>
+                        </label>
+
+                        <div class="tester-composer-actions">
+                            <button type="submit" class="tester-submit-btn" id="tester-submit-btn">Zapisz uwagę</button>
+                            <button type="reset" class="tester-secondary-btn" id="tester-reset-btn">Wyczyść
+                                formularz</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="tester-board-section tester-board-section-list" aria-labelledby="tester-list-title">
+                    <div class="tester-section-head tester-section-head-inline">
+                        <div class="tester-section-copy">
+                            <span class="tester-kicker">Wspólna lista</span>
+                            <h3 id="tester-list-title">Uwagi zapisane dla wszystkich</h3>
+                            <p>Wpisy są odświeżane po otwarciu strony, po odzyskaniu fokusu okna i ręcznie przyciskiem
+                                poniżej.</p>
+                        </div>
+
+                        <div class="tester-board-toolbar">
+                            <label class="tester-filter" for="tester-severity-filter">
+                                <span>Filtr wagi</span>
+                                <select id="tester-severity-filter">
+                                    <option value="all" selected>Wszystkie</option>
+                                    <option value="critical">Krytyczne</option>
+                                    <option value="high">Wysokie</option>
+                                    <option value="medium">Średnie</option>
+                                    <option value="low">Niskie</option>
+                                </select>
+                            </label>
+
+                            <button type="button" class="tester-secondary-btn" id="tester-refresh-btn">
+                                <i class="fa-solid fa-rotate-right"></i>
+                                <span>Odśwież wpisy</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tester-entry-list" id="tester-entries-list" aria-live="polite"></div>
+                </section>
+            </section>
+
+            <aside class="tester-sidebar">
+                <div class="tester-sidebar-stack">
+                    <article class="tester-side-card">
+                        <p class="tester-side-kicker">Status zapisu</p>
+                        <div id="tester-storage-status" class="tester-storage-status">
+                            <strong>Ładowanie trybu zapisu...</strong>
+                            <p>Sprawdzam, czy działa wspólne API do katalogu storage.</p>
+                        </div>
+                    </article>
+
+                    <article class="tester-side-card">
+                        <p class="tester-side-kicker">Podsumowanie tablicy</p>
+                        <div class="tester-side-stats">
+                            <div class="tester-side-stat">
+                                <span>Gościnne wpisy</span>
+                                <strong id="tester-stat-guest">0</strong>
+                                <small>bez logowania</small>
+                            </div>
+
+                            <div class="tester-side-stat">
+                                <span>Ze wskazanym obszarem</span>
+                                <strong id="tester-stat-area">0</strong>
+                                <small>opisanych rekordów</small>
+                            </div>
+
+                            <div class="tester-side-stat">
+                                <span>Najwyższy priorytet</span>
+                                <strong id="tester-stat-top-severity">--</strong>
+                                <small>na tablicy</small>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="tester-side-card">
+                        <p class="tester-side-kicker">Zasady modułu</p>
+                        <ul class="tester-rule-list">
+                            <li>Tylko zalogowany użytkownik może dodać nowy wpis do tablicy testerów.</li>
+                            <li>Jeśli backend API działa, dane zapisują się we wspólnym folderze `storage/data`.</li>
+                            <li>Po pracy bez backendu wpisy zapisują się tylko lokalnie w przeglądarce.</li>
+                            <li>Najwyżej na liście pojawiają się wpisy o największej wadze i najnowszej aktualizacji.</li>
+                            <li>Wpisy są publiczne dla wszystkich użytkowników tego dashboardu.</li>
+                        </ul>
+                    </article>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="main-footer">
+            <div class="footer-content">
+                <p>&copy; <span id="current-year"></span> IT Support Dashboard by <a class="creator-name"
+                        target="_blank" rel="noopener noreferrer" href="https://lisieckidev.pl">Arkadiusz
+                        Lisiecki</a></p>
+                <div class="footer-separator"></div>
+                <p class="footer-status">
+                    <span class="status-dot"></span>
+                    <a class="footer-link" target="_blank" rel="noopener noreferrer"
+                        href="https://lisieckidev.pl">lisieckidev.pl</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="./js/shared/base.js" charset="utf-8"></script>
+    <script src="./js/core/storage-service.js" charset="utf-8"></script>
+    <script src="./js/shared/auth.js" charset="utf-8"></script>
+    <script src="./js/shared/public-api.js" charset="utf-8"></script>
+    <script src="./js/shared/global-ui.js" charset="utf-8"></script>
+    <script src="./js/core/domain-services.js" charset="utf-8"></script>
+    <script src="./js/pages/testers/index.js" charset="utf-8"></script>
+    <script src="./js/demo/demo-seed-data.js" charset="utf-8"></script>
+    <script src="./js/demo/demo-controls.js" charset="utf-8"></script>
+
+</body>
+
+</html>

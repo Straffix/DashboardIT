@@ -20,11 +20,51 @@ const applyTheme = theme => {
 
 const THEME_STORAGE_KEY = APP_CONFIG.PREFERENCE_KEYS.THEME
 const WIDE_MODE_STORAGE_KEY = APP_CONFIG.PREFERENCE_KEYS.WIDE_MODE
+const SESSION_STORAGE_KEY = APP_CONFIG.STORAGE_KEYS.SESSION
+const USERS_STORAGE_KEY = APP_CONFIG.STORAGE_KEYS.USERS
 
 const normalizeStoredTheme = theme => (['light', 'dark', 'rossmann'].includes(theme) ? theme : 'light')
+const normalizeBaseTheme = theme => (theme === 'dark' ? 'dark' : 'light')
 
 const getStoredTheme = () =>
 	normalizeStoredTheme(preferencesService?.getTheme?.() || storageService?.getText(THEME_STORAGE_KEY, 'light') || 'light')
+
+const getStoredBaseTheme = () =>
+	normalizeBaseTheme(preferencesService?.getThemeFallback?.() || storageService?.getText?.(`${THEME_STORAGE_KEY}-fallback`, 'light') || 'light')
+
+const storeBaseTheme = theme => {
+	const normalizedTheme = normalizeBaseTheme(theme)
+	if (preferencesService?.setThemeFallback) {
+		preferencesService.setThemeFallback(normalizedTheme)
+		return
+	}
+
+	storageService?.setText?.(`${THEME_STORAGE_KEY}-fallback`, normalizedTheme)
+}
+
+const isThemePreferenceStorageKey = key => {
+	const normalizedKey = String(key || '').trim()
+	if (!normalizedKey) return false
+
+	return [
+		THEME_STORAGE_KEY,
+		`${THEME_STORAGE_KEY}-fallback`,
+		preferencesService?.getThemeStorageKey?.(),
+		preferencesService?.getThemeFallbackStorageKey?.(),
+	].includes(normalizedKey)
+}
+
+const requireAuthenticatedPreferenceAction = message => {
+	if (window.AppUtils?.auth?.isAuthenticated?.()) return true
+
+	window.AppUtils?.notify?.({
+		type: 'warning',
+		title: 'Tylko podglad',
+		message,
+	})
+	window.AppUtils?.auth?.openAuthModal?.('login')
+	return false
+}
 
 const createThemeToggle = () => {
 	if (document.querySelector('.theme-toggle-menu')) return null
@@ -52,11 +92,29 @@ const createThemeToggle = () => {
 
 	const rossmannButton = submenu.querySelector('[data-theme-option="rossmann"]')
 
-	const setTheme = theme => {
+	const setTheme = (theme, options = {}) => {
 		const normalizedTheme = normalizeStoredTheme(theme)
+		const fallbackTheme = normalizeBaseTheme(options.fallbackTheme || getStoredBaseTheme())
+
+		if (normalizedTheme === 'rossmann') {
+			storeBaseTheme(fallbackTheme)
+		} else {
+			storeBaseTheme(normalizedTheme)
+		}
+
 		applyTheme(normalizedTheme)
-		preferencesService?.setTheme?.(normalizedTheme) || storageService?.setText?.(THEME_STORAGE_KEY, normalizedTheme)
+		if (preferencesService?.setTheme) {
+			preferencesService.setTheme(normalizedTheme)
+		} else {
+			storageService?.setText?.(THEME_STORAGE_KEY, normalizedTheme)
+		}
 		updateToggle(normalizedTheme)
+	}
+
+	const syncThemeUiState = () => {
+		const activeTheme = getStoredTheme()
+		applyTheme(activeTheme)
+		updateToggle(activeTheme)
 	}
 
 	const updateToggle = theme => {
@@ -75,7 +133,7 @@ const createThemeToggle = () => {
 		if (rossmannButton) {
 			rossmannButton.classList.toggle('is-active', isRossmann)
 			rossmannButton.setAttribute('aria-pressed', String(isRossmann))
-			rossmannButton.setAttribute('aria-label', isRossmann ? 'Motyw Rossmann jest aktywny' : 'Wlacz motyw Rossmann')
+			rossmannButton.setAttribute('aria-label', isRossmann ? 'Wylacz motyw Rossmann' : 'Wlacz motyw Rossmann')
 			rossmannButton.removeAttribute('title')
 		}
 	}
@@ -88,14 +146,22 @@ const createThemeToggle = () => {
 	rossmannButton?.addEventListener('click', event => {
 		event.preventDefault()
 		event.stopPropagation()
-		setTheme('rossmann')
+		const activeTheme = normalizeStoredTheme(document.documentElement.getAttribute('data-theme') || getStoredTheme())
+		if (activeTheme === 'rossmann') {
+			setTheme(getStoredBaseTheme())
+			return
+		}
+
+		setTheme('rossmann', { fallbackTheme: activeTheme })
 	})
 
 	window.addEventListener('storage', event => {
-		if (event.key === THEME_STORAGE_KEY) {
-			updateToggle(getStoredTheme())
+		if (isThemePreferenceStorageKey(event.key) || event.key === SESSION_STORAGE_KEY) {
+			syncThemeUiState()
 		}
 	})
+
+	document.addEventListener('app-auth-changed', syncThemeUiState)
 
 	updateToggle(getStoredTheme())
 	wrapper.append(toggle, submenu)
@@ -156,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		fullscreenBtn.addEventListener('click', () => {
+			if (!requireAuthenticatedPreferenceAction('Musisz byc zalogowany, aby zmieniac uklad strony.')) return
 			const isWide = !document.body.classList.contains('wide-mode')
 			updateWideMode(isWide)
 			preferencesService?.setWideMode?.(isWide) || storageService?.setBoolean?.(WIDE_MODE_STORAGE_KEY, isWide)
@@ -165,12 +232,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	window.addEventListener('storage', event => {
-		if (event.key === APP_CONFIG.STORAGE_KEYS.SESSION || event.key === APP_CONFIG.STORAGE_KEYS.USERS) {
+		if (event.key === SESSION_STORAGE_KEY || event.key === USERS_STORAGE_KEY) {
 			closeUserPopover()
 			syncCurrentUserFromSession()
+			applyTheme(getStoredTheme())
 		}
 
-		if (event.key === THEME_STORAGE_KEY) {
+		if (isThemePreferenceStorageKey(event.key)) {
 			applyTheme(getStoredTheme())
 		}
 	})

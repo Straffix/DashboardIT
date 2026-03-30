@@ -39,6 +39,7 @@ const APP_CONFIG = {
 		NOTES: 'dashboard_notes_entries',
 		ANNOUNCEMENTS: 'dashboard_notes_announcements',
 		TASKS: 'dashboard_notes_tasks',
+		TESTER_FEEDBACK: 'dashboard_testers_feedback',
 	},
 	PREFERENCE_KEYS: {
 		THEME: 'dashboard-theme',

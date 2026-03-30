@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_response.php';
 require_once __DIR__ . '/_store.php';
+require_once __DIR__ . '/_auth.php';
 
 try {
 	$method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+	$requireAuthForWriteKeys = DASHBOARD_REMOTE_STORAGE_FILES;
 
 	if ($method === 'GET') {
 		$key = (string) ($_GET['key'] ?? '');
@@ -20,6 +22,9 @@ try {
 	if ($method === 'POST') {
 		$payload = dashboard_get_json_body();
 		$key = (string) ($payload['key'] ?? '');
+		if (!empty($requireAuthForWriteKeys[$key])) {
+			dashboard_require_authenticated_user();
+		}
 		$path = dashboard_storage_file_for_key($key);
 
 		dashboard_write_json_file($path, $payload['value'] ?? []);
@@ -31,6 +36,9 @@ try {
 
 	if ($method === 'DELETE') {
 		$key = (string) ($_GET['key'] ?? '');
+		if (!empty($requireAuthForWriteKeys[$key])) {
+			dashboard_require_authenticated_user();
+		}
 		$path = dashboard_storage_file_for_key($key);
 		dashboard_write_json_file($path, []);
 

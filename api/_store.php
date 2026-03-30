@@ -7,6 +7,7 @@ const DASHBOARD_REMOTE_STORAGE_FILES = [
 	'dashboard_notes_entries' => 'notes.json',
 	'dashboard_notes_announcements' => 'announcements.json',
 	'dashboard_notes_tasks' => 'tasks.json',
+	'dashboard_testers_feedback' => 'testers-feedback.json',
 	'monitor_laptopow_dane' => 'monitor.json',
 	'nowe_zatrudnienia_dane' => 'hires.json',
 	'wymiana_sprzetu_dane' => 'exchanges.json',

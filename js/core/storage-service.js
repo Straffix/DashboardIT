@@ -13,6 +13,13 @@
 	}
 
 	const runtimeConfig = window.DashboardRuntimeConfig || {}
+	const THEME_FALLBACK_KEY = `${PREFERENCE_KEYS.THEME}-fallback`
+	const THEME_GUEST_KEY = `${PREFERENCE_KEYS.THEME}::guest`
+	const THEME_USER_KEY_PREFIX = `${PREFERENCE_KEYS.THEME}::user::`
+	const THEME_FALLBACK_GUEST_KEY = `${THEME_FALLBACK_KEY}::guest`
+	const THEME_FALLBACK_USER_KEY_PREFIX = `${THEME_FALLBACK_KEY}::user::`
+	const DASHBOARD_MENU_ORDER_GUEST_KEY = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::guest`
+	const DASHBOARD_MENU_ORDER_USER_KEY_PREFIX = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::user::`
 	const REMOTE_SHARED_KEYS = new Set([
 		STORAGE_KEYS.HIRES,
 		STORAGE_KEYS.MONITOR,
@@ -22,7 +29,18 @@
 		STORAGE_KEYS.NOTES,
 		STORAGE_KEYS.ANNOUNCEMENTS,
 		STORAGE_KEYS.TASKS,
+		STORAGE_KEYS.TESTER_FEEDBACK,
 	])
+	const PROTECTED_WRITE_KEYS = new Set([
+		...REMOTE_SHARED_KEYS,
+		PREFERENCE_KEYS.WIDE_MODE,
+		DASHBOARD_MENU_ORDER_GUEST_KEY,
+		PREFERENCE_KEYS.DASHBOARD_MENU_ORDER,
+		PREFERENCE_KEYS.DASHBOARD_TASKS,
+		PREFERENCE_KEYS.DASHBOARD_TASK_REMINDERS,
+		PREFERENCE_KEYS.DASHBOARD_TASK_AUTOCLEAR,
+	])
+	const PROTECTED_WRITE_KEY_PREFIXES = [DASHBOARD_MENU_ORDER_USER_KEY_PREFIX]
 
 	let remoteEnabledCache = null
 	let remoteHealthChecked = false
@@ -122,6 +140,14 @@
 	}
 
 	const isRemoteKey = key => remoteApi.isRemoteEnabled() && REMOTE_SHARED_KEYS.has(String(key || ''))
+	const isProtectedWriteKey = key => {
+		const normalizedKey = String(key || '')
+		return (
+			PROTECTED_WRITE_KEYS.has(normalizedKey) ||
+			PROTECTED_WRITE_KEY_PREFIXES.some(prefix => normalizedKey.startsWith(prefix))
+		)
+	}
+	const canWriteProtectedKey = key => !isProtectedWriteKey(key) || Boolean(window.AppUtils?.auth?.isAuthenticated?.())
 
 	const notifyStorageError = message => {
 		console.error(message)
@@ -147,6 +173,7 @@
 			}
 		},
 		setText(key, value) {
+			if (!canWriteProtectedKey(key)) return
 			localStorage.setItem(key, String(value ?? ''))
 		},
 		readJson(key, fallback) {
@@ -172,6 +199,8 @@
 			}
 		},
 		writeJson(key, value) {
+			if (!canWriteProtectedKey(key)) return
+
 			if (isRemoteKey(key)) {
 				const response = remoteApi.request({
 					method: 'POST',
@@ -191,6 +220,8 @@
 			localStorage.setItem(key, JSON.stringify(value))
 		},
 		remove(key) {
+			if (!canWriteProtectedKey(key)) return
+
 			if (isRemoteKey(key)) {
 				const response = remoteApi.request({
 					method: 'DELETE',
@@ -318,11 +349,46 @@
 	}
 
 	const preferencesService = {
+		getCurrentUserPreferenceScope() {
+			return String(sessionService?.getCurrent?.()?.userId || '').trim()
+		},
+		getScopedPreferenceKey(guestKey, userKeyPrefix) {
+			const currentUserId = this.getCurrentUserPreferenceScope()
+			return currentUserId ? `${userKeyPrefix}${currentUserId}` : guestKey
+		},
+		getThemeStorageKey() {
+			return this.getScopedPreferenceKey(THEME_GUEST_KEY, THEME_USER_KEY_PREFIX)
+		},
+		getThemeFallbackStorageKey() {
+			return this.getScopedPreferenceKey(THEME_FALLBACK_GUEST_KEY, THEME_FALLBACK_USER_KEY_PREFIX)
+		},
+		getDashboardMenuOrderStorageKey() {
+			return this.getScopedPreferenceKey(DASHBOARD_MENU_ORDER_GUEST_KEY, DASHBOARD_MENU_ORDER_USER_KEY_PREFIX)
+		},
 		getTheme() {
-			return storageService.getText(PREFERENCE_KEYS.THEME, 'light') || 'light'
+			const scopedKey = this.getThemeStorageKey()
+			const scopedTheme = storageService.getText(scopedKey, '')
+			if (['light', 'dark', 'rossmann'].includes(scopedTheme)) {
+				return scopedTheme
+			}
+
+			const legacyTheme = storageService.getText(PREFERENCE_KEYS.THEME, 'light') || 'light'
+			return ['light', 'dark', 'rossmann'].includes(legacyTheme) ? legacyTheme : 'light'
 		},
 		setTheme(theme) {
-			storageService.setText(PREFERENCE_KEYS.THEME, theme)
+			const normalizedTheme = ['light', 'dark', 'rossmann'].includes(theme) ? theme : 'light'
+			storageService.setText(this.getThemeStorageKey(), normalizedTheme)
+		},
+		getThemeFallback() {
+			const scopedFallbackTheme = storageService.getText(this.getThemeFallbackStorageKey(), '')
+			if (scopedFallbackTheme === 'dark' || scopedFallbackTheme === 'light') {
+				return scopedFallbackTheme
+			}
+
+			return this.getTheme() === 'dark' ? 'dark' : 'light'
+		},
+		setThemeFallback(theme) {
+			storageService.setText(this.getThemeFallbackStorageKey(), theme === 'dark' ? 'dark' : 'light')
 		},
 		getWideMode() {
 			return storageService.getBoolean(PREFERENCE_KEYS.WIDE_MODE, false)
@@ -337,11 +403,21 @@
 			storageService.setText(PREFERENCE_KEYS.WEATHER_LOCATION, location)
 		},
 		getDashboardMenuOrder() {
-			const menuOrder = storageService.readJson(PREFERENCE_KEYS.DASHBOARD_MENU_ORDER, [])
-			return Array.isArray(menuOrder) ? menuOrder : []
+			const scopedKey = this.getDashboardMenuOrderStorageKey()
+			const scopedOrder = storageService.readJson(scopedKey, null)
+			if (Array.isArray(scopedOrder)) {
+				return scopedOrder
+			}
+
+			if (scopedKey === DASHBOARD_MENU_ORDER_GUEST_KEY) {
+				const legacyOrder = storageService.readJson(PREFERENCE_KEYS.DASHBOARD_MENU_ORDER, [])
+				return Array.isArray(legacyOrder) ? legacyOrder : []
+			}
+
+			return []
 		},
 		saveDashboardMenuOrder(menuOrder) {
-			storageService.writeJson(PREFERENCE_KEYS.DASHBOARD_MENU_ORDER, Array.isArray(menuOrder) ? menuOrder : [])
+			storageService.writeJson(this.getDashboardMenuOrderStorageKey(), Array.isArray(menuOrder) ? menuOrder : [])
 		},
 		getDashboardTasks() {
 			const tasks = storageService.readJson(PREFERENCE_KEYS.DASHBOARD_TASKS, [])

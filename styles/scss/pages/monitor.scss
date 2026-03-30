@@ -522,6 +522,24 @@ body:not(.dashboard-page) .wrapper > .monitor-confirm-shell {
 }
 
 body.theme-dark:not(.dashboard-page) {
+	.monitor-table .status-pill.ok {
+		background: rgba(22, 101, 52, 0.22);
+		box-shadow: inset 0 1px 0 rgba(134, 239, 172, 0.08);
+		color: #86efac;
+	}
+
+	.monitor-table .status-pill.near {
+		background: rgba(146, 64, 14, 0.24);
+		box-shadow: inset 0 1px 0 rgba(253, 186, 116, 0.08);
+		color: #fdba74;
+	}
+
+	.monitor-table .status-pill.expired {
+		background: rgba(127, 29, 29, 0.24);
+		box-shadow: inset 0 1px 0 rgba(252, 165, 165, 0.08);
+		color: #fca5a5;
+	}
+
 	.monitor-drawer {
 		background: rgba(10, 18, 34, 0.96);
 		border-color: rgba(124, 140, 255, 0.22);

@@ -31,6 +31,45 @@ const drawerSubmitBtn = deviceForm?.querySelector('button[type="submit"]')
 const searchToggleBtn = document.getElementById('monitor-search-toggle')
 const searchPanel = document.getElementById('monitor-search-panel')
 const searchInput = document.getElementById('monitor-search-input')
+const isAuthenticated = () => Boolean(AppUtils.auth?.isAuthenticated?.())
+
+function requireAuthenticatedAction(message = 'Musisz byc zalogowany, aby modyfikowac urzadzenia w domenie.') {
+	if (isAuthenticated()) return true
+
+	AppUtils.notify({
+		type: 'warning',
+		title: 'Tylko podglad',
+		message,
+	})
+	AppUtils.auth.openAuthModal?.('login')
+	return false
+}
+
+function syncProtectedUi() {
+	const guestMode = !isAuthenticated()
+
+	if (openDrawerBtn) {
+		openDrawerBtn.innerHTML = guestMode
+			? '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj się, aby dodawać</span>'
+			: '<i class="fa-solid fa-plus"></i><span>Dodaj urządzenie</span>'
+	}
+
+	if (importExcelTrigger) {
+		importExcelTrigger.innerHTML = guestMode
+			? '<i class="fa-solid fa-lock"></i><span>Import po zalogowaniu</span>'
+			: '<i class="fa-solid fa-file-import"></i><span>Import Excel</span>'
+	}
+
+	deviceForm
+		?.querySelectorAll('input, textarea, select, button[type="submit"]')
+		.forEach(control => {
+			control.disabled = guestMode
+		})
+
+	if (guestMode && drawerShell?.classList.contains('is-open')) {
+		void closeDrawer({ force: true })
+	}
+}
 
 const searchController = AppUtils.createSearchController({
 	panel: searchPanel,
@@ -242,6 +281,7 @@ async function closeDrawer({ force = false } = {}) {
 }
 
 async function startCreateFlow() {
+	if (!requireAuthenticatedAction()) return
 	if (!(await canStartDrawerFlow())) return
 
 	resetFormState()
@@ -249,6 +289,7 @@ async function startCreateFlow() {
 }
 
 async function startEditFlow(index) {
+	if (!requireAuthenticatedAction()) return
 	const device = devices[index]
 	if (!device || !(await canStartDrawerFlow())) return
 
@@ -307,6 +348,11 @@ function exportExcel() {
 }
 
 function importExcel(event) {
+	if (!requireAuthenticatedAction('Musisz byc zalogowany, aby importowac dane urzadzen.')) {
+		if (event?.target) event.target.value = ''
+		return
+	}
+
 	const file = event.target.files[0]
 	if (!file) return
 
@@ -398,6 +444,7 @@ function getVisibleDevices() {
 }
 
 async function extendDomain(index, { skipSameDayConfirmation = false } = {}) {
+	if (!requireAuthenticatedAction()) return
 	const device = devices[index]
 	if (!device) return
 
@@ -426,6 +473,7 @@ async function extendDomain(index, { skipSameDayConfirmation = false } = {}) {
 }
 
 async function removeItem(index) {
+	if (!requireAuthenticatedAction()) return
 	if (
 		!(
 			await AppUtils.confirmDialog({
@@ -468,6 +516,7 @@ function renderTable() {
 	tableBody.innerHTML = ''
 
 	const visibleDevices = getVisibleDevices()
+	const guestMode = !isAuthenticated()
 	const stats = { all: visibleDevices.length, ok: 0, warn: 0, dead: 0 }
 	const today = new Date()
 	today.setHours(0, 0, 0, 0)
@@ -530,13 +579,13 @@ function renderTable() {
 			</td>
 			<td class="cell-center">
 				<div class="monitor-actions">
-					<button class="icon-button monitor-row-btn monitor-row-btn-extend" type="button" data-action="extend" data-index="${index}" aria-label="Przedłuż o 60 dni" title="Przedłuż o 60 dni">
+					<button class="icon-button monitor-row-btn monitor-row-btn-extend" type="button" data-action="extend" data-index="${index}" aria-label="Przedłuż o 60 dni" title="${guestMode ? 'Zaloguj się, aby modyfikować urządzenia' : 'Przedłuż o 60 dni'}" ${guestMode ? 'disabled' : ''}>
 						<i class="fa-solid fa-rotate-right"></i>
 					</button>
-					<button class="icon-button monitor-row-btn monitor-row-btn-edit" type="button" data-action="edit" data-index="${index}" aria-label="Edytuj urządzenie" title="Edytuj urządzenie">
+					<button class="icon-button monitor-row-btn monitor-row-btn-edit" type="button" data-action="edit" data-index="${index}" aria-label="Edytuj urządzenie" title="${guestMode ? 'Zaloguj się, aby edytować urządzenia' : 'Edytuj urządzenie'}" ${guestMode ? 'disabled' : ''}>
 						<i class="fa-solid fa-pen-to-square"></i>
 					</button>
-					<button class="icon-button monitor-row-btn monitor-row-btn-danger" type="button" data-action="delete" data-index="${index}" aria-label="Usuń urządzenie" title="Usuń urządzenie">
+					<button class="icon-button monitor-row-btn monitor-row-btn-danger" type="button" data-action="delete" data-index="${index}" aria-label="Usuń urządzenie" title="${guestMode ? 'Zaloguj się, aby usuwać urządzenia' : 'Usuń urządzenie'}" ${guestMode ? 'disabled' : ''}>
 						<i class="fa-solid fa-trash"></i>
 					</button>
 				</div>
@@ -588,6 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		tableBody.addEventListener('click', event => {
 			const actionButton = event.target.closest('[data-action]')
 			if (!actionButton) return
+			if (!requireAuthenticatedAction()) return
 
 			const index = Number(actionButton.dataset.index)
 			if (actionButton.dataset.action === 'extend') void extendDomain(index)
@@ -626,6 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (deviceForm) {
 		deviceForm.addEventListener('submit', async event => {
 			event.preventDefault()
+			if (!requireAuthenticatedAction()) return
 
 			const isEditing = editingDeviceIndex !== null
 			const name = (nameInput?.value || '').trim().toUpperCase()
@@ -713,7 +764,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)
 	if (importExcelTrigger && importExcelInput) {
-		importExcelTrigger.addEventListener('click', () => importExcelInput.click())
+		importExcelTrigger.addEventListener('click', () => {
+			if (!requireAuthenticatedAction('Musisz byc zalogowany, aby importowac dane urzadzen.')) return
+			importExcelInput.click()
+		})
 		importExcelInput.addEventListener('change', importExcel)
 	}
 
@@ -728,7 +782,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		searchToggleBtn.addEventListener('click', searchController.toggle)
 	}
 
+	document.addEventListener('app-auth-changed', () => {
+		syncProtectedUi()
+		renderTable()
+	})
+
 	loadData()
+	syncProtectedUi()
 })
 /* === Monitor Init: End === */
 })()

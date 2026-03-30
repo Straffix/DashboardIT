@@ -1,5 +1,8 @@
 const EXPERIMENT_STORAGE_KEY = 'dashboard_experiment_builder_v3'
 const EXPERIMENT_TUTORIAL_STORAGE_KEY = 'dashboard_experiment_tutorial_seen_v1'
+const EXPERIMENT_SESSION_STORAGE_KEY = 'dashboard_user_session'
+const EXPERIMENT_REMOTE_SESSION_PATH = '../api/auth/session.php'
+const EXPERIMENT_READONLY_STATUS = 'Tryb podgladu dla goscia. Zaloguj sie na dashboardzie, aby edytowac.'
 
 const EXPERIMENT_BLOCK_LIBRARY = [
 	{ type: 'hero', label: 'Start zmiany', description: 'Nagłówek z planem i priorytetami na zmianę.', icon: 'fa-headset' },
@@ -13,6 +16,7 @@ const EXPERIMENT_BLOCK_LIBRARY = [
 const experimentElements = {}
 const experimentDragState = { source: null, type: null, blockId: null }
 const experimentTutorialState = { isOpen: false, currentStepIndex: 0, activeTarget: null }
+const experimentAuthState = { isAuthenticated: false }
 const experimentTutorialSteps = [
 	{
 		target: '[data-tutorial-target="topbar-actions"]',
@@ -53,6 +57,46 @@ const experimentEscapeHtml = value =>
 
 const experimentCreateId = () =>
 	window.crypto?.randomUUID?.() || `exp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+
+const experimentReadLocalSession = () => {
+	try {
+		const rawSession = window.localStorage.getItem(EXPERIMENT_SESSION_STORAGE_KEY)
+		if (!rawSession) return null
+
+		const parsedSession = JSON.parse(rawSession)
+		if (!parsedSession || typeof parsedSession !== 'object' || !parsedSession.userId) {
+			return null
+		}
+
+		return parsedSession
+	} catch (error) {
+		return null
+	}
+}
+
+const experimentReadRemoteSession = () => {
+	if (window.location.protocol === 'file:') return null
+
+	try {
+		const xhr = new XMLHttpRequest()
+		xhr.open('GET', new URL(EXPERIMENT_REMOTE_SESSION_PATH, window.location.href).toString(), false)
+		xhr.setRequestHeader('Accept', 'application/json')
+		xhr.send(null)
+
+		if (xhr.status < 200 || xhr.status >= 300) return null
+
+		const payload = JSON.parse(xhr.responseText || '{}')
+		if (!payload?.ok || !payload?.session?.userId) return null
+		return payload.session
+	} catch (error) {
+		return null
+	}
+}
+
+const experimentHasAuthenticatedUser = () => Boolean(experimentReadRemoteSession()?.userId || experimentReadLocalSession()?.userId)
+
+const experimentGetReadonlyFieldAttributes = () =>
+	(experimentAuthState.isAuthenticated ? '' : 'disabled aria-disabled="true"')
 
 const experimentCreateTaskItem = (text, done = false, id = experimentCreateId()) => ({
 	id,
@@ -240,8 +284,54 @@ const experimentSetStatus = message => {
 	experimentElements.status.textContent = message
 	window.clearTimeout(experimentStatusTimer)
 	experimentStatusTimer = window.setTimeout(() => {
-		experimentElements.status.textContent = 'Autozapis lokalny jest aktywny'
+		experimentElements.status.textContent = experimentAuthState.isAuthenticated
+			? 'Autozapis lokalny jest aktywny'
+			: EXPERIMENT_READONLY_STATUS
 	}, 2800)
+}
+
+const experimentRequireAuthenticatedAction = (message = 'Zaloguj sie na dashboardzie, aby edytowac strone eksperymentalna.') => {
+	if (experimentAuthState.isAuthenticated) return true
+
+	experimentSetStatus(message)
+	return false
+}
+
+const experimentApplyReadonlyUi = () => {
+	const guestMode = !experimentAuthState.isAuthenticated
+	document.body.classList.toggle('experiment-readonly', guestMode)
+
+	if (experimentElements.saveButton) {
+		experimentElements.saveButton.disabled = guestMode
+		experimentElements.saveButton.title = guestMode ? 'Zaloguj sie na dashboardzie, aby zapisywac zmiany' : 'Zapisz uklad'
+	}
+
+	if (experimentElements.exportButton) {
+		experimentElements.exportButton.disabled = guestMode
+		experimentElements.exportButton.title = guestMode ? 'Zaloguj sie na dashboardzie, aby eksportowac widok' : 'Eksport HTML'
+	}
+
+	if (experimentElements.resetButton) {
+		experimentElements.resetButton.disabled = guestMode
+		experimentElements.resetButton.title = guestMode ? 'Zaloguj sie na dashboardzie, aby resetowac uklad' : 'Reset'
+	}
+
+	if (experimentElements.status) {
+		window.clearTimeout(experimentStatusTimer)
+		experimentElements.status.textContent = guestMode ? EXPERIMENT_READONLY_STATUS : 'Autozapis lokalny jest aktywny!'
+	}
+}
+
+const experimentSyncAuthState = ({ refresh = false } = {}) => {
+	experimentAuthState.isAuthenticated = experimentHasAuthenticatedUser()
+
+	if (refresh) {
+		experimentRenderPalette()
+		experimentRenderCanvas()
+		experimentRenderInspector()
+	}
+
+	experimentApplyReadonlyUi()
 }
 
 const experimentGetSelectedBlock = () =>
@@ -410,10 +500,17 @@ const experimentCloseTestNotice = () => {
 
 const experimentRenderPalette = () => {
 	if (!experimentElements.paletteList) return
+	const guestMode = !experimentAuthState.isAuthenticated
 
 	experimentElements.paletteList.innerHTML = EXPERIMENT_BLOCK_LIBRARY.map(
 		block => `
-			<button type="button" class="palette-card" draggable="true" data-template-type="${block.type}">
+			<button
+				type="button"
+				class="palette-card${guestMode ? ' is-disabled' : ''}"
+				draggable="${guestMode ? 'false' : 'true'}"
+				data-template-type="${block.type}"
+				title="${guestMode ? 'Zaloguj sie na dashboardzie, aby dodawac bloki' : 'Przeciagnij blok do obszaru roboczego'}"
+				${guestMode ? 'disabled' : ''}>
 				<div class="palette-card-head">
 					<span class="palette-card-icon" aria-hidden="true"><i class="fa-solid ${experimentEscapeHtml(block.icon)}"></i></span>
 					<strong>${experimentEscapeHtml(block.label)}</strong>
@@ -425,7 +522,7 @@ const experimentRenderPalette = () => {
 }
 
 const experimentRenderDropzone = index =>
-	`<div class="builder-dropzone" data-dropzone-index="${index}"><span>Upusc blok tutaj</span></div>`
+	`<div class="builder-dropzone${experimentAuthState.isAuthenticated ? '' : ' is-readonly'}" data-dropzone-index="${index}"><span>${experimentAuthState.isAuthenticated ? 'Upusc blok tutaj' : 'Tylko podglad'}</span></div>`
 
 const experimentRenderTicketPreview = block => `
 	<div class="builder-preview-ticket">
@@ -448,7 +545,13 @@ const experimentRenderTasksPreview = block => `
 			${experimentNormalizeTaskItems(block.items)
 				.map(
 					item => `
-						<button type="button" class="task-toggle${item.done ? ' is-done' : ''}" data-toggle-task="${block.id}" data-task-id="${item.id}">
+						<button
+							type="button"
+							class="task-toggle${item.done ? ' is-done' : ''}"
+							data-toggle-task="${block.id}"
+							data-task-id="${item.id}"
+							title="${experimentAuthState.isAuthenticated ? 'Zmien status zadania' : 'Zaloguj sie na dashboardzie, aby zmieniac zadania'}"
+							${experimentAuthState.isAuthenticated ? '' : 'disabled'}>
 							<span class="task-toggle-check"><i class="fa-solid ${item.done ? 'fa-check' : 'fa-minus'}"></i></span>
 							<span>${experimentEscapeHtml(item.text)}</span>
 						</button>
@@ -521,16 +624,17 @@ const experimentRenderBlockPreview = block => {
 const experimentRenderBlockCard = block => {
 	const libraryEntry = EXPERIMENT_BLOCK_LIBRARY.find(entry => entry.type === block.type)
 	const isSelected = block.id === experimentState.selectedId
+	const guestMode = !experimentAuthState.isAuthenticated
 
 	return `
-		<article class="builder-block${isSelected ? ' is-selected' : ''}" draggable="true" data-block-id="${block.id}">
+		<article class="builder-block${isSelected ? ' is-selected' : ''}${guestMode ? ' is-readonly' : ''}" draggable="${guestMode ? 'false' : 'true'}" data-block-id="${block.id}">
 			<div class="builder-block-bar">
 				<div class="builder-block-bar-left">
 					<span class="builder-drag-handle" aria-hidden="true"><i class="fa-solid fa-grip-vertical"></i></span>
 					<p class="builder-type-label">${experimentEscapeHtml(libraryEntry?.label || block.type)}</p>
 				</div>
 				<div class="builder-block-bar-right">
-					<button type="button" class="builder-delete-btn" data-delete-block="${block.id}" aria-label="Usuń blok"><i class="fa-solid fa-trash"></i></button>
+					<button type="button" class="builder-delete-btn" data-delete-block="${block.id}" aria-label="Usuń blok" title="${guestMode ? 'Zaloguj sie na dashboardzie, aby usuwac bloki' : 'Usun blok'}" ${guestMode ? 'disabled' : ''}><i class="fa-solid fa-trash"></i></button>
 				</div>
 			</div>
 			<div class="builder-block-body">${experimentRenderBlockPreview(block)}</div>
@@ -540,10 +644,11 @@ const experimentRenderBlockCard = block => {
 
 const experimentRenderCanvas = () => {
 	if (!experimentElements.canvas || !experimentState) return
+	const guestMode = !experimentAuthState.isAuthenticated
 
 	const emptyStateMarkup =
 		experimentState.items.length === 0
-			? `<div class="empty-canvas"><div><p class="empty-canvas-badge">Start</p><strong>Tu pojawi sie Twoj pulpit</strong><p class="builder-preview-muted">Przeciagnij pierwszy blok z biblioteki po lewej stronie.</p></div></div>`
+			? `<div class="empty-canvas"><div><p class="empty-canvas-badge">Start</p><strong>Tu pojawi sie Twoj pulpit</strong><p class="builder-preview-muted">${guestMode ? 'Po zalogowaniu mozna dodawac i ukladac bloki. Teraz widzisz tylko podglad.' : 'Przeciagnij pierwszy blok z biblioteki po lewej stronie.'}</p></div></div>`
 			: ''
 
 	const blocksMarkup =
@@ -569,9 +674,9 @@ const experimentRenderPageInspector = () => `
 	<div class="inspector-card">
 		<div class="inspector-card-head"><h3>Ustawienia strony</h3></div>
 		<div class="inspector-grid">
-			<label class="inspector-field"><span>Mala etykieta</span><input type="text" data-scope="page" data-field="pageBadge" value="${experimentEscapeHtml(experimentState.pageBadge)}"></label>
-			<label class="inspector-field"><span>Tytul strony</span><input type="text" data-scope="page" data-field="pageTitle" value="${experimentEscapeHtml(experimentState.pageTitle)}"></label>
-			<label class="inspector-field"><span>Opis strony</span><textarea data-scope="page" data-field="pageSubtitle">${experimentEscapeHtml(experimentState.pageSubtitle)}</textarea></label>
+			<label class="inspector-field"><span>Mala etykieta</span><input type="text" data-scope="page" data-field="pageBadge" value="${experimentEscapeHtml(experimentState.pageBadge)}" ${experimentGetReadonlyFieldAttributes()}></label>
+			<label class="inspector-field"><span>Tytul strony</span><input type="text" data-scope="page" data-field="pageTitle" value="${experimentEscapeHtml(experimentState.pageTitle)}" ${experimentGetReadonlyFieldAttributes()}></label>
+			<label class="inspector-field"><span>Opis strony</span><textarea data-scope="page" data-field="pageSubtitle" ${experimentGetReadonlyFieldAttributes()}>${experimentEscapeHtml(experimentState.pageSubtitle)}</textarea></label>
 		</div>
 	</div>
 `
@@ -581,53 +686,53 @@ const experimentRenderBlockInspector = block => {
 
 	if (block.type === 'hero') {
 		fields.push(
-			`<label class="inspector-field"><span>Etykieta</span><input type="text" data-scope="block" data-field="badge" value="${experimentEscapeHtml(block.badge)}"></label>`,
-			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}"></label>`,
-			`<label class="inspector-field"><span>Opis</span><textarea data-scope="block" data-field="text">${experimentEscapeHtml(block.text)}</textarea></label>`
+			`<label class="inspector-field"><span>Etykieta</span><input type="text" data-scope="block" data-field="badge" value="${experimentEscapeHtml(block.badge)}" ${experimentGetReadonlyFieldAttributes()}></label>`,
+			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}" ${experimentGetReadonlyFieldAttributes()}></label>`,
+			`<label class="inspector-field"><span>Opis</span><textarea data-scope="block" data-field="text" ${experimentGetReadonlyFieldAttributes()}>${experimentEscapeHtml(block.text)}</textarea></label>`
 		)
 	}
 
 	if (block.type === 'ticket') {
 		fields.push(
-			`<label class="inspector-field"><span>Numer / kolejka</span><input type="text" data-scope="block" data-field="queue" value="${experimentEscapeHtml(block.queue)}"></label>`,
-			`<label class="inspector-field"><span>Priorytet</span><select data-scope="block" data-field="priority"><option value="low" ${block.priority === 'low' ? 'selected' : ''}>low</option><option value="medium" ${block.priority === 'medium' ? 'selected' : ''}>medium</option><option value="high" ${block.priority === 'high' ? 'selected' : ''}>high</option></select></label>`,
-			`<label class="inspector-field"><span>Status</span><select data-scope="block" data-field="status"><option value="Nowe" ${block.status === 'Nowe' ? 'selected' : ''}>Nowe</option><option value="W toku" ${block.status === 'W toku' ? 'selected' : ''}>W toku</option><option value="Czeka na usera" ${block.status === 'Czeka na usera' ? 'selected' : ''}>Czeka na usera</option><option value="Eskalacja" ${block.status === 'Eskalacja' ? 'selected' : ''}>Eskalacja</option><option value="Zamkniete" ${block.status === 'Zamkniete' ? 'selected' : ''}>Zamkniete</option></select></label>`,
-			`<label class="inspector-field"><span>Uzytkownik</span><input type="text" data-scope="block" data-field="user" value="${experimentEscapeHtml(block.user)}"></label>`,
-			`<label class="inspector-field"><span>Opis problemu</span><textarea data-scope="block" data-field="summary">${experimentEscapeHtml(block.summary)}</textarea></label>`
+			`<label class="inspector-field"><span>Numer / kolejka</span><input type="text" data-scope="block" data-field="queue" value="${experimentEscapeHtml(block.queue)}" ${experimentGetReadonlyFieldAttributes()}></label>`,
+			`<label class="inspector-field"><span>Priorytet</span><select data-scope="block" data-field="priority" ${experimentGetReadonlyFieldAttributes()}><option value="low" ${block.priority === 'low' ? 'selected' : ''}>low</option><option value="medium" ${block.priority === 'medium' ? 'selected' : ''}>medium</option><option value="high" ${block.priority === 'high' ? 'selected' : ''}>high</option></select></label>`,
+			`<label class="inspector-field"><span>Status</span><select data-scope="block" data-field="status" ${experimentGetReadonlyFieldAttributes()}><option value="Nowe" ${block.status === 'Nowe' ? 'selected' : ''}>Nowe</option><option value="W toku" ${block.status === 'W toku' ? 'selected' : ''}>W toku</option><option value="Czeka na usera" ${block.status === 'Czeka na usera' ? 'selected' : ''}>Czeka na usera</option><option value="Eskalacja" ${block.status === 'Eskalacja' ? 'selected' : ''}>Eskalacja</option><option value="Zamkniete" ${block.status === 'Zamkniete' ? 'selected' : ''}>Zamkniete</option></select></label>`,
+			`<label class="inspector-field"><span>Uzytkownik</span><input type="text" data-scope="block" data-field="user" value="${experimentEscapeHtml(block.user)}" ${experimentGetReadonlyFieldAttributes()}></label>`,
+			`<label class="inspector-field"><span>Opis problemu</span><textarea data-scope="block" data-field="summary" ${experimentGetReadonlyFieldAttributes()}>${experimentEscapeHtml(block.summary)}</textarea></label>`
 		)
 	}
 
 	if (block.type === 'tasks') {
 		fields.push(
-			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}"></label>`,
-			`<label class="inspector-field"><span>Zadania</span><textarea data-scope="block" data-field="items">${experimentEscapeHtml(experimentFormatTaskLines(block.items))}</textarea></label>`,
+			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}" ${experimentGetReadonlyFieldAttributes()}></label>`,
+			`<label class="inspector-field"><span>Zadania</span><textarea data-scope="block" data-field="items" ${experimentGetReadonlyFieldAttributes()}>${experimentEscapeHtml(experimentFormatTaskLines(block.items))}</textarea></label>`,
 			`<p class="inspector-help">Format: <code>[ ] do zrobienia</code> lub <code>[x] zakonczone</code>. Mozesz tez odhaczac elementy bezposrednio na podgladzie.</p>`
 		)
 	}
 
 	if (block.type === 'note') {
 		fields.push(
-			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}"></label>`,
-			`<label class="inspector-field"><span>Kontekst</span><input type="text" data-scope="block" data-field="context" value="${experimentEscapeHtml(block.context)}"></label>`,
-			`<label class="inspector-field"><span>Tresc notatki</span><textarea data-scope="block" data-field="body">${experimentEscapeHtml(block.body)}</textarea></label>`,
-			`<label class="inspector-field"><span>Wlasciciel</span><input type="text" data-scope="block" data-field="owner" value="${experimentEscapeHtml(block.owner)}"></label>`
+			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}" ${experimentGetReadonlyFieldAttributes()}></label>`,
+			`<label class="inspector-field"><span>Kontekst</span><input type="text" data-scope="block" data-field="context" value="${experimentEscapeHtml(block.context)}" ${experimentGetReadonlyFieldAttributes()}></label>`,
+			`<label class="inspector-field"><span>Tresc notatki</span><textarea data-scope="block" data-field="body" ${experimentGetReadonlyFieldAttributes()}>${experimentEscapeHtml(block.body)}</textarea></label>`,
+			`<label class="inspector-field"><span>Wlasciciel</span><input type="text" data-scope="block" data-field="owner" value="${experimentEscapeHtml(block.owner)}" ${experimentGetReadonlyFieldAttributes()}></label>`
 		)
 	}
 
 	if (block.type === 'links') {
 		fields.push(
-			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}"></label>`,
-			`<label class="inspector-field"><span>Linki</span><textarea data-scope="block" data-field="items">${experimentEscapeHtml(experimentFormatLinkLines(block.items))}</textarea></label>`,
+			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}" ${experimentGetReadonlyFieldAttributes()}></label>`,
+			`<label class="inspector-field"><span>Linki</span><textarea data-scope="block" data-field="items" ${experimentGetReadonlyFieldAttributes()}>${experimentEscapeHtml(experimentFormatLinkLines(block.items))}</textarea></label>`,
 			`<p class="inspector-help">Kazda linia: <code>Nazwa | https://adres</code></p>`
 		)
 	}
 
 	if (block.type === 'handoff') {
 		fields.push(
-			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}"></label>`,
-			`<label class="inspector-field"><span>Stan teraz</span><textarea data-scope="block" data-field="current">${experimentEscapeHtml(block.current)}</textarea></label>`,
-			`<label class="inspector-field"><span>Nastepny krok</span><textarea data-scope="block" data-field="next">${experimentEscapeHtml(block.next)}</textarea></label>`,
-			`<label class="inspector-field"><span>Follow-up</span><textarea data-scope="block" data-field="followup">${experimentEscapeHtml(block.followup)}</textarea></label>`
+			`<label class="inspector-field"><span>Tytul</span><input type="text" data-scope="block" data-field="title" value="${experimentEscapeHtml(block.title)}" ${experimentGetReadonlyFieldAttributes()}></label>`,
+			`<label class="inspector-field"><span>Stan teraz</span><textarea data-scope="block" data-field="current" ${experimentGetReadonlyFieldAttributes()}>${experimentEscapeHtml(block.current)}</textarea></label>`,
+			`<label class="inspector-field"><span>Nastepny krok</span><textarea data-scope="block" data-field="next" ${experimentGetReadonlyFieldAttributes()}>${experimentEscapeHtml(block.next)}</textarea></label>`,
+			`<label class="inspector-field"><span>Follow-up</span><textarea data-scope="block" data-field="followup" ${experimentGetReadonlyFieldAttributes()}>${experimentEscapeHtml(block.followup)}</textarea></label>`
 		)
 	}
 
@@ -635,7 +740,7 @@ const experimentRenderBlockInspector = block => {
 		<div class="inspector-card">
 			<div class="inspector-card-head">
 				<h3>Edytujesz blok: ${experimentEscapeHtml(block.type)}</h3>
-				<div class="inspector-inline-actions"><button type="button" class="inspector-inline-btn is-danger" data-remove-selected="true">Usun blok</button></div>
+				<div class="inspector-inline-actions"><button type="button" class="inspector-inline-btn is-danger" data-remove-selected="true" ${experimentAuthState.isAuthenticated ? '' : 'disabled'}>Usun blok</button></div>
 			</div>
 			<div class="inspector-grid">${fields.join('')}</div>
 		</div>
@@ -653,6 +758,8 @@ const experimentRenderInspector = () => {
 }
 
 const experimentMoveDraggedBlock = dropIndex => {
+	if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby ukladac bloki.')) return
+
 	if (experimentDragState.source === 'palette' && experimentDragState.type) {
 		const newBlock = experimentCreateBlock(experimentDragState.type)
 		const nextItems = [...experimentState.items]
@@ -688,6 +795,8 @@ const experimentClearDropzoneHighlights = () => {
 }
 
 const experimentRemoveBlock = blockId => {
+	if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby usuwac bloki.')) return
+
 	const nextItems = experimentState.items.filter(item => item.id !== blockId)
 	experimentState.items = nextItems
 	experimentState.selectedId = nextItems[0]?.id || null
@@ -698,12 +807,16 @@ const experimentRemoveBlock = blockId => {
 
 const experimentSetSelectedBlock = blockId => {
 	experimentState.selectedId = experimentState.items.some(item => item.id === blockId) ? blockId : null
-	experimentPersistState()
+	if (experimentAuthState.isAuthenticated) {
+		experimentPersistState()
+	}
 	experimentRenderCanvas()
 	experimentRenderInspector()
 }
 
 const experimentToggleTaskItem = (blockId, taskId) => {
+	if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby zmieniac status zadan.')) return
+
 	const block = experimentState.items.find(item => item.id === blockId && item.type === 'tasks')
 	if (!block) return
 
@@ -718,6 +831,11 @@ const experimentToggleTaskItem = (blockId, taskId) => {
 }
 
 const experimentHandlePaletteDragStart = event => {
+	if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby dodawac bloki.')) {
+		event.preventDefault()
+		return
+	}
+
 	const card = event.target.closest('[data-template-type]')
 	if (!card) return
 
@@ -728,6 +846,11 @@ const experimentHandlePaletteDragStart = event => {
 }
 
 const experimentHandleCanvasDragStart = event => {
+	if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby zmieniac kolejnosc blokow.')) {
+		event.preventDefault()
+		return
+	}
+
 	const block = event.target.closest('[data-block-id]')
 	if (!block) return
 
@@ -775,6 +898,11 @@ const experimentHandleCanvasClick = event => {
 }
 
 const experimentHandleInspectorInput = event => {
+	if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby edytowac tresc strony eksperymentalnej.')) {
+		event.preventDefault?.()
+		return
+	}
+
 	const field = event.target?.dataset?.field
 	const scope = event.target?.dataset?.scope
 	if (!field || !scope) return
@@ -802,6 +930,7 @@ const experimentHandleInspectorInput = event => {
 }
 
 const experimentHandleInspectorClick = event => {
+	if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby usuwac bloki.')) return
 	if (!event.target.closest('[data-remove-selected]')) return
 
 	const selectedBlock = experimentGetSelectedBlock()
@@ -919,11 +1048,13 @@ const experimentInit = () => {
 	experimentElements.testNoticeCloseButton = document.getElementById('experiment-test-notice-close-btn')
 
 	experimentState = experimentLoadState()
+	experimentAuthState.isAuthenticated = experimentHasAuthenticatedUser()
 	if (!experimentState.selectedId && experimentState.items[0]) experimentState.selectedId = experimentState.items[0].id
 
 	experimentRenderPalette()
 	experimentRenderCanvas()
 	experimentRenderInspector()
+	experimentApplyReadonlyUi()
 
 	experimentElements.paletteList?.addEventListener('dragstart', experimentHandlePaletteDragStart)
 	experimentElements.canvas?.addEventListener('dragstart', experimentHandleCanvasDragStart)
@@ -944,9 +1075,18 @@ const experimentInit = () => {
 	experimentElements.inspector?.addEventListener('change', experimentHandleInspectorInput)
 	experimentElements.inspector?.addEventListener('click', experimentHandleInspectorClick)
 	experimentElements.tutorialButton?.addEventListener('click', () => experimentOpenTutorial())
-	experimentElements.saveButton?.addEventListener('click', () => experimentPersistState({ announce: true }))
-	experimentElements.exportButton?.addEventListener('click', experimentExportHtml)
-	experimentElements.resetButton?.addEventListener('click', experimentResetWorkspace)
+	experimentElements.saveButton?.addEventListener('click', () => {
+		if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby zapisywac zmiany.')) return
+		experimentPersistState({ announce: true })
+	})
+	experimentElements.exportButton?.addEventListener('click', () => {
+		if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby eksportowac widok.')) return
+		experimentExportHtml()
+	})
+	experimentElements.resetButton?.addEventListener('click', () => {
+		if (!experimentRequireAuthenticatedAction('Zaloguj sie na dashboardzie, aby resetowac uklad.')) return
+		experimentResetWorkspace()
+	})
 	experimentElements.tutorialSkipButton?.addEventListener('click', () => experimentCloseTutorial({ showNotice: true }))
 	experimentElements.tutorialPrevButton?.addEventListener('click', () => experimentGoToTutorialStep(-1))
 	experimentElements.tutorialNextButton?.addEventListener('click', () => experimentGoToTutorialStep(1))
@@ -970,6 +1110,12 @@ const experimentInit = () => {
 		},
 		true
 	)
+	window.addEventListener('focus', () => experimentSyncAuthState({ refresh: true }))
+	window.addEventListener('storage', event => {
+		if (event.key === EXPERIMENT_SESSION_STORAGE_KEY) {
+			experimentSyncAuthState({ refresh: true })
+		}
+	})
 	window.addEventListener('keydown', event => {
 		if (experimentTutorialState.isOpen) {
 			if (event.key === 'Escape') {

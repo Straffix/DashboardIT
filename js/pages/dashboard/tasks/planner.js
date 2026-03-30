@@ -91,6 +91,18 @@
 		let remindedTaskIds = new Set()
 		let autoClearEnabled = false
 		let reminderTimerId = null
+		const isAuthenticated = () => Boolean(window.AppUtils?.auth?.isAuthenticated?.())
+		const requireAuthenticatedAction = (message = 'Musisz byc zalogowany, aby zarzadzac zadaniami dashboardu.') => {
+			if (isAuthenticated()) return true
+
+			window.AppUtils?.notify?.({
+				type: 'warning',
+				title: 'Tylko podglad',
+				message,
+			})
+			window.AppUtils?.auth?.openAuthModal?.('login')
+			return false
+		}
 
 		const loadTasks = () => {
 			const storedTasks = preferencesService?.getDashboardTasks?.() || storageService?.readJson?.(taskConfig.storageKey, []) || []
@@ -205,6 +217,7 @@
 
 			const selectedDate = new Date(`${selectedTaskDate}T00:00`)
 			const selectedTasks = getTasksForDate(selectedTaskDate)
+			const guestMode = !isAuthenticated()
 
 			taskAgendaTitle.textContent = selectedDate.toLocaleDateString('pl-PL', {
 				weekday: 'long',
@@ -235,7 +248,13 @@
 						<h4>${escapeHtml(task.title)}</h4>
 						<p>${escapeHtml(task.description || 'Bez dodatkowego opisu.')}</p>
 					</div>
-					<button type="button" class="task-delete-btn" data-task-delete="${escapeHtml(task.id)}" aria-label="Usuń zadanie">
+					<button
+						type="button"
+						class="task-delete-btn"
+						data-task-delete="${escapeHtml(task.id)}"
+						aria-label="Usuń zadanie"
+						title="${guestMode ? 'Zaloguj sie, aby usuwac zadania' : 'Usun zadanie'}"
+						${guestMode ? 'disabled' : ''}>
 						<i class="fa-solid fa-trash"></i>
 					</button>
 				`
@@ -399,6 +418,10 @@
 
 			if (taskAutoclearToggle) {
 				taskAutoclearToggle.checked = autoClearEnabled
+				taskAutoclearToggle.disabled = !isAuthenticated()
+				taskAutoclearToggle.title = isAuthenticated()
+					? 'Automatycznie usuwaj przeterminowane zadania'
+					: 'Zaloguj sie, aby zmieniac ustawienia planera'
 			}
 
 			cleanupReminderCache()
@@ -412,6 +435,7 @@
 		}
 
 		const openTaskModal = () => {
+			if (!requireAuthenticatedAction()) return
 			if (!taskModal) return
 			taskModal.hidden = false
 			taskModal.setAttribute('aria-hidden', 'false')
@@ -445,6 +469,10 @@
 			syncTaskUi()
 			if (taskAutoclearToggle) {
 				taskAutoclearToggle.checked = autoClearEnabled
+				taskAutoclearToggle.disabled = !isAuthenticated()
+				taskAutoclearToggle.title = isAuthenticated()
+					? 'Automatycznie usuwaj przeterminowane zadania'
+					: 'Zaloguj sie, aby zmieniac ustawienia planera'
 			}
 
 			clockWidgetTrigger.addEventListener('click', handleTaskPlannerOpen)
@@ -503,6 +531,11 @@
 			})
 
 			taskAutoclearToggle?.addEventListener('change', () => {
+				if (!requireAuthenticatedAction()) {
+					taskAutoclearToggle.checked = autoClearEnabled
+					return
+				}
+
 				autoClearEnabled = Boolean(taskAutoclearToggle.checked)
 				saveAutoclearPreference()
 				removeExpiredTasks()
@@ -510,6 +543,7 @@
 
 			taskForm.addEventListener('submit', event => {
 				event.preventDefault()
+				if (!requireAuthenticatedAction()) return
 
 				if (!taskTitleInput || !taskDateInput || !taskTimeInput || !taskPriorityInput) return
 
@@ -548,6 +582,7 @@
 				const deleteButton = event.target.closest('[data-task-delete]')
 				const taskId = deleteButton?.getAttribute('data-task-delete')
 				if (!taskId) return
+				if (!requireAuthenticatedAction()) return
 
 				tasks = tasks.filter(task => task.id !== taskId)
 				saveTasks()
@@ -556,6 +591,18 @@
 			})
 
 			startReminderLoop()
+			document.addEventListener('app-auth-changed', () => {
+				if (taskAutoclearToggle) {
+					taskAutoclearToggle.disabled = !isAuthenticated()
+					taskAutoclearToggle.title = isAuthenticated()
+						? 'Automatycznie usuwaj przeterminowane zadania'
+						: 'Zaloguj sie, aby zmieniac ustawienia planera'
+				}
+				syncTaskUi()
+				if (taskModal && !isAuthenticated() && !taskModal.hidden) {
+					closeTaskModal()
+				}
+			})
 			return true
 		}
 

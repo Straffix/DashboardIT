@@ -1385,15 +1385,7 @@ const ensureAuthUi = () => {
 		</section>
 	`
 
-	const dashboardTopbar = document.body.classList.contains('dashboard-page')
-		? document.querySelector('.dashboard-topbar')
-		: null
-
-	if (dashboardTopbar) {
-		dashboardTopbar.appendChild(hub)
-	} else {
-		document.body.appendChild(hub)
-	}
+	document.body.appendChild(hub)
 	document.body.appendChild(authModal)
 	document.body.appendChild(profileModal)
 

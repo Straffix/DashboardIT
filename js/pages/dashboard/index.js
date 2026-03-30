@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (!dashboardContainer) return
 
 	const DASHBOARD_MENU_ORDER_STORAGE_KEY = AppUtils.config.PREFERENCE_KEYS.DASHBOARD_MENU_ORDER
+	const SESSION_STORAGE_KEY = AppUtils.config.STORAGE_KEYS.SESSION
 
 	dashboardContainer.classList.add('is-ready')
 
@@ -80,6 +81,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		let isEditing = false
 		let draftOrder = []
 		let activeDrag = null
+		const requireAuthenticatedAction = () => {
+			if (window.AppUtils?.auth?.isAuthenticated?.()) return true
+
+			window.AppUtils?.notify?.({
+				type: 'warning',
+				title: 'Tylko podglad',
+				message: 'Musisz byc zalogowany, aby zmieniac uklad dashboardu.',
+			})
+			window.AppUtils?.auth?.openAuthModal?.('login')
+			return false
+		}
 
 		const getMenuItems = () => Array.from(dashboardMenu.querySelectorAll('.menu-item[data-menu-item-id]'))
 		const getAnimatedMenuItems = () =>
@@ -108,10 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const readSavedOrder = () => {
-			const savedOrder =
-				preferencesService?.getDashboardMenuOrder?.() ||
-				storageService?.readJson?.(DASHBOARD_MENU_ORDER_STORAGE_KEY, []) ||
-				[]
+			const savedOrder = preferencesService?.getDashboardMenuOrder?.() || storageService?.readJson?.(DASHBOARD_MENU_ORDER_STORAGE_KEY, []) || []
 
 			return Array.isArray(savedOrder) ? [...new Set(savedOrder.filter(Boolean))] : []
 		}
@@ -119,6 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		const writeSavedOrder = menuOrder => {
 			const uniqueMenuOrder = [...new Set((Array.isArray(menuOrder) ? menuOrder : []).filter(Boolean))]
 			preferencesService?.saveDashboardMenuOrder?.(uniqueMenuOrder) || storageService?.writeJson?.(DASHBOARD_MENU_ORDER_STORAGE_KEY, uniqueMenuOrder)
+		}
+
+		const syncMenuOrderFromPreferences = () => {
+			applyMenuOrder(readSavedOrder())
 		}
 
 		const animateMenuReflow = mutate => {
@@ -378,6 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const enterEditMode = () => {
 			if (isEditing) return
+			if (!requireAuthenticatedAction()) return
 
 			draftOrder = getCurrentOrder()
 			isEditing = true
@@ -405,12 +419,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const handleStorageChange = changedKey => {
-			if (changedKey !== DASHBOARD_MENU_ORDER_STORAGE_KEY || isEditing) return
-			applyMenuOrder(readSavedOrder())
+			if (isEditing) return
+
+			const activeStorageKey = preferencesService?.getDashboardMenuOrderStorageKey?.() || DASHBOARD_MENU_ORDER_STORAGE_KEY
+			const shouldSync =
+				changedKey === activeStorageKey || changedKey === DASHBOARD_MENU_ORDER_STORAGE_KEY || changedKey === SESSION_STORAGE_KEY
+
+			if (!shouldSync) return
+			syncMenuOrderFromPreferences()
 		}
 
 		const init = () => {
-			applyMenuOrder(readSavedOrder())
+			syncMenuOrderFromPreferences()
 			updateEditUi()
 
 			dashboardMenuEditBtn.addEventListener('click', enterEditMode)
@@ -436,6 +456,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			document.addEventListener('keydown', event => {
 				if (event.key !== 'Escape' || !isEditing) return
 				cancelEditMode()
+			})
+
+			document.addEventListener('app-auth-changed', () => {
+				if (!window.AppUtils?.auth?.isAuthenticated?.() && isEditing) {
+					cancelEditMode()
+				}
+
+				if (!isEditing) {
+					syncMenuOrderFromPreferences()
+				}
 			})
 		}
 

@@ -31,32 +31,14 @@
 	}
 
 	const setJson = (key, value) => {
-		const storageService = getStorageService()
-		if (storageService?.writeJson) {
-			storageService.writeJson(key, value)
-			return
-		}
-
 		localStorage.setItem(key, JSON.stringify(value))
 	}
 
 	const setText = (key, value) => {
-		const storageService = getStorageService()
-		if (storageService?.setText) {
-			storageService.setText(key, value)
-			return
-		}
-
 		localStorage.setItem(key, String(value ?? ''))
 	}
 
 	const removeKey = key => {
-		const storageService = getStorageService()
-		if (storageService?.remove) {
-			storageService.remove(key)
-			return
-		}
-
 		localStorage.removeItem(key)
 	}
 
@@ -179,6 +161,12 @@
 			demoButton.setAttribute('aria-pressed', String(isSeeded))
 			demoButton.classList.toggle('is-active', isSeeded)
 			demoButton.setAttribute('aria-label', isSeeded ? 'Usun przykladowe dane demo' : 'Wgraj przykladowe dane demo')
+			demoButton.innerHTML = `
+				<span class="theme-toggle-option-badge dashboard-demo-toggle-badge" aria-hidden="true">
+					<i class="fa-solid fa-database"></i>
+				</span>
+				<span>Demo Mode</span>
+			`
 			demoButton.removeAttribute('title')
 		}
 
@@ -369,6 +357,7 @@
 		})
 
 		window.addEventListener('focus', refreshButtonState)
+		document.addEventListener('app-auth-changed', refreshButtonState)
 		refreshButtonState()
 	})
 })()

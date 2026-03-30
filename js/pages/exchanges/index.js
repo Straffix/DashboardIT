@@ -27,6 +27,45 @@ const exchangeWorkspace = document.querySelector('.exchange-workspace')
 const searchToggleBtn = document.getElementById('exchange-search-toggle')
 const searchPanel = document.getElementById('exchange-search-panel')
 const searchInput = document.getElementById('exchange-search-input')
+const isAuthenticated = () => Boolean(AppUtils.auth?.isAuthenticated?.())
+
+function requireAuthenticatedAction(message = 'Musisz byc zalogowany, aby modyfikowac plan wymian.') {
+	if (isAuthenticated()) return true
+
+	AppUtils.notify({
+		type: 'warning',
+		title: 'Tylko podglad',
+		message,
+	})
+	AppUtils.auth.openAuthModal?.('login')
+	return false
+}
+
+function syncProtectedUi() {
+	const guestMode = !isAuthenticated()
+
+	if (openDrawerBtn) {
+		openDrawerBtn.innerHTML = guestMode
+			? '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj się, aby planować</span>'
+			: '<i class="fa-solid fa-plus"></i><span>Zaplanuj wymianę</span>'
+	}
+
+	if (importExcelTrigger) {
+		importExcelTrigger.innerHTML = guestMode
+			? '<i class="fa-solid fa-lock"></i><span>Import po zalogowaniu</span>'
+			: '<i class="fa-solid fa-file-import"></i><span>Import Excel</span>'
+	}
+
+	exchangeForm
+		?.querySelectorAll('input, textarea, select, button[type="submit"]')
+		.forEach(control => {
+			control.disabled = guestMode
+		})
+
+	if (guestMode && drawerShell?.classList.contains('is-open')) {
+		void closeDrawer({ force: true })
+	}
+}
 
 let workspaceHeightAnimationFallbackId = null
 
@@ -348,11 +387,13 @@ async function closeDrawer({ force = false } = {}) {
 }
 
 function startCreateFlow() {
+	if (!requireAuthenticatedAction()) return
 	resetFormState()
 	openDrawer()
 }
 
 function startEditFlow(index) {
+	if (!requireAuthenticatedAction()) return
 	const exchange = exchanges[index]
 	if (!exchange) return
 
@@ -394,6 +435,7 @@ function startEditFlow(index) {
 /* === Exchanges Table Rendering: Start === */
 function renderTable({ animateContainer = false, skipAnimationReset = false } = {}) {
 	if (!tableBody) return
+	const guestMode = !isAuthenticated()
 
 	if (animateContainer) {
 		animateWorkspaceHeight(renderTableContent)
@@ -483,15 +525,15 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 				<div class="action-wrapper">
 					${
 						!isDone
-							? `<button class="icon-button exchange-action-btn exchange-action-btn-complete" type="button" data-action="complete" data-index="${originalIndex}" aria-label="Finalizuj wymianę" title="Finalizuj wymianę">
+							? `<button class="icon-button exchange-action-btn exchange-action-btn-complete" type="button" data-action="complete" data-index="${originalIndex}" aria-label="Finalizuj wymianę" title="${guestMode ? 'Zaloguj się, aby finalizować wymiany' : 'Finalizuj wymianę'}" ${guestMode ? 'disabled' : ''}>
 								<i class="fas fa-check"></i>
 							</button>`
 							: ''
 					}
-					<button class="icon-button exchange-action-btn" type="button" data-action="edit" data-index="${originalIndex}" aria-label="Edytuj wymianę" title="Edytuj wymianę">
+					<button class="icon-button exchange-action-btn" type="button" data-action="edit" data-index="${originalIndex}" aria-label="Edytuj wymianę" title="${guestMode ? 'Zaloguj się, aby edytować wymiany' : 'Edytuj wymianę'}" ${guestMode ? 'disabled' : ''}>
 						<i class="fas fa-pen"></i>
 					</button>
-					<button class="icon-button exchange-action-btn exchange-action-btn-danger" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usuń wymianę" title="Usuń wymianę">
+					<button class="icon-button exchange-action-btn exchange-action-btn-danger" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usuń wymianę" title="${guestMode ? 'Zaloguj się, aby usuwać wymiany' : 'Usuń wymianę'}" ${guestMode ? 'disabled' : ''}>
 						<i class="fas fa-trash"></i>
 					</button>
 				</div>
@@ -505,6 +547,7 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 
 /* === Exchanges Actions: Start === */
 async function completeExchange(index) {
+	if (!requireAuthenticatedAction()) return
 	const exchange = exchanges[index]
 	if (!exchange || exchange.status === 'done') return
 	if (
@@ -552,6 +595,7 @@ async function completeExchange(index) {
 }
 
 async function removeItem(index) {
+	if (!requireAuthenticatedAction()) return
 	if (
 		!(
 			await AppUtils.confirmDialog({
@@ -603,6 +647,11 @@ function exportExcel() {
 }
 
 function importExcel(event) {
+	if (!requireAuthenticatedAction('Musisz byc zalogowany, aby importowac plan wymian.')) {
+		if (event?.target) event.target.value = ''
+		return
+	}
+
 	const file = event.target.files[0]
 	if (!file) return
 
@@ -714,6 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		accessoryPicker.addEventListener('click', event => {
 			const item = event.target.closest('.accessory-item')
 			if (!item) return
+			if (!requireAuthenticatedAction()) return
 
 			item.classList.toggle('active')
 			item.classList.add('is-tapped')
@@ -727,6 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		tableBody.addEventListener('click', event => {
 			const actionButton = event.target.closest('[data-action]')
 			if (!actionButton) return
+			if (!requireAuthenticatedAction()) return
 
 			const index = Number(actionButton.dataset.index)
 			const action = actionButton.dataset.action
@@ -767,6 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (exchangeForm) {
 		exchangeForm.addEventListener('submit', async event => {
 			event.preventDefault()
+			if (!requireAuthenticatedAction()) return
 
 			const actor = AppUtils.auth.getAuditActorSnapshot()
 			const now = new Date().toISOString()
@@ -814,7 +866,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)
 	if (importExcelTrigger && importExcelInput) {
-		importExcelTrigger.addEventListener('click', () => importExcelInput.click())
+		importExcelTrigger.addEventListener('click', () => {
+			if (!requireAuthenticatedAction('Musisz byc zalogowany, aby importowac plan wymian.')) return
+			importExcelInput.click()
+		})
 		importExcelInput.addEventListener('change', importExcel)
 	}
 
@@ -829,7 +884,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		searchToggleBtn.addEventListener('click', searchController.toggle)
 	}
 
+	document.addEventListener('app-auth-changed', () => {
+		syncProtectedUi()
+		renderTable()
+	})
+
 	loadData()
+	syncProtectedUi()
 })
 /* === Exchanges Init: End === */
 })()

@@ -26,6 +26,45 @@ const hiresWorkspace = document.querySelector('.hires-workspace')
 const searchToggleBtn = document.getElementById('hire-search-toggle')
 const searchPanel = document.getElementById('hire-search-panel')
 const searchInput = document.getElementById('hire-search-input')
+const isAuthenticated = () => Boolean(AppUtils.auth?.isAuthenticated?.())
+
+function requireAuthenticatedAction(message = 'Musisz byc zalogowany, aby modyfikowac nowe zatrudnienia.') {
+	if (isAuthenticated()) return true
+
+	AppUtils.notify({
+		type: 'warning',
+		title: 'Tylko podglad',
+		message,
+	})
+	AppUtils.auth.openAuthModal?.('login')
+	return false
+}
+
+function syncProtectedUi() {
+	const guestMode = !isAuthenticated()
+
+	if (openDrawerBtn) {
+		openDrawerBtn.innerHTML = guestMode
+			? '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj się, aby dodawać</span>'
+			: '<i class="fa-solid fa-plus"></i><span>Dodaj pracownika</span>'
+	}
+
+	if (importExcelTrigger) {
+		importExcelTrigger.innerHTML = guestMode
+			? '<i class="fa-solid fa-lock"></i><span>Import po zalogowaniu</span>'
+			: '<i class="fa-solid fa-file-import"></i><span>Import Excel</span>'
+	}
+
+	hiresForm
+		?.querySelectorAll('input, textarea, select, button[type="submit"]')
+		.forEach(control => {
+			control.disabled = guestMode
+		})
+
+	if (guestMode && drawerShell?.classList.contains('is-open')) {
+		void closeDrawer({ force: true })
+	}
+}
 
 let workspaceHeightAnimationFallbackId = null
 
@@ -344,11 +383,13 @@ async function closeDrawer({ force = false } = {}) {
 }
 
 function startCreateFlow() {
+	if (!requireAuthenticatedAction()) return
 	resetFormState()
 	openDrawer()
 }
 
 function startEditFlow(index) {
+	if (!requireAuthenticatedAction()) return
 	const hire = hires[index]
 	if (!hire) return
 
@@ -387,6 +428,7 @@ function startEditFlow(index) {
 /* === Hires Table Rendering: Start === */
 function renderTable({ animateContainer = false, skipAnimationReset = false } = {}) {
 	if (!tableBody) return
+	const guestMode = !isAuthenticated()
 
 	if (animateContainer) {
 		animateWorkspaceHeight(renderTableContent)
@@ -475,10 +517,10 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 			<td class="cell-center">${accessoriesHTML}</td>
 			<td class="cell-center">
 				<div class="hire-actions">
-					<button class="icon-button hire-action-btn" type="button" data-action="edit" data-index="${originalIndex}" aria-label="Edytuj wpis" title="Edytuj wpis">
+					<button class="icon-button hire-action-btn" type="button" data-action="edit" data-index="${originalIndex}" aria-label="Edytuj wpis" title="${guestMode ? 'Zaloguj się, aby edytować wpisy' : 'Edytuj wpis'}" ${guestMode ? 'disabled' : ''}>
 						<i class="fas fa-pen"></i>
 					</button>
-					<button class="icon-button hire-action-btn hire-action-btn-danger" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usuń wpis" title="Usuń wpis">
+					<button class="icon-button hire-action-btn hire-action-btn-danger" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usuń wpis" title="${guestMode ? 'Zaloguj się, aby usuwać wpisy' : 'Usuń wpis'}" ${guestMode ? 'disabled' : ''}>
 						<i class="fas fa-trash"></i>
 					</button>
 				</div>
@@ -491,6 +533,7 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 
 /* === Hires Actions: Start === */
 async function removeItem(index) {
+	if (!requireAuthenticatedAction()) return
 	if (
 		!(
 			await AppUtils.confirmDialog({
@@ -540,6 +583,11 @@ function exportExcel() {
 }
 
 function importExcel(event) {
+	if (!requireAuthenticatedAction('Musisz byc zalogowany, aby importowac dane nowych zatrudnien.')) {
+		if (event?.target) event.target.value = ''
+		return
+	}
+
 	const file = event.target.files[0]
 	if (!file) return
 
@@ -633,6 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		accessoryPicker.addEventListener('click', event => {
 			const item = event.target.closest('.accessory-item')
 			if (!item) return
+			if (!requireAuthenticatedAction()) return
 
 			item.classList.toggle('active')
 		})
@@ -645,6 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			const index = Number(actionButton.dataset.index)
 			const { action } = actionButton.dataset
+			if (!requireAuthenticatedAction()) return
 
 			if (action === 'edit') startEditFlow(index)
 			if (action === 'delete') void removeItem(index)
@@ -681,6 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (hiresForm) {
 		hiresForm.addEventListener('submit', async event => {
 			event.preventDefault()
+			if (!requireAuthenticatedAction()) return
 
 			const selectedAccessories = AppUtils.getSelectedAccessories()
 			const newHireDate = document.getElementById('date').value
@@ -731,7 +782,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)
 	if (importExcelTrigger && importExcelInput) {
-		importExcelTrigger.addEventListener('click', () => importExcelInput.click())
+		importExcelTrigger.addEventListener('click', () => {
+			if (!requireAuthenticatedAction('Musisz byc zalogowany, aby importowac dane nowych zatrudnien.')) return
+			importExcelInput.click()
+		})
 		importExcelInput.addEventListener('change', importExcel)
 	}
 
@@ -746,7 +800,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		searchToggleBtn.addEventListener('click', searchController.toggle)
 	}
 
+	document.addEventListener('app-auth-changed', () => {
+		syncProtectedUi()
+		renderTable()
+	})
+
 	loadData()
+	syncProtectedUi()
 })
 /* === Hires Init: End === */
 })()
