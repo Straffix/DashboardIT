@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-function dashboard_json_response(array $payload, int $status = 200): never
+function dashboard_json_response(array $payload, int $status = 200): void
 {
 	http_response_code($status);
 	header('Content-Type: application/json; charset=utf-8');

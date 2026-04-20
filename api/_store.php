@@ -70,21 +70,17 @@ function dashboard_database_table_name(): string
 function dashboard_database_driver(): string
 {
 	$config = dashboard_database_config();
-	$driver = strtolower(trim((string) ($config['driver'] ?? 'mysql')));
-	if ($driver === 'postgres' || $driver === 'postgresql') {
+	$driver = strtolower(trim((string) ($config['driver'] ?? 'pgsql')));
+	if ($driver === 'postgres' || $driver === 'postgresql' || $driver === 'pgsql') {
 		return 'pgsql';
 	}
 
-	if ($driver === 'mysql' || $driver === 'pgsql') {
-		return $driver;
-	}
-
-	throw new RuntimeException('Dashboard obsluguje tylko bazy MySQL lub PostgreSQL.');
+	throw new RuntimeException('Dashboard jest skonfigurowany do pracy z baza PostgreSQL.');
 }
 
 function dashboard_database_mode_label(): string
 {
-	return dashboard_database_driver() === 'pgsql' ? 'postgresql' : 'mysql';
+	return 'postgresql';
 }
 
 function dashboard_database_identifier(string $identifier): string
@@ -93,8 +89,7 @@ function dashboard_database_identifier(string $identifier): string
 		throw new RuntimeException('Nieprawidlowy identyfikator bazy danych dashboardu.');
 	}
 
-	$quote = dashboard_database_driver() === 'pgsql' ? '"' : '`';
-	return $quote . $identifier . $quote;
+	return '"' . $identifier . '"';
 }
 
 function dashboard_storage_table_identifier(): string
@@ -116,30 +111,23 @@ function dashboard_database(): PDO
 	}
 
 	$config = dashboard_database_config();
-	$driver = dashboard_database_driver();
 	$host = trim((string) ($config['host'] ?? 'localhost')) ?: 'localhost';
-	$port = (int) ($config['port'] ?? ($driver === 'pgsql' ? 5432 : 3306));
+	$port = (int) ($config['port'] ?? 5432);
 	$database = trim((string) ($config['database'] ?? ''));
 	$username = trim((string) ($config['username'] ?? ''));
 	$password = (string) ($config['password'] ?? '');
-	$charset = trim((string) ($config['charset'] ?? 'utf8mb4')) ?: 'utf8mb4';
 
 	if ($database === '' || $username === '') {
 		throw new RuntimeException('Uzupelnij nazwe bazy danych i uzytkownika bazy.');
 	}
 
-	$dsn = $driver === 'pgsql'
-		? sprintf('pgsql:host=%s;port=%d;dbname=%s', $host, $port, $database)
-		: sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s', $host, $port, $database, $charset);
+	dashboard_database_driver();
+	$dsn = sprintf('pgsql:host=%s;port=%d;dbname=%s', $host, $port, $database);
 	$options = [
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 		PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
 		PDO::ATTR_EMULATE_PREPARES => false,
 	];
-
-	if ($driver === 'mysql' && defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
-		$options[PDO::MYSQL_ATTR_INIT_COMMAND] = sprintf("SET NAMES %s COLLATE %s_unicode_ci", $charset, $charset);
-	}
 
 	try {
 		$pdo = new PDO($dsn, $username, $password, $options);
@@ -147,65 +135,29 @@ function dashboard_database(): PDO
 		throw new RuntimeException('Nie udalo sie polaczyc z baza danych dashboardu.');
 	}
 
-	if ($driver === 'pgsql') {
-		$pdo->exec("SET NAMES 'UTF8'");
-	}
-
+	$pdo->exec("SET NAMES 'UTF8'");
 	dashboard_ensure_storage_table($pdo);
 	return $pdo;
 }
 
-function dashboard_storage_column_exists(PDO $pdo, string $column): bool
-{
-	$driver = dashboard_database_driver();
-	$table = dashboard_database_table_name();
-
-	$statement = $driver === 'pgsql'
-		? $pdo->prepare(
-			'SELECT COUNT(*) FROM information_schema.columns
-			WHERE table_schema = current_schema() AND table_name = :table_name AND column_name = :column_name'
-		)
-		: $pdo->prepare(
-			'SELECT COUNT(*) FROM information_schema.COLUMNS
-			WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name AND COLUMN_NAME = :column_name'
-		);
-
-	$statement->execute([
-		'table_name' => $table,
-		'column_name' => $column,
-	]);
-
-	return (int) $statement->fetchColumn() > 0;
-}
-
 function dashboard_storage_primary_key_exists(PDO $pdo): bool
 {
-	$driver = dashboard_database_driver();
 	$table = dashboard_database_table_name();
-
-	$statement = $driver === 'pgsql'
-		? $pdo->prepare(
-			'SELECT COUNT(*) FROM information_schema.table_constraints tc
-			INNER JOIN information_schema.key_column_usage kcu
-				ON tc.constraint_schema = kcu.constraint_schema
-					AND tc.constraint_name = kcu.constraint_name
-					AND tc.table_name = kcu.table_name
-			WHERE tc.table_schema = current_schema()
-				AND tc.table_name = :table_name
-				AND tc.constraint_type = :constraint_type
-				AND kcu.column_name = :column_name'
-		)
-		: $pdo->prepare(
-			'SELECT COUNT(*) FROM information_schema.KEY_COLUMN_USAGE
-			WHERE TABLE_SCHEMA = DATABASE()
-				AND TABLE_NAME = :table_name
-				AND CONSTRAINT_NAME = :constraint_type
-				AND COLUMN_NAME = :column_name'
-		);
+	$statement = $pdo->prepare(
+		'SELECT COUNT(*) FROM information_schema.table_constraints tc
+		INNER JOIN information_schema.key_column_usage kcu
+			ON tc.constraint_schema = kcu.constraint_schema
+				AND tc.constraint_name = kcu.constraint_name
+				AND tc.table_name = kcu.table_name
+		WHERE tc.table_schema = current_schema()
+			AND tc.table_name = :table_name
+			AND tc.constraint_type = :constraint_type
+			AND kcu.column_name = :column_name'
+	);
 
 	$statement->execute([
 		'table_name' => $table,
-		'constraint_type' => $driver === 'pgsql' ? 'PRIMARY KEY' : 'PRIMARY',
+		'constraint_type' => 'PRIMARY KEY',
 		'column_name' => 'storage_key',
 	]);
 
@@ -214,37 +166,16 @@ function dashboard_storage_primary_key_exists(PDO $pdo): bool
 
 function dashboard_ensure_storage_columns(PDO $pdo): void
 {
-	$driver = dashboard_database_driver();
 	$table = dashboard_storage_table_identifier();
 	$keyColumn = dashboard_storage_column_identifier('storage_key');
 	$valueColumn = dashboard_storage_column_identifier('storage_value');
 	$createdColumn = dashboard_storage_column_identifier('created_at');
 	$updatedColumn = dashboard_storage_column_identifier('updated_at');
 
-	if ($driver === 'pgsql') {
-		$pdo->exec("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS {$keyColumn} varchar(191) NOT NULL");
-		$pdo->exec("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS {$valueColumn} text NOT NULL DEFAULT '[]'");
-		$pdo->exec("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS {$createdColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP");
-		$pdo->exec("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS {$updatedColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP");
-
-		if (!dashboard_storage_primary_key_exists($pdo)) {
-			$pdo->exec("ALTER TABLE {$table} ADD PRIMARY KEY ({$keyColumn})");
-		}
-		return;
-	}
-
-	$definitions = [
-		'storage_key' => "{$keyColumn} varchar(191) NOT NULL",
-		'storage_value' => "{$valueColumn} longtext NULL",
-		'created_at' => "{$createdColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP",
-		'updated_at' => "{$updatedColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-	];
-
-	foreach ($definitions as $column => $definition) {
-		if (!dashboard_storage_column_exists($pdo, $column)) {
-			$pdo->exec("ALTER TABLE {$table} ADD COLUMN {$definition}");
-		}
-	}
+	$pdo->exec("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS {$keyColumn} varchar(191) NOT NULL");
+	$pdo->exec("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS {$valueColumn} text NOT NULL DEFAULT '[]'");
+	$pdo->exec("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS {$createdColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP");
+	$pdo->exec("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS {$updatedColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP");
 
 	if (!dashboard_storage_primary_key_exists($pdo)) {
 		$pdo->exec("ALTER TABLE {$table} ADD PRIMARY KEY ({$keyColumn})");
@@ -260,34 +191,21 @@ function dashboard_ensure_storage_table(?PDO $pdo = null): void
 	}
 
 	$pdo = $pdo ?: dashboard_database();
-	$driver = dashboard_database_driver();
 	$table = dashboard_storage_table_identifier();
 	$keyColumn = dashboard_storage_column_identifier('storage_key');
 	$valueColumn = dashboard_storage_column_identifier('storage_value');
 	$createdColumn = dashboard_storage_column_identifier('created_at');
 	$updatedColumn = dashboard_storage_column_identifier('updated_at');
 
-	if ($driver === 'pgsql') {
-		$pdo->exec(
-			"CREATE TABLE IF NOT EXISTS {$table} (
-				{$keyColumn} varchar(191) NOT NULL,
-				{$valueColumn} text NOT NULL,
-				{$createdColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				{$updatedColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				PRIMARY KEY ({$keyColumn})
-			)"
-		);
-	} else {
-		$pdo->exec(
-			"CREATE TABLE IF NOT EXISTS {$table} (
-				{$keyColumn} varchar(191) NOT NULL,
-				{$valueColumn} longtext NOT NULL,
-				{$createdColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				{$updatedColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-				PRIMARY KEY ({$keyColumn})
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
-		);
-	}
+	$pdo->exec(
+		"CREATE TABLE IF NOT EXISTS {$table} (
+			{$keyColumn} varchar(191) NOT NULL,
+			{$valueColumn} text NOT NULL,
+			{$createdColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			{$updatedColumn} timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY ({$keyColumn})
+		)"
+	);
 
 	dashboard_ensure_storage_columns($pdo);
 
@@ -311,19 +229,14 @@ function dashboard_storage_backend_status(): array
 
 function dashboard_insert_empty_json_if_missing(PDO $pdo, string $path, string $encodedFallback): void
 {
-	$driver = dashboard_database_driver();
 	$table = dashboard_storage_table_identifier();
 	$keyColumn = dashboard_storage_column_identifier('storage_key');
 	$valueColumn = dashboard_storage_column_identifier('storage_value');
-
-	$sql = $driver === 'pgsql'
-		? "INSERT INTO {$table} ({$keyColumn}, {$valueColumn})
-			VALUES (:storage_key, :storage_value)
-			ON CONFLICT ({$keyColumn}) DO NOTHING"
-		: "INSERT IGNORE INTO {$table} ({$keyColumn}, {$valueColumn})
-			VALUES (:storage_key, :storage_value)";
-
-	$statement = $pdo->prepare($sql);
+	$statement = $pdo->prepare(
+		"INSERT INTO {$table} ({$keyColumn}, {$valueColumn})
+		VALUES (:storage_key, :storage_value)
+		ON CONFLICT ({$keyColumn}) DO NOTHING"
+	);
 	$statement->execute([
 		'storage_key' => $path,
 		'storage_value' => $encodedFallback,
@@ -332,22 +245,16 @@ function dashboard_insert_empty_json_if_missing(PDO $pdo, string $path, string $
 
 function dashboard_upsert_json_value(PDO $pdo, string $path, string $encodedValue): void
 {
-	$driver = dashboard_database_driver();
 	$table = dashboard_storage_table_identifier();
 	$keyColumn = dashboard_storage_column_identifier('storage_key');
 	$valueColumn = dashboard_storage_column_identifier('storage_value');
 	$updatedColumn = dashboard_storage_column_identifier('updated_at');
-
-	$sql = $driver === 'pgsql'
-		? "INSERT INTO {$table} ({$keyColumn}, {$valueColumn})
-			VALUES (:storage_key, :storage_value)
-			ON CONFLICT ({$keyColumn}) DO UPDATE
-			SET {$valueColumn} = EXCLUDED.{$valueColumn}, {$updatedColumn} = CURRENT_TIMESTAMP"
-		: "INSERT INTO {$table} ({$keyColumn}, {$valueColumn})
-			VALUES (:storage_key, :storage_value)
-			ON DUPLICATE KEY UPDATE {$valueColumn} = VALUES({$valueColumn}), {$updatedColumn} = CURRENT_TIMESTAMP";
-
-	$statement = $pdo->prepare($sql);
+	$statement = $pdo->prepare(
+		"INSERT INTO {$table} ({$keyColumn}, {$valueColumn})
+		VALUES (:storage_key, :storage_value)
+		ON CONFLICT ({$keyColumn}) DO UPDATE
+		SET {$valueColumn} = EXCLUDED.{$valueColumn}, {$updatedColumn} = CURRENT_TIMESTAMP"
+	);
 	$statement->execute([
 		'storage_key' => $path,
 		'storage_value' => $encodedValue,
@@ -373,13 +280,13 @@ function dashboard_demo_marker_path(): string
 	return 'dashboard_demo_marker';
 }
 
-function dashboard_decode_json_or_fallback(string $jsonContent, mixed $fallback): mixed
+function dashboard_decode_json_or_fallback(string $jsonContent, $fallback)
 {
 	$decodedValue = json_decode($jsonContent, true);
 	return json_last_error() === JSON_ERROR_NONE ? $decodedValue : $fallback;
 }
 
-function dashboard_read_json_file(string $path, mixed $fallback): mixed
+function dashboard_read_json_file(string $path, $fallback)
 {
 	$pdo = dashboard_database();
 	$table = dashboard_storage_table_identifier();
@@ -395,7 +302,7 @@ function dashboard_read_json_file(string $path, mixed $fallback): mixed
 	return dashboard_decode_json_or_fallback((string) ($row['storage_value'] ?? ''), $fallback);
 }
 
-function dashboard_write_json_file(string $path, mixed $data): void
+function dashboard_write_json_file(string $path, $data): void
 {
 	$encodedValue = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 	if ($encodedValue === false) {
@@ -406,7 +313,7 @@ function dashboard_write_json_file(string $path, mixed $data): void
 	dashboard_upsert_json_value($pdo, $path, $encodedValue);
 }
 
-function dashboard_update_json_file(string $path, mixed $fallback, callable $updater): mixed
+function dashboard_update_json_file(string $path, $fallback, callable $updater)
 {
 	$pdo = dashboard_database();
 	$table = dashboard_storage_table_identifier();

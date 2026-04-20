@@ -9,6 +9,5 @@ return [
 	'database' => 'dashboard_post',
 	'username' => 'dashboard_post',
 	'password' => 'CHANGE_ME',
-	'charset' => 'utf8',
 	'table' => 'dashboard_storage',
 ];

@@ -3,8 +3,8 @@
 	"private": true,
 	"scripts": {
 		"start": "node tools/dev-server.js",
-		"build:styles": "sass styles/scss/style.scss:styles/style.css styles/scss/pages/dashboard.scss:styles/dashboard.css styles/scss/pages/monitor.scss:styles/monitor.css styles/scss/pages/notes.scss:styles/notes.css styles/scss/pages/lunch.scss:styles/lunch.css styles/scss/pages/wymiany.scss:styles/wymiany.css styles/scss/pages/zatrudnienia.scss:styles/zatrudnienia.css styles/scss/pages/eksperyment.scss:styles/eksperyment.css styles/scss/pages/testers.scss:styles/testers.css",
-		"watch:styles": "sass --watch styles/scss/style.scss:styles/style.css styles/scss/pages/dashboard.scss:styles/dashboard.css styles/scss/pages/monitor.scss:styles/monitor.css styles/scss/pages/notes.scss:styles/notes.css styles/scss/pages/lunch.scss:styles/lunch.css styles/scss/pages/wymiany.scss:styles/wymiany.css styles/scss/pages/zatrudnienia.scss:styles/zatrudnienia.css styles/scss/pages/eksperyment.scss:styles/eksperyment.css styles/scss/pages/testers.scss:styles/testers.css",
+		"build:styles": "sass styles/scss/style.scss:styles/style.css styles/scss/pages/dashboard.scss:styles/dashboard.css styles/scss/pages/monitor.scss:styles/monitor.css styles/scss/pages/notes.scss:styles/notes.css styles/scss/pages/lunch.scss:styles/lunch.css styles/scss/pages/wymiany.scss:styles/wymiany.css styles/scss/pages/zatrudnienia.scss:styles/zatrudnienia.css styles/scss/pages/testers.scss:styles/testers.css",
+		"watch:styles": "sass --watch styles/scss/style.scss:styles/style.css styles/scss/pages/dashboard.scss:styles/dashboard.css styles/scss/pages/monitor.scss:styles/monitor.css styles/scss/pages/notes.scss:styles/notes.css styles/scss/pages/lunch.scss:styles/lunch.css styles/scss/pages/wymiany.scss:styles/wymiany.css styles/scss/pages/zatrudnienia.scss:styles/zatrudnienia.css styles/scss/pages/testers.scss:styles/testers.css",
 		"lint:scripts": "eslint \"js/**/*.js\"",
 		"check": "npm run lint:scripts && npm run build:styles"
 	},

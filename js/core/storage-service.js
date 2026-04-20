@@ -201,7 +201,7 @@
 
 			const response = sendRemoteRequest({ path: 'health.php' })
 			const remoteMode = String(response.payload?.mode || '').toLowerCase()
-			remoteEnabledCache = Boolean(response.ok && ['mysql', 'postgresql', 'pgsql'].includes(remoteMode))
+			remoteEnabledCache = Boolean(response.ok && ['postgresql', 'pgsql'].includes(remoteMode))
 			return Boolean(remoteEnabledCache)
 		},
 	}

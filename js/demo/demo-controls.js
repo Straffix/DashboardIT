@@ -1,5 +1,6 @@
 (function initializeDashboardDemoControls() {
 	const DEMO_MARKER_KEY = 'dashboard_demo_seed_marker'
+	const DEMO_RIBBON_ID = 'dashboard-demo-ribbon'
 
 	const onReady = callback => {
 		if (document.readyState === 'loading') {
@@ -95,7 +96,6 @@
 	}
 
 	const getDemoButtonHost = () =>
-		document.querySelector('.theme-toggle-submenu') ||
 		document.querySelector('.dashboard-theme-bookmark-slot') ||
 		document.querySelector('.dashboard-topbar') ||
 		document.body
@@ -122,7 +122,7 @@
 
 		const button = document.createElement('button')
 		button.type = 'button'
-		button.className = 'dashboard-demo-toggle-btn theme-toggle-option'
+		button.className = 'dashboard-demo-toggle-btn'
 		button.id = 'dashboard-demo-toggle-btn'
 		button.setAttribute('aria-live', 'polite')
 		button.innerHTML = `
@@ -137,12 +137,32 @@
 		return button
 	}
 
+	const ensureDemoRibbon = () => {
+		const existingRibbon = document.getElementById(DEMO_RIBBON_ID)
+		if (existingRibbon) return existingRibbon
+
+		const ribbon = document.createElement('div')
+		ribbon.className = 'dashboard-demo-ribbon'
+		ribbon.id = DEMO_RIBBON_ID
+		ribbon.setAttribute('role', 'status')
+		ribbon.setAttribute('aria-live', 'polite')
+		ribbon.innerHTML = '<span>Wersja demonstracyjna</span>'
+		document.body.appendChild(ribbon)
+		return ribbon
+	}
+
+	const setDemoRibbonVisible = isVisible => {
+		document.body?.classList.toggle('dashboard-demo-active', isVisible)
+
+		const ribbon = ensureDemoRibbon()
+		if (!ribbon) return
+
+		ribbon.hidden = !isVisible
+		ribbon.setAttribute('aria-hidden', String(!isVisible))
+	}
+
 	onReady(() => {
 		const demoButton = ensureDemoButton()
-
-		if (!demoButton) {
-			return
-		}
 
 		const refreshButtonState = () => {
 			let isSeeded = false
@@ -157,17 +177,21 @@
 				isSeeded = Boolean(localStorage.getItem(DEMO_MARKER_KEY))
 			}
 
-			demoButton.dataset.state = isSeeded ? 'seeded' : 'empty'
-			demoButton.setAttribute('aria-pressed', String(isSeeded))
-			demoButton.classList.toggle('is-active', isSeeded)
-			demoButton.setAttribute('aria-label', isSeeded ? 'Usun przykladowe dane demo' : 'Wgraj przykladowe dane demo')
-			demoButton.innerHTML = `
-				<span class="theme-toggle-option-badge dashboard-demo-toggle-badge" aria-hidden="true">
-					<i class="fa-solid fa-database"></i>
-				</span>
-				<span>Demo Mode</span>
-			`
-			demoButton.removeAttribute('title')
+			if (demoButton) {
+				demoButton.dataset.state = isSeeded ? 'seeded' : 'empty'
+				demoButton.setAttribute('aria-pressed', String(isSeeded))
+				demoButton.classList.toggle('is-active', isSeeded)
+				demoButton.setAttribute('aria-label', isSeeded ? 'Usun przykladowe dane demo' : 'Wgraj przykladowe dane demo')
+				demoButton.innerHTML = `
+					<span class="theme-toggle-option-badge dashboard-demo-toggle-badge" aria-hidden="true">
+						<i class="fa-solid fa-database"></i>
+					</span>
+					<span>Demo Mode</span>
+				`
+				demoButton.removeAttribute('title')
+			}
+
+			setDemoRibbonVisible(isSeeded)
 		}
 
 		const setBusyState = isBusy => {
@@ -265,7 +289,7 @@
 			removeKey(DEMO_MARKER_KEY)
 		}
 
-		demoButton.addEventListener('click', async () => {
+		demoButton?.addEventListener('click', async () => {
 			let isSeeded = false
 
 			if (isRemoteMode()) {

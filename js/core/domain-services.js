@@ -201,7 +201,9 @@
 		authorId: String(record.authorId || ''),
 		createdAt: record.createdAt || new Date().toISOString(),
 		updatedAt: record.updatedAt || record.createdAt || new Date().toISOString(),
-		isPinned: false,
+		isPinned: Boolean(record.isPinned),
+		pinnedAt: record.pinnedAt || '',
+		pinnedBy: String(record.pinnedBy || ''),
 	})
 
 	const normalizeAnnouncementRecord = record => ({
@@ -256,7 +258,7 @@
 	})
 
 	const notesService = {
-		// TODO: replace this localStorage implementation with fetch/API calls once backend notes endpoints are ready.
+		// storageService writes shared notes to the remote backend when the server mode is active.
 		loadNotes() {
 			return readArray(STORAGE_KEYS.NOTES).map(normalizeNoteRecord)
 		},
@@ -271,6 +273,20 @@
 		},
 		getNotes() {
 			return this.loadNotes().filter(note => note.id && note.content && note.authorId).sort(sortByUpdatedDesc)
+		},
+		getChatMessages() {
+			return this.loadNotes()
+				.filter(note => note.id && note.content && note.authorId)
+				.sort((leftNote, rightNote) => getTimestamp(leftNote.createdAt) - getTimestamp(rightNote.createdAt))
+		},
+		getPinnedChatMessages() {
+			return this.getChatMessages()
+				.filter(note => note.isPinned)
+				.sort((leftNote, rightNote) => {
+					const pinnedDiff = getTimestamp(rightNote.pinnedAt) - getTimestamp(leftNote.pinnedAt)
+					if (pinnedDiff !== 0) return pinnedDiff
+					return sortByUpdatedDesc(leftNote, rightNote)
+				})
 		},
 		getAnnouncements() {
 			return this.loadAnnouncements()
@@ -315,6 +331,34 @@
 			this.saveNotes(notes)
 			return nextNote
 		},
+		createChatMessage({ content, actor }) {
+			const normalizedActor = actor && typeof actor === 'object' ? actor : null
+			const normalizedContent = String(content || '').trim()
+			if (!normalizedActor?.id) {
+				throw new Error('Musisz byc zalogowany, aby wyslac wiadomosc.')
+			}
+
+			if (!normalizedContent) {
+				throw new Error('Wpisz tresc wiadomosci przed wyslaniem.')
+			}
+
+			const notes = this.loadNotes()
+			const now = new Date().toISOString()
+			const nextMessage = {
+				id: createEntryId('chat-message'),
+				content: normalizedContent,
+				authorId: String(normalizedActor.id),
+				createdAt: now,
+				updatedAt: now,
+				isPinned: false,
+				pinnedAt: '',
+				pinnedBy: '',
+			}
+
+			notes.push(nextMessage)
+			this.saveNotes(notes)
+			return nextMessage
+		},
 		updateNote({ noteId, content, actor }) {
 			const normalizedNoteId = String(noteId || '')
 			const normalizedContent = String(content || '').trim()
@@ -342,6 +386,33 @@
 			this.saveNotes(notes)
 			return notes[noteIndex]
 		},
+		updateChatMessage({ messageId, content, actor }) {
+			const normalizedMessageId = String(messageId || '')
+			const normalizedContent = String(content || '').trim()
+			const notes = this.loadNotes()
+			const messageIndex = notes.findIndex(note => note.id === normalizedMessageId)
+
+			if (messageIndex === -1) {
+				throw new Error('Nie znaleziono wiadomosci do edycji.')
+			}
+
+			if (!actor || String(notes[messageIndex].authorId) !== String(actor.id || '')) {
+				throw new Error('Mozesz edytowac tylko swoje wiadomosci.')
+			}
+
+			if (!normalizedContent) {
+				throw new Error('Wiadomosc nie moze byc pusta.')
+			}
+
+			notes[messageIndex] = {
+				...notes[messageIndex],
+				content: normalizedContent,
+				updatedAt: new Date().toISOString(),
+			}
+
+			this.saveNotes(notes)
+			return notes[messageIndex]
+		},
 		deleteNote({ noteId, actor }) {
 			const normalizedNoteId = String(noteId || '')
 			const notes = this.loadNotes()
@@ -357,6 +428,47 @@
 
 			this.saveNotes(notes.filter(note => note.id !== normalizedNoteId))
 			return noteToDelete
+		},
+		deleteChatMessage({ messageId, actor }) {
+			const normalizedMessageId = String(messageId || '')
+			const notes = this.loadNotes()
+			const messageToDelete = notes.find(note => note.id === normalizedMessageId)
+
+			if (!messageToDelete) {
+				throw new Error('Nie znaleziono wiadomosci do usuniecia.')
+			}
+
+			if (!actor || String(messageToDelete.authorId) !== String(actor.id || '')) {
+				throw new Error('Mozesz usuwac tylko swoje wiadomosci.')
+			}
+
+			this.saveNotes(notes.filter(note => note.id !== normalizedMessageId))
+			return messageToDelete
+		},
+		setChatMessagePinned({ messageId, isPinned, actor }) {
+			const normalizedMessageId = String(messageId || '')
+			const notes = this.loadNotes()
+			const messageIndex = notes.findIndex(note => note.id === normalizedMessageId)
+
+			if (messageIndex === -1) {
+				throw new Error('Nie znaleziono wiadomosci do przypiecia.')
+			}
+
+			if (!actor?.id) {
+				throw new Error('Musisz byc zalogowany, aby przypinac wiadomosci.')
+			}
+
+			const shouldPin = Boolean(isPinned)
+			notes[messageIndex] = {
+				...notes[messageIndex],
+				isPinned: shouldPin,
+				pinnedAt: shouldPin ? new Date().toISOString() : '',
+				pinnedBy: shouldPin ? String(actor.id) : '',
+				updatedAt: new Date().toISOString(),
+			}
+
+			this.saveNotes(notes)
+			return notes[messageIndex]
 		},
 		createAnnouncement({ title, content, authorId }) {
 			const normalizedTitle = String(title || '').trim()

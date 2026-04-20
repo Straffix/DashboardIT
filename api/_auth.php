@@ -37,7 +37,7 @@ function dashboard_get_all_permission_ids(): array
 	return DASHBOARD_PERMISSION_IDS;
 }
 
-function dashboard_normalize_permissions(mixed $permissions): array
+function dashboard_normalize_permissions($permissions): array
 {
 	if (!is_array($permissions)) {
 		return [];

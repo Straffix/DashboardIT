@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notatnik - DashboardIT</title>
+    <title>Notatnik - Czat zespołu - DashboardIT</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,46 +37,19 @@
 
                 <div>
                     <h1>Notatnik</h1>
-                    <p>Wspólne notatki, ważne tematy, zadania i komunikacja operacyjna zespołu. <span>Tylko nie pisz
-                            głupot!</span></p>
+                    <p>Czat operacyjny zespołu z przypiętymi wiadomościami po prawej stronie. <span>Najważniejsze
+                            informacje zawsze pod ręką.</span></p>
                 </div>
             </div>
         </header>
 
-        <main class="main-content notes-content">
-            <section class="notes-workspace">
-                <div class="notes-hero">
-                    <div class="notes-hero-copy">
-                        <span class="notes-kicker">Tablica zespołu</span>
-                        <h2>Jedno miejsce na ważne tematy i gotowe teksty dla całego zespołu</h2>
-                        <p id="notes-day-summary">Ładowanie wspólnej tablicy notatek...</p>
-                    </div>
-
-                    <div class="notes-hero-actions">
-                        <button type="button" class="notes-hero-btn" id="notes-announcement-toggle">
-                            <i class="fa-solid fa-bullhorn"></i>
-                            <span>Dodaj ważny temat</span>
-                        </button>
-
-                        <button type="button" class="notes-hero-btn is-secondary" id="notes-note-toggle">
-                            <i class="fa-solid fa-file-lines"></i>
-                            <span>Dodaj notatkę</span>
-                        </button>
-
-                        <button type="button" class="notes-hero-btn is-secondary" id="notes-task-toggle">
-                            <i class="fa-solid fa-list-check"></i>
-                            <span>Dodaj zadanie</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="notes-feedback" class="notes-feedback is-hidden" aria-live="polite"></div>
-
-                <div id="notes-auth-callout" class="notes-auth-callout">
-                    <div class="notes-auth-copy">
-                        <strong id="notes-auth-title">Podgląd tablicy jest dostępny dla wszystkich</strong>
-                        <p id="notes-auth-text">Zaloguj się, aby dodawać wpisy, edytować swoje notatki i utrzymywać
-                            ważne tematy na górze ekranu.</p>
+        <main class="notes-chat-shell">
+            <section class="notes-chat-panel" aria-labelledby="notes-chat-title">
+                <div class="notes-chat-hero">
+                    <div>
+                        <span class="notes-kicker">Czat zespołu</span>
+                        <h2 id="notes-chat-title">Wiadomości operacyjne dostępne 24/7</h2>
+                        <p id="notes-chat-summary">Ładowanie wiadomości z serwera...</p>
                     </div>
 
                     <button type="button" id="notes-auth-btn" class="notes-auth-btn">
@@ -85,199 +58,62 @@
                     </button>
                 </div>
 
-                <section class="notes-board-section notes-board-section-announcements"
-                    aria-labelledby="notes-announcements-title">
-                    <div class="notes-section-head">
-                        <div class="notes-section-copy">
-                            <span class="notes-kicker">Ważne tematy</span>
-                            <h3 id="notes-announcements-title">Przypięte informacje na górze ekranu</h3>
-                            <p>Publikuj priorytetowe komunikaty dla zespołu i trzymaj je zawsze pod ręką.</p>
-                        </div>
+                <div id="notes-feedback" class="notes-feedback is-hidden" aria-live="polite"></div>
+
+                <div id="notes-auth-callout" class="notes-auth-callout">
+                    <div>
+                        <strong id="notes-auth-title">Zaloguj się, aby korzystać z czatu</strong>
+                        <p id="notes-auth-text">Wiadomości są zapisywane na serwerze i widoczne dla zalogowanych użytkowników.</p>
                     </div>
+                </div>
 
-                    <form id="notes-announcement-form" class="notes-composer" hidden>
-                        <label class="notes-field" for="notes-announcement-title">
-                            <span>Tytuł tematu</span>
-                            <input type="text" id="notes-announcement-title" maxlength="90"
-                                placeholder="Np. Awaria drukarki na 3 piętrze" required>
-                        </label>
+                <div class="notes-chat-window" id="notes-chat-window">
+                    <div class="notes-chat-list" id="notes-chat-list" aria-live="polite"></div>
+                </div>
 
-                        <label class="notes-field" for="notes-announcement-content">
-                            <span>Treść</span>
-                            <textarea id="notes-announcement-content" maxlength="1200"
-                                placeholder="Dodaj najważniejszą informację, status lub instrukcję dla zespołu."
-                                required></textarea>
-                        </label>
-
-                        <div class="notes-composer-actions">
-                            <button type="submit" class="notes-submit-btn" id="notes-announcement-submit">Opublikuj
-                                temat</button>
-                            <button type="button" class="notes-secondary-btn"
-                                id="notes-announcement-cancel">Anuluj</button>
-                        </div>
-                    </form>
-
-                    <div class="notes-card-list" id="notes-announcements-list" aria-live="polite"></div>
-                </section>
-
-                <section class="notes-board-section" aria-labelledby="notes-list-title">
-                    <div class="notes-section-head">
-                        <div class="notes-section-copy">
-                            <span class="notes-kicker">Wspólne notatki</span>
-                            <h3 id="notes-list-title">Gotowe teksty, checklisty i komunikacja operacyjna</h3>
-                            <p>Zapisywane wpisy są widoczne dla wszystkich i podpisane autorem oraz czasem utworzenia i
-                                edycji.</p>
-                        </div>
+                <form id="notes-chat-form" class="notes-chat-composer">
+                    <label class="sr-only" for="notes-chat-input">Treść wiadomości</label>
+                    <textarea id="notes-chat-input" maxlength="1600" rows="2"
+                        placeholder="Napisz wiadomość do zespołu..." required></textarea>
+                    <div class="notes-chat-composer-actions">
+                        <span id="notes-chat-edit-indicator" class="notes-chat-edit-indicator" hidden>Edytujesz wiadomość</span>
+                        <button type="button" id="notes-chat-cancel-edit" class="notes-secondary-btn" hidden>Anuluj</button>
+                        <button type="submit" id="notes-chat-submit" class="notes-submit-btn">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Wyślij</span>
+                        </button>
                     </div>
-
-                    <form id="notes-note-form" class="notes-composer" hidden>
-                        <label class="notes-field" for="notes-note-content">
-                            <span>Treść notatki</span>
-                            <textarea id="notes-note-content" maxlength="1600"
-                                placeholder="Np. Zwrot do zamykania SD, lista kontrolna na poranny dyżur albo szybka instrukcja dla zespołu."
-                                required></textarea>
-                        </label>
-
-                        <div class="notes-composer-actions">
-                            <button type="submit" class="notes-submit-btn" id="notes-note-submit">Dodaj notatkę</button>
-                            <button type="button" class="notes-secondary-btn" id="notes-note-cancel">Anuluj</button>
-                        </div>
-                    </form>
-
-                    <div class="notes-card-list" id="notes-notes-list" aria-live="polite"></div>
-                </section>
-
-                <section class="notes-board-section notes-board-section-tasks" aria-labelledby="notes-tasks-title">
-                    <div class="notes-section-head">
-                        <div class="notes-section-copy">
-                            <span class="notes-kicker">Zadania zespołu</span>
-                            <h3 id="notes-tasks-title">Zadania przypisane do konkretnych osób</h3>
-                            <p>Lider przypisuje zadania do użytkowników, a osoba przypisana może aktualizować status
-                                swojego zadania.</p>
-                        </div>
-                    </div>
-
-                    <div id="notes-task-admin-callout" class="notes-task-admin-callout">
-                        <strong id="notes-task-admin-title">Tylko lider może przypisywać zadania</strong>
-                        <p id="notes-task-admin-text">Po zalogowaniu jako lider możesz tworzyć zadania, przypisywać je
-                            do ludzi i nadawać im priorytet.</p>
-                    </div>
-
-                    <form id="notes-task-form" class="notes-composer" hidden>
-                        <label class="notes-field" for="notes-task-title">
-                            <span>Tytuł zadania</span>
-                            <input type="text" id="notes-task-title" maxlength="90"
-                                placeholder="Np. Zweryfikować status laptopa i domeny" required>
-                        </label>
-
-                        <label class="notes-field" for="notes-task-description">
-                            <span>Opis</span>
-                            <textarea id="notes-task-description" maxlength="1400"
-                                placeholder="Dodaj kontekst zadania, kroki do wykonania albo link do zgłoszenia."
-                                required></textarea>
-                        </label>
-
-                        <div class="notes-field-row">
-                            <label class="notes-field" for="notes-task-assignee">
-                                <span>Przypisz do</span>
-                                <select id="notes-task-assignee" required></select>
-                            </label>
-
-                            <label class="notes-field" for="notes-task-priority">
-                                <span>Priorytet</span>
-                                <select id="notes-task-priority" required>
-                                    <option value="low">Niski</option>
-                                    <option value="medium" selected>Średni</option>
-                                    <option value="high">Wysoki</option>
-                                </select>
-                            </label>
-
-                            <label class="notes-field" for="notes-task-status">
-                                <span>Status</span>
-                                <select id="notes-task-status" required>
-                                    <option value="todo" selected>Do zrobienia</option>
-                                    <option value="in_progress">W toku</option>
-                                    <option value="done">Zrobione</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <p id="notes-task-form-hint" class="notes-field-hint" hidden></p>
-
-                        <div class="notes-composer-actions">
-                            <button type="submit" class="notes-submit-btn" id="notes-task-submit">Dodaj zadanie</button>
-                            <button type="button" class="notes-secondary-btn" id="notes-task-cancel">Anuluj</button>
-                        </div>
-                    </form>
-
-                    <div class="notes-card-list" id="notes-tasks-list" aria-live="polite"></div>
-                </section>
+                </form>
             </section>
 
-            <aside class="notes-sidebar">
-                <div class="notes-sidebar-stack">
-                    <article class="notes-side-card">
-                        <p class="notes-side-kicker">Status konta</p>
-                        <div id="notes-user-status" class="notes-user-status">
-                            <strong>Gość</strong>
-                            <p>Podgląd tablicy bez możliwości edycji.</p>
-                        </div>
-                    </article>
-
-                    <article class="notes-side-card">
-                        <p class="notes-side-kicker">Podsumowanie tablicy</p>
-                        <div class="notes-side-stats">
-                            <div class="notes-side-stat">
-                                <span>Ważne tematy</span>
-                                <strong id="notes-stat-announcements">0</strong>
-                                <small>na górze tablicy</small>
-                            </div>
-
-                            <div class="notes-side-stat">
-                                <span>Wspólne notatki</span>
-                                <strong id="notes-stat-notes">0</strong>
-                                <small>aktywnych wpisów</small>
-                            </div>
-
-                            <div class="notes-side-stat">
-                                <span>Twoje wpisy</span>
-                                <strong id="notes-stat-mine">0</strong>
-                                <small id="notes-stat-mine-meta">po zalogowaniu</small>
-                            </div>
-
-                            <div class="notes-side-stat">
-                                <span>Zadania</span>
-                                <strong id="notes-stat-tasks">0</strong>
-                                <small>na tablicy zadań</small>
-                            </div>
-
-                            <div class="notes-side-stat">
-                                <span>Przypisane Tobie</span>
-                                <strong id="notes-stat-assigned">0</strong>
-                                <small id="notes-stat-assigned-meta">po zalogowaniu</small>
-                            </div>
-
-                            <div class="notes-side-stat">
-                                <span>Ostatnia zmiana</span>
-                                <strong id="notes-stat-updated">--</strong>
-                                <small>na tablicy</small>
-                            </div>
-                        </div>
-                    </article>
-
-                    <article class="notes-side-card">
-                        <p class="notes-side-kicker">Zasady modułu</p>
-                        <ul class="notes-rule-list">
-                            <li>Ważne tematy są wyświetlane na górze i mają osobną sekcję.</li>
-                            <li>Notatki oraz tablica działają na lokalnym storage tej przeglądarki.</li>
-                            <li>Każdy zalogowany użytkownik może dodać wpis, a autor lub lider może go edytować albo
-                                usunąć.</li>
-                            <li>Tylko lider przypisuje zadania innym użytkownikom, a osoba przypisana może zmienić
-                                status swojego zadania.</li>
-                            <li>Przy każdym rekordzie widać autora oraz czas utworzenia i ostatniej edycji.</li>
-                        </ul>
-                    </article>
+            <aside class="notes-pinned-panel" aria-labelledby="notes-pinned-title">
+                <div class="notes-pinned-head">
+                    <div>
+                        <span class="notes-kicker">Przypięte</span>
+                        <h2 id="notes-pinned-title">Wiadomości na widoku</h2>
+                    </div>
+                    <span id="notes-pinned-count" class="notes-pinned-count">0</span>
                 </div>
+
+                <div class="notes-side-card notes-user-card">
+                    <p class="notes-side-kicker">Status konta</p>
+                    <div id="notes-user-status" class="notes-user-status">
+                        <strong>Gość</strong>
+                        <p>Zaloguj się, aby zobaczyć chat i pisać wiadomości.</p>
+                    </div>
+                </div>
+
+                <div id="notes-pinned-list" class="notes-pinned-list" aria-live="polite"></div>
+
+                <article class="notes-side-card">
+                    <p class="notes-side-kicker">Zasady czatu</p>
+                    <ul class="notes-rule-list">
+                        <li>Chat jest po lewej stronie, przypięte wiadomości po prawej.</li>
+                        <li>Wiadomości zapisują się na serwerze i są dostępne dla zalogowanych użytkowników.</li>
+                        <li>Każdy może edytować i usuwać tylko swoje wiadomości.</li>
+                        <li>Każdy zalogowany użytkownik może przypiąć albo odpiąć wiadomość.</li>
+                    </ul>
+                </article>
             </aside>
         </main>
 
