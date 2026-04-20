@@ -9,7 +9,9 @@ self.addEventListener('activate', event => {
 self.addEventListener('notificationclick', event => {
 	const notification = event.notification
 	const payload = notification?.data || {}
-	const targetUrl = payload.url || `${self.location.origin}/index.html`
+	const scopeUrl = self.registration?.scope || new URL('./', self.location.href).toString()
+	const dashboardIndexUrl = new URL('index.html', scopeUrl).toString()
+	const targetUrl = payload.url || dashboardIndexUrl
 
 	notification?.close()
 
@@ -20,10 +22,10 @@ self.addEventListener('notificationclick', event => {
 				includeUncontrolled: true,
 			})
 
-			let targetClient = windowClients.find(client => client.url.startsWith(self.location.origin))
+			let targetClient = windowClients.find(client => client.url.startsWith(scopeUrl))
 
 			if (targetClient) {
-				if ('navigate' in targetClient && !targetClient.url.includes('/index.html')) {
+				if ('navigate' in targetClient && !targetClient.url.startsWith(dashboardIndexUrl)) {
 					targetClient = (await targetClient.navigate(targetUrl)) || targetClient
 				}
 				await targetClient.focus()

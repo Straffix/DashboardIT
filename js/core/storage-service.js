@@ -134,7 +134,7 @@
 			}
 
 			const response = sendRemoteRequest({ path: 'health.php' })
-			remoteEnabledCache = Boolean(response.ok && response.payload?.mode === 'file-json')
+			remoteEnabledCache = Boolean(response.ok && response.payload?.mode === 'mysql')
 			return Boolean(remoteEnabledCache)
 		},
 	}

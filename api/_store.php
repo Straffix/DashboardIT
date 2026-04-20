@@ -2,34 +2,146 @@
 declare(strict_types=1);
 
 const DASHBOARD_REMOTE_STORAGE_FILES = [
-	'dashboard_user_bookmarks' => 'bookmarks.json',
-	'dashboard_lunch_reservations' => 'lunch.json',
-	'dashboard_notes_entries' => 'notes.json',
-	'dashboard_notes_announcements' => 'announcements.json',
-	'dashboard_notes_tasks' => 'tasks.json',
-	'dashboard_testers_feedback' => 'testers-feedback.json',
-	'monitor_laptopow_dane' => 'monitor.json',
-	'nowe_zatrudnienia_dane' => 'hires.json',
-	'wymiana_sprzetu_dane' => 'exchanges.json',
+	'dashboard_user_bookmarks' => 'bookmarks',
+	'dashboard_lunch_reservations' => 'lunch',
+	'dashboard_notes_entries' => 'notes',
+	'dashboard_notes_announcements' => 'announcements',
+	'dashboard_notes_tasks' => 'tasks',
+	'dashboard_testers_feedback' => 'testers-feedback',
+	'monitor_laptopow_dane' => 'monitor',
+	'nowe_zatrudnienia_dane' => 'hires',
+	'wymiana_sprzetu_dane' => 'exchanges',
 ];
 
-function dashboard_storage_root(): string
+function dashboard_database_config_path(): string
 {
-	return dirname(__DIR__) . '/storage/data';
-}
-
-function dashboard_ensure_storage_root(): void
-{
-	$storageRoot = dashboard_storage_root();
-	if (!is_dir($storageRoot)) {
-		mkdir($storageRoot, 0775, true);
+	$environmentPath = trim((string) getenv('DASHBOARD_DATABASE_CONFIG'));
+	if ($environmentPath !== '') {
+		return $environmentPath;
 	}
+
+	$externalConfigPath = dirname(__DIR__, 2) . '/dashboardit-config/database.php';
+	if (is_file($externalConfigPath)) {
+		return $externalConfigPath;
+	}
+
+	return __DIR__ . '/config/database.php';
 }
 
-function dashboard_storage_path(string $fileName): string
+function dashboard_database_config(): array
 {
-	dashboard_ensure_storage_root();
-	return dashboard_storage_root() . '/' . ltrim($fileName, '/');
+	static $config = null;
+
+	if (is_array($config)) {
+		return $config;
+	}
+
+	$configPath = dashboard_database_config_path();
+	if (!is_file($configPath)) {
+		throw new RuntimeException('Brak konfiguracji bazy danych dashboardu.');
+	}
+
+	$config = require $configPath;
+	if (!is_array($config)) {
+		throw new RuntimeException('Nieprawidlowa konfiguracja bazy danych dashboardu.');
+	}
+
+	return $config;
+}
+
+function dashboard_database_table_name(): string
+{
+	$config = dashboard_database_config();
+	$table = trim((string) ($config['table'] ?? 'dashboard_storage'));
+	if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+		throw new RuntimeException('Nieprawidlowa nazwa tabeli danych dashboardu.');
+	}
+
+	return $table;
+}
+
+function dashboard_database(): PDO
+{
+	static $pdo = null;
+
+	if ($pdo instanceof PDO) {
+		return $pdo;
+	}
+
+	$config = dashboard_database_config();
+	$driver = strtolower(trim((string) ($config['driver'] ?? 'mysql')));
+	if ($driver !== 'mysql') {
+		throw new RuntimeException('Dashboard obsluguje teraz tylko baze MySQL.');
+	}
+
+	$host = trim((string) ($config['host'] ?? 'localhost')) ?: 'localhost';
+	$port = (int) ($config['port'] ?? 3306);
+	$database = trim((string) ($config['database'] ?? ''));
+	$username = trim((string) ($config['username'] ?? ''));
+	$password = (string) ($config['password'] ?? '');
+	$charset = trim((string) ($config['charset'] ?? 'utf8mb4')) ?: 'utf8mb4';
+
+	if ($database === '' || $username === '') {
+		throw new RuntimeException('Uzupelnij nazwe bazy danych i uzytkownika bazy.');
+	}
+
+	$dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s', $host, $port, $database, $charset);
+	$options = [
+		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+		PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+		PDO::ATTR_EMULATE_PREPARES => false,
+	];
+
+	if (defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
+		$options[PDO::MYSQL_ATTR_INIT_COMMAND] = sprintf("SET NAMES %s COLLATE %s_unicode_ci", $charset, $charset);
+	}
+
+	try {
+		$pdo = new PDO($dsn, $username, $password, $options);
+	} catch (PDOException $error) {
+		throw new RuntimeException('Nie udalo sie polaczyc z baza danych dashboardu.');
+	}
+
+	dashboard_ensure_storage_table($pdo);
+	return $pdo;
+}
+
+function dashboard_ensure_storage_table(?PDO $pdo = null): void
+{
+	static $ensured = false;
+
+	if ($ensured) {
+		return;
+	}
+
+	$pdo = $pdo ?: dashboard_database();
+	$table = dashboard_database_table_name();
+	$pdo->exec(
+		"CREATE TABLE IF NOT EXISTS `{$table}` (
+			`storage_key` varchar(191) NOT NULL,
+			`storage_value` longtext NOT NULL,
+			`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			PRIMARY KEY (`storage_key`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+	);
+
+	$ensured = true;
+}
+
+function dashboard_storage_backend_status(): array
+{
+	$config = dashboard_database_config();
+	$pdo = dashboard_database();
+	$statement = $pdo->query('SELECT 1 AS ok');
+	$statement->fetch();
+
+	return [
+		'mode' => 'mysql',
+		'host' => (string) ($config['host'] ?? ''),
+		'database' => (string) ($config['database'] ?? ''),
+		'table' => dashboard_database_table_name(),
+	];
 }
 
 function dashboard_storage_file_for_key(string $key): string
@@ -38,119 +150,128 @@ function dashboard_storage_file_for_key(string $key): string
 		throw new InvalidArgumentException('Nieznany klucz danych.');
 	}
 
-	return dashboard_storage_path(DASHBOARD_REMOTE_STORAGE_FILES[$key]);
+	return $key;
 }
 
 function dashboard_users_path(): string
 {
-	return dashboard_storage_path('users.json');
+	return 'dashboard_users';
 }
 
 function dashboard_demo_marker_path(): string
 {
-	return dashboard_storage_path('demo-marker.json');
+	return 'dashboard_demo_marker';
 }
 
 function dashboard_decode_json_or_fallback(string $jsonContent, mixed $fallback): mixed
 {
-	$trimmedContent = trim($jsonContent);
-	if ($trimmedContent === '') {
-		return $fallback;
-	}
-
-	$decodedValue = json_decode($trimmedContent, true);
-	if (json_last_error() !== JSON_ERROR_NONE) {
-		return $fallback;
-	}
-
-	return $decodedValue;
+	$decodedValue = json_decode($jsonContent, true);
+	return json_last_error() === JSON_ERROR_NONE ? $decodedValue : $fallback;
 }
 
 function dashboard_read_json_file(string $path, mixed $fallback): mixed
 {
-	if (!is_file($path)) {
+	$pdo = dashboard_database();
+	$table = dashboard_database_table_name();
+	$statement = $pdo->prepare("SELECT `storage_value` FROM `{$table}` WHERE `storage_key` = :storage_key LIMIT 1");
+	$statement->execute(['storage_key' => $path]);
+	$row = $statement->fetch();
+	if (!is_array($row)) {
 		return $fallback;
 	}
 
-	$handle = fopen($path, 'rb');
-	if ($handle === false) {
-		return $fallback;
-	}
-
-	try {
-		if (!flock($handle, LOCK_SH)) {
-			return $fallback;
-		}
-
-		$fileSize = filesize($path);
-		$fileContent = $fileSize > 0 ? (string) fread($handle, $fileSize) : '';
-		flock($handle, LOCK_UN);
-	} finally {
-		fclose($handle);
-	}
-
-	return dashboard_decode_json_or_fallback($fileContent, $fallback);
+	return dashboard_decode_json_or_fallback((string) ($row['storage_value'] ?? ''), $fallback);
 }
 
 function dashboard_write_json_file(string $path, mixed $data): void
 {
-	dashboard_ensure_storage_root();
 	$encodedValue = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 	if ($encodedValue === false) {
-		throw new RuntimeException('Nie udalo sie zakodowac danych do JSON.');
+		throw new RuntimeException('Nie udalo sie zakodowac danych do zapisu.');
 	}
 
-	$handle = fopen($path, 'c+');
-	if ($handle === false) {
-		throw new RuntimeException('Nie udalo sie otworzyc pliku danych do zapisu.');
-	}
-
-	try {
-		if (!flock($handle, LOCK_EX)) {
-			throw new RuntimeException('Nie udalo sie zablokowac pliku danych do zapisu.');
-		}
-
-		ftruncate($handle, 0);
-		rewind($handle);
-		fwrite($handle, $encodedValue);
-		fflush($handle);
-		flock($handle, LOCK_UN);
-	} finally {
-		fclose($handle);
-	}
+	$pdo = dashboard_database();
+	$table = dashboard_database_table_name();
+	$statement = $pdo->prepare(
+		"INSERT INTO `{$table}` (`storage_key`, `storage_value`)
+		VALUES (:storage_key, :storage_value)
+		ON DUPLICATE KEY UPDATE `storage_value` = VALUES(`storage_value`), `updated_at` = CURRENT_TIMESTAMP"
+	);
+	$statement->execute([
+		'storage_key' => $path,
+		'storage_value' => $encodedValue,
+	]);
 }
 
 function dashboard_update_json_file(string $path, mixed $fallback, callable $updater): mixed
 {
-	dashboard_ensure_storage_root();
-	$handle = fopen($path, 'c+');
-	if ($handle === false) {
-		throw new RuntimeException('Nie udalo sie otworzyc pliku danych.');
-	}
+	$pdo = dashboard_database();
+	$table = dashboard_database_table_name();
 
 	try {
-		if (!flock($handle, LOCK_EX)) {
-			throw new RuntimeException('Nie udalo sie zablokowac pliku danych.');
+		$pdo->beginTransaction();
+
+		$fallbackValue = json_encode($fallback, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+		if ($fallbackValue === false) {
+			throw new RuntimeException('Nie udalo sie zakodowac wartosci domyslnej.');
 		}
 
-		$fileSize = filesize($path);
-		$fileContent = $fileSize > 0 ? (string) fread($handle, $fileSize) : '';
-		$currentValue = dashboard_decode_json_or_fallback($fileContent, $fallback);
+		$insertFallbackStatement = $pdo->prepare(
+			"INSERT IGNORE INTO `{$table}` (`storage_key`, `storage_value`)
+			VALUES (:storage_key, :storage_value)"
+		);
+		$insertFallbackStatement->execute([
+			'storage_key' => $path,
+			'storage_value' => $fallbackValue,
+		]);
+
+		$readStatement = $pdo->prepare("SELECT `storage_value` FROM `{$table}` WHERE `storage_key` = :storage_key LIMIT 1 FOR UPDATE");
+		$readStatement->execute(['storage_key' => $path]);
+		$row = $readStatement->fetch();
+		$currentValue = is_array($row)
+			? dashboard_decode_json_or_fallback((string) ($row['storage_value'] ?? ''), $fallback)
+			: $fallback;
 		$nextValue = $updater($currentValue);
 
 		$encodedValue = json_encode($nextValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 		if ($encodedValue === false) {
-			throw new RuntimeException('Nie udalo sie zapisac danych po aktualizacji.');
+			throw new RuntimeException('Nie udalo sie zakodowac danych po aktualizacji.');
 		}
 
-		ftruncate($handle, 0);
-		rewind($handle);
-		fwrite($handle, $encodedValue);
-		fflush($handle);
-		flock($handle, LOCK_UN);
+		$writeStatement = $pdo->prepare(
+			"INSERT INTO `{$table}` (`storage_key`, `storage_value`)
+			VALUES (:storage_key, :storage_value)
+			ON DUPLICATE KEY UPDATE `storage_value` = VALUES(`storage_value`), `updated_at` = CURRENT_TIMESTAMP"
+		);
+		$writeStatement->execute([
+			'storage_key' => $path,
+			'storage_value' => $encodedValue,
+		]);
+
+		$pdo->commit();
 
 		return $nextValue;
-	} finally {
-		fclose($handle);
+	} catch (Throwable $error) {
+		if ($pdo->inTransaction()) {
+			$pdo->rollBack();
+		}
+		throw $error;
 	}
+}
+
+function dashboard_delete_json_file(string $path): void
+{
+	$pdo = dashboard_database();
+	$table = dashboard_database_table_name();
+	$statement = $pdo->prepare("DELETE FROM `{$table}` WHERE `storage_key` = :storage_key");
+	$statement->execute(['storage_key' => $path]);
+}
+
+function dashboard_json_file_exists(string $path): bool
+{
+	$pdo = dashboard_database();
+	$table = dashboard_database_table_name();
+	$statement = $pdo->prepare("SELECT 1 FROM `{$table}` WHERE `storage_key` = :storage_key LIMIT 1");
+	$statement->execute(['storage_key' => $path]);
+	return (bool) $statement->fetchColumn();
 }

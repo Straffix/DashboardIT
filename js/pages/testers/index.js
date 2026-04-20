@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (storageService.isRemoteEnabled()) {
 			storageStatus.innerHTML = `
 				<strong>Wspolny zapis serwerowy jest aktywny</strong>
-				<p>Nowe wpisy trafiaja do wspolnej tablicy i sa zapisywane w pliku <code>storage/data/testers-feedback.json</code>.</p>
+				<p>Nowe wpisy trafiaja do wspolnej tablicy i sa zapisywane w bazie MySQL.</p>
 			`
 			return
 		}

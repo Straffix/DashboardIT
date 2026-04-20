@@ -99,9 +99,7 @@ function dashboard_set_demo_marker(bool $isSeeded): void
 	$markerPath = dashboard_demo_marker_path();
 
 	if (!$isSeeded) {
-		if (is_file($markerPath)) {
-			unlink($markerPath);
-		}
+		dashboard_delete_json_file($markerPath);
 		return;
 	}
 
@@ -115,7 +113,7 @@ $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 if ($method === 'GET') {
 	dashboard_json_response([
 		'ok' => true,
-		'seeded' => is_file(dashboard_demo_marker_path()),
+		'seeded' => dashboard_json_file_exists(dashboard_demo_marker_path()),
 	]);
 }
 
