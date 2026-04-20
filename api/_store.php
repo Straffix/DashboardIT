@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 const DASHBOARD_REMOTE_STORAGE_FILES = [
 	'dashboard_user_bookmarks' => 'bookmarks',
+	'dashboard_active_users' => 'active-users',
 	'dashboard_lunch_reservations' => 'lunch',
 	'dashboard_notes_entries' => 'notes',
+	'dashboard_notes_active_viewers' => 'notes-active-viewers',
 	'dashboard_notes_announcements' => 'announcements',
 	'dashboard_notes_tasks' => 'tasks',
 	'dashboard_testers_feedback' => 'testers-feedback',

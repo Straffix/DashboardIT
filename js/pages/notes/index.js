@@ -1,9 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
 	const notesService = window.AppServices?.notesService
 	const usersService = window.AppServices?.usersService
+	const storageService = window.AppServices?.storageService
 	const escapeHtml = AppUtils.escapeHtml
 	const getInitials = AppUtils.getInitials
 	const formatDateTimeLabel = AppUtils.formatDateTimeLabel
+	const activeViewersStorageKey = AppUtils.config.STORAGE_KEYS.NOTES_ACTIVE_VIEWERS || 'dashboard_notes_active_viewers'
+	const presenceTabIdKey = 'dashboard_notes_presence_tab_id'
+	const presenceTtlMs = 45000
 
 	const chatSummary = document.getElementById('notes-chat-summary')
 	const feedback = document.getElementById('notes-feedback')
@@ -21,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const pinnedList = document.getElementById('notes-pinned-list')
 	const pinnedCount = document.getElementById('notes-pinned-count')
 	const userStatusBox = document.getElementById('notes-user-status')
+	const activeViewersBox = document.getElementById('notes-active-viewers')
 
 	if (
 		!notesService ||
@@ -40,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		!pinnedList ||
 		!pinnedCount ||
 		!userStatusBox ||
+		!activeViewersBox ||
 		typeof escapeHtml !== 'function' ||
 		typeof getInitials !== 'function' ||
 		typeof formatDateTimeLabel !== 'function'
@@ -52,10 +58,26 @@ document.addEventListener('DOMContentLoaded', () => {
 		editingMessageId: '',
 		feedbackTimeoutId: null,
 		refreshTimerId: 0,
+		presenceTimerId: 0,
 	}
 
 	const getCurrentUser = () => AppUtils.auth.getCurrentUser()
 	const getUsers = () => (usersService?.getAll?.() || []).filter(user => user?.id)
+	const getPresenceTabId = () => {
+		try {
+			const existingId = sessionStorage.getItem(presenceTabIdKey)
+			if (existingId) return existingId
+			const nextId =
+				typeof window.crypto?.randomUUID === 'function'
+					? window.crypto.randomUUID()
+					: `notes-tab-${Date.now()}-${Math.random().toString(36).slice(2)}`
+			sessionStorage.setItem(presenceTabIdKey, nextId)
+			return nextId
+		} catch (error) {
+			return `notes-tab-${Date.now()}`
+		}
+	}
+	const presenceTabId = getPresenceTabId()
 
 	const getMessages = () => {
 		if (typeof notesService.getChatMessages === 'function') {
@@ -93,6 +115,82 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const renderMultilineText = value => escapeHtml(value).replace(/\n/g, '<br>')
+
+	const getActiveViewerRecords = () => {
+		const records = storageService?.readJson?.(activeViewersStorageKey, []) || []
+		return Array.isArray(records) ? records.filter(record => record && typeof record === 'object') : []
+	}
+
+	const saveActiveViewerRecords = records => {
+		storageService?.writeJson?.(activeViewersStorageKey, Array.isArray(records) ? records : [])
+	}
+
+	const getFreshActiveViewerRecords = () => {
+		const now = Date.now()
+		return getActiveViewerRecords()
+			.filter(record => record.userId && record.tabId && now - (Date.parse(record.lastSeenAt) || 0) <= presenceTtlMs)
+			.sort((leftRecord, rightRecord) => String(leftRecord.login || '').localeCompare(String(rightRecord.login || ''), 'pl'))
+	}
+
+	const syncCurrentViewerPresence = currentUser => {
+		const records = getFreshActiveViewerRecords().filter(record => record.tabId !== presenceTabId)
+		if (currentUser && !document.hidden) {
+			records.push({
+				tabId: presenceTabId,
+				userId: String(currentUser.id || ''),
+				login: currentUser.login || '',
+				fullName: currentUser.fullName || '',
+				avatarId: currentUser.avatarId || '',
+				avatarImage: currentUser.avatarImage || '',
+				lastSeenAt: new Date().toISOString(),
+			})
+		}
+		saveActiveViewerRecords(records)
+		return records
+	}
+
+	const clearCurrentViewerPresence = () => {
+		const records = getActiveViewerRecords().filter(record => record.tabId !== presenceTabId)
+		saveActiveViewerRecords(records)
+	}
+
+	const renderActiveViewers = (currentUser, { syncPresence = true } = {}) => {
+		if (!currentUser) {
+			clearCurrentViewerPresence()
+			activeViewersBox.hidden = true
+			activeViewersBox.innerHTML = ''
+			return
+		}
+
+		const recordsByUserId = new Map()
+		const activeRecordsSource = syncPresence ? syncCurrentViewerPresence(currentUser) : getFreshActiveViewerRecords()
+		activeRecordsSource.forEach(record => {
+			if (!recordsByUserId.has(record.userId)) {
+				recordsByUserId.set(record.userId, record)
+			}
+		})
+
+		const activeRecords = [...recordsByUserId.values()]
+		activeViewersBox.hidden = activeRecords.length === 0
+		activeViewersBox.innerHTML = activeRecords.length
+			? `
+				<span class="notes-active-viewers-label">Aktywni teraz</span>
+				<div class="notes-active-viewers-list">
+					${activeRecords
+						.map(record => {
+							const nick = record.login ? `@${record.login}` : record.fullName || 'aktywny'
+							return `
+								<span class="notes-active-viewer-chip">
+									<span class="notes-active-dot" aria-hidden="true"></span>
+									<span>${escapeHtml(nick)}</span>
+								</span>
+							`
+						})
+						.join('')}
+				</div>
+			`
+			: ''
+	}
 
 	const createAvatarMarkup = (user, extraClass = '') => {
 		if (typeof AppUtils.createAvatarMarkup === 'function') {
@@ -138,20 +236,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const renderAuthState = currentUser => {
 		if (currentUser) {
-			authCallout.classList.add('is-active-user')
-			authTitle.textContent = `Pracujesz jako ${currentUser.fullName || `@${currentUser.login}`}`
-			authText.textContent = 'Możesz pisać na czacie, przypinać wiadomości oraz edytować i usuwać swoje wpisy.'
-			authBtn.innerHTML = '<i class="fa-solid fa-user-gear"></i><span>Profil</span>'
-			userStatusBox.innerHTML = `
-				<strong>${escapeHtml(currentUser.fullName || `@${currentUser.login}`)}</strong>
-				<p>Wiadomości zapisują się na serwerze i są dostępne po zalogowaniu 24/7.</p>
-			`
+			authCallout.hidden = true
+			authCallout.classList.remove('is-active-user')
+			authTitle.textContent = ''
+			authText.textContent = ''
+			authBtn.innerHTML = ''
+			userStatusBox.innerHTML = ''
 			chatInput.disabled = false
 			chatSubmit.disabled = false
 			chatForm.classList.remove('is-disabled')
 			return
 		}
 
+		authCallout.hidden = false
 		authCallout.classList.remove('is-active-user')
 		authTitle.textContent = 'Zaloguj się, aby korzystać z czatu'
 		authText.textContent = 'Czat jest dostępny dla zalogowanych użytkowników. Po zalogowaniu zobaczysz historię wiadomości z serwera.'
@@ -252,7 +349,6 @@ document.addEventListener('DOMContentLoaded', () => {
 						<div class="notes-message-bubble">
 							<header class="notes-message-meta">
 								<strong>${escapeHtml(author.fullName)}</strong>
-								<span>@${escapeHtml(author.login)}</span>
 								<time datetime="${escapeHtml(message.createdAt)}">${escapeHtml(formatDateTimeLabel(message.createdAt))}</time>
 								${isEdited ? '<span>edytowano</span>' : ''}
 								${message.isPinned ? '<span class="notes-pin-chip"><i class="fa-solid fa-thumbtack"></i> przypięte</span>' : ''}
@@ -328,6 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		renderSummary(messages, pinnedMessages, currentUser)
 		renderMessages(messages, currentUser)
 		renderPinnedMessages(pinnedMessages, currentUser)
+		renderActiveViewers(currentUser)
 
 		if (!currentUser && state.editingMessageId) {
 			setEditMode(null)
@@ -407,11 +504,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	authBtn.addEventListener('click', () => {
-		if (getCurrentUser()) {
-			AppUtils.auth.openProfileModal()
-			return
-		}
-
 		AppUtils.auth.openAuthModal('login')
 	})
 
@@ -466,9 +558,23 @@ document.addEventListener('DOMContentLoaded', () => {
 	})
 
 	window.addEventListener('storage', event => {
+		if (event.key === activeViewersStorageKey) {
+			renderActiveViewers(getCurrentUser(), { syncPresence: false })
+			return
+		}
+
 		if (event.key === AppUtils.config.STORAGE_KEYS.NOTES || event.key === AppUtils.config.STORAGE_KEYS.SESSION) {
 			refreshView()
 		}
+	})
+
+	document.addEventListener('visibilitychange', () => {
+		if (document.hidden) {
+			clearCurrentViewerPresence()
+			return
+		}
+
+		refreshView()
 	})
 
 	state.refreshTimerId = window.setInterval(() => {
@@ -476,8 +582,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		refreshView()
 	}, 15000)
 
+	state.presenceTimerId = window.setInterval(() => {
+		if (document.hidden) return
+		renderActiveViewers(getCurrentUser())
+	}, 10000)
+
 	window.addEventListener('beforeunload', () => {
+		clearCurrentViewerPresence()
 		window.clearInterval(state.refreshTimerId)
+		window.clearInterval(state.presenceTimerId)
 	})
 
 	refreshView({ forceScrollBottom: true })

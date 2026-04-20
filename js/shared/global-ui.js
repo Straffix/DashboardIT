@@ -22,6 +22,10 @@ const THEME_STORAGE_KEY = APP_CONFIG.PREFERENCE_KEYS.THEME
 const WIDE_MODE_STORAGE_KEY = APP_CONFIG.PREFERENCE_KEYS.WIDE_MODE
 const SESSION_STORAGE_KEY = APP_CONFIG.STORAGE_KEYS.SESSION
 const USERS_STORAGE_KEY = APP_CONFIG.STORAGE_KEYS.USERS
+const ACTIVE_USERS_STORAGE_KEY = APP_CONFIG.STORAGE_KEYS.DASHBOARD_ACTIVE_USERS || 'dashboard_active_users'
+const THEME_TOOLS_SLOT_CLASS = 'app-theme-tools-slot'
+const ACTIVE_USER_TAB_ID_KEY = 'dashboard_active_user_tab_id'
+const ACTIVE_USER_TTL_MS = 45000
 
 const normalizeStoredTheme = theme => (['light', 'dark', 'rossmann'].includes(theme) ? theme : 'light')
 const normalizeBaseTheme = theme => (theme === 'dark' ? 'dark' : 'light')
@@ -52,6 +56,79 @@ const isThemePreferenceStorageKey = key => {
 		preferencesService?.getThemeStorageKey?.(),
 		preferencesService?.getThemeFallbackStorageKey?.(),
 	].includes(normalizedKey)
+}
+
+const getOrCreateThemeToolsSlot = () => {
+	const existingSlot = document.querySelector(`.${THEME_TOOLS_SLOT_CLASS}`) || document.querySelector('.dashboard-theme-bookmark-slot')
+	if (existingSlot) {
+		existingSlot.classList.add(THEME_TOOLS_SLOT_CLASS)
+		return existingSlot
+	}
+
+	if (!document.body) return null
+
+	const slot = document.createElement('div')
+	slot.className = THEME_TOOLS_SLOT_CLASS
+	document.body.appendChild(slot)
+	return slot
+}
+
+const getActiveUserTabId = () => {
+	try {
+		const existingId = sessionStorage.getItem(ACTIVE_USER_TAB_ID_KEY)
+		if (existingId) return existingId
+
+		const nextId =
+			typeof window.crypto?.randomUUID === 'function'
+				? window.crypto.randomUUID()
+				: `dashboard-tab-${Date.now()}-${Math.random().toString(36).slice(2)}`
+		sessionStorage.setItem(ACTIVE_USER_TAB_ID_KEY, nextId)
+		return nextId
+	} catch (error) {
+		return `dashboard-tab-${Date.now()}`
+	}
+}
+
+const activeUserTabId = getActiveUserTabId()
+
+const getActiveUserRecords = () => {
+	const records = storageService?.readJson?.(ACTIVE_USERS_STORAGE_KEY, []) || []
+	return Array.isArray(records) ? records.filter(record => record && typeof record === 'object') : []
+}
+
+const getFreshActiveUserRecords = () => {
+	const now = Date.now()
+	return getActiveUserRecords().filter(
+		record => record.userId && record.tabId && now - (Date.parse(record.lastSeenAt) || 0) <= ACTIVE_USER_TTL_MS
+	)
+}
+
+const saveActiveUserRecords = records => {
+	storageService?.writeJson?.(ACTIVE_USERS_STORAGE_KEY, Array.isArray(records) ? records : [])
+}
+
+const syncActiveUserPresence = () => {
+	const records = getFreshActiveUserRecords().filter(record => record.tabId !== activeUserTabId)
+	const currentUser = window.AppUtils?.auth?.getCurrentUser?.()
+
+	if (currentUser && !document.hidden) {
+		records.push({
+			tabId: activeUserTabId,
+			userId: String(currentUser.id || ''),
+			login: currentUser.login || '',
+			fullName: currentUser.fullName || '',
+			role: currentUser.role || 'user',
+			avatarId: currentUser.avatarId || 'blue',
+			avatarImage: currentUser.avatarImage || '',
+			lastSeenAt: new Date().toISOString(),
+		})
+	}
+
+	saveActiveUserRecords(records)
+}
+
+const clearActiveUserPresence = () => {
+	saveActiveUserRecords(getActiveUserRecords().filter(record => record.tabId !== activeUserTabId))
 }
 
 const requireAuthenticatedPreferenceAction = message => {
@@ -85,9 +162,10 @@ const createThemeToggle = () => {
 		`,
 	}
 
-	const button = document.createElement('button')
-	button.type = 'button'
+	const button = document.createElement('div')
 	button.className = 'theme-toggle-btn'
+	button.setAttribute('role', 'group')
+	button.setAttribute('aria-label', 'Zmien motyw')
 
 	const setTheme = (theme, options = {}) => {
 		const normalizedTheme = normalizeStoredTheme(theme)
@@ -120,19 +198,36 @@ const createThemeToggle = () => {
 		const nextTheme = themeSequence[(activeIndex + 1) % themeSequence.length]
 		button.dataset.themeOption = normalizedTheme
 		button.dataset.nextTheme = nextTheme
-		button.setAttribute('aria-label', `${themeLabels[normalizedTheme]}. Kliknij, aby wlaczyc ${themeLabels[nextTheme]}.`)
 		button.innerHTML = `
-			<span class="theme-toggle-option-badge" aria-hidden="true">
-				${themeIcons[normalizedTheme]}
+			<span class="theme-toggle-option-list">
+				${themeSequence
+					.map(
+						themeOption => `
+							<button
+								type="button"
+								class="theme-toggle-option-badge${themeOption === normalizedTheme ? ' is-active' : ''}"
+								data-theme-icon="${themeOption}"
+								aria-label="${themeLabels[themeOption]}"
+								aria-pressed="${themeOption === normalizedTheme}"
+							>
+								${themeIcons[themeOption]}
+							</button>
+						`
+					)
+					.join('')}
 			</span>
-			<span>${themeLabels[normalizedTheme]}</span>
 		`
 	}
 
-	button.addEventListener('click', () => {
+	button.addEventListener('click', event => {
+		const themeButton = event.target.closest?.('[data-theme-icon]')
+		if (!themeButton || !button.contains(themeButton)) return
+
 		const activeTheme = normalizeStoredTheme(document.documentElement.getAttribute('data-theme') || getStoredTheme())
-		const activeIndex = themeSequence.indexOf(activeTheme)
-		const nextTheme = themeSequence[(activeIndex + 1) % themeSequence.length]
+		const nextTheme = themeButton.dataset.themeIcon
+		if (!themeSequence.includes(nextTheme)) return
+		if (nextTheme === activeTheme) return
+
 		setTheme(nextTheme, { fallbackTheme: activeTheme === 'rossmann' ? getStoredBaseTheme() : activeTheme })
 	})
 
@@ -154,6 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	ensureAuthUi()
 	ensurePageStatusStrip()
 	syncCurrentUserFromSession()
+	syncActiveUserPresence()
+	const activeUserPresenceTimerId = window.setInterval(() => {
+		if (document.hidden) return
+		syncActiveUserPresence()
+	}, 10000)
 
 	document.querySelectorAll('#current-year').forEach(element => {
 		element.textContent = new Date().getFullYear()
@@ -161,14 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const themeToggle = createThemeToggle()
 	if (themeToggle) {
-		const dashboardBookmarkSlot = document.querySelector('.dashboard-theme-bookmark-slot')
+		const themeToolsSlot = getOrCreateThemeToolsSlot()
 		const dashboardTopbar = document.querySelector('.dashboard-topbar')
-		if (document.body.classList.contains('dashboard-page') && dashboardTopbar) {
-			if (dashboardBookmarkSlot) {
-				dashboardBookmarkSlot.appendChild(themeToggle)
-			} else {
-				dashboardTopbar.prepend(themeToggle)
-			}
+		if (themeToolsSlot) {
+			themeToolsSlot.appendChild(themeToggle)
+		} else if (document.body.classList.contains('dashboard-page') && dashboardTopbar) {
+			dashboardTopbar.prepend(themeToggle)
 		} else {
 			document.body.appendChild(themeToggle)
 		}
@@ -216,11 +314,28 @@ document.addEventListener('DOMContentLoaded', () => {
 			closeUserPopover()
 			syncCurrentUserFromSession()
 			applyTheme(getStoredTheme())
+			syncActiveUserPresence()
 		}
 
 		if (isThemePreferenceStorageKey(event.key)) {
 			applyTheme(getStoredTheme())
 		}
+	})
+
+	document.addEventListener('app-auth-changed', syncActiveUserPresence)
+
+	document.addEventListener('visibilitychange', () => {
+		if (document.hidden) {
+			clearActiveUserPresence()
+			return
+		}
+
+		syncActiveUserPresence()
+	})
+
+	window.addEventListener('beforeunload', () => {
+		clearActiveUserPresence()
+		window.clearInterval(activeUserPresenceTimerId)
 	})
 })
 /* === Shared Global UI: End === */

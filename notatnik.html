@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notatnik - Czat zespołu - DashboardIT</title>
+    <title>Chat zespołu - DashboardIT</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,11 +32,11 @@
 
             <div class="logo-section">
                 <div class="icon-box notes-icon-box">
-                    <i class="fa-solid fa-book-open"></i>
+                    <i class="fa-solid fa-comments"></i>
                 </div>
 
                 <div>
-                    <h1>Notatnik</h1>
+                    <h1>Chat</h1>
                     <p>Czat operacyjny zespołu z przypiętymi wiadomościami po prawej stronie. <span>Najważniejsze
                             informacje zawsze pod ręką.</span></p>
                 </div>
@@ -45,18 +45,8 @@
 
         <main class="notes-chat-shell">
             <section class="notes-chat-panel" aria-labelledby="notes-chat-title">
-                <div class="notes-chat-hero">
-                    <div>
-                        <span class="notes-kicker">Czat zespołu</span>
-                        <h2 id="notes-chat-title">Wiadomości operacyjne dostępne 24/7</h2>
-                        <p id="notes-chat-summary">Ładowanie wiadomości z serwera...</p>
-                    </div>
-
-                    <button type="button" id="notes-auth-btn" class="notes-auth-btn">
-                        <i class="fa-solid fa-right-to-bracket"></i>
-                        <span>Zaloguj się</span>
-                    </button>
-                </div>
+                <h2 id="notes-chat-title" class="sr-only">Chat zespołu</h2>
+                <p id="notes-chat-summary" class="sr-only">Ładowanie wiadomości z serwera...</p>
 
                 <div id="notes-feedback" class="notes-feedback is-hidden" aria-live="polite"></div>
 
@@ -64,7 +54,15 @@
                     <div>
                         <strong id="notes-auth-title">Zaloguj się, aby korzystać z czatu</strong>
                         <p id="notes-auth-text">Wiadomości są zapisywane na serwerze i widoczne dla zalogowanych użytkowników.</p>
+                        <div id="notes-user-status" class="sr-only">
+                            <strong>Gość</strong>
+                            <p>Zaloguj się, aby zobaczyć chat i pisać wiadomości.</p>
+                        </div>
                     </div>
+                    <button type="button" id="notes-auth-btn" class="notes-auth-btn">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>Zaloguj się</span>
+                    </button>
                 </div>
 
                 <div class="notes-chat-window" id="notes-chat-window">
@@ -84,36 +82,19 @@
                         </button>
                     </div>
                 </form>
+                <div id="notes-active-viewers" class="notes-active-viewers" aria-live="polite" hidden></div>
             </section>
 
             <aside class="notes-pinned-panel" aria-labelledby="notes-pinned-title">
                 <div class="notes-pinned-head">
                     <div>
                         <span class="notes-kicker">Przypięte</span>
-                        <h2 id="notes-pinned-title">Wiadomości na widoku</h2>
+                        <h2 id="notes-pinned-title">Przypięte zadania</h2>
                     </div>
                     <span id="notes-pinned-count" class="notes-pinned-count">0</span>
                 </div>
 
-                <div class="notes-side-card notes-user-card">
-                    <p class="notes-side-kicker">Status konta</p>
-                    <div id="notes-user-status" class="notes-user-status">
-                        <strong>Gość</strong>
-                        <p>Zaloguj się, aby zobaczyć chat i pisać wiadomości.</p>
-                    </div>
-                </div>
-
                 <div id="notes-pinned-list" class="notes-pinned-list" aria-live="polite"></div>
-
-                <article class="notes-side-card">
-                    <p class="notes-side-kicker">Zasady czatu</p>
-                    <ul class="notes-rule-list">
-                        <li>Chat jest po lewej stronie, przypięte wiadomości po prawej.</li>
-                        <li>Wiadomości zapisują się na serwerze i są dostępne dla zalogowanych użytkowników.</li>
-                        <li>Każdy może edytować i usuwać tylko swoje wiadomości.</li>
-                        <li>Każdy zalogowany użytkownik może przypiąć albo odpiąć wiadomość.</li>
-                    </ul>
-                </article>
             </aside>
         </main>
 

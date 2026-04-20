@@ -26,6 +26,7 @@ window.AppUtils = {
 		isCurrentUserAdmin,
 		isCurrentUserLeader,
 		hasPermission,
+		changePassword: changeCurrentUserPassword,
 		updateUserAccess,
 		getRoleLabel,
 		getPermissionLabel,

@@ -1,14 +1,30 @@
 /* === Shared Auth And Session: Start === */
 const AUTH_CONFIG = {
-	minPasswordLength: 4,
+	minPasswordLength: 8,
 	maxAvatarUploadSizeBytes: 10 * 1024 * 1024,
 	avatarOutputSize: 192,
 	avatarOutputQuality: 0.9,
+	coverOutputWidth: 1200,
+	coverOutputHeight: 360,
+	coverOutputQuality: 0.86,
+	defaultProfileAccentColor: '#0f766e',
+	testAdmin: {
+		id: 'user-test-admin',
+		fullName: 'Administrator Testowy',
+		login: 'admin',
+		password: 'admin321',
+	},
 	permissionOptions: [
 		{ id: 'it_support', label: 'Informatyk' },
 		{ id: 'network', label: 'Sieciowiec' },
 		{ id: 'printers', label: 'Drukarkowy' },
 		{ id: 'rooms', label: 'Salkowy' },
+	],
+	accentOptions: ['#0f766e', '#2563eb', '#be123c', '#7c3aed', '#ca8a04'],
+	themeOptions: [
+		{ id: 'light', label: 'Jasny', icon: 'fa-sun' },
+		{ id: 'dark', label: 'Ciemny', icon: 'fa-moon' },
+		{ id: 'rossmann', label: 'Ross', icon: 'fa-store' },
 	],
 	avatarPresets: [
 		{ id: 'violet', label: 'Neutralny', gradient: 'linear-gradient(135deg, #64748b 0%, #94a3b8 100%)' },
@@ -50,6 +66,16 @@ const authState = {
 	profileForm: null,
 	profileNameInput: null,
 	profileLoginInput: null,
+	profileTitleInput: null,
+	profileBioInput: null,
+	profileAccentInput: null,
+	profileCoverPreview: null,
+	profileCoverUploadInput: null,
+	profileCoverBrowseBtn: null,
+	profileCoverResetBtn: null,
+	profileCurrentPasswordInput: null,
+	profileNewPasswordInput: null,
+	profilePasswordRepeatInput: null,
 	profileRoleBadge: null,
 	profileCreatedAtValue: null,
 	profileUpdatedAtValue: null,
@@ -67,6 +93,7 @@ const authState = {
 	selectedProfileAvatarId: AUTH_CONFIG.avatarPresets[0].id,
 	customRegisterAvatarImage: '',
 	customProfileAvatarImage: '',
+	customProfileCoverImage: '',
 }
 
 const systemUiState = {
@@ -112,7 +139,77 @@ const getAvatarPreset = avatarId => AUTH_CONFIG.avatarPresets.find(preset => pre
 
 const normalizeAvatarImage = value => {
 	const normalizedValue = String(value || '').trim()
-	return /^data:image\//i.test(normalizedValue) ? normalizedValue : ''
+	return /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(normalizedValue) ? normalizedValue : ''
+}
+
+const normalizeProfileCoverImage = value => {
+	const normalizedValue = String(value || '').trim()
+	return /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(normalizedValue) ? normalizedValue : ''
+}
+
+const isSupportedProfileImageFile = file =>
+	/^image\/(?:png|jpe?g|webp|gif)$/i.test(String(file?.type || ''))
+
+const normalizeProfileAccentColor = value => {
+	const normalizedValue = String(value || '').trim().toLowerCase()
+	return /^#[0-9a-f]{6}$/.test(normalizedValue) ? normalizedValue : AUTH_CONFIG.defaultProfileAccentColor
+}
+
+const normalizeProfileTitle = value => String(value || '').trim().slice(0, 80)
+
+const normalizeProfileBio = value => String(value || '').trim().slice(0, 240)
+
+const normalizeThemePreference = theme => (AUTH_CONFIG.themeOptions.some(option => option.id === theme) ? theme : 'light')
+
+const getCurrentThemePreference = () =>
+	normalizeThemePreference(preferencesService?.getTheme?.() || document.documentElement.getAttribute('data-theme') || 'light')
+
+const refreshThemeToggleState = theme => {
+	const normalizedTheme = normalizeThemePreference(theme)
+	const themeToggle = document.querySelector('.theme-toggle-btn')
+	if (!themeToggle) return
+
+	const themeSequence = AUTH_CONFIG.themeOptions.map(option => option.id)
+	const activeIndex = themeSequence.indexOf(normalizedTheme)
+	themeToggle.dataset.themeOption = normalizedTheme
+	themeToggle.dataset.nextTheme = themeSequence[(activeIndex + 1) % themeSequence.length] || 'light'
+	themeToggle.querySelectorAll('[data-theme-icon]').forEach(button => {
+		const isActive = button.dataset.themeIcon === normalizedTheme
+		button.classList.toggle('is-active', isActive)
+		button.setAttribute('aria-pressed', String(isActive))
+	})
+}
+
+const applyThemePreference = theme => {
+	const normalizedTheme = normalizeThemePreference(theme)
+	const fallbackTheme = normalizedTheme === 'rossmann'
+		? preferencesService?.getThemeFallback?.() || 'light'
+		: normalizedTheme === 'dark'
+			? 'dark'
+			: 'light'
+
+	preferencesService?.setThemeFallback?.(fallbackTheme)
+	if (preferencesService?.setTheme) {
+		preferencesService.setTheme(normalizedTheme)
+	} else {
+		storageService?.setText?.(APP_CONFIG.PREFERENCE_KEYS.THEME, normalizedTheme)
+	}
+
+	if (typeof applyTheme === 'function') {
+		applyTheme(normalizedTheme)
+	} else {
+		document.body.classList.toggle('theme-dark', normalizedTheme === 'dark')
+		document.body.classList.toggle('theme-rossmann', normalizedTheme === 'rossmann')
+		document.documentElement.setAttribute('data-theme', normalizedTheme)
+	}
+
+	refreshThemeToggleState(normalizedTheme)
+}
+
+const applyCurrentUserAppearance = user => {
+	const accentColor = normalizeProfileAccentColor(user?.profileAccentColor)
+	document.documentElement.style.setProperty('--app-profile-accent', accentColor)
+	document.body?.style?.setProperty('--app-profile-accent', accentColor)
 }
 
 const getInitials = fullName => {
@@ -187,8 +284,14 @@ const mapStoredUser = user => ({
 	permissions: normalizeUserRole(user.role) === 'admin' ? getAllPermissionIds() : normalizeUserPermissions(user.permissions),
 	avatarId: getAvatarPreset(user.avatarId).id,
 	avatarImage: normalizeAvatarImage(user.avatarImage),
+	profileTitle: normalizeProfileTitle(user.profileTitle),
+	profileBio: normalizeProfileBio(user.profileBio),
+	profileAccentColor: normalizeProfileAccentColor(user.profileAccentColor),
+	profileCoverImage: normalizeProfileCoverImage(user.profileCoverImage),
 	createdAt: user.createdAt || new Date().toISOString(),
 	updatedAt: user.updatedAt || user.createdAt || new Date().toISOString(),
+	isDemo: Boolean(user.isDemo),
+	isTestAccount: Boolean(user.isTestAccount),
 })
 
 const sanitizeUser = user => {
@@ -202,8 +305,14 @@ const sanitizeUser = user => {
 		permissions: getEffectiveUserPermissions(user),
 		avatarId: user.avatarId,
 		avatarImage: normalizeAvatarImage(user.avatarImage),
+		profileTitle: normalizeProfileTitle(user.profileTitle),
+		profileBio: normalizeProfileBio(user.profileBio),
+		profileAccentColor: normalizeProfileAccentColor(user.profileAccentColor),
+		profileCoverImage: normalizeProfileCoverImage(user.profileCoverImage),
 		createdAt: user.createdAt,
 		updatedAt: user.updatedAt,
+		isDemo: Boolean(user.isDemo),
+		isTestAccount: Boolean(user.isTestAccount),
 	}
 }
 
@@ -232,6 +341,56 @@ const saveSession = session => {
 }
 
 const findUserByLogin = login => authState.users.find(user => user.login === normalizeUserLogin(login))
+
+const isLocalPasswordMatch = (user, password) => String(user?.passwordHash || '') === encodeLocalPassword(password)
+
+const buildLocalTestAdminAccount = existingUser => {
+	const now = new Date().toISOString()
+	return {
+		...(existingUser || {}),
+		id: existingUser?.id || AUTH_CONFIG.testAdmin.id,
+		fullName: existingUser?.fullName || AUTH_CONFIG.testAdmin.fullName,
+		login: AUTH_CONFIG.testAdmin.login,
+		passwordHash: encodeLocalPassword(AUTH_CONFIG.testAdmin.password),
+		role: 'admin',
+		permissions: getAllPermissionIds(),
+		avatarId: existingUser?.avatarId || 'slate',
+		avatarImage: normalizeAvatarImage(existingUser?.avatarImage),
+		profileTitle: normalizeProfileTitle(existingUser?.profileTitle || 'Administrator systemu'),
+		profileBio: normalizeProfileBio(existingUser?.profileBio || 'Konto testowe do konfiguracji rol i klas uzytkownikow.'),
+		profileAccentColor: normalizeProfileAccentColor(existingUser?.profileAccentColor || '#0f766e'),
+		profileCoverImage: normalizeProfileCoverImage(existingUser?.profileCoverImage),
+		createdAt: existingUser?.createdAt || now,
+		updatedAt: now,
+		isTestAccount: true,
+		isDemo: Boolean(existingUser?.isDemo),
+	}
+}
+
+const ensureLocalTestAdminAccount = () => {
+	if (isRemoteAuthMode()) return
+
+	const adminLogin = AUTH_CONFIG.testAdmin.login
+	const adminIndex = authState.users.findIndex(user => user.login === adminLogin)
+	if (adminIndex === -1) {
+		saveUsers([...authState.users, buildLocalTestAdminAccount(null)])
+		return
+	}
+
+	const currentAdmin = authState.users[adminIndex]
+	const needsUpdate =
+		currentAdmin.role !== 'admin' ||
+		!isLocalPasswordMatch(currentAdmin, AUTH_CONFIG.testAdmin.password) ||
+		getEffectiveUserPermissions(currentAdmin).length !== getAllPermissionIds().length ||
+		!currentAdmin.isTestAccount
+
+	if (!needsUpdate) return
+
+	const updatedUsers = authState.users.map((user, index) =>
+		index === adminIndex ? buildLocalTestAdminAccount(user) : user
+	)
+	saveUsers(updatedUsers)
+}
 
 const renderAuthUi = () => {
 	if (!authState.trigger || !authState.popoverIdentity || !authState.popoverMeta || !authState.popoverActions) return
@@ -274,8 +433,8 @@ const renderAuthUi = () => {
 		? ''
 		: authState.users.length === 0
 			? isRemoteAuthMode()
-				? 'Zaloz pierwsze konto na serwerze. Otrzyma ono role lidera.'
-				: 'Załóż pierwsze konto. Otrzyma ono rolę lidera.'
+				? 'Konto lidera admin / admin321 jest gotowe do testów.'
+				: 'Konto lidera admin / admin321 jest gotowe do testów.'
 			: isRemoteAuthMode()
 				? 'Zaloguj sie lub zaloz nowe konto wspoldzielone na serwerze.'
 				: 'Zaloguj się lub załóż nowe konto lokalne.'
@@ -310,6 +469,7 @@ const renderAuthUi = () => {
 const setCurrentUser = user => {
 	authState.currentUser = user ? sanitizeUser(user) : null
 	document.body.classList.toggle('app-user-logged-in', Boolean(authState.currentUser))
+	applyCurrentUserAppearance(authState.currentUser)
 	renderAuthUi()
 
 	document.dispatchEvent(
@@ -323,6 +483,7 @@ const setCurrentUser = user => {
 
 const syncCurrentUserFromSession = () => {
 	authState.users = loadUsers()
+	ensureLocalTestAdminAccount()
 	authState.session = loadSession()
 
 	if (!authState.session) {
@@ -355,7 +516,7 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 	}
 
 	if (normalizedPassword.length < AUTH_CONFIG.minPasswordLength) {
-		throw new Error(`Hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaki.`)
+		throw new Error(`Hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaków.`)
 	}
 
 	if (isRemoteAuthMode()) {
@@ -368,6 +529,7 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 				password: normalizedPassword,
 				avatarId: getAvatarPreset(avatarId).id,
 				avatarImage: normalizeAvatarImage(avatarImage),
+				profileAccentColor: AUTH_CONFIG.defaultProfileAccentColor,
 			},
 		})
 
@@ -389,6 +551,10 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 		permissions: authState.users.length === 0 ? getAllPermissionIds() : [],
 		avatarId: getAvatarPreset(avatarId).id,
 		avatarImage: normalizeAvatarImage(avatarImage),
+		profileTitle: '',
+		profileBio: '',
+		profileAccentColor: AUTH_CONFIG.defaultProfileAccentColor,
+		profileCoverImage: '',
 		createdAt: now,
 		updatedAt: now,
 	}
@@ -415,7 +581,7 @@ const loginUser = ({ login, password }) => {
 	}
 
 	const matchedUser = findUserByLogin(login)
-	if (!matchedUser || matchedUser.passwordHash !== encodeLocalPassword(password)) {
+	if (!matchedUser || !isLocalPasswordMatch(matchedUser, password)) {
 		throw new Error('Nieprawidłowy login lub hasło.')
 	}
 
@@ -438,7 +604,7 @@ const resetUserPassword = ({ login, password }) => {
 	}
 
 	if (normalizedPassword.length < AUTH_CONFIG.minPasswordLength) {
-		throw new Error(`Hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaki.`)
+		throw new Error(`Hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaków.`)
 	}
 
 	const now = new Date().toISOString()
@@ -482,13 +648,17 @@ const logoutUser = ({ silent = false } = {}) => {
 	}
 }
 
-const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage }) => {
+const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage, profileTitle, profileBio, profileAccentColor, profileCoverImage }) => {
 	if (!authState.currentUser) {
 		throw new Error('Brak zalogowanego użytkownika.')
 	}
 
 	const normalizedName = String(fullName || '').trim()
 	const normalizedLogin = normalizeUserLogin(login)
+	const normalizedProfileTitle = normalizeProfileTitle(profileTitle)
+	const normalizedProfileBio = normalizeProfileBio(profileBio)
+	const normalizedProfileAccentColor = normalizeProfileAccentColor(profileAccentColor)
+	const normalizedProfileCoverImage = normalizeProfileCoverImage(profileCoverImage)
 
 	if (!normalizedName) {
 		throw new Error('Imię i nazwisko nie może być puste.')
@@ -507,6 +677,10 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage }) =>
 				login: normalizedLogin,
 				avatarId: getAvatarPreset(avatarId).id,
 				avatarImage: normalizeAvatarImage(avatarImage),
+				profileTitle: normalizedProfileTitle,
+				profileBio: normalizedProfileBio,
+				profileAccentColor: normalizedProfileAccentColor,
+				profileCoverImage: normalizedProfileCoverImage,
 			},
 		})
 
@@ -532,6 +706,10 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage }) =>
 					permissions: getEffectiveUserPermissions(user),
 					avatarId: getAvatarPreset(avatarId).id,
 					avatarImage: normalizeAvatarImage(avatarImage),
+					profileTitle: normalizedProfileTitle,
+					profileBio: normalizedProfileBio,
+					profileAccentColor: normalizedProfileAccentColor,
+					profileCoverImage: normalizedProfileCoverImage,
 					updatedAt: now,
 				}
 			: user
@@ -541,6 +719,59 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage }) =>
 	const nextCurrentUser = updatedUsers.find(user => user.id === authState.currentUser.id)
 	setCurrentUser(nextCurrentUser)
 	return sanitizeUser(nextCurrentUser)
+}
+
+const changeCurrentUserPassword = ({ currentPassword, newPassword }) => {
+	if (!authState.currentUser) {
+		throw new Error('Brak zalogowanego użytkownika.')
+	}
+
+	const normalizedCurrentPassword = String(currentPassword || '')
+	const normalizedNewPassword = String(newPassword || '')
+
+	if (!normalizedCurrentPassword) {
+		throw new Error('Wpisz aktualne hasło.')
+	}
+
+	if (normalizedNewPassword.length < AUTH_CONFIG.minPasswordLength) {
+		throw new Error(`Nowe hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaków.`)
+	}
+
+	if (isRemoteAuthMode()) {
+		requestRemoteAuth({
+			path: 'password.php',
+			method: 'POST',
+			payload: {
+				currentPassword: normalizedCurrentPassword,
+				newPassword: normalizedNewPassword,
+			},
+		})
+
+		syncCurrentUserFromSession()
+		return true
+	}
+
+	const matchedUser = authState.users.find(user => String(user.id || '') === String(authState.currentUser.id || ''))
+	if (!matchedUser || !isLocalPasswordMatch(matchedUser, normalizedCurrentPassword)) {
+		throw new Error('Aktualne hasło jest nieprawidłowe.')
+	}
+
+	const now = new Date().toISOString()
+	let updatedUser = null
+	const updatedUsers = authState.users.map(user => {
+		if (String(user.id || '') !== String(authState.currentUser.id || '')) return user
+
+		updatedUser = {
+			...user,
+			passwordHash: encodeLocalPassword(normalizedNewPassword),
+			updatedAt: now,
+		}
+		return updatedUser
+	})
+
+	saveUsers(updatedUsers)
+	setCurrentUser(updatedUser)
+	return true
 }
 
 const updateUserAccess = ({ userId, role, permissions } = {}) => {
@@ -880,6 +1111,53 @@ const renderProfileAvatarEditor = () => {
 	if (authState.profileAvatarResetBtn) {
 		authState.profileAvatarResetBtn.hidden = !authState.customProfileAvatarImage
 	}
+
+	renderProfileCoverEditor()
+}
+
+const renderProfileCoverEditor = () => {
+	const accentColor = normalizeProfileAccentColor(authState.profileAccentInput?.value || authState.currentUser?.profileAccentColor)
+	const coverImage = normalizeProfileCoverImage(authState.customProfileCoverImage)
+	const displayName = authState.profileNameInput?.value || authState.currentUser?.fullName || 'Użytkownik'
+	const title = normalizeProfileTitle(authState.profileTitleInput?.value || authState.currentUser?.profileTitle)
+	const bio = normalizeProfileBio(authState.profileBioInput?.value || authState.currentUser?.profileBio)
+
+	if (authState.profileCoverPreview) {
+		authState.profileCoverPreview.style.setProperty('--profile-accent', accentColor)
+		authState.profileCoverPreview.style.setProperty('--profile-cover-image', coverImage ? `url('${escapeHtml(coverImage)}')` : 'none')
+		authState.profileCoverPreview.classList.toggle('has-cover-image', Boolean(coverImage))
+		authState.profileCoverPreview.innerHTML = `
+			<div class="app-profile-cover-visual" aria-hidden="true"></div>
+			<div class="app-profile-cover-content">
+				${createAvatarMarkup({
+					fullName: displayName,
+					avatarId: authState.selectedProfileAvatarId,
+					avatarImage: authState.customProfileAvatarImage,
+					extraClass: 'app-user-avatar-xl',
+				})}
+				<div class="app-profile-cover-copy">
+					<strong>${escapeHtml(displayName)}</strong>
+					<span>${escapeHtml(title || getRoleLabel(authState.currentUser?.role))}</span>
+					<p>${escapeHtml(bio || 'Krótki opis profilu pojawi się tutaj.')}</p>
+				</div>
+			</div>
+		`
+	}
+
+	if (authState.profileCoverResetBtn) {
+		authState.profileCoverResetBtn.hidden = !coverImage
+	}
+}
+
+const syncProfileThemeEditor = () => {
+	if (!authState.profileForm) return
+
+	const currentTheme = getCurrentThemePreference()
+	authState.profileForm.querySelectorAll('[data-profile-theme]').forEach(button => {
+		const isActive = button.dataset.profileTheme === currentTheme
+		button.classList.toggle('is-active', isActive)
+		button.setAttribute('aria-pressed', String(isActive))
+	})
 }
 
 const getManageableUsers = () => {
@@ -917,12 +1195,12 @@ const syncTeamMemberCardState = card => {
 	if (!summary) return
 
 	if (isLeader) {
-		summary.textContent = 'Pełny dostęp do wszystkich specjalizacji i zarządzania kontami.'
+		summary.textContent = 'Pełny dostęp do wszystkich klas i zarządzania kontami.'
 		return
 	}
 
 	const selectedPermissions = permissionInputs.filter(input => input.checked).map(input => input.value)
-	summary.textContent = selectedPermissions.length > 0 ? `Specjalizacje: ${selectedPermissions.map(getPermissionLabel).join(', ')}` : 'Brak nadanych specjalizacji.'
+	summary.textContent = selectedPermissions.length > 0 ? `Klasy: ${selectedPermissions.map(getPermissionLabel).join(', ')}` : 'Brak nadanych klas.'
 }
 
 const renderTeamManagement = () => {
@@ -943,8 +1221,8 @@ const renderTeamManagement = () => {
 				<strong>Brak innych kont do konfiguracji</strong>
 				<p>${
 					isRemoteAuthMode()
-						? 'Gdy kolejne osoby zaloza konto na serwerze, pojawia sie tutaj i bedziesz mogl nadac im role oraz specjalizacje.'
-						: 'Gdy kolejne osoby zaloza konto lokalne, pojawia sie tutaj i bedziesz mogl nadac im role oraz specjalizacje.'
+						? 'Gdy kolejne osoby zaloza konto na serwerze, pojawia sie tutaj i bedziesz mogl nadac im role oraz klasy.'
+						: 'Gdy kolejne osoby zaloza konto lokalne, pojawia sie tutaj i bedziesz mogl nadac im role oraz klasy.'
 				}</p>
 			</div>
 		`
@@ -979,7 +1257,7 @@ const renderTeamManagement = () => {
 						</label>
 					</div>
 					<div class="app-team-member-permissions">
-						<span>Specjalizacje</span>
+						<span>Klasy użytkownika</span>
 						<div class="app-team-permission-grid">
 							${AUTH_CONFIG.permissionOptions
 								.map(
@@ -1001,10 +1279,10 @@ const renderTeamManagement = () => {
 					<div class="app-team-member-footer">
 						<p class="app-team-member-summary" data-team-summary>${
 							isLeaderRole
-								? 'Pełny dostęp do wszystkich specjalizacji i zarządzania kontami.'
+								? 'Pełny dostęp do wszystkich klas i zarządzania kontami.'
 								: permissions.length > 0
-									? `Specjalizacje: ${permissions.map(getPermissionLabel).join(', ')}`
-									: 'Brak nadanych specjalizacji.'
+									? `Klasy: ${permissions.map(getPermissionLabel).join(', ')}`
+									: 'Brak nadanych klas.'
 						}</p>
 						<button type="button" class="app-avatar-upload-btn is-primary app-team-member-save" data-team-save>
 							<i class="fa-solid fa-shield-halved"></i>
@@ -1045,6 +1323,14 @@ const clearCustomAvatar = scope => {
 	renderRegisterAvatarEditor()
 }
 
+const clearCustomProfileCover = () => {
+	authState.customProfileCoverImage = ''
+	if (authState.profileCoverUploadInput) {
+		authState.profileCoverUploadInput.value = ''
+	}
+	renderProfileCoverEditor()
+}
+
 const buildAvatarImageFromFile = file =>
 	new Promise((resolve, reject) => {
 		if (!file) {
@@ -1052,8 +1338,8 @@ const buildAvatarImageFromFile = file =>
 			return
 		}
 
-		if (!String(file.type || '').startsWith('image/')) {
-			reject(new Error('Avatar musi byc plikiem graficznym.'))
+		if (!isSupportedProfileImageFile(file)) {
+			reject(new Error('Avatar musi być plikiem PNG, JPG, WebP albo GIF.'))
 			return
 		}
 
@@ -1108,6 +1394,81 @@ const buildAvatarImageFromFile = file =>
 		reader.readAsDataURL(file)
 	})
 
+const buildCoverImageFromFile = file =>
+	new Promise((resolve, reject) => {
+		if (!file) {
+			reject(new Error('Nie wybrano pliku tła profilu.'))
+			return
+		}
+
+		if (!isSupportedProfileImageFile(file)) {
+			reject(new Error('Tło profilu musi być plikiem PNG, JPG, WebP albo GIF.'))
+			return
+		}
+
+		if (Number(file.size || 0) > AUTH_CONFIG.maxAvatarUploadSizeBytes) {
+			reject(new Error('Wybrany plik jest za duży. Użyj obrazu do 10 MB.'))
+			return
+		}
+
+		const reader = new FileReader()
+		reader.onerror = () => reject(new Error('Nie udało się odczytać pliku tła profilu.'))
+		reader.onload = () => {
+			const image = new Image()
+			image.onerror = () => reject(new Error('Nie udało się przetworzyć obrazu tła profilu.'))
+			image.onload = () => {
+				const targetWidth = AUTH_CONFIG.coverOutputWidth
+				const targetHeight = AUTH_CONFIG.coverOutputHeight
+				const targetRatio = targetWidth / targetHeight
+				const sourceRatio = image.width / image.height
+				let sourceWidth = image.width
+				let sourceHeight = image.height
+				let sourceX = 0
+				let sourceY = 0
+
+				if (sourceRatio > targetRatio) {
+					sourceWidth = Math.floor(image.height * targetRatio)
+					sourceX = Math.floor((image.width - sourceWidth) / 2)
+				} else {
+					sourceHeight = Math.floor(image.width / targetRatio)
+					sourceY = Math.floor((image.height - sourceHeight) / 2)
+				}
+
+				const canvas = document.createElement('canvas')
+				canvas.width = targetWidth
+				canvas.height = targetHeight
+
+				const context = canvas.getContext('2d')
+				if (!context) {
+					reject(new Error('Przeglądarka nie pozwala przygotować tła profilu.'))
+					return
+				}
+
+				context.drawImage(
+					image,
+					sourceX,
+					sourceY,
+					sourceWidth,
+					sourceHeight,
+					0,
+					0,
+					targetWidth,
+					targetHeight
+				)
+
+				try {
+					resolve(canvas.toDataURL('image/jpeg', AUTH_CONFIG.coverOutputQuality))
+				} catch (error) {
+					reject(new Error('Nie udało się zapisać przygotowanego tła profilu.'))
+				}
+			}
+
+			image.src = String(reader.result || '')
+		}
+
+		reader.readAsDataURL(file)
+	})
+
 const handleAvatarFileSelection = async (scope, file) => {
 	const avatarImage = await buildAvatarImageFromFile(file)
 	if (scope === 'profile') {
@@ -1118,6 +1479,11 @@ const handleAvatarFileSelection = async (scope, file) => {
 
 	authState.customRegisterAvatarImage = avatarImage
 	renderRegisterAvatarEditor()
+}
+
+const handleCoverFileSelection = async file => {
+	authState.customProfileCoverImage = await buildCoverImageFromFile(file)
+	renderProfileCoverEditor()
 }
 
 const updateAuthMode = mode => {
@@ -1142,8 +1508,8 @@ const updateAuthMode = mode => {
 	if (authState.authCopy) {
 		authState.authCopy.textContent = isRegister
 			? isRemoteAuthMode()
-				? 'Konto zostanie zapisane na serwerze i bedzie widoczne dla wszystkich uzytkownikow tej aplikacji. Pierwsze konto otrzyma role lidera.'
-				: 'Konto zostanie zapisane lokalnie w tej przeglądarce. Pierwsze konto otrzyma rolę lidera.'
+				? 'Konto zostanie zapisane na serwerze i będzie widoczne dla użytkowników tej aplikacji. Role nadaje lider.'
+				: 'Konto zostanie zapisane lokalnie w tej przeglądarce. Role nadaje lider.'
 			: isReset
 				? 'Podaj login i ustaw nowe hasło dla lokalnego konta w tej przeglądarce.'
 				: isRemoteAuthMode()
@@ -1165,7 +1531,7 @@ const updateAuthMode = mode => {
 
 	authState.authFullNameInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
 	if (authState.authPasswordInput) {
-		authState.authPasswordInput.placeholder = isReset ? 'Wpisz nowe hasło' : 'Minimum 4 znaki'
+		authState.authPasswordInput.placeholder = isReset ? 'Wpisz nowe hasło' : `Minimum ${AUTH_CONFIG.minPasswordLength} znaków`
 		authState.authPasswordInput.autocomplete = isRegister || isReset ? 'new-password' : 'current-password'
 	}
 	authState.authPasswordRepeatInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !(isRegister || isReset))
@@ -1195,8 +1561,16 @@ const populateProfileForm = () => {
 
 	authState.selectedProfileAvatarId = authState.currentUser.avatarId
 	authState.customProfileAvatarImage = normalizeAvatarImage(authState.currentUser.avatarImage)
+	authState.customProfileCoverImage = normalizeProfileCoverImage(authState.currentUser.profileCoverImage)
 	if (authState.profileNameInput) authState.profileNameInput.value = authState.currentUser.fullName || ''
 	if (authState.profileLoginInput) authState.profileLoginInput.value = authState.currentUser.login || ''
+	if (authState.profileTitleInput) authState.profileTitleInput.value = normalizeProfileTitle(authState.currentUser.profileTitle)
+	if (authState.profileBioInput) authState.profileBioInput.value = normalizeProfileBio(authState.currentUser.profileBio)
+	if (authState.profileAccentInput) authState.profileAccentInput.value = normalizeProfileAccentColor(authState.currentUser.profileAccentColor)
+	if (authState.profileCoverUploadInput) authState.profileCoverUploadInput.value = ''
+	if (authState.profileCurrentPasswordInput) authState.profileCurrentPasswordInput.value = ''
+	if (authState.profileNewPasswordInput) authState.profileNewPasswordInput.value = ''
+	if (authState.profilePasswordRepeatInput) authState.profilePasswordRepeatInput.value = ''
 	if (authState.profileRoleBadge) {
 		authState.profileRoleBadge.textContent = getRoleLabel(authState.currentUser.role)
 		authState.profileRoleBadge.classList.toggle('is-admin', authState.currentUser.role === 'admin')
@@ -1216,6 +1590,8 @@ const populateProfileForm = () => {
 
 	renderTeamManagement()
 	renderProfileAvatarEditor()
+	renderProfileCoverEditor()
+	syncProfileThemeEditor()
 }
 
 const openProfileModal = () => {
@@ -1267,7 +1643,7 @@ const ensureAuthUi = () => {
 				</label>
 				<label class="app-auth-field">
 					<span>Hasło</span>
-					<input type="password" id="app-auth-password" placeholder="Minimum 4 znaki" autocomplete="current-password" required>
+					<input type="password" id="app-auth-password" placeholder="Minimum ${AUTH_CONFIG.minPasswordLength} znaków" autocomplete="current-password" required>
 				</label>
 				<label class="app-auth-field is-hidden">
 					<span>Powtórz hasło</span>
@@ -1278,7 +1654,7 @@ const ensureAuthUi = () => {
 					<div class="app-avatar-upload">
 						<div class="app-avatar-upload-preview" id="app-auth-avatar-preview"></div>
 						<div class="app-avatar-upload-actions">
-							<input type="file" id="app-auth-avatar-upload" accept="image/*" hidden>
+							<input type="file" id="app-auth-avatar-upload" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
 							<div class="app-avatar-upload-btn-row">
 								<button type="button" class="app-avatar-upload-btn is-primary" id="app-auth-avatar-browse-btn">
 									<i class="fa-solid fa-image"></i>
@@ -1289,11 +1665,11 @@ const ensureAuthUi = () => {
 									<span>Usuń zdjęcie</span>
 								</button>
 							</div>
-							<small>PNG, JPG lub WebP do 10 MB. Zdjecie zostanie przyciete do kwadratu i przypisane do tego konta.</small>
+							<small>PNG, JPG, WebP lub GIF do 10 MB. Zdjecie zostanie przyciete do kwadratu i przypisane do tego konta.</small>
 						</div>
 					</div>
 				</div>
-				<p class="app-auth-role-hint is-hidden" id="app-auth-role-hint">Pierwsze założone konto otrzyma rolę lidera.</p>
+				<p class="app-auth-role-hint is-hidden" id="app-auth-role-hint">Konto admin / admin321 ma rolę lidera i może nadawać klasy użytkownikom.</p>
 				<div class="app-auth-actions">
 					<button type="submit" class="app-auth-submit">Zaloguj się</button>
 					<button type="button" class="app-auth-switch">Nie masz konta? Zarejestruj się</button>
@@ -1314,9 +1690,10 @@ const ensureAuthUi = () => {
 				<i class="fa-solid fa-xmark"></i>
 			</button>
 			<p class="app-auth-kicker">Twój profil</p>
-			<h2 id="app-profile-title">Dane użytkownika</h2>
-			<p class="app-auth-copy">Tutaj możesz zmienić nazwę, login i zdjęcie profilowe. Dodatkowo widać najważniejsze informacje o koncie.</p>
+			<h2 id="app-profile-title">Panel użytkownika</h2>
+			<p class="app-auth-copy">Ustaw wygląd konta, dane logowania i klasy dostępu dla zespołu.</p>
 			<form class="app-auth-form app-profile-form" novalidate>
+				<section class="app-profile-cover-preview" id="app-profile-cover-preview" aria-label="Podgląd profilu"></section>
 				<div class="app-profile-role-row">
 					<span>Rola</span>
 					<strong class="app-role-badge" id="app-profile-role-badge">Użytkownik</strong>
@@ -1339,44 +1716,141 @@ const ensureAuthUi = () => {
 						<strong id="app-profile-last-login">-</strong>
 					</div>
 				</div>
+				<section class="app-profile-section">
+					<div class="app-profile-section-head">
+						<div>
+							<p class="app-auth-kicker">Tożsamość</p>
+							<h3>Dane publiczne</h3>
+							<p class="app-auth-copy">Nick, opis i podpis będą widoczne przy aktywności użytkownika.</p>
+						</div>
+					</div>
+					<div class="app-profile-field-grid">
+						<label class="app-auth-field">
+							<span>Imię i nazwisko</span>
+							<input type="text" id="app-profile-name" placeholder="Np. Jan Kowalski" autocomplete="name" required>
+						</label>
+						<label class="app-auth-field">
+							<span>Login</span>
+							<input type="text" id="app-profile-login" placeholder="Np. jkowalski" autocomplete="username" required>
+						</label>
+						<label class="app-auth-field">
+							<span>Podpis profilu</span>
+							<input type="text" id="app-profile-headline" placeholder="Np. Specjalista IT" maxlength="80">
+						</label>
+						<label class="app-auth-field app-auth-field-wide">
+							<span>Opis</span>
+							<textarea id="app-profile-bio" rows="3" maxlength="240" placeholder="Kilka słów o roli, obszarze lub dyżurach."></textarea>
+						</label>
+					</div>
+				</section>
+				<section class="app-profile-section">
+					<div class="app-profile-section-head">
+						<div>
+							<p class="app-auth-kicker">Wygląd</p>
+							<h3>Avatar, tło i kolor strony</h3>
+							<p class="app-auth-copy">Profil może mieć własny avatar, baner i kolor akcentu.</p>
+						</div>
+					</div>
+					<div class="app-auth-field">
+						<span>Obrazek w tle</span>
+						<div class="app-avatar-upload app-profile-upload-split">
+							<div class="app-avatar-upload-actions">
+								<input type="file" id="app-profile-cover-upload" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+								<div class="app-avatar-upload-btn-row">
+									<button type="button" class="app-avatar-upload-btn is-primary" id="app-profile-cover-browse-btn">
+										<i class="fa-solid fa-panorama"></i>
+										<span>Wgraj tło</span>
+									</button>
+									<button type="button" class="app-avatar-upload-btn is-secondary" id="app-profile-cover-reset-btn" hidden>
+										<i class="fa-solid fa-trash-can"></i>
+										<span>Usuń tło</span>
+									</button>
+								</div>
+								<small>PNG, JPG, WebP lub GIF do 10 MB. Obraz zostanie przycięty do szerokiego banera.</small>
+							</div>
+						</div>
+					</div>
+					<div class="app-auth-field">
+						<span>Zdjęcie profilowe</span>
+						<div class="app-avatar-upload">
+							<div class="app-avatar-upload-preview" id="app-profile-avatar-preview"></div>
+							<div class="app-avatar-upload-actions">
+								<input type="file" id="app-profile-avatar-upload" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+								<div class="app-avatar-upload-btn-row">
+									<button type="button" class="app-avatar-upload-btn is-primary" id="app-profile-avatar-browse-btn">
+										<i class="fa-solid fa-image"></i>
+										<span>Przeglądaj</span>
+									</button>
+									<button type="button" class="app-avatar-upload-btn is-secondary" id="app-profile-avatar-reset-btn" hidden>
+										<i class="fa-solid fa-trash-can"></i>
+										<span>Usuń zdjęcie</span>
+									</button>
+								</div>
+								<small>PNG, JPG, WebP lub GIF do 10 MB. Zdjęcie zostanie przycięte do kwadratu.</small>
+							</div>
+						</div>
+					</div>
+					<div class="app-profile-appearance-grid">
+						<label class="app-auth-field">
+							<span>Kolor akcentu</span>
+							<input type="color" id="app-profile-accent" value="${AUTH_CONFIG.defaultProfileAccentColor}">
+						</label>
+						<div class="app-profile-accent-swatches" aria-label="Gotowe kolory profilu">
+							${AUTH_CONFIG.accentOptions
+								.map(
+									color => `
+										<button type="button" class="app-profile-accent-swatch" data-profile-accent="${color}" style="--profile-accent: ${color}" aria-label="Ustaw kolor ${color}"></button>
+									`
+								)
+								.join('')}
+						</div>
+					</div>
+					<div class="app-profile-theme-picker" role="group" aria-label="Kolor strony">
+						${AUTH_CONFIG.themeOptions
+							.map(
+								option => `
+									<button type="button" class="app-profile-theme-btn" data-profile-theme="${option.id}" aria-pressed="false">
+										<i class="fa-solid ${option.icon}"></i>
+										<span>${option.label}</span>
+									</button>
+								`
+							)
+							.join('')}
+					</div>
+				</section>
+				<section class="app-profile-section">
+					<div class="app-profile-section-head">
+						<div>
+							<p class="app-auth-kicker">Bezpieczeństwo</p>
+							<h3>Zmiana hasła</h3>
+							<p class="app-auth-copy">Zostaw pola puste, jeśli hasło ma zostać bez zmian.</p>
+						</div>
+					</div>
+					<div class="app-profile-field-grid">
+						<label class="app-auth-field">
+							<span>Aktualne hasło</span>
+							<input type="password" id="app-profile-current-password" autocomplete="current-password" placeholder="Wpisz obecne hasło">
+						</label>
+						<label class="app-auth-field">
+							<span>Nowe hasło</span>
+							<input type="password" id="app-profile-new-password" autocomplete="new-password" placeholder="Minimum ${AUTH_CONFIG.minPasswordLength} znaków">
+						</label>
+						<label class="app-auth-field">
+							<span>Powtórz nowe hasło</span>
+							<input type="password" id="app-profile-password-repeat" autocomplete="new-password" placeholder="Powtórz nowe hasło">
+						</label>
+					</div>
+				</section>
 				<section class="app-profile-team-section is-hidden" id="app-profile-team-section">
 					<div class="app-profile-team-head">
 						<div>
-							<p class="app-auth-kicker">Zespół i uprawnienia</p>
-							<h3>Konfiguracja dostępów</h3>
-							<p class="app-auth-copy">Lider może nadawać role oraz specjalizacje pozostałym zarejestrowanym osobom.</p>
+							<p class="app-auth-kicker">Zespół i klasy</p>
+							<h3>Role użytkowników</h3>
+							<p class="app-auth-copy">Lider może nadawać role oraz klasy takie jak drukarkowy lub sieciowy.</p>
 						</div>
 					</div>
 					<div class="app-profile-team-list" id="app-profile-team-list"></div>
 				</section>
-				<label class="app-auth-field">
-					<span>Imię i nazwisko</span>
-					<input type="text" id="app-profile-name" placeholder="Np. Jan Kowalski" autocomplete="name" required>
-				</label>
-				<label class="app-auth-field">
-					<span>Login</span>
-					<input type="text" id="app-profile-login" placeholder="Np. jkowalski" autocomplete="username" required>
-				</label>
-				<div class="app-auth-field">
-					<span>Zdjęcie profilowe</span>
-					<div class="app-avatar-upload">
-						<div class="app-avatar-upload-preview" id="app-profile-avatar-preview"></div>
-						<div class="app-avatar-upload-actions">
-							<input type="file" id="app-profile-avatar-upload" accept="image/*" hidden>
-							<div class="app-avatar-upload-btn-row">
-								<button type="button" class="app-avatar-upload-btn is-primary" id="app-profile-avatar-browse-btn">
-									<i class="fa-solid fa-image"></i>
-									<span>Przeglądaj</span>
-								</button>
-								<button type="button" class="app-avatar-upload-btn is-secondary" id="app-profile-avatar-reset-btn" hidden>
-									<i class="fa-solid fa-trash-can"></i>
-									<span>Usuń zdjęcie</span>
-								</button>
-							</div>
-							<small>PNG, JPG lub WebP do 10 MB. Zdjecie zostanie przyciete do kwadratu i przypisane do tego konta.</small>
-						</div>
-					</div>
-				</div>
 				<div class="app-auth-actions">
 					<button type="submit" class="app-auth-submit">Zapisz zmiany</button>
 					<button type="button" class="app-auth-switch app-auth-switch-danger" id="app-profile-logout-btn">Wyloguj</button>
@@ -1415,6 +1889,16 @@ const ensureAuthUi = () => {
 	authState.profileForm = profileModal.querySelector('.app-profile-form')
 	authState.profileNameInput = profileModal.querySelector('#app-profile-name')
 	authState.profileLoginInput = profileModal.querySelector('#app-profile-login')
+	authState.profileTitleInput = profileModal.querySelector('#app-profile-headline')
+	authState.profileBioInput = profileModal.querySelector('#app-profile-bio')
+	authState.profileAccentInput = profileModal.querySelector('#app-profile-accent')
+	authState.profileCoverPreview = profileModal.querySelector('#app-profile-cover-preview')
+	authState.profileCoverUploadInput = profileModal.querySelector('#app-profile-cover-upload')
+	authState.profileCoverBrowseBtn = profileModal.querySelector('#app-profile-cover-browse-btn')
+	authState.profileCoverResetBtn = profileModal.querySelector('#app-profile-cover-reset-btn')
+	authState.profileCurrentPasswordInput = profileModal.querySelector('#app-profile-current-password')
+	authState.profileNewPasswordInput = profileModal.querySelector('#app-profile-new-password')
+	authState.profilePasswordRepeatInput = profileModal.querySelector('#app-profile-password-repeat')
 	authState.profileRoleBadge = profileModal.querySelector('#app-profile-role-badge')
 	authState.profileCreatedAtValue = profileModal.querySelector('#app-profile-created-at')
 	authState.profileUpdatedAtValue = profileModal.querySelector('#app-profile-updated-at')
@@ -1496,7 +1980,7 @@ const ensureAuthUi = () => {
 			notify({
 				type: 'success',
 				title: 'Uprawnienia zapisane',
-				message: 'Rola i specjalizacje tego konta zostały zaktualizowane.',
+				message: 'Rola i klasy tego konta zostały zaktualizowane.',
 			})
 		} catch (error) {
 			notify({
@@ -1509,9 +1993,11 @@ const ensureAuthUi = () => {
 
 	authState.authAvatarBrowseBtn?.addEventListener('click', () => authState.authAvatarUploadInput?.click())
 	authState.profileAvatarBrowseBtn?.addEventListener('click', () => authState.profileAvatarUploadInput?.click())
+	authState.profileCoverBrowseBtn?.addEventListener('click', () => authState.profileCoverUploadInput?.click())
 
 	authState.authAvatarResetBtn?.addEventListener('click', () => clearCustomAvatar('register'))
 	authState.profileAvatarResetBtn?.addEventListener('click', () => clearCustomAvatar('profile'))
+	authState.profileCoverResetBtn?.addEventListener('click', clearCustomProfileCover)
 
 	authState.authAvatarUploadInput?.addEventListener('change', async event => {
 		const file = event.target.files?.[0]
@@ -1543,10 +2029,44 @@ const ensureAuthUi = () => {
 		}
 	})
 
+	authState.profileCoverUploadInput?.addEventListener('change', async event => {
+		const file = event.target.files?.[0]
+		if (!file) return
+
+		try {
+			await handleCoverFileSelection(file)
+		} catch (error) {
+			notify({
+				type: 'error',
+				title: 'Tło nie zostało wgrane',
+				message: error.message || 'Nie udało się przygotować tła profilu.',
+			})
+		}
+	})
+
 	authState.authFullNameInput?.addEventListener('input', renderRegisterAvatarEditor)
 	authState.authLoginInput?.addEventListener('input', renderRegisterAvatarEditor)
 	authState.profileNameInput?.addEventListener('input', renderProfileAvatarEditor)
 	authState.profileLoginInput?.addEventListener('input', renderProfileAvatarEditor)
+	authState.profileTitleInput?.addEventListener('input', renderProfileCoverEditor)
+	authState.profileBioInput?.addEventListener('input', renderProfileCoverEditor)
+	authState.profileAccentInput?.addEventListener('input', renderProfileCoverEditor)
+
+	authState.profileForm?.addEventListener('click', event => {
+		const themeButton = getEventTargetElement(event.target)?.closest('[data-profile-theme]')
+		if (themeButton && authState.profileForm?.contains(themeButton)) {
+			applyThemePreference(themeButton.dataset.profileTheme)
+			syncProfileThemeEditor()
+			return
+		}
+
+		const accentButton = getEventTargetElement(event.target)?.closest('[data-profile-accent]')
+		if (accentButton && authState.profileForm?.contains(accentButton)) {
+			const accentColor = normalizeProfileAccentColor(accentButton.dataset.profileAccent)
+			if (authState.profileAccentInput) authState.profileAccentInput.value = accentColor
+			renderProfileCoverEditor()
+		}
+	})
 
 	authState.authForm?.addEventListener('submit', event => {
 		event.preventDefault()
@@ -1620,18 +2140,40 @@ const ensureAuthUi = () => {
 		event.preventDefault()
 
 		try {
+			const currentPassword = authState.profileCurrentPasswordInput?.value || ''
+			const newPassword = authState.profileNewPasswordInput?.value || ''
+			const repeatedPassword = authState.profilePasswordRepeatInput?.value || ''
+			const shouldChangePassword = Boolean(currentPassword || newPassword || repeatedPassword)
+
+			if (shouldChangePassword && newPassword !== repeatedPassword) {
+				throw new Error('Nowe hasła muszą być identyczne.')
+			}
+
 			updateCurrentUserProfile({
 				fullName: authState.profileNameInput?.value || '',
 				login: authState.profileLoginInput?.value || '',
 				avatarId: authState.selectedProfileAvatarId,
 				avatarImage: authState.customProfileAvatarImage,
+				profileTitle: authState.profileTitleInput?.value || '',
+				profileBio: authState.profileBioInput?.value || '',
+				profileAccentColor: authState.profileAccentInput?.value || AUTH_CONFIG.defaultProfileAccentColor,
+				profileCoverImage: authState.customProfileCoverImage,
 			})
+
+			if (shouldChangePassword) {
+				changeCurrentUserPassword({
+					currentPassword,
+					newPassword,
+				})
+			}
 
 			closeModal(profileModal)
 			notify({
 				type: 'success',
 				title: 'Profil zaktualizowany',
-				message: 'Zmiany profilu zostały zapisane i są widoczne we wszystkich modułach.',
+				message: shouldChangePassword
+					? 'Zmiany profilu i nowe hasło zostały zapisane.'
+					: 'Zmiany profilu zostały zapisane i są widoczne we wszystkich modułach.',
 			})
 		} catch (error) {
 			notify({
@@ -1695,6 +2237,7 @@ appServices.authService = {
 	resetPassword: resetUserPassword,
 	logout: logoutUser,
 	updateProfile: updateCurrentUserProfile,
+	changePassword: changeCurrentUserPassword,
 	updateUserAccess,
 	getCurrentUser,
 	isAuthenticated,

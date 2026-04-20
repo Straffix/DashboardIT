@@ -22,7 +22,7 @@ try {
 
 	$updatedUser = null;
 	dashboard_update_json_file(dashboard_users_path(), [], function ($users) use (&$updatedUser, $userId, $role, $permissions) {
-		$users = is_array($users) ? array_values(array_filter($users, static fn ($user): bool => is_array($user))) : [];
+		$users = dashboard_normalize_users_array($users);
 
 		foreach ($users as $index => $user) {
 			if ((string) ($user['id'] ?? '') !== $userId) {

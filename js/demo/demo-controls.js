@@ -96,16 +96,12 @@
 	}
 
 	const getDemoButtonHost = () =>
+		document.querySelector('.app-theme-tools-slot') ||
 		document.querySelector('.dashboard-theme-bookmark-slot') ||
 		document.querySelector('.dashboard-topbar') ||
 		document.body
 
 	const ensureDemoButton = () => {
-		if (!document.body?.classList.contains('dashboard-page')) {
-			document.getElementById('dashboard-demo-toggle-btn')?.remove()
-			return null
-		}
-
 		const existingButton = document.getElementById('dashboard-demo-toggle-btn')
 		const host = getDemoButtonHost()
 
@@ -309,9 +305,9 @@
 
 			if (!isSeeded) {
 				const shouldSeed = await confirmAction({
-					title: 'Wgrac przykladowe dane?',
+					title: 'Wgrać przykładowe dane?',
 					message: isRemoteMode()
-						? 'To doda lub odswiezy tylko rekordy oznaczone jako demo. Prawdziwe konta i normalne wpisy pozostana bez zmian.'
+						? 'To doda lub odswieży tylko rekordy oznaczone jako demo. Prawdziwe konta i normalne wpisy pozostana bez zmian.'
 						: 'To nadpisze lokalne dane testowe w tabelach, notatkach, obiadach, zakladkach i koncie uzytkownika.',
 					confirmLabel: 'Wgraj dane',
 					cancelLabel: 'Anuluj',
@@ -339,8 +335,8 @@
 					setBusyState(false)
 					window.AppUtils?.notify?.({
 						type: 'error',
-						title: 'Blad danych demo',
-						message: error?.message || 'Nie udalo sie zapisac danych demo.',
+						title: 'Bład danych demo',
+						message: error?.message || 'Nie udało sie zapisać danych demo.',
 					})
 				}
 
@@ -350,7 +346,7 @@
 			const shouldClear = await confirmAction({
 				title: 'Usunac przykladowe dane?',
 				message: isRemoteMode()
-					? 'To usunie tylko rekordy i konta oznaczone jako demo. Prawdziwi uzytkownicy oraz normalne wpisy zostana nienaruszone.'
+					? 'To usunie tylko rekordy i konta oznaczone jako demo. Prawdziwi użytkownicy oraz normalne wpisy zostana nienaruszone.'
 					: 'To wyczysci lokalne dane testowe ze wszystkich modulow oraz konto demo zapisane w tej przegladarce.',
 				confirmLabel: 'Usun dane',
 				cancelLabel: 'Anuluj',

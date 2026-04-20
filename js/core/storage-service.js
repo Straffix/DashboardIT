@@ -33,8 +33,10 @@
 		STORAGE_KEYS.MONITOR,
 		STORAGE_KEYS.EXCHANGES,
 		STORAGE_KEYS.BOOKMARKS,
+		STORAGE_KEYS.DASHBOARD_ACTIVE_USERS,
 		STORAGE_KEYS.LUNCH,
 		STORAGE_KEYS.NOTES,
+		STORAGE_KEYS.NOTES_ACTIVE_VIEWERS,
 		STORAGE_KEYS.ANNOUNCEMENTS,
 		STORAGE_KEYS.TASKS,
 		STORAGE_KEYS.TESTER_FEEDBACK,
@@ -49,6 +51,10 @@
 		PREFERENCE_KEYS.DASHBOARD_TASK_AUTOCLEAR,
 	])
 	const PROTECTED_WRITE_KEY_PREFIXES = [DASHBOARD_MENU_ORDER_USER_KEY_PREFIX]
+	const PUBLIC_WRITE_KEYS = new Set([
+		STORAGE_KEYS.DASHBOARD_ACTIVE_USERS,
+		STORAGE_KEYS.NOTES_ACTIVE_VIEWERS,
+	])
 
 	let remoteEnabledCache = null
 	let remoteHealthChecked = false
@@ -210,6 +216,8 @@
 		remoteApi.isRemoteEnabled() && !remoteStorageFallbackActive && REMOTE_SHARED_KEYS.has(String(key || ''))
 	const isProtectedWriteKey = key => {
 		const normalizedKey = String(key || '')
+		if (PUBLIC_WRITE_KEYS.has(normalizedKey)) return false
+
 		return (
 			PROTECTED_WRITE_KEYS.has(normalizedKey) ||
 			PROTECTED_WRITE_KEY_PREFIXES.some(prefix => normalizedKey.startsWith(prefix))

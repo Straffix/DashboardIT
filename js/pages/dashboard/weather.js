@@ -4,6 +4,7 @@
 
 	const weatherConfig = {
 		storageKey: preferenceKeys.WEATHER_LOCATION,
+		currentLocationStorageKey: `${preferenceKeys.WEATHER_LOCATION}-current`,
 		fallbackName: 'Warszawa',
 		geoapifyApiKeyMetaName: 'geoapify-api-key',
 		requestTimeoutMs: 6500,
@@ -109,10 +110,22 @@
 				address.state,
 				address.country,
 			]).find(part => part !== primaryLabel) || ''
+		const searchLabel =
+			getUniqueLocationParts([
+				address.city,
+				address.town,
+				address.village,
+				address.municipality,
+				address.county,
+				address.state,
+				address.country,
+			])[0] ||
+			primaryLabel ||
+			'Aktualna lokalizacja'
 
 		return {
 			displayLabel: getUniqueLocationParts([primaryLabel, contextLabel]).join(', ') || 'Aktualna lokalizacja',
-			searchLabel: primaryLabel,
+			searchLabel,
 		}
 	}
 
@@ -210,10 +223,22 @@
 
 		const contextLabel =
 			getUniqueLocationParts([properties.county, properties.state, properties.country]).find(part => part !== primaryLabel) || ''
+		const searchLabel =
+			getUniqueLocationParts([
+				properties.city,
+				properties.town,
+				properties.village,
+				properties.municipality,
+				properties.county,
+				properties.state,
+				properties.country,
+			])[0] ||
+			primaryLabel ||
+			'Aktualna lokalizacja'
 
 		return {
 			displayLabel: getUniqueLocationParts([primaryLabel, contextLabel]).join(', ') || 'Aktualna lokalizacja',
-			searchLabel: primaryLabel,
+			searchLabel,
 		}
 	}
 
@@ -249,6 +274,53 @@
 
 		const formatHourLabel = hour => `${String(hour).padStart(2, '0')}:00`
 		const forecastDayLabels = ['Dzis', 'Jutro', 'Pojutrze']
+		const parseStoredCurrentLocation = value => {
+			if (!value || typeof value !== 'object') return null
+
+			const latitude = Number(value.latitude)
+			const longitude = Number(value.longitude)
+			if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
+			if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null
+
+			const displayLabel = String(value.displayLabel || value.searchLabel || 'Aktualna lokalizacja').trim()
+			const searchLabel = String(value.searchLabel || displayLabel || 'Aktualna lokalizacja').trim()
+
+			return {
+				latitude,
+				longitude,
+				displayLabel: displayLabel || 'Aktualna lokalizacja',
+				searchLabel: searchLabel || 'Aktualna lokalizacja',
+				savedAt: value.savedAt || '',
+			}
+		}
+		const getStoredCurrentLocation = () => {
+			const storedValue = storageService?.readJson?.(weatherConfig.currentLocationStorageKey, null)
+			return parseStoredCurrentLocation(storedValue)
+		}
+		const saveCurrentLocation = locationDetails => {
+			const normalizedLocation = parseStoredCurrentLocation(locationDetails)
+			if (!normalizedLocation) return
+
+			storageService?.writeJson?.(weatherConfig.currentLocationStorageKey, {
+				...normalizedLocation,
+				savedAt: new Date().toISOString(),
+			})
+		}
+		const clearStoredCurrentLocation = () => {
+			storageService?.remove?.(weatherConfig.currentLocationStorageKey)
+		}
+		const isStoredCurrentLocationLabel = (locationName, storedLocation) => {
+			if (!storedLocation) return false
+
+			const normalizedLocationName = normalizeSearchValue(locationName)
+			if (!normalizedLocationName) return false
+
+			return [
+				storedLocation.displayLabel,
+				storedLocation.searchLabel,
+				'Aktualna lokalizacja',
+			].some(label => normalizeSearchValue(label) === normalizedLocationName)
+		}
 		const isPointInsideElement = (element, clientX, clientY) => {
 			if (!element) return false
 
@@ -686,15 +758,20 @@
 			}
 		}
 
-		const fetchWeatherForLocation = async locationName => {
-			const trimmedLocation = locationName.trim()
+		const fetchWeatherForLocation = async (locationName, { clearCurrentLocation = true } = {}) => {
+			const trimmedLocation = String(locationName || '').trim()
 			if (!trimmedLocation) return
+			const storedCurrentLocation = getStoredCurrentLocation()
+			const matchesStoredCurrentLocation = isStoredCurrentLocationLabel(trimmedLocation, storedCurrentLocation)
+			if (clearCurrentLocation && !matchesStoredCurrentLocation) {
+				clearStoredCurrentLocation()
+			}
 
 			setWeatherState({
 				temperature: '-- C',
 				location: trimmedLocation,
 				description: 'Szukanie lokalizacji...',
-				wind: 'Prosze czekac',
+				wind: 'Proszę czekać',
 				icon: 'fa-cloud-sun',
 			})
 			latestForecastData = null
@@ -717,6 +794,11 @@
 			} catch (error) {
 				const fallbackReason =
 					String(error?.name || '').toLowerCase() === 'aborterror' ? 'Brak odpowiedzi z API pogody' : 'Nie znaleziono lokalizacji'
+				if (matchesStoredCurrentLocation) {
+					await fetchWeather(storedCurrentLocation.latitude, storedCurrentLocation.longitude, storedCurrentLocation.displayLabel)
+					return
+				}
+
 				setOfflineWeatherState(trimmedLocation, fallbackReason)
 			}
 		}
@@ -898,8 +980,8 @@
 			setWeatherState({
 				temperature: '-- C',
 				location: 'Aktualna lokalizacja',
-				description: 'Pobieram pozycje...',
-				wind: 'Prosze czekac',
+				description: 'Pobieram pozycję...',
+				wind: 'Proszę czekać',
 				icon: 'fa-location-crosshairs',
 			})
 			latestForecastData = null
@@ -911,12 +993,18 @@
 				const latitude = position.coords.latitude
 				const longitude = position.coords.longitude
 				const locationDetails = await resolveCurrentLocationName(latitude, longitude)
+				saveCurrentLocation({
+					latitude,
+					longitude,
+					displayLabel: locationDetails.displayLabel,
+					searchLabel: locationDetails.searchLabel,
+				})
 
-				fetchWeather(latitude, longitude, locationDetails.displayLabel)
 				if (weatherLocationInput) {
 					weatherLocationInput.value = locationDetails.searchLabel
 				}
 				preferencesService?.setWeatherLocation?.(locationDetails.searchLabel) || storageService?.setText?.(weatherConfig.storageKey, locationDetails.searchLabel)
+				await fetchWeather(latitude, longitude, locationDetails.displayLabel)
 			} catch (error) {
 				const geolocationErrors = {
 					1: {
@@ -1016,7 +1104,12 @@
 			resetSelectedForecast()
 			enableWorkdayTrackDrag()
 
-			fetchWeatherForLocation(savedLocation)
+			const storedCurrentLocation = getStoredCurrentLocation()
+			if (isStoredCurrentLocationLabel(savedLocation, storedCurrentLocation)) {
+				fetchWeather(storedCurrentLocation.latitude, storedCurrentLocation.longitude, storedCurrentLocation.displayLabel)
+			} else {
+				fetchWeatherForLocation(savedLocation, { clearCurrentLocation: false })
+			}
 
 			if (weatherSearchForm && weatherLocationInput) {
 				weatherSearchForm.addEventListener('pointerdown', event => {

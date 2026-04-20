@@ -9,7 +9,9 @@
 
 	const STORAGE_KEYS = window.AppUtils?.config?.STORAGE_KEYS || {
 		LUNCH: 'dashboard_lunch_reservations',
+		DASHBOARD_ACTIVE_USERS: 'dashboard_active_users',
 		NOTES: 'dashboard_notes_entries',
+		NOTES_ACTIVE_VIEWERS: 'dashboard_notes_active_viewers',
 		ANNOUNCEMENTS: 'dashboard_notes_announcements',
 		TASKS: 'dashboard_notes_tasks',
 		TESTER_FEEDBACK: 'dashboard_testers_feedback',

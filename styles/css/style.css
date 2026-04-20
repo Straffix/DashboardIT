@@ -269,6 +269,56 @@ body.theme-rossmann .theme-toggle-btn {
   color: #8f0024;
 }
 
+.dashboard-demo-ribbon {
+  position: fixed;
+  right: -72px;
+  bottom: 36px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 300px;
+  min-height: 42px;
+  padding: 0 26px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.96), rgba(14, 165, 233, 0.92));
+  box-shadow: 0 16px 34px rgba(79, 70, 229, 0.22);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  transform: rotate(-45deg);
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.dashboard-demo-ribbon[hidden] {
+  display: none;
+}
+
+.dashboard-demo-ribbon span {
+  display: block;
+  text-shadow: 0 1px 8px rgba(15, 23, 42, 0.18);
+}
+
+body.theme-dark .dashboard-demo-ribbon {
+  border-color: rgba(210, 156, 255, 0.28);
+  background: linear-gradient(135deg, rgba(72, 43, 132, 0.96), rgba(159, 86, 255, 0.9));
+  box-shadow: 0 16px 34px rgba(39, 31, 68, 0.34);
+  color: #fff7ed;
+}
+
+body.theme-rossmann .dashboard-demo-ribbon {
+  border-color: rgba(195, 0, 45, 0.22);
+  background: linear-gradient(135deg, rgba(195, 0, 45, 0.96), rgba(255, 122, 0, 0.88));
+  box-shadow: 0 16px 34px rgba(195, 0, 45, 0.18);
+  color: #fff;
+}
+
 .wrapper {
   width: min(1280px, 100% - 48px);
   margin-inline: auto;
@@ -863,8 +913,10 @@ body:not(.dashboard-page) .app-user-avatar-lg {
   top: calc(100% + 12px);
   right: 0;
   z-index: 41;
-  width: min(320px, 100vw - 32px);
-  padding: 18px;
+  width: max-content;
+  min-width: min(260px, 100vw - 32px);
+  max-width: calc(100vw - 32px);
+  padding: 16px;
   border: 1px solid var(--border);
   border-radius: 22px;
   background: var(--bg-surface-strong);
@@ -978,7 +1030,7 @@ body:not(.dashboard-page) .app-user-avatar-lg {
 }
 
 .app-profile-card {
-  width: min(760px, 100vw - 32px);
+  width: min(940px, 100vw - 32px);
 }
 
 .app-auth-close {
@@ -1032,7 +1084,9 @@ body:not(.dashboard-page) .app-user-avatar-lg {
   font-size: 1.16rem;
   font-weight: 600;
 }
-.app-auth-field input {
+.app-auth-field input,
+.app-auth-field textarea,
+.app-auth-field select {
   width: 100%;
   min-height: 48px;
   padding: 12px 14px;
@@ -1041,11 +1095,19 @@ body:not(.dashboard-page) .app-user-avatar-lg {
   background: var(--bg-panel);
   color: var(--text-main);
   font-size: 1.18rem;
+  font-family: inherit;
 }
-.app-auth-field input:focus {
+.app-auth-field input:focus,
+.app-auth-field textarea:focus,
+.app-auth-field select:focus {
   outline: none;
   border-color: var(--border-strong);
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
+.app-auth-field textarea {
+  min-height: 98px;
+  resize: vertical;
+  line-height: 1.5;
 }
 
 .app-auth-role-hint {
@@ -1177,6 +1239,64 @@ body:not(.dashboard-page) .app-user-avatar-lg {
   color: #b91c1c;
 }
 
+.app-profile-cover-preview {
+  position: relative;
+  display: grid;
+  align-items: end;
+  min-height: 210px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--profile-accent, var(--app-profile-accent, #0f766e)) 22%, transparent) 0%, transparent 52%), var(--bg-panel);
+}
+
+.app-profile-cover-visual {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--profile-accent, var(--app-profile-accent, #0f766e)) 74%, #111827) 0%, rgba(15, 23, 42, 0.72) 100%), var(--profile-cover-image, none);
+  background-position: center;
+  background-size: cover;
+  opacity: 0.98;
+}
+
+.app-profile-cover-preview.has-cover-image .app-profile-cover-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.74) 0%, rgba(15, 23, 42, 0.2) 100%);
+}
+
+.app-profile-cover-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: end;
+  gap: 16px;
+  padding: 24px;
+  color: #ffffff;
+}
+
+.app-profile-cover-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.app-profile-cover-copy strong {
+  font-size: 1.62rem;
+  line-height: 1.1;
+}
+.app-profile-cover-copy span {
+  font-size: 1.04rem;
+  font-weight: 700;
+  opacity: 0.86;
+}
+.app-profile-cover-copy p {
+  max-width: 62ch;
+  font-size: 1rem;
+  line-height: 1.45;
+  opacity: 0.82;
+}
+
 .app-profile-role-row {
   display: flex;
   align-items: center;
@@ -1188,6 +1308,103 @@ body:not(.dashboard-page) .app-user-avatar-lg {
   background: var(--bg-panel);
   font-size: 1.14rem;
   font-weight: 600;
+}
+
+.app-profile-section {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-surface-strong);
+}
+
+.app-profile-section-head h3 {
+  font-size: 1.34rem;
+}
+.app-profile-section-head .app-auth-kicker {
+  margin-bottom: 8px;
+}
+.app-profile-section-head .app-auth-copy {
+  font-size: 1rem;
+}
+
+.app-profile-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.app-auth-field-wide {
+  grid-column: 1/-1;
+}
+
+.app-profile-upload-split {
+  padding: 14px;
+}
+
+.app-profile-appearance-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 180px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: end;
+}
+
+.app-profile-accent-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 2px;
+}
+
+.app-profile-accent-swatch {
+  width: 44px;
+  height: 44px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  background: var(--profile-accent);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.app-profile-accent-swatch:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(15, 23, 42, 0.16);
+}
+
+.app-profile-theme-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.app-profile-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-panel);
+  color: var(--text-main);
+  font-size: 1.04rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+.app-profile-theme-btn i {
+  color: var(--app-profile-accent, var(--primary));
+}
+.app-profile-theme-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+}
+.app-profile-theme-btn.is-active {
+  border-color: color-mix(in srgb, var(--app-profile-accent, var(--primary)) 42%, transparent);
+  background: color-mix(in srgb, var(--app-profile-accent, var(--primary)) 12%, var(--bg-panel));
+  color: var(--text-main);
 }
 
 .app-profile-meta-grid {
@@ -1383,10 +1600,13 @@ body.theme-dark .app-avatar-upload {
   border-color: rgba(128, 103, 224, 0.18);
 }
 body.theme-dark .app-profile-team-section,
+body.theme-dark .app-profile-section,
+body.theme-dark .app-profile-cover-preview,
 body.theme-dark .app-team-empty,
 body.theme-dark .app-team-member-card,
 body.theme-dark .app-team-member-control select,
-body.theme-dark .app-team-permission-chip {
+body.theme-dark .app-team-permission-chip,
+body.theme-dark .app-profile-theme-btn {
   border-color: rgba(128, 103, 224, 0.18);
 }
 body.theme-dark .app-auth-modal-backdrop {
@@ -1524,6 +1744,16 @@ body.theme-dark:not(.dashboard-page) .app-user-avatar-lg {
     grid-template-columns: 1fr;
   }
   .app-profile-meta-grid {
+    grid-template-columns: 1fr;
+  }
+  .app-profile-cover-content {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 20px;
+  }
+  .app-profile-field-grid,
+  .app-profile-appearance-grid,
+  .app-profile-theme-picker {
     grid-template-columns: 1fr;
   }
   .app-team-member-head {
@@ -2592,6 +2822,14 @@ body:not(.dashboard-page) .fullscreen-btn {
     top: auto;
     min-height: 40px;
     padding: 0 14px;
+  }
+  .dashboard-demo-ribbon {
+    right: -68px;
+    bottom: 30px;
+    width: 280px;
+    min-height: 38px;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
   }
   .fullscreen-btn {
     top: 14px;
