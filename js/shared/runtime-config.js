@@ -1,0 +1,6 @@
+// Set storageMode to 'local' when the hosting does not provide a working PHP/MySQL backend.
+window.DashboardRuntimeConfig = {
+	storageMode: 'auto',
+	fallbackToLocalOnRemoteError: true,
+	...(window.DashboardRuntimeConfig || {}),
+}

@@ -12,12 +12,12 @@ try {
 		'mode' => $backend['mode'],
 		'database' => $backend['database'],
 		'table' => $backend['table'],
-		'version' => 2,
+		'version' => 3,
 	]);
 } catch (Throwable $error) {
 	dashboard_json_response([
 		'ok' => false,
 		'message' => 'Nie udalo sie polaczyc z baza danych dashboardu.',
-		'version' => 2,
+		'version' => 3,
 	], 500);
 }

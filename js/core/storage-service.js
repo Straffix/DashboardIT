@@ -13,6 +13,14 @@
 	}
 
 	const runtimeConfig = window.DashboardRuntimeConfig || {}
+	const normalizeStorageMode = value => {
+		const normalizedValue = String(value || '')
+			.trim()
+			.toLowerCase()
+		return ['auto', 'local', 'remote'].includes(normalizedValue) ? normalizedValue : 'auto'
+	}
+	const storageMode = normalizeStorageMode(runtimeConfig.storageMode)
+	const allowRemoteFallback = storageMode !== 'remote' && runtimeConfig.fallbackToLocalOnRemoteError !== false
 	const THEME_FALLBACK_KEY = `${PREFERENCE_KEYS.THEME}-fallback`
 	const THEME_GUEST_KEY = `${PREFERENCE_KEYS.THEME}::guest`
 	const THEME_USER_KEY_PREFIX = `${PREFERENCE_KEYS.THEME}::user::`
@@ -44,6 +52,8 @@
 
 	let remoteEnabledCache = null
 	let remoteHealthChecked = false
+	let remoteStorageFallbackActive = false
+	let remoteStorageFallbackNotified = false
 
 	const getConfiguredApiBase = () => {
 		const configuredBase = String(runtimeConfig.apiBaseUrl || './api/').trim()
@@ -54,6 +64,57 @@
 	const resolveApiUrl = path => {
 		const apiBaseUrl = new URL(getConfiguredApiBase(), document.baseURI)
 		return new URL(path, apiBaseUrl).toString()
+	}
+
+	const isRemoteServerFailure = status => status === 0 || status >= 500
+	const shouldFallbackToLocal = status => allowRemoteFallback && isRemoteServerFailure(status)
+
+	const readLocalJsonValue = (key, fallback) => {
+		try {
+			const storedValue = localStorage.getItem(key)
+			if (!storedValue) return cloneValue(fallback)
+			return JSON.parse(storedValue)
+		} catch (error) {
+			return cloneValue(fallback)
+		}
+	}
+
+	const writeLocalJsonValue = (key, value) => {
+		try {
+			localStorage.setItem(key, JSON.stringify(value))
+		} catch (error) {
+			// Ignore local cache write failures and keep the app responsive.
+		}
+	}
+
+	const removeLocalValue = key => {
+		try {
+			localStorage.removeItem(key)
+		} catch (error) {
+			// Ignore local cache cleanup failures.
+		}
+	}
+
+	const cacheRemoteJsonValue = (key, value) => {
+		writeLocalJsonValue(key, value)
+	}
+
+	const activateRemoteStorageFallback = message => {
+		if (!allowRemoteFallback) return
+		remoteStorageFallbackActive = true
+		if (remoteStorageFallbackNotified) return
+		remoteStorageFallbackNotified = true
+		if (typeof window.AppUtils?.notify === 'function') {
+			window.AppUtils.notify({
+				type: 'warning',
+				title: 'Tryb lokalny',
+				message:
+					'Serwer synchronizacji jest chwilowo niedostepny. Aplikacja przelaczyla sie na lokalny zapis w tej przegladarce.',
+			})
+		}
+		if (message) {
+			console.warn(message)
+		}
 	}
 
 	const sendRemoteRequest = ({ method = 'GET', path = '', body = null } = {}) => {
@@ -128,18 +189,25 @@
 			if (remoteHealthChecked) return Boolean(remoteEnabledCache)
 			remoteHealthChecked = true
 
-			if (window.location.protocol === 'file:' || runtimeConfig.storageMode === 'local') {
+			if (window.location.protocol === 'file:' || storageMode === 'local') {
 				remoteEnabledCache = false
 				return false
 			}
 
+			if (storageMode === 'remote') {
+				remoteEnabledCache = true
+				return true
+			}
+
 			const response = sendRemoteRequest({ path: 'health.php' })
-			remoteEnabledCache = Boolean(response.ok && response.payload?.mode === 'mysql')
+			const remoteMode = String(response.payload?.mode || '').toLowerCase()
+			remoteEnabledCache = Boolean(response.ok && ['mysql', 'postgresql', 'pgsql'].includes(remoteMode))
 			return Boolean(remoteEnabledCache)
 		},
 	}
 
-	const isRemoteKey = key => remoteApi.isRemoteEnabled() && REMOTE_SHARED_KEYS.has(String(key || ''))
+	const isRemoteKey = key =>
+		remoteApi.isRemoteEnabled() && !remoteStorageFallbackActive && REMOTE_SHARED_KEYS.has(String(key || ''))
 	const isProtectedWriteKey = key => {
 		const normalizedKey = String(key || '')
 		return (
@@ -162,7 +230,7 @@
 
 	const storageService = {
 		isRemoteEnabled() {
-			return remoteApi.isRemoteEnabled()
+			return remoteApi.isRemoteEnabled() && !remoteStorageFallbackActive
 		},
 		getText(key, fallback = '') {
 			try {
@@ -183,20 +251,19 @@
 				})
 
 				if (!response.ok) {
+					if (shouldFallbackToLocal(response.status)) {
+						activateRemoteStorageFallback(response.message)
+						return readLocalJsonValue(key, fallback)
+					}
 					notifyStorageError(response.message || 'Nie udalo sie pobrac danych z serwera.')
 					return cloneValue(fallback)
 				}
 
+				cacheRemoteJsonValue(key, response.value ?? fallback)
 				return cloneValue(response.value ?? fallback)
 			}
 
-			try {
-				const storedValue = localStorage.getItem(key)
-				if (!storedValue) return cloneValue(fallback)
-				return JSON.parse(storedValue)
-			} catch (error) {
-				return cloneValue(fallback)
-			}
+			return readLocalJsonValue(key, fallback)
 		},
 		writeJson(key, value) {
 			if (!canWriteProtectedKey(key)) return
@@ -212,12 +279,19 @@
 				})
 
 				if (!response.ok) {
+					if (shouldFallbackToLocal(response.status)) {
+						activateRemoteStorageFallback(response.message)
+						writeLocalJsonValue(key, value)
+						return
+					}
 					notifyStorageError(response.message || 'Nie udalo sie zapisac danych na serwerze.')
+					return
 				}
+				cacheRemoteJsonValue(key, value)
 				return
 			}
 
-			localStorage.setItem(key, JSON.stringify(value))
+			writeLocalJsonValue(key, value)
 		},
 		remove(key) {
 			if (!canWriteProtectedKey(key)) return
@@ -229,12 +303,19 @@
 				})
 
 				if (!response.ok) {
+					if (shouldFallbackToLocal(response.status)) {
+						activateRemoteStorageFallback(response.message)
+						removeLocalValue(key)
+						return
+					}
 					notifyStorageError(response.message || 'Nie udalo sie usunac danych z serwera.')
+					return
 				}
+				removeLocalValue(key)
 				return
 			}
 
-			localStorage.removeItem(key)
+			removeLocalValue(key)
 		},
 		getBoolean(key, fallback = false) {
 			const storedValue = this.getText(key, '')
@@ -264,11 +345,18 @@
 			if (remoteApi.isRemoteEnabled()) {
 				const response = remoteApi.requestAuth({ path: 'users.php' })
 				if (!response.ok) {
+					if (shouldFallbackToLocal(response.status)) {
+						activateRemoteStorageFallback(response.message)
+						const cachedUsers = readLocalJsonValue(this.storageKey, [])
+						return Array.isArray(cachedUsers) ? cachedUsers : []
+					}
 					notifyStorageError(response.message || 'Nie udalo sie pobrac listy uzytkownikow.')
 					return []
 				}
 
-				return Array.isArray(response.users) ? cloneValue(response.users) : []
+				const users = Array.isArray(response.users) ? response.users : []
+				cacheRemoteJsonValue(this.storageKey, users)
+				return cloneValue(users)
 			}
 
 			const storedUsers = storageService.readJson(this.storageKey, [])
@@ -290,15 +378,29 @@
 			if (remoteApi.isRemoteEnabled()) {
 				const response = remoteApi.requestAuth({ path: 'session.php' })
 				if (!response.ok) {
+					if (shouldFallbackToLocal(response.status)) {
+						activateRemoteStorageFallback(response.message)
+						const cachedSession = readLocalJsonValue(this.storageKey, null)
+						if (!cachedSession || typeof cachedSession !== 'object' || !cachedSession.userId) {
+							return null
+						}
+
+						return {
+							userId: String(cachedSession.userId),
+							loginAt: cachedSession.loginAt || new Date().toISOString(),
+						}
+					}
 					notifyStorageError(response.message || 'Nie udalo sie odczytac sesji z serwera.')
 					return null
 				}
 
 				const session = response.session
 				if (!session || typeof session !== 'object' || !session.userId) {
+					removeLocalValue(this.storageKey)
 					return null
 				}
 
+				cacheRemoteJsonValue(this.storageKey, session)
 				return {
 					userId: String(session.userId),
 					loginAt: session.loginAt || new Date().toISOString(),
@@ -331,8 +433,15 @@
 				})
 
 				if (!response.ok) {
+					if (shouldFallbackToLocal(response.status)) {
+						activateRemoteStorageFallback(response.message)
+						removeLocalValue(this.storageKey)
+						return
+					}
 					notifyStorageError(response.message || 'Nie udalo sie wylogowac sesji serwerowej.')
+					return
 				}
+				removeLocalValue(this.storageKey)
 				return
 			}
 

@@ -2,12 +2,13 @@
 declare(strict_types=1);
 
 return [
-	'driver' => 'mysql',
-	'host' => '10.0.0.23',
-	'port' => 2053,
-	'database' => 'dashboard',
-	'username' => 'dashboard',
+	// Recommended PostgreSQL database name: lowercase letters, numbers and underscores only.
+	'driver' => 'pgsql',
+	'host' => '10.0.0.21',
+	'port' => 2054,
+	'database' => 'dashboard_post',
+	'username' => 'dashboard_post',
 	'password' => 'CHANGE_ME',
-	'charset' => 'utf8mb4',
+	'charset' => 'utf8',
 	'table' => 'dashboard_storage',
 ];
