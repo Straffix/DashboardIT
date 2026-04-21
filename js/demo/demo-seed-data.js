@@ -63,7 +63,9 @@
 		const currentMonth = 3
 		const currentDay = 25
 		const permissionIds = ['it_support', 'network', 'printers', 'rooms']
-		const ownerCycle = ['demo-admin', 'demo-user-1', 'demo-user-2', 'demo-user-3', 'demo-user-4', 'demo-user-5']
+		const demoUserId = 'demo-admin'
+		const ownerCycle = [demoUserId]
+		const normalizeDemoUserId = userId => (String(userId || '').startsWith('demo-') ? demoUserId : userId)
 		const hireDepartments = [
 			'Service Desk', 'Infra / Network', 'Security Ops', 'HR Systems', 'BI / Data', 'Retail Apps',
 			'Workplace Support', 'Finance IT', 'Logistics IT', 'Compliance', 'Support 2nd Line', 'Onsite Katowice',
@@ -96,14 +98,6 @@
 
 		const users = [
 			['demo-admin', 'Arek Tester', 'demoarek', 'demo123', 'admin', permissionIds, 'blue'],
-			['demo-user-1', 'Katarzyna Nowak', 'k.nowak', 'demo123', 'user', ['it_support', 'network'], 'emerald'],
-			['demo-user-2', 'Michal Zielinski', 'm.zielinski', 'demo123', 'user', ['it_support'], 'amber'],
-			['demo-user-3', 'Ola Borkowska', 'o.borkowska', 'demo123', 'user', ['printers'], 'rose'],
-			['demo-user-4', 'Piotr Kurek', 'p.kurek', 'demo123', 'user', ['network', 'rooms'], 'slate'],
-			['demo-user-5', 'Ewa Sobczak', 'e.sobczak', 'demo123', 'user', ['it_support', 'printers'], 'violet'],
-			['demo-user-6', 'Tomasz Wrobel', 't.wrobel', 'demo123', 'user', ['rooms'], 'blue'],
-			['demo-user-7', 'Sandra Lis', 's.lis', 'demo123', 'user', ['network'], 'emerald'],
-			['demo-user-8', 'Marcin Banach', 'm.banach', 'demo123', 'user', ['it_support', 'rooms'], 'amber'],
 		].map(([id, fullName, login, password, role, permissions, avatarId], index) => ({
 			id,
 			fullName,
@@ -122,8 +116,8 @@
 		)
 
 		const createAudit = (sourceDate, createdById, updatedById = createdById, createdShiftDays = -14, updatedShiftDays = -3) => ({
-			createdBy: actorById[createdById],
-			updatedBy: actorById[updatedById],
+			createdBy: actorById[normalizeDemoUserId(createdById)] || actorById[demoUserId],
+			updatedBy: actorById[normalizeDemoUserId(updatedById)] || actorById[demoUserId],
 			createdAt: toIso(shiftDate(sourceDate, createdShiftDays, 8 + Math.abs(createdShiftDays % 3), 10)),
 			updatedAt: toIso(shiftDate(sourceDate, updatedShiftDays, 14 + Math.abs(updatedShiftDays % 2), 30)),
 		})
@@ -230,13 +224,13 @@
 			['bookmark-demo-7', 'demo-admin', 'Google', 'https://www.google.com', 'Przykladowa zakladka do wyszukiwarki Google.'],
 			['bookmark-demo-8', 'demo-admin', 'Office', 'https://www.office.com', 'Szybkie przejscie do pakietu Microsoft 365.'],
 			['bookmark-demo-9', 'demo-admin', 'Apple', 'https://www.apple.com', 'Przykladowy zewnetrzny link firmowy do Apple.'],
-			['bookmark-demo-3', 'demo-user-1', 'CMDB', 'https://cmdb.example.local', 'Prywatny skrot operatora do ewidencji sprzetu.'],
-			['bookmark-demo-4', 'demo-user-2', 'Plan dyzurow', '\\\\serwer-it\\grafik\\dyzury_marzec.xlsx', 'Grafik zmian i awaryjnych dyzurow zespolu.'],
-			['bookmark-demo-5', 'demo-user-3', 'Drukarki retail', 'https://print.example.local/retail', 'Panel sledzenia zgloszen drukarkowych.'],
-			['bookmark-demo-6', 'demo-user-4', 'Lista salek', 'https://rooms.example.local', 'Konfiguracja urządzeń Teams Rooms i tabletów.'],
+			['bookmark-demo-3', demoUserId, 'CMDB', 'https://cmdb.example.local', 'Prywatny skrot operatora do ewidencji sprzetu.'],
+			['bookmark-demo-4', demoUserId, 'Plan dyzurow', '\\\\serwer-it\\grafik\\dyzury_marzec.xlsx', 'Grafik zmian i awaryjnych dyzurow zespolu.'],
+			['bookmark-demo-5', demoUserId, 'Drukarki retail', 'https://print.example.local/retail', 'Panel sledzenia zgloszen drukarkowych.'],
+			['bookmark-demo-6', demoUserId, 'Lista salek', 'https://rooms.example.local', 'Konfiguracja urządzeń Teams Rooms i tabletów.'],
 		].map(([id, userId, label, url, description], index) => ({
 			id,
-			userId,
+			userId: normalizeDemoUserId(userId),
 			label,
 			url,
 			description,
@@ -246,13 +240,13 @@
 
 		const lunchSeedBaseDate = createCalendarDate(seedYear, currentMonth, currentDay, 12, 0)
 		const lunchReservationPlan = [
-			[-1, '11:30', 'demo-user-1'], [-1, '11:30', 'demo-user-5'], [-1, '12:00', 'demo-user-2'],
-			[-1, '12:00', 'demo-user-6'], [-1, '12:30', 'demo-user-3'], [-1, '13:00', 'demo-user-4'],
-			[0, '11:30', 'demo-admin'], [0, '11:30', 'demo-user-8'], [0, '12:00', 'demo-user-7'],
-			[0, '12:30', 'demo-user-1'], [0, '13:00', 'demo-user-2'], [0, '13:30', 'demo-user-6'],
-			[1, '11:00', 'demo-user-3'], [1, '11:00', 'demo-user-4'], [1, '12:00', 'demo-admin'],
-			[1, '12:30', 'demo-user-5'], [1, '13:30', 'demo-user-7'], [2, '11:30', 'demo-user-8'],
-			[2, '12:00', 'demo-user-1'], [2, '12:30', 'demo-user-2'], [2, '13:00', 'demo-user-5'],
+			[-1, '11:30', demoUserId], [-1, '11:30', demoUserId], [-1, '12:00', demoUserId],
+			[-1, '12:00', demoUserId], [-1, '12:30', demoUserId], [-1, '13:00', demoUserId],
+			[0, '11:30', demoUserId], [0, '11:30', demoUserId], [0, '12:00', demoUserId],
+			[0, '12:30', demoUserId], [0, '13:00', demoUserId], [0, '13:30', demoUserId],
+			[1, '11:00', demoUserId], [1, '11:00', demoUserId], [1, '12:00', demoUserId],
+			[1, '12:30', demoUserId], [1, '13:30', demoUserId], [2, '11:30', demoUserId],
+			[2, '12:00', demoUserId], [2, '12:30', demoUserId], [2, '13:00', demoUserId],
 		]
 		const lunchReservations = lunchReservationPlan.map(([dayOffset, timeSlot, userId], index) => {
 			const reservationDate = shiftDate(lunchSeedBaseDate, dayOffset, 12, 0)
@@ -261,7 +255,7 @@
 				id: `lunch-demo-${index + 1}`,
 				date: formatDate(reservationDate),
 				timeSlot,
-				userId,
+				userId: normalizeDemoUserId(userId),
 				createdAt: toIso(stamp),
 				updatedAt: toIso(stamp),
 				status: 'active',
@@ -270,53 +264,53 @@
 
 		const announcements = [
 			['announcement-demo-1', 'Okno serwisowe w piątek', 'Od 18:00 do 19:30 planowany jest restart VPN oraz kontrolerów wydruku. Dział obsługi ma być pod telefonem.', 'demo-admin', 24],
-			['announcement-demo-2', 'Nowa pula laptopów Dell', 'Do magazynu dotarła nowa partia urządzeń. Proszę zużywać ją najpierw do onboardingów planowanych na kwiecień i maj.', 'demo-user-1', 22],
-			['announcement-demo-3', 'Audyt sal konferencyjnych', 'Do końca miesiąca trzeba potwierdzić wersje Teams Rooms, aktywne mikrofony i dostępność zapasowych pilotów.', 'demo-user-4', 20],
+			['announcement-demo-2', 'Nowa pula laptopów Dell', 'Do magazynu dotarła nowa partia urządzeń. Proszę zużywać ją najpierw do onboardingów planowanych na kwiecień i maj.', demoUserId, 22],
+			['announcement-demo-3', 'Audyt sal konferencyjnych', 'Do końca miesiąca trzeba potwierdzić wersje Teams Rooms, aktywne mikrofony i dostępność zapasowych pilotów.', demoUserId, 20],
 			['announcement-demo-4', 'Wydania na start kwartału', 'Największe obciążenie onboardingowe przypada na kwiecień i maj. Zarezerwujcie czas na przygotowanie monitorów i stacji dokujących.', 'demo-admin', 18],
 		].map(([id, title, content, authorId, day], index) => ({
 			id,
 			title,
 			content,
-			authorId,
+			authorId: normalizeDemoUserId(authorId),
 			createdAt: toIso(createCalendarDate(seedYear, 3, day, 9 + index, 10)),
 			updatedAt: toIso(createCalendarDate(seedYear, 3, day + (index % 2), 10 + index, 15)),
 			isPinned: true,
 		}))
 
 		const notes = [
-			['note-demo-1', 'Na stanowisku w sali B3 nadal trzeba podmienić zasilacz do monitora konferencyjnego.', 'demo-user-2', 23],
+			['note-demo-1', 'Na stanowisku w sali B3 nadal trzeba podmienić zasilacz do monitora konferencyjnego.', demoUserId, 23],
 			['note-demo-2', 'HR potwierdził start onboardingów na kwiecień. W magazynie trzeba odłożyć 4 komplety: laptop, mysz, headset, torba.', 'demo-admin', 24],
-			['note-demo-3', 'Po testach drukarki w recepcji trzeba jeszcze wgrać finalny sterownik do stanowiska kierownika zmiany.', 'demo-user-3', 21],
-			['note-demo-4', 'Monitoringi domeny z wygaśnięciem do 14 dni: sprawdzić serię RU 45120-45160 przed końcem tygodnia.', 'demo-user-1', 20],
-			['note-demo-5', 'W sali Zarząd 2 trzeba wymienić baterie w pilocie i sprawdzić drugi display po ostatnim restarcie.', 'demo-user-4', 19],
-			['note-demo-6', 'Do zamknięcia pozostaje jeszcze import starej listy wymian z oddziału Łódź. Brakuje 3 numerów SN.', 'demo-user-5', 18],
-			['note-demo-7', 'Prośba od security: nowe onboardingi mają dostawać MFA w pakiecie startowym razem z instrukcją logowania.', 'demo-user-6', 17],
+			['note-demo-3', 'Po testach drukarki w recepcji trzeba jeszcze wgrać finalny sterownik do stanowiska kierownika zmiany.', demoUserId, 21],
+			['note-demo-4', 'Monitoringi domeny z wygaśnięciem do 14 dni: sprawdzić serię RU 45120-45160 przed końcem tygodnia.', demoUserId, 20],
+			['note-demo-5', 'W sali Zarząd 2 trzeba wymienić baterie w pilocie i sprawdzić drugi display po ostatnim restarcie.', demoUserId, 19],
+			['note-demo-6', 'Do zamknięcia pozostaje jeszcze import starej listy wymian z oddziału Łódź. Brakuje 3 numerów SN.', demoUserId, 18],
+			['note-demo-7', 'Prośba od security: nowe onboardingi mają dostawać MFA w pakiecie startowym razem z instrukcją logowania.', demoUserId, 17],
 			['note-demo-8', 'Dla majowych wymian warto zarezerwować dodatkowe monitory 24 cale, bo zapotrzebowanie z retail wzrasta.', 'demo-admin', 16],
 		].map(([id, content, authorId, day], index) => ({
 			id,
 			content,
-			authorId,
+			authorId: normalizeDemoUserId(authorId),
 			createdAt: toIso(createCalendarDate(seedYear, 3, day, 8 + (index % 4), 20)),
 			updatedAt: toIso(createCalendarDate(seedYear, 3, day + (index % 2), 9 + (index % 4), 35)),
 			isPinned: false,
 		}))
 
 		const noteTasks = [
-			['task-demo-1', 'Zweryfikuj pulę docking station', 'Sprawdź magazyn i oznacz dwie kompletne sztuki pod onboarding z przyszłego tygodnia.', 'demo-user-1', 'demo-admin', 'demo-admin', 'todo', 'high', 23],
-			['task-demo-2', 'Domknij wymianę dla Karoliny Banas', 'Zarchiwizuj potwierdzenie odbioru starego urządzenia i zaktualizuj wpis w zestawieniu HR.', 'demo-user-2', 'demo-admin', 'demo-user-2', 'in_progress', 'medium', 20],
-			['task-demo-3', 'Spisz licencje z sal konferencyjnych', 'Potrzebna lista aktualnych wersji Teams Rooms i numerów seryjnych tabletów sterujących.', 'demo-user-3', 'demo-admin', 'demo-admin', 'done', 'low', 18],
-			['task-demo-4', 'Przejrzyj wygasające domeny', 'Urządzenia z terminem do 10 dni mają dostać priorytetowe przedłużenie albo decyzję o wymianie.', 'demo-user-4', 'demo-admin', 'demo-user-4', 'in_progress', 'high', 21],
-			['task-demo-5', 'Zweryfikuj checklisty kwietniowe', 'Dla wszystkich onboardingów w kwietniu sprawdź gotowość laptopa, monitora i uprawnień startowych.', 'demo-user-5', 'demo-admin', 'demo-admin', 'todo', 'high', 19],
-			['task-demo-6', 'Odśwież grafikę sali zarządu', 'Po wymianie kontrolera trzeba zrobić nowy zestaw screenów i instrukcję dla asystentek.', 'demo-user-6', 'demo-user-4', 'demo-user-6', 'todo', 'medium', 18],
-			['task-demo-7', 'Zamknij incydent drukarki retail 12', 'Potwierdź stabilność po wymianie modułu i dopisz notatkę do historii urządzenia.', 'demo-user-3', 'demo-user-5', 'demo-user-3', 'done', 'medium', 17],
-			['task-demo-8', 'Przygotuj raport miesięczny', 'Potrzebne podsumowanie onboardingów, wymian i urządzeń poza domeną za marzec 2026.', 'demo-user-8', 'demo-admin', 'demo-admin', 'todo', 'high', 16],
+			['task-demo-1', 'Zweryfikuj pulę docking station', 'Sprawdź magazyn i oznacz dwie kompletne sztuki pod onboarding z przyszłego tygodnia.', demoUserId, demoUserId, demoUserId, 'todo', 'high', 23],
+			['task-demo-2', 'Domknij wymianę dla Karoliny Banas', 'Zarchiwizuj potwierdzenie odbioru starego urządzenia i zaktualizuj wpis w zestawieniu HR.', demoUserId, demoUserId, demoUserId, 'in_progress', 'medium', 20],
+			['task-demo-3', 'Spisz licencje z sal konferencyjnych', 'Potrzebna lista aktualnych wersji Teams Rooms i numerów seryjnych tabletów sterujących.', demoUserId, demoUserId, demoUserId, 'done', 'low', 18],
+			['task-demo-4', 'Przejrzyj wygasające domeny', 'Urządzenia z terminem do 10 dni mają dostać priorytetowe przedłużenie albo decyzję o wymianie.', demoUserId, demoUserId, demoUserId, 'in_progress', 'high', 21],
+			['task-demo-5', 'Zweryfikuj checklisty kwietniowe', 'Dla wszystkich onboardingów w kwietniu sprawdź gotowość laptopa, monitora i uprawnień startowych.', demoUserId, demoUserId, demoUserId, 'todo', 'high', 19],
+			['task-demo-6', 'Odśwież grafikę sali zarządu', 'Po wymianie kontrolera trzeba zrobić nowy zestaw screenów i instrukcję dla asystentek.', demoUserId, demoUserId, demoUserId, 'todo', 'medium', 18],
+			['task-demo-7', 'Zamknij incydent drukarki retail 12', 'Potwierdź stabilność po wymianie modułu i dopisz notatkę do historii urządzenia.', demoUserId, demoUserId, demoUserId, 'done', 'medium', 17],
+			['task-demo-8', 'Przygotuj raport miesięczny', 'Potrzebne podsumowanie onboardingów, wymian i urządzeń poza domeną za marzec 2026.', demoUserId, demoUserId, demoUserId, 'todo', 'high', 16],
 		].map(([id, title, description, assignedToUserId, createdBy, updatedBy, status, priority, day], index) => ({
 			id,
 			title,
 			description,
-			assignedToUserId,
-			createdBy,
-			updatedBy,
+			assignedToUserId: normalizeDemoUserId(assignedToUserId),
+			createdBy: normalizeDemoUserId(createdBy),
+			updatedBy: normalizeDemoUserId(updatedBy),
 			createdAt: toIso(createCalendarDate(seedYear, 3, day, 9 + (index % 3), 0)),
 			updatedAt: toIso(createCalendarDate(seedYear, 3, day + (index % 2), 13 + (index % 3), 20)),
 			status,
@@ -341,7 +335,7 @@
 		return {
 			credentials: { login: 'demoarek', password: 'demo123' },
 			users,
-			session: { userId: 'demo-admin', loginAt: toIso(createCalendarDate(seedYear, currentMonth, currentDay, 8, 5)) },
+			session: { userId: demoUserId, loginAt: toIso(createCalendarDate(seedYear, currentMonth, currentDay, 8, 5)) },
 			hires,
 			monitor,
 			exchanges,

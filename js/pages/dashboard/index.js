@@ -44,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		weatherCurrentLocationBtn: document.getElementById('weather-current-location-btn'),
 		weatherWidget: document.querySelector('.weather-widget'),
 		registeredUsersCount: document.getElementById('dashboard-registered-users-count'),
-		activeUsersCount: document.getElementById('dashboard-active-users-count'),
 		activeUsersList: document.getElementById('dashboard-active-users-list'),
 		taskModal: document.getElementById('task-modal'),
 		taskForm: document.getElementById('task-form'),
@@ -68,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const activeUsersController = (() => {
-		const { registeredUsersCount, activeUsersCount, activeUsersList } = elements
+		const { registeredUsersCount, activeUsersList } = elements
 		const { storageService, usersService } = services
 		const activeUsersStorageKey = AppUtils.config.STORAGE_KEYS.DASHBOARD_ACTIVE_USERS || 'dashboard_active_users'
 		const usersStorageKey = AppUtils.config.STORAGE_KEYS.USERS
@@ -81,12 +80,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		let rotationTimerId = 0
 		let profileShell = null
 
-		if (!registeredUsersCount || !activeUsersCount || !activeUsersList || !storageService || !usersService) {
+		if (!registeredUsersCount || !activeUsersList || !storageService || !usersService) {
 			return null
 		}
 
 		const escapeHtml = value => AppUtils.escapeHtml(String(value ?? ''))
-		const getRegisteredUsers = () => (usersService.getAll?.() || []).filter(user => user?.id)
+		const isDemoUser = user => {
+			const id = String(user?.id || '').trim()
+			const login = String(user?.login || '').trim().toLowerCase()
+			return Boolean(user?.isDemo || id === 'demo-admin' || /^demo-user-\d+$/.test(id) || login === 'demoarek')
+		}
+		const getUsers = () => (usersService.getAll?.() || []).filter(user => user?.id)
+		const getRegisteredUsers = users => users.filter(user => !isDemoUser(user))
 		const getActiveUserRecords = () => {
 			const now = Date.now()
 			const records = storageService.readJson?.(activeUsersStorageKey, []) || []
@@ -95,6 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
 				: []
 		}
 		const getUserDisplayName = user => String(user?.fullName || user?.login || 'Użytkownik').trim()
+		const normalizeProfileImage = value => {
+			const normalizedValue = String(value || '').trim()
+			return /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(normalizedValue) ? normalizedValue : ''
+		}
+		const normalizeProfileAccentColor = value => {
+			const normalizedValue = String(value || '').trim().toLowerCase()
+			return /^#[0-9a-f]{6}$/.test(normalizedValue) ? normalizedValue : '#0f766e'
+		}
 		const mergeRecordWithUser = (record, user) => ({
 			id: String(record.userId || user?.id || ''),
 			fullName: String(user?.fullName || record.fullName || '').trim(),
@@ -102,6 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			role: user?.role || record.role || 'user',
 			avatarId: user?.avatarId || record.avatarId || 'blue',
 			avatarImage: user?.avatarImage || record.avatarImage || '',
+			profileAccentColor: user?.profileAccentColor || record.profileAccentColor || '',
+			profileCoverImage: user?.profileCoverImage || record.profileCoverImage || '',
 			lastSeenAt: record.lastSeenAt || '',
 		})
 		const getActiveUsers = registeredUsers => {
@@ -149,14 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 		const refreshSummary = () => {
-			const registeredUsers = getRegisteredUsers()
-			activeUsers = getActiveUsers(registeredUsers)
+			const users = getUsers()
+			const registeredUsers = getRegisteredUsers(users)
+			activeUsers = getActiveUsers(users)
 			if (rotationIndex >= activeUsers.length) {
 				rotationIndex = 0
 			}
 
 			registeredUsersCount.textContent = String(registeredUsers.length)
-			activeUsersCount.textContent = String(activeUsers.length)
 			renderActiveUsersList()
 		}
 		const rotateVisibleUsers = () => {
@@ -200,6 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			const roleLabel = AppUtils.auth?.getRoleLabel?.(user.role) || (user.role === 'admin' ? 'Lider' : 'Pracownik')
 			const loginLabel = user.login ? `@${user.login}` : 'Brak loginu'
 			const name = getUserDisplayName(user)
+			const coverImage = normalizeProfileImage(user.profileCoverImage)
+			const accentColor = normalizeProfileAccentColor(user.profileAccentColor)
 			const avatarMarkup = AppUtils.createAvatarMarkup({
 				fullName: name,
 				avatarId: user.avatarId || 'blue',
@@ -207,23 +224,30 @@ document.addEventListener('DOMContentLoaded', () => {
 				extraClass: 'dashboard-user-profile-avatar',
 			})
 
+			shell.style.setProperty('--dashboard-user-profile-accent', accentColor)
+			shell.style.setProperty('--dashboard-user-profile-cover-image', coverImage ? `url("${coverImage}")` : 'none')
+			shell.classList.toggle('has-profile-cover-image', Boolean(coverImage))
+			card.classList.toggle('has-profile-cover-image', Boolean(coverImage))
 			card.innerHTML = `
+				<div class="dashboard-user-profile-cover" aria-hidden="true"></div>
 				<button type="button" class="dashboard-user-profile-close" data-dashboard-user-profile-close aria-label="Zamknij profil">
 					<i class="fa-solid fa-xmark"></i>
 				</button>
-				<div class="dashboard-user-profile-head">
-					${avatarMarkup}
-					<div>
-						<p class="dashboard-kicker">Profil użytkownika</p>
-						<h2 id="dashboard-user-profile-title">${escapeHtml(name)}</h2>
-						<p>${escapeHtml(loginLabel)}</p>
+				<div class="dashboard-user-profile-body">
+					<div class="dashboard-user-profile-head">
+						${avatarMarkup}
+						<div>
+							<p class="dashboard-kicker">Profil użytkownika</p>
+							<h2 id="dashboard-user-profile-title">${escapeHtml(name)}</h2>
+							<p>${escapeHtml(loginLabel)}</p>
+						</div>
 					</div>
-				</div>
-				<div class="dashboard-user-profile-grid">
-					<span>Rola</span>
-					<strong>${escapeHtml(roleLabel)}</strong>
-					<span>Status</span>
-					<strong>Aktywny teraz</strong>
+					<div class="dashboard-user-profile-grid">
+						<span>Rola</span>
+						<strong>${escapeHtml(roleLabel)}</strong>
+						<span>Status</span>
+						<strong>Aktywny teraz</strong>
+					</div>
 				</div>
 			`
 
@@ -248,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const userId = String(userButton.dataset.activeUserId || '')
 				const clickedUser =
 					activeUsers.find(user => String(user.id) === userId) ||
-					getRegisteredUsers().find(user => String(user.id) === userId)
+					getUsers().find(user => String(user.id) === userId)
 				openUserProfilePreview(clickedUser)
 			})
 

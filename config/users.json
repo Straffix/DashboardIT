@@ -1,0 +1,9 @@
+{
+	"_purpose": "Editable user account metadata exported from DashboardIT. Passwords and passwordHash are intentionally not stored here.",
+	"_howToUse": "Edit entries in users. The id identifies the account, so login can be changed while preserving the stored password hash.",
+	"_important": "Create accounts and change passwords from the app UI. Do not add password, passwordHash or temporary passwords to this file.",
+	"_allowedRoles": ["admin", "user"],
+	"_allowedPermissions": ["it_support", "network", "printers", "rooms"],
+	"_updatedAt": null,
+	"users": []
+}

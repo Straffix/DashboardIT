@@ -15,7 +15,7 @@ function dashboard_find_demo_session_user_id(array $sessionPayload, array $users
 			continue;
 		}
 
-		if ((string) ($user['id'] ?? '') === $userId && !empty($user['isDemo'])) {
+		if ((string) ($user['id'] ?? '') === $userId && dashboard_is_demo_account_record($user)) {
 			return $userId;
 		}
 	}
@@ -83,18 +83,24 @@ function dashboard_merge_demo_records(string $path, array $incomingRecords, bool
 {
 	dashboard_update_json_file($path, [], function ($existingRecords) use ($incomingRecords, $usersMode) {
 		$existingRecords = is_array($existingRecords) ? array_values(array_filter($existingRecords, static fn ($record): bool => is_array($record))) : [];
-		$cleanRecords = array_values(array_filter($existingRecords, static fn ($record): bool => empty($record['isDemo'])));
+		$cleanRecords = array_values(array_filter(
+			$existingRecords,
+			static fn ($record): bool => $usersMode ? !dashboard_is_demo_account_record($record) : empty($record['isDemo'])
+		));
 		$demoRecords = $usersMode ? dashboard_convert_demo_users($incomingRecords) : dashboard_mark_demo_records($incomingRecords);
 
 		return [...$cleanRecords, ...$demoRecords];
 	});
 }
 
-function dashboard_clear_demo_records(string $path): void
+function dashboard_clear_demo_records(string $path, bool $usersMode = false): void
 {
-	dashboard_update_json_file($path, [], function ($existingRecords) {
+	dashboard_update_json_file($path, [], function ($existingRecords) use ($usersMode) {
 		$existingRecords = is_array($existingRecords) ? array_values(array_filter($existingRecords, static fn ($record): bool => is_array($record))) : [];
-		return array_values(array_filter($existingRecords, static fn ($record): bool => empty($record['isDemo'])));
+		return array_values(array_filter(
+			$existingRecords,
+			static fn ($record): bool => $usersMode ? !dashboard_is_demo_account_record($record) : empty($record['isDemo'])
+		));
 	});
 }
 
@@ -164,7 +170,7 @@ if ($method === 'DELETE') {
 	try {
 		$currentSession = dashboard_get_session_payload();
 
-		dashboard_clear_demo_records(dashboard_users_path());
+		dashboard_clear_demo_records(dashboard_users_path(), true);
 		dashboard_clear_demo_records(dashboard_storage_file_for_key('nowe_zatrudnienia_dane'));
 		dashboard_clear_demo_records(dashboard_storage_file_for_key('monitor_laptopow_dane'));
 		dashboard_clear_demo_records(dashboard_storage_file_for_key('wymiana_sprzetu_dane'));

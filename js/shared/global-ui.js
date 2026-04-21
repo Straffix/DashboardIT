@@ -120,6 +120,8 @@ const syncActiveUserPresence = () => {
 			role: currentUser.role || 'user',
 			avatarId: currentUser.avatarId || 'blue',
 			avatarImage: currentUser.avatarImage || '',
+			profileAccentColor: currentUser.profileAccentColor || '',
+			profileCoverImage: currentUser.profileCoverImage || '',
 			lastSeenAt: new Date().toISOString(),
 		})
 	}
@@ -196,11 +198,15 @@ const createThemeToggle = () => {
 		const normalizedTheme = normalizeStoredTheme(theme)
 		const activeIndex = themeSequence.indexOf(normalizedTheme)
 		const nextTheme = themeSequence[(activeIndex + 1) % themeSequence.length]
+		const orderedThemeSequence = [
+			normalizedTheme,
+			...themeSequence.filter(themeOption => themeOption !== normalizedTheme),
+		]
 		button.dataset.themeOption = normalizedTheme
 		button.dataset.nextTheme = nextTheme
 		button.innerHTML = `
 			<span class="theme-toggle-option-list">
-				${themeSequence
+				${orderedThemeSequence
 					.map(
 						themeOption => `
 							<button

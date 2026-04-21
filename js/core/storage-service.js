@@ -28,6 +28,8 @@
 	const THEME_FALLBACK_USER_KEY_PREFIX = `${THEME_FALLBACK_KEY}::user::`
 	const DASHBOARD_MENU_ORDER_GUEST_KEY = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::guest`
 	const DASHBOARD_MENU_ORDER_USER_KEY_PREFIX = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::user::`
+	const USERS_CONFIG_PATH = 'config/users.json'
+	const USERS_CONFIG_PERMISSION_IDS = ['it_support', 'network', 'printers', 'rooms']
 	const REMOTE_SHARED_KEYS = new Set([
 		STORAGE_KEYS.HIRES,
 		STORAGE_KEYS.MONITOR,
@@ -60,6 +62,8 @@
 	let remoteHealthChecked = false
 	let remoteStorageFallbackActive = false
 	let remoteStorageFallbackNotified = false
+	let usersConfigLoaded = false
+	let usersConfigEntries = []
 
 	const getConfiguredApiBase = () => {
 		const configuredBase = String(runtimeConfig.apiBaseUrl || './api/').trim()
@@ -70,6 +74,127 @@
 	const resolveApiUrl = path => {
 		const apiBaseUrl = new URL(getConfiguredApiBase(), document.baseURI)
 		return new URL(path, apiBaseUrl).toString()
+	}
+
+	const normalizeConfigLogin = value =>
+		String(value || '')
+			.toLowerCase()
+			.trim()
+			.replace(/\s+/g, '')
+			.replace(/[^a-z0-9._-]/g, '')
+	const normalizeConfigId = value => String(value || '').trim()
+	const normalizeConfigRole = value => (value === 'admin' ? 'admin' : 'user')
+	const normalizeConfigPermissions = permissions => {
+		if (!Array.isArray(permissions)) return []
+
+		const allowedPermissions = new Set(USERS_CONFIG_PERMISSION_IDS)
+		return [
+			...new Set(
+				permissions
+					.map(permission => String(permission || '').trim())
+					.filter(permission => allowedPermissions.has(permission))
+			),
+		]
+	}
+	const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key)
+	const readUsersConfigEntries = () => {
+		if (usersConfigLoaded) return usersConfigEntries
+
+		usersConfigLoaded = true
+
+		if (window.location.protocol === 'file:') return usersConfigEntries
+
+		const xhr = new XMLHttpRequest()
+		try {
+			xhr.open('GET', new URL(USERS_CONFIG_PATH, document.baseURI).toString(), false)
+			xhr.setRequestHeader('Accept', 'application/json')
+			xhr.send(null)
+		} catch (error) {
+			return usersConfigEntries
+		}
+
+		if (xhr.status !== 200) return usersConfigEntries
+
+		try {
+			const payload = JSON.parse(xhr.responseText || '{}')
+			const entries = Array.isArray(payload) ? payload : Array.isArray(payload?.users) ? payload.users : []
+			usersConfigEntries = entries.filter(
+				entry => entry && typeof entry === 'object' && (normalizeConfigId(entry.id) || normalizeConfigLogin(entry.login))
+			)
+		} catch (error) {
+			usersConfigEntries = []
+		}
+
+		return usersConfigEntries
+	}
+	const applyUsersConfig = users => {
+		const configEntries = readUsersConfigEntries()
+		if (!configEntries.length) return users
+
+		const configById = new Map(
+			configEntries
+				.map(entry => [normalizeConfigId(entry.id), entry])
+				.filter(([id]) => id)
+		)
+		const configByLogin = new Map(
+			configEntries
+				.map(entry => [normalizeConfigLogin(entry.login), entry])
+				.filter(([login]) => login)
+		)
+		const loginOwners = new Map(
+			users
+				.map(user => {
+					const login = normalizeConfigLogin(user?.login)
+					return login ? [login, normalizeConfigId(user?.id) || login] : null
+				})
+				.filter(Boolean)
+		)
+
+		return users.map(user => {
+			const userId = normalizeConfigId(user?.id)
+			const currentLogin = normalizeConfigLogin(user?.login)
+			const userOwner = userId || currentLogin
+			const config = (userId && configById.get(userId)) || configByLogin.get(currentLogin)
+			if (!config) return user
+
+			const role = hasOwn(config, 'role') ? normalizeConfigRole(config.role) : normalizeConfigRole(user.role)
+			const nextUser = {
+				...user,
+				role,
+				permissions: role === 'admin'
+					? [...USERS_CONFIG_PERMISSION_IDS]
+					: hasOwn(config, 'permissions')
+						? normalizeConfigPermissions(config.permissions)
+						: normalizeConfigPermissions(user.permissions),
+			}
+
+			if (hasOwn(config, 'fullName')) {
+				const fullName = String(config.fullName || '').trim()
+				if (fullName) nextUser.fullName = fullName
+			}
+			if (hasOwn(config, 'login')) {
+				const login = normalizeConfigLogin(config.login)
+				const claimedOwner = loginOwners.get(login)
+				if (login && (!claimedOwner || claimedOwner === userOwner)) {
+					if (currentLogin && loginOwners.get(currentLogin) === userOwner) {
+						loginOwners.delete(currentLogin)
+					}
+					loginOwners.set(login, userOwner)
+					nextUser.login = login
+				}
+			}
+			if (hasOwn(config, 'avatarId')) nextUser.avatarId = String(config.avatarId || nextUser.avatarId || 'violet').trim() || 'violet'
+			if (hasOwn(config, 'avatarImage')) nextUser.avatarImage = String(config.avatarImage || '').trim()
+			if (hasOwn(config, 'profileTitle')) nextUser.profileTitle = String(config.profileTitle || '').trim().slice(0, 80)
+			if (hasOwn(config, 'profileBio')) nextUser.profileBio = String(config.profileBio || '').trim().slice(0, 240)
+			if (hasOwn(config, 'profileAccentColor')) {
+				const accentColor = String(config.profileAccentColor || '').trim().toLowerCase()
+				nextUser.profileAccentColor = /^#[0-9a-f]{6}$/.test(accentColor) ? accentColor : nextUser.profileAccentColor
+			}
+			if (hasOwn(config, 'profileCoverImage')) nextUser.profileCoverImage = String(config.profileCoverImage || '').trim()
+
+			return nextUser
+		})
 	}
 
 	const isRemoteServerFailure = status => status === 0 || status >= 500
@@ -356,7 +481,7 @@
 					if (shouldFallbackToLocal(response.status)) {
 						activateRemoteStorageFallback(response.message)
 						const cachedUsers = readLocalJsonValue(this.storageKey, [])
-						return Array.isArray(cachedUsers) ? cachedUsers : []
+						return Array.isArray(cachedUsers) ? applyUsersConfig(cachedUsers) : []
 					}
 					notifyStorageError(response.message || 'Nie udalo sie pobrac listy uzytkownikow.')
 					return []
@@ -368,7 +493,7 @@
 			}
 
 			const storedUsers = storageService.readJson(this.storageKey, [])
-			return Array.isArray(storedUsers) ? storedUsers : []
+			return Array.isArray(storedUsers) ? applyUsersConfig(storedUsers) : []
 		},
 		saveAll(users) {
 			if (remoteApi.isRemoteEnabled()) {

@@ -61,6 +61,8 @@ try {
 		throw new RuntimeException('Nie udalo sie utworzyc konta.');
 	}
 
+	dashboard_export_users_config_snapshot($users);
+
 	$session = dashboard_set_session((string) $createdUser['id']);
 
 	dashboard_json_response([

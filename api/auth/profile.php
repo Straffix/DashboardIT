@@ -24,7 +24,7 @@ try {
 	}
 
 	$updatedUser = null;
-	dashboard_update_json_file(dashboard_users_path(), [], function ($users) use (&$updatedUser, $currentUser, $fullName, $login, $avatarId, $avatarImage, $profileTitle, $profileBio, $profileAccentColor, $profileCoverImage) {
+	$updatedUsers = dashboard_update_json_file(dashboard_users_path(), [], function ($users) use (&$updatedUser, $currentUser, $fullName, $login, $avatarId, $avatarImage, $profileTitle, $profileBio, $profileAccentColor, $profileCoverImage) {
 		$users = dashboard_normalize_users_array($users);
 
 		foreach ($users as $user) {
@@ -60,6 +60,8 @@ try {
 	if (!$updatedUser) {
 		throw new RuntimeException('Nie znaleziono konta do aktualizacji.');
 	}
+
+	dashboard_export_users_config_snapshot($updatedUsers);
 
 	dashboard_json_response([
 		'ok' => true,

@@ -75,11 +75,22 @@
 					}))
 			: []
 
-	const mergeLocalDemoRecords = (existingRecords, demoRecords) => {
+	const isDemoUserRecord = user => {
+		const id = String(user?.id || '').trim()
+		const login = String(user?.login || '').trim().toLowerCase()
+		return Boolean(user?.isDemo || id === 'demo-admin' || /^demo-user-\d+$/.test(id) || login === 'demoarek')
+	}
+
+	const isLegacyExtraDemoUserRecord = user => /^demo-user-\d+$/.test(String(user?.id || '').trim())
+
+	const isDemoRecord = (record, { usersMode = false } = {}) =>
+		usersMode ? isDemoUserRecord(record) : Boolean(record?.isDemo)
+
+	const mergeLocalDemoRecords = (existingRecords, demoRecords, options = {}) => {
 		const safeExistingRecords = Array.isArray(existingRecords)
 			? existingRecords.filter(record => record && typeof record === 'object')
 			: []
-		const cleanExistingRecords = safeExistingRecords.filter(record => !record.isDemo)
+		const cleanExistingRecords = safeExistingRecords.filter(record => !isDemoRecord(record, options))
 		return [...cleanExistingRecords, ...markLocalDemoRecords(demoRecords)]
 	}
 
@@ -92,7 +103,7 @@
 			? users.find(user => String(user?.id || '') === String(session.userId || ''))
 			: null
 
-		return Boolean(matchedUser?.isDemo)
+		return isDemoUserRecord(matchedUser)
 	}
 
 	const getDemoButtonHost = () =>
@@ -100,6 +111,29 @@
 		document.querySelector('.dashboard-theme-bookmark-slot') ||
 		document.querySelector('.dashboard-topbar') ||
 		document.body
+
+	const bindThemeMenuReveal = host => {
+		if (!host || host.dataset.demoRevealBound === 'true') return
+
+		const themeToggle = host.querySelector('.theme-toggle-btn')
+		if (!themeToggle) return
+
+		host.dataset.demoRevealBound = 'true'
+
+		const setThemeMenuArmed = isArmed => {
+			host.classList.toggle('is-theme-menu-armed', isArmed)
+		}
+
+		themeToggle.addEventListener('mouseenter', () => setThemeMenuArmed(true))
+		themeToggle.addEventListener('focusin', () => setThemeMenuArmed(true))
+		themeToggle.addEventListener('touchstart', () => setThemeMenuArmed(true), { passive: true })
+		host.addEventListener('mouseleave', () => setThemeMenuArmed(false))
+		host.addEventListener('focusout', () => {
+			window.setTimeout(() => {
+				if (!host.contains(document.activeElement)) setThemeMenuArmed(false)
+			}, 0)
+		})
+	}
 
 	const ensureDemoButton = () => {
 		const existingButton = document.getElementById('dashboard-demo-toggle-btn')
@@ -109,6 +143,7 @@
 			if (host && existingButton.parentElement !== host) {
 				host.appendChild(existingButton)
 			}
+			bindThemeMenuReveal(host)
 			return existingButton
 		}
 
@@ -129,6 +164,7 @@
 		`
 
 		host.appendChild(button)
+		bindThemeMenuReveal(host)
 
 		return button
 	}
@@ -157,7 +193,30 @@
 		ribbon.setAttribute('aria-hidden', String(!isVisible))
 	}
 
+	const pruneLegacyExtraDemoUsers = () => {
+		if (isRemoteMode()) return false
+
+		const storageKeys = getStorageKeys()
+		const existingUsers = getJson(storageKeys.USERS, [])
+		if (!Array.isArray(existingUsers)) return false
+
+		const existingSession = getJson(storageKeys.SESSION, null)
+		const sessionUser = existingUsers.find(user => String(user?.id || '') === String(existingSession?.userId || ''))
+		const nextUsers = existingUsers.filter(user => !isLegacyExtraDemoUserRecord(user))
+		if (nextUsers.length !== existingUsers.length) {
+			setJson(storageKeys.USERS, nextUsers)
+			if (isLegacyExtraDemoUserRecord(sessionUser)) {
+				removeKey(storageKeys.SESSION)
+			}
+			return true
+		}
+
+		return false
+	}
+
 	onReady(() => {
+		const didPruneLegacyUsers = pruneLegacyExtraDemoUsers()
+
 		const demoButton = ensureDemoButton()
 
 		const refreshButtonState = () => {
@@ -232,7 +291,7 @@
 			const storageKeys = getStorageKeys()
 			const existingUsers = getJson(storageKeys.USERS, [])
 			const existingSession = getJson(storageKeys.SESSION, null)
-			const nextUsers = mergeLocalDemoRecords(existingUsers, payload.users || [])
+			const nextUsers = mergeLocalDemoRecords(existingUsers, payload.users || [], { usersMode: true })
 			const shouldReplaceSession = !existingSession || isSessionBoundToDemoUser(existingSession, existingUsers)
 
 			setJson(storageKeys.USERS, nextUsers)
@@ -266,7 +325,7 @@
 			const storageKeys = getStorageKeys()
 			const existingUsers = getJson(storageKeys.USERS, [])
 			const existingSession = getJson(storageKeys.SESSION, null)
-			const nextUsers = mergeLocalDemoRecords(existingUsers, [])
+			const nextUsers = mergeLocalDemoRecords(existingUsers, [], { usersMode: true })
 			clearLocalDemoPreferences()
 			setJson(storageKeys.USERS, nextUsers)
 			setJson(storageKeys.HIRES, mergeLocalDemoRecords(getJson(storageKeys.HIRES, []), []))
@@ -346,8 +405,8 @@
 			const shouldClear = await confirmAction({
 				title: 'Usunac przykladowe dane?',
 				message: isRemoteMode()
-					? 'To usunie tylko rekordy i konta oznaczone jako demo. Prawdziwi użytkownicy oraz normalne wpisy zostana nienaruszone.'
-					: 'To wyczysci lokalne dane testowe ze wszystkich modulow oraz konto demo zapisane w tej przegladarce.',
+					? 'To usunie tylko rekordy i konta demo. Prawdziwi użytkownicy oraz normalne wpisy zostana nienaruszone.'
+					: 'To wyczysci lokalne dane testowe ze wszystkich modulow oraz konta demo zapisane w tej przegladarce.',
 				confirmLabel: 'Usun dane',
 				cancelLabel: 'Anuluj',
 			})
@@ -379,5 +438,8 @@
 		window.addEventListener('focus', refreshButtonState)
 		document.addEventListener('app-auth-changed', refreshButtonState)
 		refreshButtonState()
+		if (didPruneLegacyUsers) {
+			document.dispatchEvent(new CustomEvent('app-auth-changed'))
+		}
 	})
 })()

@@ -20,7 +20,6 @@ const AUTH_CONFIG = {
 		{ id: 'printers', label: 'Drukarkowy' },
 		{ id: 'rooms', label: 'Salkowy' },
 	],
-	accentOptions: ['#0f766e', '#2563eb', '#be123c', '#7c3aed', '#ca8a04'],
 	themeOptions: [
 		{ id: 'light', label: 'Jasny', icon: 'fa-sun' },
 		{ id: 'dark', label: 'Ciemny', icon: 'fa-moon' },
@@ -68,11 +67,8 @@ const authState = {
 	profileLoginInput: null,
 	profileTitleInput: null,
 	profileBioInput: null,
-	profileAccentInput: null,
 	profileCoverPreview: null,
 	profileCoverUploadInput: null,
-	profileCoverBrowseBtn: null,
-	profileCoverResetBtn: null,
 	profileCurrentPasswordInput: null,
 	profileNewPasswordInput: null,
 	profilePasswordRepeatInput: null,
@@ -81,8 +77,12 @@ const authState = {
 	profileUpdatedAtValue: null,
 	profileLastLoginValue: null,
 	profileModuleValue: null,
-	profileTeamSection: null,
-	profileTeamList: null,
+	profileAdminUsersBtn: null,
+	adminUsersModal: null,
+	adminUsersSearchInput: null,
+	adminUsersList: null,
+	adminUsersCountValue: null,
+	adminUsersStorageValue: null,
 	profileAvatarPreview: null,
 	profileAvatarUploadInput: null,
 	profileAvatarBrowseBtn: null,
@@ -94,6 +94,7 @@ const authState = {
 	customRegisterAvatarImage: '',
 	customProfileAvatarImage: '',
 	customProfileCoverImage: '',
+	profileCoverCropState: null,
 }
 
 const systemUiState = {
@@ -171,6 +172,7 @@ const refreshThemeToggleState = theme => {
 
 	const themeSequence = AUTH_CONFIG.themeOptions.map(option => option.id)
 	const activeIndex = themeSequence.indexOf(normalizedTheme)
+	const optionList = themeToggle.querySelector('.theme-toggle-option-list')
 	themeToggle.dataset.themeOption = normalizedTheme
 	themeToggle.dataset.nextTheme = themeSequence[(activeIndex + 1) % themeSequence.length] || 'light'
 	themeToggle.querySelectorAll('[data-theme-icon]').forEach(button => {
@@ -178,6 +180,12 @@ const refreshThemeToggleState = theme => {
 		button.classList.toggle('is-active', isActive)
 		button.setAttribute('aria-pressed', String(isActive))
 	})
+	if (optionList) {
+		[normalizedTheme, ...themeSequence.filter(themeOption => themeOption !== normalizedTheme)].forEach(themeOption => {
+			const button = optionList.querySelector(`[data-theme-icon="${themeOption}"]`)
+			if (button) optionList.appendChild(button)
+		})
+	}
 }
 
 const applyThemePreference = theme => {
@@ -443,6 +451,16 @@ const renderAuthUi = () => {
 
 	authState.popoverActions.innerHTML = currentUser
 		? `
+			${
+				currentUser.role === 'admin'
+					? `
+						<button type="button" class="app-user-action-btn" data-user-action="admin-users">
+							<i class="fa-solid fa-users-gear"></i>
+							<span>Użytkownicy</span>
+						</button>
+					`
+					: ''
+			}
 			<button type="button" class="app-user-action-btn" data-user-action="profile">
 				<i class="fa-solid fa-user-gear"></i>
 				<span>Profil</span>
@@ -774,18 +792,32 @@ const changeCurrentUserPassword = ({ currentPassword, newPassword }) => {
 	return true
 }
 
-const updateUserAccess = ({ userId, role, permissions } = {}) => {
+const updateUserAccess = ({ userId, fullName, login, role, permissions } = {}) => {
 	if (!authState.currentUser || authState.currentUser.role !== 'admin') {
 		throw new Error('Tylko lider może nadawać uprawnienia.')
 	}
 
 	const normalizedUserId = String(userId || '').trim()
+	const normalizedName = String(fullName || '').trim()
+	const normalizedLogin = normalizeUserLogin(login)
 	if (!normalizedUserId) {
 		throw new Error('Brak wskazanego użytkownika.')
 	}
 
+	if (!normalizedName) {
+		throw new Error('Wpisz imię i nazwisko użytkownika.')
+	}
+
+	if (!normalizedLogin) {
+		throw new Error('Wpisz poprawny login użytkownika.')
+	}
+
 	if (normalizedUserId === String(authState.currentUser.id || '')) {
 		throw new Error('W tej wersji nie zmienisz tutaj własnych uprawnień lidera.')
+	}
+
+	if (authState.users.some(user => String(user.id || '') !== normalizedUserId && normalizeUserLogin(user.login) === normalizedLogin)) {
+		throw new Error('Ten login jest już zajęty.')
 	}
 
 	if (isRemoteAuthMode()) {
@@ -794,6 +826,8 @@ const updateUserAccess = ({ userId, role, permissions } = {}) => {
 			method: 'POST',
 			payload: {
 				userId: normalizedUserId,
+				fullName: normalizedName,
+				login: normalizedLogin,
 				role: normalizeUserRole(role),
 				permissions: normalizeUserPermissions(permissions),
 			},
@@ -813,6 +847,8 @@ const updateUserAccess = ({ userId, role, permissions } = {}) => {
 
 		matchedUser = {
 			...user,
+			fullName: normalizedName,
+			login: normalizedLogin,
 			role: normalizedRole,
 			permissions: nextPermissions,
 			updatedAt: now,
@@ -978,6 +1014,16 @@ const renderPageStatusStrip = () => {
 
 	systemUiState.pageStatusActions.innerHTML = currentUser
 		? `
+			${
+				currentUser.role === 'admin'
+					? `
+						<button type="button" class="app-page-status-btn" data-user-action="admin-users">
+							<i class="fa-solid fa-users-gear"></i>
+							<span>Użytkownicy</span>
+						</button>
+					`
+					: ''
+			}
 			<button type="button" class="app-page-status-btn" data-user-action="profile">
 				<i class="fa-solid fa-user-gear"></i>
 				<span>Profil</span>
@@ -1005,6 +1051,7 @@ const handleUserAction = action => {
 	if (action === 'login') openAuthModal('login')
 	if (action === 'register') openAuthModal('register')
 	if (action === 'profile') openProfileModal()
+	if (action === 'admin-users') openAdminUsersModal()
 	if (action === 'logout') logoutUser()
 }
 
@@ -1116,36 +1163,70 @@ const renderProfileAvatarEditor = () => {
 }
 
 const renderProfileCoverEditor = () => {
-	const accentColor = normalizeProfileAccentColor(authState.profileAccentInput?.value || authState.currentUser?.profileAccentColor)
+	const accentColor = normalizeProfileAccentColor(authState.currentUser?.profileAccentColor)
 	const coverImage = normalizeProfileCoverImage(authState.customProfileCoverImage)
 	const displayName = authState.profileNameInput?.value || authState.currentUser?.fullName || 'Użytkownik'
 	const title = normalizeProfileTitle(authState.profileTitleInput?.value || authState.currentUser?.profileTitle)
 	const bio = normalizeProfileBio(authState.profileBioInput?.value || authState.currentUser?.profileBio)
+	const isCroppingCover = Boolean(authState.profileCoverCropState)
 
 	if (authState.profileCoverPreview) {
 		authState.profileCoverPreview.style.setProperty('--profile-accent', accentColor)
 		authState.profileCoverPreview.style.setProperty('--profile-cover-image', coverImage ? `url('${escapeHtml(coverImage)}')` : 'none')
 		authState.profileCoverPreview.classList.toggle('has-cover-image', Boolean(coverImage))
-		authState.profileCoverPreview.innerHTML = `
-			<div class="app-profile-cover-visual" aria-hidden="true"></div>
-			<div class="app-profile-cover-content">
-				${createAvatarMarkup({
-					fullName: displayName,
-					avatarId: authState.selectedProfileAvatarId,
-					avatarImage: authState.customProfileAvatarImage,
-					extraClass: 'app-user-avatar-xl',
-				})}
-				<div class="app-profile-cover-copy">
-					<strong>${escapeHtml(displayName)}</strong>
-					<span>${escapeHtml(title || getRoleLabel(authState.currentUser?.role))}</span>
-					<p>${escapeHtml(bio || 'Krótki opis profilu pojawi się tutaj.')}</p>
-				</div>
-			</div>
-		`
-	}
+		authState.profileCoverPreview.classList.toggle('is-cropping', isCroppingCover)
 
-	if (authState.profileCoverResetBtn) {
-		authState.profileCoverResetBtn.hidden = !coverImage
+		if (isCroppingCover) {
+			authState.profileCoverPreview.innerHTML = `
+				<div class="app-profile-cover-cropper" data-profile-cover-cropper>
+					<img src="${escapeHtml(authState.profileCoverCropState.src)}" alt="" draggable="false" data-profile-cover-crop-image>
+					<div class="app-profile-cover-actions app-profile-cover-crop-actions">
+						<button type="button" class="app-avatar-upload-btn is-primary" data-profile-cover-apply>
+							<i class="fa-solid fa-check"></i>
+							<span>Zastosuj kadr</span>
+						</button>
+						<button type="button" class="app-avatar-upload-btn is-secondary" data-profile-cover-cancel>
+							<i class="fa-solid fa-xmark"></i>
+							<span>Anuluj</span>
+						</button>
+					</div>
+				</div>
+			`
+			window.requestAnimationFrame(() => syncProfileCoverCropperGeometry())
+		} else {
+			authState.profileCoverPreview.innerHTML = `
+				<div class="app-profile-cover-actions">
+					<button type="button" class="app-avatar-upload-btn is-primary" data-profile-cover-browse>
+						<i class="fa-solid fa-panorama"></i>
+						<span>${coverImage ? 'Zmień tło' : 'Wgraj tło'}</span>
+					</button>
+					${
+						coverImage
+							? `
+								<button type="button" class="app-avatar-upload-btn is-secondary" data-profile-cover-reset>
+									<i class="fa-solid fa-trash-can"></i>
+									<span>Usuń tło</span>
+								</button>
+							`
+							: ''
+					}
+				</div>
+				<div class="app-profile-cover-visual" aria-hidden="true"></div>
+				<div class="app-profile-cover-content">
+					${createAvatarMarkup({
+						fullName: displayName,
+						avatarId: authState.selectedProfileAvatarId,
+						avatarImage: authState.customProfileAvatarImage,
+						extraClass: 'app-user-avatar-xl',
+					})}
+					<div class="app-profile-cover-copy">
+						<strong>${escapeHtml(displayName)}</strong>
+						<span>${escapeHtml(title || getRoleLabel(authState.currentUser?.role))}</span>
+						<p>${escapeHtml(bio || 'Krótki opis profilu pojawi się tutaj.')}</p>
+					</div>
+				</div>
+			`
+		}
 	}
 }
 
@@ -1172,6 +1253,29 @@ const getManageableUsers = () => {
 
 			return String(leftUser.fullName || leftUser.login || '').localeCompare(String(rightUser.fullName || rightUser.login || ''), 'pl')
 		})
+}
+
+const getAdminUsersSearchTerm = () =>
+	String(authState.adminUsersSearchInput?.value || '')
+		.trim()
+		.toLocaleLowerCase('pl-PL')
+
+const matchesAdminUsersSearch = (user, searchTerm) => {
+	if (!searchTerm) return true
+
+	const permissions = getEffectiveUserPermissions(user)
+		.map(getPermissionLabel)
+		.join(' ')
+	const haystack = [
+		user.fullName,
+		user.login,
+		getRoleLabel(user.role),
+		permissions,
+	]
+		.join(' ')
+		.toLocaleLowerCase('pl-PL')
+
+	return haystack.includes(searchTerm)
 }
 
 const syncTeamMemberCardState = card => {
@@ -1203,98 +1307,142 @@ const syncTeamMemberCardState = card => {
 	summary.textContent = selectedPermissions.length > 0 ? `Klasy: ${selectedPermissions.map(getPermissionLabel).join(', ')}` : 'Brak nadanych klas.'
 }
 
-const renderTeamManagement = () => {
-	if (!authState.profileTeamSection || !authState.profileTeamList) return
+const createManagedUserCardMarkup = user => {
+	const isLeaderRole = user.role === 'admin'
+	const permissions = getEffectiveUserPermissions(user)
+
+	return `
+		<article class="app-team-member-card" data-user-id="${escapeHtml(user.id)}">
+			<div class="app-team-member-head">
+				<div class="app-team-member-identity">
+					${createAvatarMarkup({
+						fullName: user.fullName || user.login || 'Użytkownik',
+						avatarId: user.avatarId,
+						avatarImage: user.avatarImage,
+					})}
+					<div class="app-team-member-copy">
+						<strong>${escapeHtml(user.fullName || `@${user.login}`)}</strong>
+						<span>${getRoleLabel(user.role)} · @${escapeHtml(user.login || '')}</span>
+					</div>
+				</div>
+				<div class="app-team-member-details">
+					<label class="app-team-member-control">
+						<span>Imię i nazwisko</span>
+						<input type="text" value="${escapeHtml(user.fullName || '')}" data-team-full-name autocomplete="off">
+					</label>
+					<label class="app-team-member-control">
+						<span>Login</span>
+						<input type="text" value="${escapeHtml(user.login || '')}" data-team-login autocomplete="off">
+					</label>
+				</div>
+				<label class="app-team-member-control">
+					<span>Poziom dostępu</span>
+					<select data-team-role>
+						<option value="user" ${user.role === 'user' ? 'selected' : ''}>Pracownik</option>
+						<option value="admin" ${isLeaderRole ? 'selected' : ''}>Lider</option>
+					</select>
+				</label>
+			</div>
+			<div class="app-team-member-permissions">
+				<span>Klasy użytkownika</span>
+				<div class="app-team-permission-grid">
+					${AUTH_CONFIG.permissionOptions
+						.map(
+							option => `
+								<label class="app-team-permission-chip">
+									<input
+										type="checkbox"
+										value="${option.id}"
+										data-team-permission
+										${isLeaderRole || permissions.includes(option.id) ? 'checked' : ''}
+										${isLeaderRole ? 'disabled' : ''}>
+									<span>${option.label}</span>
+								</label>
+							`
+						)
+						.join('')}
+				</div>
+			</div>
+			<div class="app-team-member-footer">
+				<p class="app-team-member-summary" data-team-summary>${
+					isLeaderRole
+						? 'Pełny dostęp do wszystkich klas i zarządzania kontami.'
+						: permissions.length > 0
+							? `Klasy: ${permissions.map(getPermissionLabel).join(', ')}`
+							: 'Brak nadanych klas.'
+				}</p>
+				<button type="button" class="app-avatar-upload-btn is-primary app-team-member-save" data-team-save>
+					<i class="fa-solid fa-floppy-disk"></i>
+					<span>Zapisz konto</span>
+				</button>
+			</div>
+		</article>
+	`
+}
+
+const renderAdminUsersPanel = () => {
+	if (!authState.adminUsersList) return
 
 	const isLeader = authState.currentUser?.role === 'admin'
-	authState.profileTeamSection.classList.toggle('is-hidden', !isLeader)
-
 	if (!isLeader) {
-		authState.profileTeamList.innerHTML = ''
+		authState.adminUsersList.innerHTML = ''
 		return
 	}
 
 	const manageableUsers = getManageableUsers()
+	const searchTerm = getAdminUsersSearchTerm()
+	const filteredUsers = manageableUsers.filter(user => matchesAdminUsersSearch(user, searchTerm))
+
+	if (authState.adminUsersCountValue) {
+		authState.adminUsersCountValue.textContent = `${filteredUsers.length} / ${manageableUsers.length}`
+	}
+
+	if (authState.adminUsersStorageValue) {
+		authState.adminUsersStorageValue.textContent = isRemoteAuthMode() ? 'Serwer' : 'Lokalnie'
+	}
+
 	if (manageableUsers.length === 0) {
-		authState.profileTeamList.innerHTML = `
+		authState.adminUsersList.innerHTML = `
 			<div class="app-team-empty">
 				<strong>Brak innych kont do konfiguracji</strong>
 				<p>${
 					isRemoteAuthMode()
-						? 'Gdy kolejne osoby zaloza konto na serwerze, pojawia sie tutaj i bedziesz mogl nadac im role oraz klasy.'
-						: 'Gdy kolejne osoby zaloza konto lokalne, pojawia sie tutaj i bedziesz mogl nadac im role oraz klasy.'
+						? 'Gdy kolejne osoby zaloza konto na serwerze, pojawia sie tutaj i bedziesz mogl poprawic ich dane, role oraz klasy.'
+						: 'Gdy kolejne osoby zaloza konto lokalne, pojawia sie tutaj i bedziesz mogl poprawic ich dane, role oraz klasy.'
 				}</p>
 			</div>
 		`
 		return
 	}
 
-	authState.profileTeamList.innerHTML = manageableUsers
-		.map(user => {
-			const isLeaderRole = user.role === 'admin'
-			const permissions = getEffectiveUserPermissions(user)
+	if (filteredUsers.length === 0) {
+		authState.adminUsersList.innerHTML = `
+			<div class="app-team-empty">
+				<strong>Brak wyników</strong>
+				<p>Zmień wyszukiwaną frazę, aby zobaczyć konta pasujące do imienia, loginu, roli lub klasy.</p>
+			</div>
+		`
+		return
+	}
 
-			return `
-				<article class="app-team-member-card" data-user-id="${escapeHtml(user.id)}">
-					<div class="app-team-member-head">
-						<div class="app-team-member-identity">
-							${createAvatarMarkup({
-								fullName: user.fullName || user.login || 'Użytkownik',
-								avatarId: user.avatarId,
-								avatarImage: user.avatarImage,
-							})}
-							<div class="app-team-member-copy">
-								<strong>${escapeHtml(user.fullName || `@${user.login}`)}</strong>
-								<span>${getRoleLabel(user.role)} · @${escapeHtml(user.login || '')}</span>
-							</div>
-						</div>
-						<label class="app-team-member-control">
-							<span>Poziom dostępu</span>
-							<select data-team-role>
-								<option value="user" ${user.role === 'user' ? 'selected' : ''}>Pracownik</option>
-								<option value="admin" ${isLeaderRole ? 'selected' : ''}>Lider</option>
-							</select>
-						</label>
-					</div>
-					<div class="app-team-member-permissions">
-						<span>Klasy użytkownika</span>
-						<div class="app-team-permission-grid">
-							${AUTH_CONFIG.permissionOptions
-								.map(
-									option => `
-										<label class="app-team-permission-chip">
-											<input
-												type="checkbox"
-												value="${option.id}"
-												data-team-permission
-												${isLeaderRole || permissions.includes(option.id) ? 'checked' : ''}
-												${isLeaderRole ? 'disabled' : ''}>
-											<span>${option.label}</span>
-										</label>
-									`
-								)
-								.join('')}
-						</div>
-					</div>
-					<div class="app-team-member-footer">
-						<p class="app-team-member-summary" data-team-summary>${
-							isLeaderRole
-								? 'Pełny dostęp do wszystkich klas i zarządzania kontami.'
-								: permissions.length > 0
-									? `Klasy: ${permissions.map(getPermissionLabel).join(', ')}`
-									: 'Brak nadanych klas.'
-						}</p>
-						<button type="button" class="app-avatar-upload-btn is-primary app-team-member-save" data-team-save>
-							<i class="fa-solid fa-shield-halved"></i>
-							<span>Zapisz uprawnienia</span>
-						</button>
-					</div>
-				</article>
-			`
-		})
-		.join('')
+	authState.adminUsersList.innerHTML = filteredUsers.map(createManagedUserCardMarkup).join('')
+	authState.adminUsersList.querySelectorAll('.app-team-member-card').forEach(syncTeamMemberCardState)
+}
 
-	authState.profileTeamList.querySelectorAll('.app-team-member-card').forEach(syncTeamMemberCardState)
+const saveManagedUserCard = memberCard => {
+	const fullNameInput = memberCard?.querySelector('[data-team-full-name]')
+	const loginInput = memberCard?.querySelector('[data-team-login]')
+	const roleSelect = memberCard?.querySelector('[data-team-role]')
+	const selectedPermissions = [...(memberCard?.querySelectorAll('[data-team-permission]:checked') || [])].map(input => input.value)
+
+	updateUserAccess({
+		userId: memberCard?.dataset.userId || '',
+		fullName: fullNameInput?.value || '',
+		login: loginInput?.value || '',
+		role: roleSelect?.value || 'user',
+		permissions: selectedPermissions,
+	})
+	renderAdminUsersPanel()
 }
 
 const resetRegisterAvatarEditor = () => {
@@ -1324,6 +1472,7 @@ const clearCustomAvatar = scope => {
 }
 
 const clearCustomProfileCover = () => {
+	authState.profileCoverCropState = null
 	authState.customProfileCoverImage = ''
 	if (authState.profileCoverUploadInput) {
 		authState.profileCoverUploadInput.value = ''
@@ -1394,7 +1543,7 @@ const buildAvatarImageFromFile = file =>
 		reader.readAsDataURL(file)
 	})
 
-const buildCoverImageFromFile = file =>
+const readCoverImageFile = file =>
 	new Promise((resolve, reject) => {
 		if (!file) {
 			reject(new Error('Nie wybrano pliku tła profilu.'))
@@ -1417,56 +1566,148 @@ const buildCoverImageFromFile = file =>
 			const image = new Image()
 			image.onerror = () => reject(new Error('Nie udało się przetworzyć obrazu tła profilu.'))
 			image.onload = () => {
-				const targetWidth = AUTH_CONFIG.coverOutputWidth
-				const targetHeight = AUTH_CONFIG.coverOutputHeight
-				const targetRatio = targetWidth / targetHeight
-				const sourceRatio = image.width / image.height
-				let sourceWidth = image.width
-				let sourceHeight = image.height
-				let sourceX = 0
-				let sourceY = 0
-
-				if (sourceRatio > targetRatio) {
-					sourceWidth = Math.floor(image.height * targetRatio)
-					sourceX = Math.floor((image.width - sourceWidth) / 2)
-				} else {
-					sourceHeight = Math.floor(image.width / targetRatio)
-					sourceY = Math.floor((image.height - sourceHeight) / 2)
-				}
-
-				const canvas = document.createElement('canvas')
-				canvas.width = targetWidth
-				canvas.height = targetHeight
-
-				const context = canvas.getContext('2d')
-				if (!context) {
-					reject(new Error('Przeglądarka nie pozwala przygotować tła profilu.'))
-					return
-				}
-
-				context.drawImage(
-					image,
-					sourceX,
-					sourceY,
-					sourceWidth,
-					sourceHeight,
-					0,
-					0,
-					targetWidth,
-					targetHeight
-				)
-
-				try {
-					resolve(canvas.toDataURL('image/jpeg', AUTH_CONFIG.coverOutputQuality))
-				} catch (error) {
-					reject(new Error('Nie udało się zapisać przygotowanego tła profilu.'))
-				}
+				resolve({
+					src: String(reader.result || ''),
+					width: image.naturalWidth || image.width,
+					height: image.naturalHeight || image.height,
+				})
 			}
 
 			image.src = String(reader.result || '')
 		}
 
 		reader.readAsDataURL(file)
+	})
+
+const getProfileCoverCropElements = () => ({
+	cropper: authState.profileCoverPreview?.querySelector('[data-profile-cover-cropper]') || null,
+	image: authState.profileCoverPreview?.querySelector('[data-profile-cover-crop-image]') || null,
+})
+
+const clampProfileCoverCropState = () => {
+	const state = authState.profileCoverCropState
+	if (!state) return
+
+	const minOffsetX = Math.min(0, state.viewportWidth - state.displayWidth)
+	const minOffsetY = Math.min(0, state.viewportHeight - state.displayHeight)
+	state.offsetX = state.displayWidth <= state.viewportWidth
+		? (state.viewportWidth - state.displayWidth) / 2
+		: Math.min(0, Math.max(minOffsetX, state.offsetX))
+	state.offsetY = state.displayHeight <= state.viewportHeight
+		? (state.viewportHeight - state.displayHeight) / 2
+		: Math.min(0, Math.max(minOffsetY, state.offsetY))
+}
+
+const applyProfileCoverCropTransform = () => {
+	const state = authState.profileCoverCropState
+	if (!state) return
+
+	const { image } = getProfileCoverCropElements()
+	if (!image) return
+
+	image.style.width = `${state.displayWidth}px`
+	image.style.height = `${state.displayHeight}px`
+	image.style.transform = `translate3d(${state.offsetX}px, ${state.offsetY}px, 0)`
+}
+
+const syncProfileCoverCropperGeometry = ({ reset = false } = {}) => {
+	const state = authState.profileCoverCropState
+	const { cropper } = getProfileCoverCropElements()
+	if (!state || !cropper) return
+
+	const rect = cropper.getBoundingClientRect()
+	if (!rect.width || !rect.height) return
+
+	const minScale = Math.max(rect.width / state.imageWidth, rect.height / state.imageHeight)
+	state.viewportWidth = rect.width
+	state.viewportHeight = rect.height
+
+	if (reset || !state.geometryReady) {
+		const initialScale = minScale * 1.08
+		state.displayWidth = state.imageWidth * initialScale
+		state.displayHeight = state.imageHeight * initialScale
+		state.offsetX = (rect.width - state.displayWidth) / 2
+		state.offsetY = (rect.height - state.displayHeight) / 2
+		state.geometryReady = true
+	}
+
+	clampProfileCoverCropState()
+	applyProfileCoverCropTransform()
+}
+
+const startProfileCoverCrop = async file => {
+	const image = await readCoverImageFile(file)
+	authState.profileCoverCropState = {
+		src: image.src,
+		imageWidth: image.width,
+		imageHeight: image.height,
+		displayWidth: 0,
+		displayHeight: 0,
+		viewportWidth: 0,
+		viewportHeight: 0,
+		offsetX: 0,
+		offsetY: 0,
+		geometryReady: false,
+		isDragging: false,
+	}
+	renderProfileCoverEditor()
+}
+
+const buildCoverImageFromCropState = () =>
+	new Promise((resolve, reject) => {
+		const state = authState.profileCoverCropState
+		if (!state) {
+			reject(new Error('Brak aktywnego kadru tła profilu.'))
+			return
+		}
+
+		syncProfileCoverCropperGeometry()
+
+		const scale = state.displayWidth / state.imageWidth
+		if (!scale || !state.viewportWidth || !state.viewportHeight) {
+			reject(new Error('Nie udało się odczytać kadru tła profilu.'))
+			return
+		}
+
+		const image = new Image()
+		image.onerror = () => reject(new Error('Nie udało się przetworzyć kadru tła profilu.'))
+		image.onload = () => {
+			const targetWidth = AUTH_CONFIG.coverOutputWidth
+			const targetHeight = AUTH_CONFIG.coverOutputHeight
+			const sourceX = Math.max(0, -state.offsetX / scale)
+			const sourceY = Math.max(0, -state.offsetY / scale)
+			const sourceWidth = Math.min(state.imageWidth - sourceX, state.viewportWidth / scale)
+			const sourceHeight = Math.min(state.imageHeight - sourceY, state.viewportHeight / scale)
+			const canvas = document.createElement('canvas')
+			canvas.width = targetWidth
+			canvas.height = targetHeight
+
+			const context = canvas.getContext('2d')
+			if (!context) {
+				reject(new Error('Przeglądarka nie pozwala przygotować tła profilu.'))
+				return
+			}
+
+			context.drawImage(
+				image,
+				sourceX,
+				sourceY,
+				sourceWidth,
+				sourceHeight,
+				0,
+				0,
+				targetWidth,
+				targetHeight
+			)
+
+			try {
+				resolve(canvas.toDataURL('image/jpeg', AUTH_CONFIG.coverOutputQuality))
+			} catch (error) {
+				reject(new Error('Nie udało się zapisać przygotowanego tła profilu.'))
+			}
+		}
+
+		image.src = state.src
 	})
 
 const handleAvatarFileSelection = async (scope, file) => {
@@ -1482,8 +1723,50 @@ const handleAvatarFileSelection = async (scope, file) => {
 }
 
 const handleCoverFileSelection = async file => {
-	authState.customProfileCoverImage = await buildCoverImageFromFile(file)
-	renderProfileCoverEditor()
+	await startProfileCoverCrop(file)
+}
+
+const moveProfileCoverCrop = event => {
+	const state = authState.profileCoverCropState
+	if (!state?.isDragging) return
+
+	state.offsetX = state.dragStartOffsetX + event.clientX - state.dragStartClientX
+	state.offsetY = state.dragStartOffsetY + event.clientY - state.dragStartClientY
+	clampProfileCoverCropState()
+	applyProfileCoverCropTransform()
+}
+
+const stopProfileCoverCropDrag = event => {
+	const state = authState.profileCoverCropState
+	if (!state?.isDragging) return
+
+	state.isDragging = false
+	const { cropper } = getProfileCoverCropElements()
+	cropper?.classList.remove('is-dragging')
+	try {
+		cropper?.releasePointerCapture?.(event.pointerId)
+	} catch (error) {
+		// Pointer capture can already be released by the browser.
+	}
+}
+
+const startProfileCoverCropDrag = event => {
+	const target = getEventTargetElement(event.target)
+	const cropper = target?.closest('[data-profile-cover-cropper]')
+	if (!cropper || target?.closest('button')) return
+
+	const state = authState.profileCoverCropState
+	if (!state) return
+
+	event.preventDefault()
+	syncProfileCoverCropperGeometry()
+	state.isDragging = true
+	state.dragStartClientX = event.clientX
+	state.dragStartClientY = event.clientY
+	state.dragStartOffsetX = state.offsetX
+	state.dragStartOffsetY = state.offsetY
+	cropper.classList.add('is-dragging')
+	cropper.setPointerCapture?.(event.pointerId)
 }
 
 const updateAuthMode = mode => {
@@ -1562,11 +1845,11 @@ const populateProfileForm = () => {
 	authState.selectedProfileAvatarId = authState.currentUser.avatarId
 	authState.customProfileAvatarImage = normalizeAvatarImage(authState.currentUser.avatarImage)
 	authState.customProfileCoverImage = normalizeProfileCoverImage(authState.currentUser.profileCoverImage)
+	authState.profileCoverCropState = null
 	if (authState.profileNameInput) authState.profileNameInput.value = authState.currentUser.fullName || ''
 	if (authState.profileLoginInput) authState.profileLoginInput.value = authState.currentUser.login || ''
 	if (authState.profileTitleInput) authState.profileTitleInput.value = normalizeProfileTitle(authState.currentUser.profileTitle)
 	if (authState.profileBioInput) authState.profileBioInput.value = normalizeProfileBio(authState.currentUser.profileBio)
-	if (authState.profileAccentInput) authState.profileAccentInput.value = normalizeProfileAccentColor(authState.currentUser.profileAccentColor)
 	if (authState.profileCoverUploadInput) authState.profileCoverUploadInput.value = ''
 	if (authState.profileCurrentPasswordInput) authState.profileCurrentPasswordInput.value = ''
 	if (authState.profileNewPasswordInput) authState.profileNewPasswordInput.value = ''
@@ -1587,8 +1870,10 @@ const populateProfileForm = () => {
 	if (authState.profileModuleValue) {
 		authState.profileModuleValue.textContent = getCurrentModuleLabel()
 	}
+	if (authState.profileAdminUsersBtn) {
+		authState.profileAdminUsersBtn.hidden = authState.currentUser.role !== 'admin'
+	}
 
-	renderTeamManagement()
 	renderProfileAvatarEditor()
 	renderProfileCoverEditor()
 	syncProfileThemeEditor()
@@ -1603,6 +1888,32 @@ const openProfileModal = () => {
 	populateProfileForm()
 	openModal(authState.profileModal)
 	window.setTimeout(() => authState.profileNameInput?.focus(), 40)
+}
+
+const openAdminUsersModal = () => {
+	syncCurrentUserFromSession()
+
+	if (!authState.currentUser) {
+		openAuthModal('login')
+		return
+	}
+
+	if (authState.currentUser.role !== 'admin') {
+		notify({
+			type: 'warning',
+			title: 'Brak dostępu',
+			message: 'Tylko lider może edytować konta użytkowników.',
+		})
+		return
+	}
+
+	if (authState.adminUsersSearchInput) {
+		authState.adminUsersSearchInput.value = ''
+	}
+
+	renderAdminUsersPanel()
+	openModal(authState.adminUsersModal)
+	window.setTimeout(() => authState.adminUsersSearchInput?.focus(), 40)
 }
 
 const ensureAuthUi = () => {
@@ -1694,9 +2005,14 @@ const ensureAuthUi = () => {
 			<p class="app-auth-copy">Ustaw wygląd konta, dane logowania i klasy dostępu dla zespołu.</p>
 			<form class="app-auth-form app-profile-form" novalidate>
 				<section class="app-profile-cover-preview" id="app-profile-cover-preview" aria-label="Podgląd profilu"></section>
+				<input type="file" id="app-profile-cover-upload" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
 				<div class="app-profile-role-row">
 					<span>Rola</span>
 					<strong class="app-role-badge" id="app-profile-role-badge">Użytkownik</strong>
+					<button type="button" class="app-avatar-upload-btn is-secondary app-profile-admin-users-btn" id="app-profile-admin-users-btn" hidden>
+						<i class="fa-solid fa-users-gear"></i>
+						<span>Użytkownicy</span>
+					</button>
 				</div>
 				<div class="app-profile-meta-grid">
 					<div class="app-profile-meta-item">
@@ -1752,25 +2068,6 @@ const ensureAuthUi = () => {
 						</div>
 					</div>
 					<div class="app-auth-field">
-						<span>Obrazek w tle</span>
-						<div class="app-avatar-upload app-profile-upload-split">
-							<div class="app-avatar-upload-actions">
-								<input type="file" id="app-profile-cover-upload" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
-								<div class="app-avatar-upload-btn-row">
-									<button type="button" class="app-avatar-upload-btn is-primary" id="app-profile-cover-browse-btn">
-										<i class="fa-solid fa-panorama"></i>
-										<span>Wgraj tło</span>
-									</button>
-									<button type="button" class="app-avatar-upload-btn is-secondary" id="app-profile-cover-reset-btn" hidden>
-										<i class="fa-solid fa-trash-can"></i>
-										<span>Usuń tło</span>
-									</button>
-								</div>
-								<small>PNG, JPG, WebP lub GIF do 10 MB. Obraz zostanie przycięty do szerokiego banera.</small>
-							</div>
-						</div>
-					</div>
-					<div class="app-auth-field">
 						<span>Zdjęcie profilowe</span>
 						<div class="app-avatar-upload">
 							<div class="app-avatar-upload-preview" id="app-profile-avatar-preview"></div>
@@ -1788,21 +2085,6 @@ const ensureAuthUi = () => {
 								</div>
 								<small>PNG, JPG, WebP lub GIF do 10 MB. Zdjęcie zostanie przycięte do kwadratu.</small>
 							</div>
-						</div>
-					</div>
-					<div class="app-profile-appearance-grid">
-						<label class="app-auth-field">
-							<span>Kolor akcentu</span>
-							<input type="color" id="app-profile-accent" value="${AUTH_CONFIG.defaultProfileAccentColor}">
-						</label>
-						<div class="app-profile-accent-swatches" aria-label="Gotowe kolory profilu">
-							${AUTH_CONFIG.accentOptions
-								.map(
-									color => `
-										<button type="button" class="app-profile-accent-swatch" data-profile-accent="${color}" style="--profile-accent: ${color}" aria-label="Ustaw kolor ${color}"></button>
-									`
-								)
-								.join('')}
 						</div>
 					</div>
 					<div class="app-profile-theme-picker" role="group" aria-label="Kolor strony">
@@ -1841,16 +2123,6 @@ const ensureAuthUi = () => {
 						</label>
 					</div>
 				</section>
-				<section class="app-profile-team-section is-hidden" id="app-profile-team-section">
-					<div class="app-profile-team-head">
-						<div>
-							<p class="app-auth-kicker">Zespół i klasy</p>
-							<h3>Role użytkowników</h3>
-							<p class="app-auth-copy">Lider może nadawać role oraz klasy takie jak drukarkowy lub sieciowy.</p>
-						</div>
-					</div>
-					<div class="app-profile-team-list" id="app-profile-team-list"></div>
-				</section>
 				<div class="app-auth-actions">
 					<button type="submit" class="app-auth-submit">Zapisz zmiany</button>
 					<button type="button" class="app-auth-switch app-auth-switch-danger" id="app-profile-logout-btn">Wyloguj</button>
@@ -1859,9 +2131,52 @@ const ensureAuthUi = () => {
 		</section>
 	`
 
+	const adminUsersModal = document.createElement('div')
+	adminUsersModal.className = 'app-auth-modal-shell'
+	adminUsersModal.hidden = true
+	adminUsersModal.setAttribute('aria-hidden', 'true')
+	adminUsersModal.innerHTML = `
+		<div class="app-auth-modal-backdrop" data-admin-users-close></div>
+		<section class="app-auth-card app-profile-card app-admin-users-card" role="dialog" aria-modal="true" aria-labelledby="app-admin-users-title">
+			<button type="button" class="app-auth-close" data-admin-users-close aria-label="Zamknij panel użytkowników">
+				<i class="fa-solid fa-xmark"></i>
+			</button>
+			<p class="app-auth-kicker">Administracja</p>
+			<h2 id="app-admin-users-title">Konta użytkowników</h2>
+			<p class="app-auth-copy">Edytuj imiona, loginy, role oraz klasy dostępu pozostałych kont. Własne dane administratora zmienisz w profilu.</p>
+			<div class="app-admin-users-toolbar">
+				<label class="app-auth-field app-admin-users-search">
+					<span>Szukaj użytkownika</span>
+					<input type="search" id="app-admin-users-search" placeholder="Imię, login, rola lub klasa" autocomplete="off">
+				</label>
+				<div class="app-admin-users-meta">
+					<div class="app-profile-meta-item">
+						<span>Widoczne konta</span>
+						<strong id="app-admin-users-count">0 / 0</strong>
+					</div>
+					<div class="app-profile-meta-item">
+						<span>Tryb danych</span>
+						<strong id="app-admin-users-storage">-</strong>
+					</div>
+				</div>
+			</div>
+			<section class="app-profile-team-section app-admin-users-section">
+				<div class="app-profile-team-head">
+					<div>
+						<p class="app-auth-kicker">Lista kont</p>
+						<h3>Edycja użytkowników</h3>
+						<p class="app-auth-copy">Hasła nie są tu widoczne i nie są zapisywane w konfiguracji publicznej.</p>
+					</div>
+				</div>
+				<div class="app-profile-team-list" id="app-admin-users-list"></div>
+			</section>
+		</section>
+	`
+
 	document.body.appendChild(hub)
 	document.body.appendChild(authModal)
 	document.body.appendChild(profileModal)
+	document.body.appendChild(adminUsersModal)
 
 	authState.hub = hub
 	authState.trigger = hub.querySelector('.app-user-trigger')
@@ -1891,11 +2206,8 @@ const ensureAuthUi = () => {
 	authState.profileLoginInput = profileModal.querySelector('#app-profile-login')
 	authState.profileTitleInput = profileModal.querySelector('#app-profile-headline')
 	authState.profileBioInput = profileModal.querySelector('#app-profile-bio')
-	authState.profileAccentInput = profileModal.querySelector('#app-profile-accent')
 	authState.profileCoverPreview = profileModal.querySelector('#app-profile-cover-preview')
 	authState.profileCoverUploadInput = profileModal.querySelector('#app-profile-cover-upload')
-	authState.profileCoverBrowseBtn = profileModal.querySelector('#app-profile-cover-browse-btn')
-	authState.profileCoverResetBtn = profileModal.querySelector('#app-profile-cover-reset-btn')
 	authState.profileCurrentPasswordInput = profileModal.querySelector('#app-profile-current-password')
 	authState.profileNewPasswordInput = profileModal.querySelector('#app-profile-new-password')
 	authState.profilePasswordRepeatInput = profileModal.querySelector('#app-profile-password-repeat')
@@ -1904,8 +2216,12 @@ const ensureAuthUi = () => {
 	authState.profileUpdatedAtValue = profileModal.querySelector('#app-profile-updated-at')
 	authState.profileLastLoginValue = profileModal.querySelector('#app-profile-last-login')
 	authState.profileModuleValue = profileModal.querySelector('#app-profile-module')
-	authState.profileTeamSection = profileModal.querySelector('#app-profile-team-section')
-	authState.profileTeamList = profileModal.querySelector('#app-profile-team-list')
+	authState.profileAdminUsersBtn = profileModal.querySelector('#app-profile-admin-users-btn')
+	authState.adminUsersModal = adminUsersModal
+	authState.adminUsersSearchInput = adminUsersModal.querySelector('#app-admin-users-search')
+	authState.adminUsersList = adminUsersModal.querySelector('#app-admin-users-list')
+	authState.adminUsersCountValue = adminUsersModal.querySelector('#app-admin-users-count')
+	authState.adminUsersStorageValue = adminUsersModal.querySelector('#app-admin-users-storage')
 	authState.profileAvatarPreview = profileModal.querySelector('#app-profile-avatar-preview')
 	authState.profileAvatarUploadInput = profileModal.querySelector('#app-profile-avatar-upload')
 	authState.profileAvatarBrowseBtn = profileModal.querySelector('#app-profile-avatar-browse-btn')
@@ -1946,6 +2262,12 @@ const ensureAuthUi = () => {
 		}
 	})
 
+	adminUsersModal.addEventListener('click', event => {
+		if (getEventTargetElement(event.target)?.closest('[data-admin-users-close]')) {
+			closeModal(adminUsersModal)
+		}
+	})
+
 	authState.authSwitchBtn?.addEventListener('click', () => {
 		updateAuthMode(authState.mode === 'login' ? 'register' : 'login')
 	})
@@ -1955,32 +2277,32 @@ const ensureAuthUi = () => {
 		window.setTimeout(() => authState.authLoginInput?.focus(), 40)
 	})
 
-	authState.profileTeamList?.addEventListener('change', event => {
+	authState.profileAdminUsersBtn?.addEventListener('click', () => {
+		closeModal(profileModal)
+		openAdminUsersModal()
+	})
+
+	authState.adminUsersSearchInput?.addEventListener('input', renderAdminUsersPanel)
+
+	authState.adminUsersList?.addEventListener('change', event => {
 		const teamControl = getEventTargetElement(event.target)?.closest('[data-team-role], [data-team-permission]')
 		if (!teamControl) return
 
 		syncTeamMemberCardState(teamControl.closest('.app-team-member-card'))
 	})
 
-	authState.profileTeamList?.addEventListener('click', event => {
+	authState.adminUsersList?.addEventListener('click', event => {
 		const saveButton = getEventTargetElement(event.target)?.closest('[data-team-save]')
 		if (!saveButton) return
 
 		const memberCard = saveButton.closest('.app-team-member-card')
-		const roleSelect = memberCard?.querySelector('[data-team-role]')
-		const selectedPermissions = [...(memberCard?.querySelectorAll('[data-team-permission]:checked') || [])].map(input => input.value)
 
 		try {
-			updateUserAccess({
-				userId: memberCard?.dataset.userId || '',
-				role: roleSelect?.value || 'user',
-				permissions: selectedPermissions,
-			})
-			renderTeamManagement()
+			saveManagedUserCard(memberCard)
 			notify({
 				type: 'success',
-				title: 'Uprawnienia zapisane',
-				message: 'Rola i klasy tego konta zostały zaktualizowane.',
+				title: 'Konto zapisane',
+				message: 'Dane publiczne, rola i klasy tego konta zostały zaktualizowane.',
 			})
 		} catch (error) {
 			notify({
@@ -1993,11 +2315,50 @@ const ensureAuthUi = () => {
 
 	authState.authAvatarBrowseBtn?.addEventListener('click', () => authState.authAvatarUploadInput?.click())
 	authState.profileAvatarBrowseBtn?.addEventListener('click', () => authState.profileAvatarUploadInput?.click())
-	authState.profileCoverBrowseBtn?.addEventListener('click', () => authState.profileCoverUploadInput?.click())
 
 	authState.authAvatarResetBtn?.addEventListener('click', () => clearCustomAvatar('register'))
 	authState.profileAvatarResetBtn?.addEventListener('click', () => clearCustomAvatar('profile'))
-	authState.profileCoverResetBtn?.addEventListener('click', clearCustomProfileCover)
+
+	authState.profileCoverPreview?.addEventListener('click', async event => {
+		const target = getEventTargetElement(event.target)
+
+		if (target?.closest('[data-profile-cover-browse]')) {
+			authState.profileCoverUploadInput?.click()
+			return
+		}
+
+		if (target?.closest('[data-profile-cover-reset]')) {
+			clearCustomProfileCover()
+			return
+		}
+
+		if (target?.closest('[data-profile-cover-cancel]')) {
+			authState.profileCoverCropState = null
+			if (authState.profileCoverUploadInput) authState.profileCoverUploadInput.value = ''
+			renderProfileCoverEditor()
+			return
+		}
+
+		if (target?.closest('[data-profile-cover-apply]')) {
+			try {
+				authState.customProfileCoverImage = await buildCoverImageFromCropState()
+				authState.profileCoverCropState = null
+				if (authState.profileCoverUploadInput) authState.profileCoverUploadInput.value = ''
+				renderProfileCoverEditor()
+			} catch (error) {
+				notify({
+					type: 'error',
+					title: 'Kadr nie został zapisany',
+					message: error.message || 'Nie udało się przygotować tła profilu.',
+				})
+			}
+		}
+	})
+
+	authState.profileCoverPreview?.addEventListener('pointerdown', startProfileCoverCropDrag)
+	authState.profileCoverPreview?.addEventListener('pointermove', moveProfileCoverCrop)
+	authState.profileCoverPreview?.addEventListener('pointerup', stopProfileCoverCropDrag)
+	authState.profileCoverPreview?.addEventListener('pointercancel', stopProfileCoverCropDrag)
 
 	authState.authAvatarUploadInput?.addEventListener('change', async event => {
 		const file = event.target.files?.[0]
@@ -2050,7 +2411,6 @@ const ensureAuthUi = () => {
 	authState.profileLoginInput?.addEventListener('input', renderProfileAvatarEditor)
 	authState.profileTitleInput?.addEventListener('input', renderProfileCoverEditor)
 	authState.profileBioInput?.addEventListener('input', renderProfileCoverEditor)
-	authState.profileAccentInput?.addEventListener('input', renderProfileCoverEditor)
 
 	authState.profileForm?.addEventListener('click', event => {
 		const themeButton = getEventTargetElement(event.target)?.closest('[data-profile-theme]')
@@ -2060,12 +2420,6 @@ const ensureAuthUi = () => {
 			return
 		}
 
-		const accentButton = getEventTargetElement(event.target)?.closest('[data-profile-accent]')
-		if (accentButton && authState.profileForm?.contains(accentButton)) {
-			const accentColor = normalizeProfileAccentColor(accentButton.dataset.profileAccent)
-			if (authState.profileAccentInput) authState.profileAccentInput.value = accentColor
-			renderProfileCoverEditor()
-		}
 	})
 
 	authState.authForm?.addEventListener('submit', event => {
@@ -2149,6 +2503,10 @@ const ensureAuthUi = () => {
 				throw new Error('Nowe hasła muszą być identyczne.')
 			}
 
+			if (authState.profileCoverCropState) {
+				throw new Error('Zastosuj albo anuluj kadrowanie tła przed zapisaniem profilu.')
+			}
+
 			updateCurrentUserProfile({
 				fullName: authState.profileNameInput?.value || '',
 				login: authState.profileLoginInput?.value || '',
@@ -2156,7 +2514,7 @@ const ensureAuthUi = () => {
 				avatarImage: authState.customProfileAvatarImage,
 				profileTitle: authState.profileTitleInput?.value || '',
 				profileBio: authState.profileBioInput?.value || '',
-				profileAccentColor: authState.profileAccentInput?.value || AUTH_CONFIG.defaultProfileAccentColor,
+				profileAccentColor: authState.currentUser?.profileAccentColor || AUTH_CONFIG.defaultProfileAccentColor,
 				profileCoverImage: authState.customProfileCoverImage,
 			})
 
@@ -2195,6 +2553,13 @@ const ensureAuthUi = () => {
 
 			if (!authState.authModal?.hidden) closeModal(authState.authModal)
 			if (!authState.profileModal?.hidden) closeModal(authState.profileModal)
+			if (!authState.adminUsersModal?.hidden) closeModal(authState.adminUsersModal)
+		}
+	})
+
+	window.addEventListener('resize', () => {
+		if (authState.profileCoverCropState) {
+			syncProfileCoverCropperGeometry()
 		}
 	})
 
