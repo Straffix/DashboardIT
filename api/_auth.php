@@ -7,8 +7,6 @@ require_once __DIR__ . '/_response.php';
 const DASHBOARD_PERMISSION_IDS = ['it_support', 'network', 'printers', 'rooms'];
 const DASHBOARD_MIN_PASSWORD_LENGTH = 8;
 const DASHBOARD_PROFILE_IMAGE_MAX_LENGTH = 2500000;
-const DASHBOARD_TEST_ADMIN_LOGIN = 'admin';
-const DASHBOARD_TEST_ADMIN_PASSWORD = 'admin321';
 const DASHBOARD_LOGIN_MAX_ATTEMPTS = 10;
 const DASHBOARD_LOGIN_WINDOW_SECONDS = 300;
 
@@ -97,17 +95,6 @@ function dashboard_normalize_profile_bio(string $profileBio): string
 function dashboard_normalize_users_array($users): array
 {
 	return is_array($users) ? array_values(array_filter($users, static fn ($user): bool => is_array($user))) : [];
-}
-
-function dashboard_is_demo_account_record(array $user): bool
-{
-	$id = trim((string) ($user['id'] ?? ''));
-	$login = dashboard_normalize_login((string) ($user['login'] ?? ''));
-
-	return !empty($user['isDemo'])
-		|| $id === 'demo-admin'
-		|| preg_match('/^demo-user-\d+$/', $id) === 1
-		|| $login === 'demoarek';
 }
 
 function dashboard_users_config_path(): string
@@ -277,7 +264,6 @@ function dashboard_user_config_export_record(array $user): array
 		'profileBio' => $sanitizedUser['profileBio'],
 		'profileAccentColor' => $sanitizedUser['profileAccentColor'],
 		'profileCoverImage' => $sanitizedUser['profileCoverImage'],
-		'isTestAccount' => !empty($sanitizedUser['isTestAccount']),
 	];
 }
 
@@ -285,7 +271,7 @@ function dashboard_build_users_config_payload(array $users): array
 {
 	$editableUsers = array_values(array_map(
 		'dashboard_user_config_export_record',
-		array_values(array_filter($users, static fn ($user): bool => is_array($user) && !dashboard_is_demo_account_record($user)))
+		array_values(array_filter($users, static fn ($user): bool => is_array($user)))
 	));
 
 	return [
@@ -333,90 +319,9 @@ function dashboard_export_users_config_snapshot(array $users): void
 	file_put_contents($configPath, $encodedPayload . PHP_EOL, LOCK_EX);
 }
 
-function dashboard_build_test_admin_user(?array $existingUser = null): array
-{
-	$now = gmdate('c');
-	return [
-		'id' => (string) ($existingUser['id'] ?? 'user-test-admin'),
-		'fullName' => trim((string) ($existingUser['fullName'] ?? 'Administrator Testowy')) ?: 'Administrator Testowy',
-		'login' => DASHBOARD_TEST_ADMIN_LOGIN,
-		'passwordHash' => password_hash(DASHBOARD_TEST_ADMIN_PASSWORD, PASSWORD_DEFAULT),
-		'role' => 'admin',
-		'permissions' => dashboard_get_all_permission_ids(),
-		'avatarId' => trim((string) ($existingUser['avatarId'] ?? 'slate')) ?: 'slate',
-		'avatarImage' => dashboard_normalize_avatar_image((string) ($existingUser['avatarImage'] ?? '')),
-		'profileTitle' => dashboard_normalize_profile_title((string) ($existingUser['profileTitle'] ?? 'Administrator systemu')),
-		'profileBio' => dashboard_normalize_profile_bio((string) ($existingUser['profileBio'] ?? 'Konto testowe do konfiguracji rol i klas uzytkownikow.')),
-		'profileAccentColor' => dashboard_normalize_profile_accent_color((string) ($existingUser['profileAccentColor'] ?? '#0f766e')),
-		'profileCoverImage' => dashboard_normalize_profile_cover_image((string) ($existingUser['profileCoverImage'] ?? '')),
-		'createdAt' => (string) ($existingUser['createdAt'] ?? $now),
-		'updatedAt' => $now,
-		'isDemo' => !empty($existingUser['isDemo']),
-		'isTestAccount' => true,
-	];
-}
-
-function dashboard_test_admin_enabled(): bool
-{
-	$value = strtolower(trim((string) getenv('DASHBOARD_ENABLE_TEST_ADMIN')));
-	return !in_array($value, ['0', 'false', 'off', 'no'], true);
-}
-
-function dashboard_test_admin_requires_update(?array $adminUser): bool
-{
-	if (!$adminUser) {
-		return true;
-	}
-
-	$currentHash = (string) ($adminUser['passwordHash'] ?? '');
-	return !password_verify(DASHBOARD_TEST_ADMIN_PASSWORD, $currentHash) ||
-		dashboard_normalize_role((string) ($adminUser['role'] ?? 'user')) !== 'admin' ||
-		count(array_diff(dashboard_get_all_permission_ids(), dashboard_normalize_permissions($adminUser['permissions'] ?? []))) > 0 ||
-		empty($adminUser['isTestAccount']);
-}
-
-function dashboard_ensure_test_admin_account(): void
-{
-	if (!dashboard_test_admin_enabled()) {
-		return;
-	}
-
-	$currentUsers = dashboard_normalize_users_array(dashboard_read_json_file(dashboard_users_path(), []));
-	$currentAdminIndex = dashboard_find_user_index_by_login($currentUsers, DASHBOARD_TEST_ADMIN_LOGIN);
-	if ($currentAdminIndex !== -1 && !dashboard_test_admin_requires_update($currentUsers[$currentAdminIndex])) {
-		return;
-	}
-
-	dashboard_update_json_file(dashboard_users_path(), [], function ($users) {
-		$users = dashboard_normalize_users_array($users);
-		$adminIndex = dashboard_find_user_index_by_login($users, DASHBOARD_TEST_ADMIN_LOGIN);
-
-		if ($adminIndex === -1) {
-			$users[] = dashboard_build_test_admin_user(null);
-			return $users;
-		}
-
-		$currentAdmin = $users[$adminIndex];
-		if (dashboard_test_admin_requires_update($currentAdmin)) {
-			$users[$adminIndex] = dashboard_build_test_admin_user($currentAdmin);
-		}
-
-		return $users;
-	});
-}
-
 function dashboard_load_users(): array
 {
-	static $ensuringTestAdmin = false;
-	static $testAdminChecked = false;
 	static $userConfigSynced = false;
-
-	if (!$testAdminChecked && !$ensuringTestAdmin) {
-		$ensuringTestAdmin = true;
-		dashboard_ensure_test_admin_account();
-		$ensuringTestAdmin = false;
-		$testAdminChecked = true;
-	}
 
 	if (!$userConfigSynced) {
 		dashboard_sync_user_config_accounts();
@@ -447,8 +352,6 @@ function dashboard_sanitize_user(array $user): array
 		'profileCoverImage' => dashboard_normalize_profile_cover_image((string) ($user['profileCoverImage'] ?? '')),
 		'createdAt' => (string) ($user['createdAt'] ?? gmdate('c')),
 		'updatedAt' => (string) ($user['updatedAt'] ?? gmdate('c')),
-		'isDemo' => !empty($user['isDemo']),
-		'isTestAccount' => !empty($user['isTestAccount']),
 	];
 }
 

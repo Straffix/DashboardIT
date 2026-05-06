@@ -22,33 +22,33 @@
 	}
 
 	const weatherCodeMap = {
-		0: { label: 'Bezchmurnie', icon: 'fa-sun', tone: 'sun' },
-		1: { label: 'Glownie slonecznie', icon: 'fa-cloud-sun', tone: 'partly' },
-		2: { label: 'Czesciowe zachmurzenie', icon: 'fa-cloud-sun', tone: 'partly' },
-		3: { label: 'Pochmurno', icon: 'fa-cloud', tone: 'cloudy' },
-		45: { label: 'Mgla', icon: 'fa-smog', tone: 'fog' },
-		48: { label: 'Osadzajaca sie mgla', icon: 'fa-smog', tone: 'fog' },
-		51: { label: 'Lekka mzawka', icon: 'fa-cloud-rain', tone: 'rain' },
-		53: { label: 'Mzawka', icon: 'fa-cloud-rain', tone: 'rain' },
-		55: { label: 'Intensywna mzawka', icon: 'fa-cloud-rain', tone: 'rain' },
-		61: { label: 'Lekki deszcz', icon: 'fa-cloud-rain', tone: 'rain' },
-		63: { label: 'Deszcz', icon: 'fa-cloud-showers-heavy', tone: 'rain' },
-		65: { label: 'Ulewa', icon: 'fa-cloud-showers-heavy', tone: 'rain' },
-		71: { label: 'Lekki snieg', icon: 'fa-snowflake', tone: 'snow' },
-		73: { label: 'Snieg', icon: 'fa-snowflake', tone: 'snow' },
-		75: { label: 'Intensywny snieg', icon: 'fa-snowflake', tone: 'snow' },
-		80: { label: 'Przelotny deszcz', icon: 'fa-cloud-sun-rain', tone: 'showers' },
-		81: { label: 'Przelotny deszcz', icon: 'fa-cloud-sun-rain', tone: 'showers' },
-		82: { label: 'Silny przelotny deszcz', icon: 'fa-cloud-showers-heavy', tone: 'rain' },
-		95: { label: 'Burza', icon: 'fa-cloud-bolt', tone: 'storm' },
-		96: { label: 'Burza z gradem', icon: 'fa-cloud-bolt', tone: 'storm' },
-		99: { label: 'Silna burza z gradem', icon: 'fa-cloud-bolt', tone: 'storm' },
+		0: { label: 'Bezchmurnie', icon: 'sun-solid-full', tone: 'sun' },
+		1: { label: 'Glownie slonecznie', icon: 'cloud-sun-solid-full', tone: 'partly' },
+		2: { label: 'Czesciowe zachmurzenie', icon: 'cloud-sun-solid-full', tone: 'partly' },
+		3: { label: 'Pochmurno', icon: 'cloud-solid-full', tone: 'cloudy' },
+		45: { label: 'Mgla', icon: 'smog-solid-full', tone: 'fog' },
+		48: { label: 'Osadzajaca sie mgla', icon: 'smog-solid-full', tone: 'fog' },
+		51: { label: 'Lekka mzawka', icon: 'cloud-rain-solid-full', tone: 'rain' },
+		53: { label: 'Mzawka', icon: 'cloud-rain-solid-full', tone: 'rain' },
+		55: { label: 'Intensywna mzawka', icon: 'cloud-rain-solid-full', tone: 'rain' },
+		61: { label: 'Lekki deszcz', icon: 'cloud-rain-solid-full', tone: 'rain' },
+		63: { label: 'Deszcz', icon: 'cloud-showers-heavy-solid-full', tone: 'rain' },
+		65: { label: 'Ulewa', icon: 'cloud-showers-heavy-solid-full', tone: 'rain' },
+		71: { label: 'Lekki snieg', icon: 'snowflake-solid-full', tone: 'snow' },
+		73: { label: 'Snieg', icon: 'snowflake-solid-full', tone: 'snow' },
+		75: { label: 'Intensywny snieg', icon: 'snowflake-solid-full', tone: 'snow' },
+		80: { label: 'Przelotny deszcz', icon: 'cloud-sun-rain-solid-full', tone: 'showers' },
+		81: { label: 'Przelotny deszcz', icon: 'cloud-sun-rain-solid-full', tone: 'showers' },
+		82: { label: 'Silny przelotny deszcz', icon: 'cloud-showers-heavy-solid-full', tone: 'rain' },
+		95: { label: 'Burza', icon: 'cloud-bolt-solid-full', tone: 'storm' },
+		96: { label: 'Burza z gradem', icon: 'cloud-bolt-solid-full', tone: 'storm' },
+		99: { label: 'Silna burza z gradem', icon: 'cloud-bolt-solid-full', tone: 'storm' },
 	}
 
 	const getWeatherDetails = (weatherCode, fallbackLabel = 'Warunki lokalne', fallbackTone = 'cloudy') =>
 		weatherCodeMap[weatherCode] || {
 			label: fallbackLabel,
-			icon: 'fa-cloud-sun',
+			icon: 'cloud-sun-solid-full',
 			tone: fallbackTone,
 		}
 
@@ -349,7 +349,7 @@
 			weatherSearchForecast.innerHTML = days
 				.map(day => {
 					const details = day.isUnavailable
-						? { label: 'Brak danych', icon: 'fa-minus', tone: 'cloudy' }
+						? { label: 'Brak danych', icon: 'minus-solid-full', tone: 'cloudy' }
 						: getWeatherDetails(day.weatherCode)
 					const classes = ['weather-forecast-card']
 					if (day.isUnavailable) classes.push('is-unavailable')
@@ -361,7 +361,7 @@
 					return `
 						<button type="button" class="${classes.join(' ')}" data-weather-day="${day.date || ''}" data-weather-day-label="${day.label}" ${day.isUnavailable ? 'disabled' : ''} title="${titleParts.join(' | ')}">
 							<span class="weather-forecast-day">${day.label}</span>
-							<span class="weather-forecast-icon weather-tone-${details.tone}"><i class="fa-solid ${details.icon}"></i></span>
+							<span class="weather-forecast-icon weather-tone-${details.tone}">${renderIcon(details.icon)}</span>
 							<span class="weather-forecast-temps">
 								<strong>${day.maxTempLabel || '--'}</strong>
 								<small>${day.minTempLabel || '--'}</small>
@@ -405,7 +405,7 @@
 			weatherWorkdayTrack.innerHTML = slots
 				.map(slot => {
 					const details = slot.isUnavailable
-						? { label: 'Brak danych', icon: 'fa-minus', tone: 'cloudy' }
+						? { label: 'Brak danych', icon: 'minus-solid-full', tone: 'cloudy' }
 						: getWeatherDetails(slot.weatherCode)
 					const classes = ['weather-workday-slot']
 					if (slot.isCurrent) classes.push('is-current')
@@ -416,7 +416,7 @@
 					return `
 						<div class="${classes.join(' ')}" data-weather-hour="${slot.hour}" title="${titleParts.join(' | ')}">
 							<span class="weather-workday-time">${formatHourLabel(slot.hour).slice(0, 5)}</span>
-							<span class="weather-workday-icon weather-tone-${details.tone}"><i class="fa-solid ${details.icon}"></i></span>
+							<span class="weather-workday-icon weather-tone-${details.tone}">${renderIcon(details.icon)}</span>
 							<span class="weather-workday-temp">${slot.temperatureLabel}</span>
 						</div>
 					`
@@ -716,7 +716,7 @@
 			if (weatherWind) weatherWind.textContent = wind
 			if (weatherIcon) {
 				weatherIcon.className = `weather-icon weather-tone-${tone}`
-				weatherIcon.innerHTML = `<i class="fa-solid ${icon}"></i>`
+				weatherIcon.innerHTML = renderIcon(icon)
 			}
 		}
 
@@ -725,8 +725,8 @@
 				temperature: '-- C',
 				location: locationName || weatherConfig.fallbackName,
 				description: reason,
-				wind: 'Tryb demo offline',
-				icon: 'fa-cloud',
+				wind: 'Tryb offline',
+				icon: 'cloud-solid-full',
 			})
 			latestForecastData = null
 			setThreeDayFallbackState()
@@ -772,7 +772,7 @@
 				location: trimmedLocation,
 				description: 'Szukanie lokalizacji...',
 				wind: 'Proszę czekać',
-				icon: 'fa-cloud-sun',
+				icon: 'cloud-sun-solid-full',
 			})
 			latestForecastData = null
 			setThreeDayFallbackState()
@@ -957,7 +957,7 @@
 					location: 'Aktualna lokalizacja',
 					description: 'Geolokalizacja niedostępna',
 					wind: 'Twoja przeglądarka jej nie wspiera',
-					icon: 'fa-location-crosshairs',
+					icon: 'location-crosshairs-solid-full',
 				})
 				setThreeDayFallbackState()
 				resetSelectedForecast()
@@ -970,7 +970,7 @@
 					location: 'Aktualna lokalizacja',
 					description: 'Lokalizacja wymaga bezpiecznego adresu',
 					wind: 'Uruchom przez HTTPS albo localhost',
-					icon: 'fa-location-crosshairs',
+					icon: 'location-crosshairs-solid-full',
 				})
 				setThreeDayFallbackState()
 				resetSelectedForecast()
@@ -982,7 +982,7 @@
 				location: 'Aktualna lokalizacja',
 				description: 'Pobieram pozycję...',
 				wind: 'Proszę czekać',
-				icon: 'fa-location-crosshairs',
+				icon: 'location-crosshairs-solid-full',
 			})
 			latestForecastData = null
 			setThreeDayFallbackState()
@@ -1049,7 +1049,7 @@
 					location: 'Aktualna lokalizacja',
 					description: message.description,
 					wind: message.wind,
-					icon: 'fa-location-crosshairs',
+					icon: 'location-crosshairs-solid-full',
 				})
 				setThreeDayFallbackState()
 				resetSelectedForecast()

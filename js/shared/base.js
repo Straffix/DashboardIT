@@ -15,18 +15,66 @@ const APP_CONFIG = {
 		'Grudzie\u0144',
 	],
 	ICON_MAP: {
-		mouse: 'fa-mouse',
-		keyboard: 'fa-keyboard',
-		headset: 'fa-headset',
-		monitor: 'fa-desktop',
-		bag: 'fa-briefcase',
+		mouse: 'computer-mouse-solid-full',
+		'vertical-mouse': 'vertical-mouse-side-icon',
+		keyboard: 'keyboard-solid-full',
+		headset: 'headset-solid-full',
+		monitor: 'desktop-solid-full',
+		bag: 'briefcase-solid-full',
+		backpack: 'backpack-icon',
+		pointer: 'pen-clip-solid-full',
+		printer: 'print-solid-full',
+		'laptop-pad': 'table-cells-solid-full',
 	},
 	ACCESSORY_LABELS: {
 		mouse: 'Myszka',
+		'vertical-mouse': 'Mysz wertykalna',
 		keyboard: 'Klawiatura',
 		headset: 'S\u0142uchawki',
 		monitor: 'Monitor',
 		bag: 'Torba / Etui',
+		backpack: 'Plecak',
+		pointer: 'Wska\u017anik',
+		printer: 'Drukarka',
+		'laptop-pad': 'Podk\u0142adka pod laptopa',
+	},
+	ACCESSORY_ALIASES: {
+		mouse: 'mouse',
+		mysz: 'mouse',
+		myszka: 'mouse',
+		'computer-mouse-solid-full': 'mouse',
+		keyboard: 'keyboard',
+		klawiatura: 'keyboard',
+		'keyboard-solid-full': 'keyboard',
+		headset: 'headset',
+		sluchawki: 'headset',
+		'headset-solid-full': 'headset',
+		monitor: 'monitor',
+		'desktop-solid-full': 'monitor',
+		bag: 'bag',
+		torba: 'bag',
+		etui: 'bag',
+		'torba / etui': 'bag',
+		briefcase: 'bag',
+		'briefcase-solid-full': 'bag',
+		backpack: 'backpack',
+		plecak: 'backpack',
+		'backpack-icon': 'backpack',
+		pointer: 'pointer',
+		wskaznik: 'pointer',
+		pen: 'pointer',
+		'pen-clip-solid-full': 'pointer',
+		printer: 'printer',
+		drukarka: 'printer',
+		'print-solid-full': 'printer',
+		'laptop-pad': 'laptop-pad',
+		'laptop-stand': 'laptop-pad',
+		'podkladka pod laptopa': 'laptop-pad',
+		'podstawka pod laptopa': 'laptop-pad',
+		'table-cells-solid-full': 'laptop-pad',
+		'vertical-mouse': 'vertical-mouse',
+		'mysz wertykalna': 'vertical-mouse',
+		'vertical-mouse-side-icon': 'vertical-mouse',
 	},
 	STORAGE_KEYS: {
 		MONITOR: 'monitor_laptopow_dane',
@@ -172,7 +220,80 @@ const formatDateTimeLabel = value => {
 }
 /* === Shared Formatters: End === */
 
+/* === Shared Icon Rendering: Start === */
+const APP_ICON_ASSET_DIR = './img/ico'
+
+const normalizeIconAssetName = value => String(value || '').trim().replace(/\.svg$/i, '')
+
+const getIconAssetUrl = iconName => {
+	const normalizedName = normalizeIconAssetName(iconName)
+	return normalizedName ? `${APP_ICON_ASSET_DIR}/${normalizedName}.svg` : ''
+}
+
+const renderIcon = (iconName, options = {}) => {
+	const assetName = normalizeIconAssetName(iconName)
+	if (!assetName) return ''
+
+	const className = String(options.className || '')
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean)
+	const extraAttributes = Array.isArray(options.attributes) ? options.attributes.filter(Boolean) : []
+	const title = options.title ? ` title="${escapeHtml(options.title)}"` : ''
+	const ariaLabel = options.ariaLabel ? ` aria-label="${escapeHtml(options.ariaLabel)}" role="img"` : ''
+	const ariaHidden = options.ariaLabel ? '' : ' aria-hidden="true"'
+
+	return `<i class="${['app-icon', assetName, ...className].join(' ')}"${title}${ariaLabel}${ariaHidden}${
+		extraAttributes.length ? ` ${extraAttributes.join(' ')}` : ''
+	}></i>`
+}
+
+window.AppIcons = {
+	getAssetUrl: getIconAssetUrl,
+	render: renderIcon,
+}
+/* === Shared Icon Rendering: End === */
+
 /* === Shared Accessory Rendering: Start === */
+const normalizeAccessoryLookup = value =>
+	String(value ?? '')
+		.trim()
+		.toLocaleLowerCase('pl-PL')
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.replace(/_/g, '-')
+		.replace(/\s+/g, ' ')
+
+const normalizeAccessoryKey = accessory => {
+	const normalizedValue = normalizeAccessoryLookup(accessory)
+	if (!normalizedValue) return ''
+
+	if (APP_CONFIG.ACCESSORY_LABELS[normalizedValue] || APP_CONFIG.ICON_MAP[normalizedValue]) {
+		return normalizedValue
+	}
+
+	return APP_CONFIG.ACCESSORY_ALIASES[normalizedValue] || normalizedValue
+}
+
+const normalizeAccessories = accessories => {
+	const source = Array.isArray(accessories)
+		? accessories
+		: typeof accessories === 'string'
+			? accessories.split(',')
+			: []
+	const seenAccessories = new Set()
+
+	return source
+		.map(normalizeAccessoryKey)
+		.filter(Boolean)
+		.filter(accessory => {
+			if (seenAccessories.has(accessory)) return false
+
+			seenAccessories.add(accessory)
+			return true
+		})
+}
+
 const getSelectedAccessories = (selector = '.accessory-item.active') =>
 	Array.from(document.querySelectorAll(selector))
 		.map(item => item.dataset.item)
@@ -209,16 +330,23 @@ const renderAccessoryIcons = (accessories, options = {}) => {
 		return '<small class="acc-empty">brak</small>'
 	}
 
-	const normalized = accessories.filter(Boolean)
+	const normalized = normalizeAccessories(accessories)
+	if (normalized.length === 0) {
+		return '<small class="acc-empty">brak</small>'
+	}
+
 	const visibleItems = normalized.slice(0, config.maxVisible)
 	const hiddenItems = normalized.slice(config.maxVisible)
 	const wrapperClasses = [config.wrapperClass, getAccessorySizeClass(config.size), getAccessoryColumnsClass(config.columns)].filter(Boolean)
 
 	const items = visibleItems
 		.map(acc => {
-			const icon = APP_CONFIG.ICON_MAP[acc] || 'fa-box'
+			const icon = APP_CONFIG.ICON_MAP[acc] || 'box-solid-full'
 			const label = APP_CONFIG.ACCESSORY_LABELS[acc] || acc
-			return `<i class="fas ${icon} acc-inline-icon" title="${label}"></i>`
+			return renderIcon(icon, {
+				className: 'acc-inline-icon',
+				title: label,
+			})
 		})
 		.join('')
 

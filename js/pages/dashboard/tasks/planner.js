@@ -255,7 +255,7 @@
 						aria-label="Usuń zadanie"
 						title="${guestMode ? 'Zaloguj sie, aby usuwac zadania' : 'Usun zadanie'}"
 						${guestMode ? 'disabled' : ''}>
-						<i class="fa-solid fa-trash"></i>
+						<i class="app-icon trash-solid-full"></i>
 					</button>
 				`
 				taskAgendaList.appendChild(item)

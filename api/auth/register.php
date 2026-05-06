@@ -24,8 +24,6 @@ try {
 		dashboard_json_response(['ok' => false, 'message' => sprintf('Haslo musi miec co najmniej %d znakow.', DASHBOARD_MIN_PASSWORD_LENGTH)], 422);
 	}
 
-	dashboard_ensure_test_admin_account();
-
 	$createdUser = null;
 	$users = dashboard_update_json_file(dashboard_users_path(), [], function ($users) use (&$createdUser, $fullName, $login, $password, $avatarId, $avatarImage, $profileAccentColor) {
 		$users = dashboard_normalize_users_array($users);
@@ -50,7 +48,6 @@ try {
 			'profileCoverImage' => '',
 			'createdAt' => $now,
 			'updatedAt' => $now,
-			'isDemo' => false,
 		];
 
 		$users[] = $createdUser;

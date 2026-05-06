@@ -1,566 +1,200 @@
-# Handoff Techniczny Do Podłączenia Backendu
+# Handoff Techniczny Backendu DashboardIT
 
 ## Cel dokumentu
 
-Ten dokument opisuje aktualną architekturę aplikacji `DashboardIT` oraz założenia potrzebne do przyszłego podłączenia backendu.
+Ten dokument opisuje aktualna architekture aplikacji `DashboardIT` po przejsciu na backend `PHP + PostgreSQL`.
 
-Obecnie aplikacja działa jako frontend oparty o statyczne pliki HTML/CSS/JS i przechowuje dane lokalnie w `localStorage`.
-Docelowo frontend ma zostać zachowany możliwie bez większej przebudowy, a warstwa danych oraz uwierzytelniania ma zostać przepięta na backend / API.
+Najwazniejsze zalozenia:
 
-Najważniejsze założenie:
+- obecny frontend ma zostac zachowany
+- logika UI pozostaje po stronie `HTML/CSS/JS`
+- backend odpowiada za zapis, odczyt, walidacje i sesje
+- baza danych jest relacyjna
 
-- aktualny frontend ma zostać zachowany
-- należy podmienić źródło danych z `localStorage` na backend
-- najlepiej utrzymać warstwę serwisów po stronie frontu, aby UI nie wymagało dużych zmian
+## Stack projektu
 
----
+- frontend: statyczne pliki `HTML/CSS/JS`
+- backend: `PHP 8.4`
+- serwer WWW: `Nginx`
+- baza danych: `PostgreSQL`
+- auth: sesje `PHP`
 
-## Aktualny stan aplikacji
-
-Aktualnie aplikacja zawiera następujące moduły:
-
-- `Dashboard` strony głównej
-- `Nowe zatrudnienia`
-- `Monitor laptopów`
-- `Wymiana sprzętu`
-- `Rezerwacja obiadów`
-- `Notatnik`
-- `Zadania zespołu`
-- `Prywatne zakładki użytkownika`
-- `Lokalne logowanie / profil / sesja / role`
-
-Pliki wejściowe:
+## Najwazniejsze pliki
 
 - `index.html`
-- `nowe_zatrudnienia.html`
 - `monitor_laptopow.html`
+- `nowe_zatrudnienia.html`
 - `wymiana_sprzetu.html`
 - `rezerwacja_obiadow.html`
 - `notatnik.html`
+- `js/core/storage-service.js`
+- `js/core/domain-services.js`
+- `js/shared/base.js`
+- `js/shared/auth.js`
+- `js/shared/global-ui.js`
+- `api/_store.php`
+- `api/_auth.php`
+- `api/storage.php`
+- `api/auth/*.php`
+- `api/sql/dashboard-schema.sql`
 
-Pliki JS:
+## Moduly aplikacji
 
-- `js/core/storage-service.js` - wspólna warstwa storage/service dla demo localStorage
-- `js/core/domain-services.js` - wspólne serwisy domenowe lunch/notatki/zadania
-- `js/shared/base.js` - wspólne formatowanie, helpery UI i utilities
-- `js/shared/auth.js` - auth UI, sesja, profile i uprawnienia
-- `js/shared/public-api.js` - publiczne API helperów dostępne jako `AppUtils`
-- `js/shared/global-ui.js` - motyw, fullscreen, status strony i wspólne zachowanie UI
-- `js/pages/dashboard/index.js`
-- `js/pages/dashboard/bookmarks.js`
-- `js/pages/hires/index.js`
-- `js/pages/monitor/index.js`
-- `js/pages/exchanges/index.js`
-- `js/pages/lunch/index.js`
-- `js/pages/notes/index.js`
+- Uzytkownicy, sesje i role
+- Dashboard strony glownej
+- Prywatne zakladki uzytkownika
+- Rezerwacja obiadow
+- Notatnik
+- Ogloszenia
+- Zadania zespolowe
+- Monitor laptopow
+- Nowe zatrudnienia
+- Wymiana sprzetu
+- Panel testerow
 
-Aktualnie dane są trzymane lokalnie pod kluczami:
+## Warstwa danych po stronie frontu
 
-- `monitor_laptopow_dane`
-- `nowe_zatrudnienia_dane`
-- `wymiana_sprzetu_dane`
-- `dashboard_users`
-- `dashboard_user_session`
-- `dashboard_user_bookmarks`
-- `dashboard_lunch_reservations`
-- `dashboard_notes_entries`
-- `dashboard_notes_announcements`
-- `dashboard_notes_tasks`
+Frontend nadal korzysta z warstwy serwisow, zeby UI nie bylo zwiazane bezposrednio z backendem.
 
-Stan obecny:
+Najwazniejsze obiekty na `window.AppServices`:
 
-- moduły użytkownika, lunchu, notatnika, zadań i zakładek są już wdrożone w wersji demo
-- bezpośrednie użycia `localStorage` zostały ograniczone do wspólnej warstwy serwisów
-- logika UI nadal działa na statycznych plikach HTML/CSS/JS bez backendu
-
----
-
-## Założenia architektoniczne na przyszłość
-
-Frontend powinien korzystać z warstwy pośredniej typu serwisy:
-
-- `authService`
+- `storageService`
 - `usersService`
+- `sessionService`
+- `authService`
 - `hiresService`
 - `monitorService`
 - `exchangesService`
-- `lunchService`
-- `notesService`
-- `tasksService`
 - `bookmarksService`
+- `preferencesService`
 
-Na dziś serwisy mogą mieć implementację opartą o `localStorage`.
-Docelowo implementacja powinna zostać podmieniona na komunikację z API.
-
-Aktualnie warstwa demo jest już wydzielona do:
-
-- `window.AppServices.storageService`
-- `window.AppServices.usersService`
-- `window.AppServices.sessionService`
-- `window.AppServices.authService`
-- `window.AppServices.hiresService`
-- `window.AppServices.monitorService`
-- `window.AppServices.exchangesService`
-- `window.AppServices.bookmarksService`
-- `window.AppServices.preferencesService`
-- `window.AppServices.lunchDomainConfig`
-- `window.AppServices.notesDomainConfig`
-
-Serwisy domenowe `lunchService`, `notesService` i `tasksService` są już wydzielone do `js/core/domain-services.js`.
-Pliki `js/pages/lunch/index.js` i `js/pages/notes/index.js` pełnią głównie rolę warstwy UI, korzystając z gotowych kontraktów domenowych i współdzielonej konfiguracji.
+Serwisy domenowe pozostaja w:
 
-Zalecenie:
-
-- nie przepisywać UI
-- nie mieszać bezpośrednich wywołań API w komponentach / plikach stron
-- utrzymać jeden kontrakt danych po stronie frontu
-
----
-
-## Moduł 1: Użytkownicy, logowanie, role
-
-### Wymagania biznesowe
-
-- użytkownik może się zarejestrować
-- użytkownik może się zalogować i wylogować
-- użytkownik posiada avatar
-- użytkownik posiada rolę:
-  - `user`
-  - `admin`
-- aplikacja ma wiedzieć, kto jest aktualnie zalogowany
-- rekordy w systemie mają przechowywać informację:
-  - kto utworzył rekord
-  - kto ostatnio edytował rekord
-  - kiedy rekord został utworzony
-  - kiedy rekord został ostatnio zmieniony
-
-### Proponowany model danych `User`
-
-```json
-{
-  "id": "user_001",
-  "fullName": "Jan Kowalski",
-  "login": "jkowalski",
-  "email": "jan.kowalski@firma.pl",
-  "passwordHash": "docelowo po stronie backendu",
-  "avatarUrl": "/avatars/jan.png",
-  "role": "admin",
-  "createdAt": "2026-03-23T10:00:00Z",
-  "updatedAt": "2026-03-23T10:00:00Z",
-  "isActive": true
-}
-```
-
-### Proponowany model sesji
-
-```json
-{
-  "userId": "user_001",
-  "loginAt": "2026-03-23T10:00:00Z",
-  "expiresAt": "2026-03-23T18:00:00Z"
-}
-```
-
-### Ważne uwagi
-
-- na etapie `localStorage` hasła mogą być jedynie rozwiązaniem pokazowym
-- produkcyjnie logowanie musi zostać przeniesione do backendu
-- role powinny być walidowane po stronie backendu, nie tylko w UI
-
----
-
-## Moduł 2: Nowe zatrudnienia
-
-### Obecna funkcja
-
-Moduł służy do planowania onboardingów i wydania sprzętu dla nowych pracowników.
-
-### Docelowe pola wpisu `Hire`
-
-```json
-{
-  "id": "hire_001",
-  "name": "JAN KOWALSKI",
-  "ru": "Administracja",
-  "sn": "PF123456",
-  "date": "2026-07-23",
-  "accessories": ["mouse", "keyboard"],
-  "createdBy": "user_001",
-  "updatedBy": "user_002",
-  "createdAt": "2026-03-23T09:00:00Z",
-  "updatedAt": "2026-03-23T11:00:00Z"
-}
-```
-
-### Wymagania
-
-- zapis autora utworzenia
-- zapis autora ostatniej edycji
-- możliwość pokazania tych informacji w UI
-
----
-
-## Moduł 3: Monitor laptopów
-
-### Obecna funkcja
-
-Moduł służy do kontroli urządzeń w domenie i ich dat ważności.
-
-### Docelowe pola wpisu `MonitorDevice`
-
-```json
-{
-  "id": "device_001",
-  "name": "REKRUTACJA746",
-  "ru": "243621351",
-  "sn": "PF928402",
-  "date": "2026-05-20",
-  "lastExtendedOn": "2026-03-23",
-  "createdBy": "user_001",
-  "updatedBy": "user_003",
-  "createdAt": "2026-03-23T09:00:00Z",
-  "updatedAt": "2026-03-23T12:00:00Z"
-}
-```
+- `js/core/domain-services.js`
 
-### Wymagania
+## Klucze danych po stronie aplikacji
 
-- autor dodania wpisu
-- autor ostatniej edycji
-- data utworzenia
-- data ostatniej zmiany
-
----
-
-## Moduł 4: Wymiana sprzętu
-
-### Obecna funkcja
-
-Moduł służy do planowania wymian laptopów i akcesoriów.
-
-### Docelowe pola wpisu `Exchange`
-
-```json
-{
-  "id": "exchange_001",
-  "name": "JAN KOWALSKI",
-  "plannedDate": "2026-07-23",
-  "oldSn": "PF123111",
-  "newSn": "PF999222",
-  "accessories": ["mouse", "bag"],
-  "notes": "stary laptop uszkodzony",
-  "status": "pending",
-  "createdBy": "user_001",
-  "updatedBy": "user_002",
-  "createdAt": "2026-03-23T09:00:00Z",
-  "updatedAt": "2026-03-23T11:30:00Z"
-}
-```
-
-### Wymagania
-
-- zapis autora wpisu
-- zapis ostatniej edycji
-- historia dat zmian
-
----
-
-## Moduł 5: Rezerwacja obiadów
-
-### Założenia biznesowe
-
-- osobna strona `.html`
-- osobny kafelek na dashboardzie
-- rezerwacje mogą robić tylko zalogowani użytkownicy
-- sloty od `11:00` do `15:00`
-- interwał co `30 minut`
-- maksymalnie `4 osoby` na jeden slot
-- użytkownik może zarezerwować godzinę i ewentualnie anulować własną rezerwację
-- system powinien pokazywać, kto zapisał się na dany slot
-
-### Przykładowe sloty
-
-- `11:00`
-- `11:30`
-- `12:00`
-- `12:30`
-- `13:00`
-- `13:30`
-- `14:00`
-- `14:30`
-- `15:00`
-
-### Docelowy model danych `LunchReservation`
-
-```json
-{
-  "id": "lunch_001",
-  "date": "2026-03-23",
-  "timeSlot": "12:00",
-  "userId": "user_001",
-  "createdAt": "2026-03-23T08:10:00Z",
-  "updatedAt": "2026-03-23T08:10:00Z",
-  "status": "active"
-}
-```
-
-### Reguły biznesowe
-
-- na jeden slot może przypadać maksymalnie `4` aktywnych rezerwacji
-- tylko zalogowany użytkownik może utworzyć rezerwację
-- użytkownik może anulować swoją własną rezerwację
-- docelowo limit powinien być egzekwowany po stronie backendu, aby uniknąć konfliktów równoczesnych zapisów
-
-### Uwaga do wersji bez backendu
-
-W wersji `localStorage` limit działa tylko lokalnie w obrębie jednej przeglądarki / jednego środowiska danych.
-Nie jest to w pełni wiarygodne dla wielu użytkowników na różnych komputerach.
-
----
-
-## Moduł 6: Notatnik / tablica / zadania
-
-### Założenia biznesowe
-
-- osobna strona `.html`
-- osobny kafelek na dashboardzie
-- notatki może pisać każdy zalogowany użytkownik
-- notatki mają służyć jako podręczne teksty, ważne informacje, komunikacja operacyjna
-- zadania mają mieć możliwość przypisania do użytkownika
-- zadania może przypisywać tylko `admin`
-- przy przypisanym zadaniu ma być widoczny:
-  - avatar użytkownika
-  - imię i nazwisko użytkownika
-- sekcja ważnych tematów / tablica ma być widoczna na górze
-
-### Proponowany podział logiczny
-
-- `notes` - zwykłe notatki
-- `announcements` - ważne informacje / przypięte tematy
-- `tasks` - zadania przypisane do użytkowników
-
-### Model danych `Note`
-
-```json
-{
-  "id": "note_001",
-  "content": "Zwrot do zamykania SD: ...",
-  "authorId": "user_001",
-  "createdAt": "2026-03-23T09:00:00Z",
-  "updatedAt": "2026-03-23T09:10:00Z",
-  "isPinned": false
-}
-```
-
-### Model danych `Announcement`
-
-```json
-{
-  "id": "announcement_001",
-  "title": "Pilny temat",
-  "content": "Najważniejsza informacja dla zespołu",
-  "authorId": "user_002",
-  "createdAt": "2026-03-23T07:30:00Z",
-  "updatedAt": "2026-03-23T08:00:00Z",
-  "isPinned": true
-}
-```
-
-### Model danych `Task`
-
-```json
-{
-  "id": "task_001",
-  "title": "Sprawdzić zgłoszenie SD",
-  "description": "Zweryfikować status laptopa i domeny",
-  "assignedToUserId": "user_003",
-  "createdBy": "user_001",
-  "updatedBy": "user_001",
-  "createdAt": "2026-03-23T10:00:00Z",
-  "updatedAt": "2026-03-23T10:30:00Z",
-  "status": "todo",
-  "priority": "high"
-}
-```
-
-### Reguły biznesowe
-
-- notatki może tworzyć każdy zalogowany użytkownik
-- zadania przypisuje tylko użytkownik z rolą `admin`
-- zadanie może mieć statusy:
-  - `todo`
-  - `in_progress`
-  - `done`
-- przy zadaniu należy zwracać lub łatwo pobierać dane przypisanego użytkownika
-
----
-
-## Moduł 7: Zakładki użytkownika
-
-### Założenia biznesowe
-
-- zakładki są prywatne
-- są przypisane do zalogowanego użytkownika
-- mają być widoczne na stronie głównej dashboardu
-- mają prowadzić m.in. do:
-  - linków SharePoint
-  - plików `.xlsx`
-  - innych ważnych adresów firmowych
-
-### Model danych `Bookmark`
-
-```json
-{
-  "id": "bookmark_001",
-  "userId": "user_001",
-  "label": "Raport tygodniowy",
-  "url": "https://firma.sharepoint.com/...",
-  "icon": "fa-file-excel",
-  "createdAt": "2026-03-23T10:00:00Z",
-  "updatedAt": "2026-03-23T10:00:00Z"
-}
-```
-
-### Reguły biznesowe
-
-- zakładki widzi tylko właściciel
-- zakładki nie są współdzielone między użytkownikami
-
----
-
-## Role i uprawnienia
-
-### `user`
-
-- może się zalogować
-- może edytować własny profil / avatar
-- może dodawać i edytować standardowe wpisy zgodnie z zakresem modułów
-- może dodawać notatki
-- może robić rezerwacje obiadowe
-- może zarządzać własnymi zakładkami
+Klucze sa dalej uzywane przez frontend jako kontrakt, ale backend mapuje je na tabele PostgreSQL:
 
-### `admin`
+- `monitor_laptopow_dane` -> `dashboard_monitor_devices`
+- `nowe_zatrudnienia_dane` -> `dashboard_hires`
+- `wymiana_sprzetu_dane` -> `dashboard_exchanges`
+- `dashboard_users` -> `dashboard_users`
+- `dashboard_user_bookmarks` -> `dashboard_bookmarks`
+- `dashboard_active_users` -> `dashboard_active_users`
+- `dashboard_lunch_reservations` -> `dashboard_lunch_reservations`
+- `dashboard_notes_entries` -> `dashboard_notes`
+- `dashboard_notes_active_viewers` -> `dashboard_notes_active_viewers`
+- `dashboard_notes_announcements` -> `dashboard_announcements`
+- `dashboard_notes_tasks` -> `dashboard_tasks`
+- `dashboard_testers_feedback` -> `dashboard_tester_feedback`
 
-Posiada wszystkie uprawnienia użytkownika oraz dodatkowo:
+## Auth i role
 
-- może przypisywać zadania do innych użytkowników
-- może zarządzać zadaniami zespołowymi w szerszym zakresie
-- docelowo może mieć dodatkowe uprawnienia administracyjne
+System logowania jest oparty o sesje `PHP`.
 
----
+Role:
 
-## Minimalny kontrakt API do rozważenia
+- `user`
+- `admin`
 
-Poniżej przykładowy kierunek, nie jest to sztywne wymaganie technologiczne.
+Backend odpowiada za:
 
-### Auth
+- rejestracje
+- logowanie
+- wylogowanie
+- odczyt aktualnej sesji
+- walidacje uprawnien
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
+## Zasady biznesowe
 
-### Users
+### Uzytkownicy
 
-- `GET /api/users`
-- `GET /api/users/:id`
-- `PATCH /api/users/:id`
+- pierwszy utworzony uzytkownik dostaje role `admin`
+- kazdy uzytkownik ma profil, avatar i login
+- backend przechowuje hash hasla, nigdy nie zapisujemy hasla jawnie
 
-### Hires
+### Obiady
 
-- `GET /api/hires`
-- `POST /api/hires`
-- `PATCH /api/hires/:id`
-- `DELETE /api/hires/:id`
+- rezerwacje moze tworzyc tylko zalogowany uzytkownik
+- jeden uzytkownik moze miec tylko jedna aktywna rezerwacje dziennie
+- jeden slot moze miec maksymalnie `4` aktywne rezerwacje
+- anulowanie dotyczy wlasnej rezerwacji
 
-### Monitor
+### Notatki i ogloszenia
 
-- `GET /api/monitor-devices`
-- `POST /api/monitor-devices`
-- `PATCH /api/monitor-devices/:id`
-- `DELETE /api/monitor-devices/:id`
+- notatki moze dodawac zalogowany uzytkownik
+- ogloszenia sa przechowywane osobno od zwyklych notatek
+- rekordy maja znaczniki czasu i autora
 
-### Exchanges
+### Zadania
 
-- `GET /api/exchanges`
-- `POST /api/exchanges`
-- `PATCH /api/exchanges/:id`
-- `DELETE /api/exchanges/:id`
+- zadania tworzy i przypisuje `admin`
+- zadanie ma status `todo`, `in_progress` albo `done`
+- zadanie moze byc przypisane do konkretnego uzytkownika
 
-### Lunch
+### Zakladki
 
-- `GET /api/lunch-reservations?date=2026-03-23`
-- `POST /api/lunch-reservations`
-- `DELETE /api/lunch-reservations/:id`
+- zakladki sa prywatne
+- widzi je tylko wlasciciel
 
-### Notes / Announcements / Tasks
+### Monitor, zatrudnienia i wymiany
 
-- `GET /api/notes`
-- `POST /api/notes`
-- `PATCH /api/notes/:id`
-- `DELETE /api/notes/:id`
+- rekordy przechowuja `createdBy`, `updatedBy`, `createdAt`, `updatedAt`
+- frontend wysyla dalej ten sam kontrakt danych, backend mapuje go na relacyjne kolumny
 
-- `GET /api/announcements`
-- `POST /api/announcements`
-- `PATCH /api/announcements/:id`
-- `DELETE /api/announcements/:id`
+## Tabele w PostgreSQL
 
-- `GET /api/tasks`
-- `POST /api/tasks`
-- `PATCH /api/tasks/:id`
-- `DELETE /api/tasks/:id`
+Glowne tabele aplikacji:
 
-### Bookmarks
+- `dashboard_users`
+- `dashboard_user_permissions`
+- `dashboard_bookmarks`
+- `dashboard_active_users`
+- `dashboard_lunch_reservations`
+- `dashboard_notes`
+- `dashboard_notes_active_viewers`
+- `dashboard_announcements`
+- `dashboard_tasks`
+- `dashboard_tester_feedback`
+- `dashboard_monitor_devices`
+- `dashboard_hires`
+- `dashboard_exchanges`
 
-- `GET /api/bookmarks`
-- `POST /api/bookmarks`
-- `PATCH /api/bookmarks/:id`
-- `DELETE /api/bookmarks/:id`
+Schemat jest utrzymywany w:
 
----
+- `api/sql/dashboard-schema.sql`
 
-## Rekomendacja wdrożeniowa
+## Endpointy
 
-Najbezpieczniejsza ścieżka migracji:
+Najwazniejsze endpointy:
 
-1. Zachować obecny frontend
-2. Utrzymać wspólną warstwę serwisów po stronie frontu
-3. Ustalić finalne modele danych
-4. Przygotować backend i endpointy
-5. Podmienić implementację serwisów z `localStorage` na `fetch/API`
-6. Zostawić UI możliwie bez zmian
+- `POST /api/auth/register.php`
+- `POST /api/auth/login.php`
+- `POST /api/auth/password.php`
+- `POST /api/auth/profile.php`
+- `POST /api/auth/access.php`
+- `GET /api/auth/session.php`
+- `GET|POST|DELETE /api/storage.php`
+- `GET /api/health.php`
 
----
+## Czyszczenie danych
 
-## Co należy wiedzieć o obecnej wersji demo
+Aplikacja startuje od pustych danych. Dodatkowo projekt zawiera:
 
-Aktualna lub planowana wersja bez backendu jest wersją pokazową / lokalną.
+- `api/reset-app-data.php` - jednorazowy reset danych bazy
+- `api/sql/dashboard-reset.sql` - reczny skrypt SQL do wyczyszczenia tabel
+- `js/shared/runtime-config.js` - jednorazowe wyczyszczenie lokalnego `localStorage` i `sessionStorage`
 
-Ograniczenia:
+## Wdrozenie
 
-- dane nie są współdzielone między komputerami
-- logowanie lokalne nie jest rozwiązaniem produkcyjnym
-- limit `4 osób` na obiady nie jest w pełni bezpieczny bez wspólnej bazy i blokad po stronie serwera
-- wspólny notatnik bez backendu będzie tylko lokalny dla danego środowiska przeglądarki
+Minimalne wymagania po stronie hostingu:
 
-Mimo tego wersja demo pozwala:
+- `PHP 8.4`
+- aktywne rozszerzenie `pdo_pgsql`
+- dostep do PostgreSQL
+- mozliwosc wykonywania `CREATE`, `ALTER`, `INDEX`
 
-- pokazać pełny przepływ działania aplikacji
-- ustalić wygląd i UX modułów
-- przygotować frontend pod przyszłe wdrożenie backendowe
+## Najkrotsze podsumowanie
 
----
-
-## Najkrótsze podsumowanie dla kolejnego programisty
-
-Ta aplikacja działa obecnie na statycznym frontendzie i `localStorage`, ale została zaplanowana tak, aby w kolejnym etapie podmienić wyłącznie warstwę danych i auth na backend.
-
-Kluczowe wymagania:
-
-- zachować UI
-- dodać prawdziwe logowanie i użytkowników
-- wdrożyć role `user/admin`
-- podpiąć `createdBy`, `updatedBy`, `createdAt`, `updatedAt`
-- obsłużyć prywatne zakładki użytkownika
-- wdrożyć współdzielone rezerwacje obiadów z limitem `4 osób`
-- wdrożyć notatnik, ogłoszenia i zadania przypisywane do użytkowników
+DashboardIT jest teraz przygotowany do pracy na jednym frontendzie i backendzie `PHP + PostgreSQL`, bez przykladowych danych i bez osobnej wersji pokazowej.

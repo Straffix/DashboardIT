@@ -13,17 +13,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous" defer></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
 
     <link rel="stylesheet" href="./styles/style.css">
     <link rel="stylesheet" href="./styles/zatrudnienia.css">
+    <link rel="stylesheet" href="./styles/app-icons.css">
 </head>
 
 <body>
 
     <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pełnoekranowy">
-        <i class="fa-solid fa-expand"></i>
+        <i class="app-icon expand-solid-full"></i>
     </button>
 
     <div class="wrapper">
@@ -31,13 +31,13 @@
         <header class="header">
 
             <a href="index.html" class="menu-btn">
-                <i class="fas fa-arrow-left"></i> Powrót do menu
+                <i class="app-icon arrow-left-solid-full"></i> Powrót do menu
             </a>
 
             <div class="logo-section">
 
                 <div class="icon-box">
-                    <i class="fas fa-user-plus"></i>
+                    <i class="app-icon user-plus-solid-full"></i>
                 </div>
 
                 <div>
@@ -70,12 +70,12 @@
                             aria-label="Otwórz wyszukiwarkę"
                             aria-expanded="false"
                             aria-controls="hire-search-panel">
-                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <i class="app-icon magnifying-glass-solid-full" aria-hidden="true"></i>
                         </button>
 
                         <div id="hire-search-panel" class="workspace-search-panel" hidden>
                             <label class="workspace-search" for="hire-search-input">
-                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                <i class="app-icon magnifying-glass-solid-full" aria-hidden="true"></i>
                                 <input
                                     type="search"
                                     id="hire-search-input"
@@ -86,17 +86,17 @@
                         </div>
 
                         <button id="import-excel-trigger" class="workspace-action-btn" type="button">
-                            <i class="fa-solid fa-file-import"></i>
+                            <i class="app-icon file-import-solid-full"></i>
                             <span>Import Excel</span>
                         </button>
 
                         <button id="export-excel-btn" class="workspace-action-btn workspace-action-btn-green" type="button">
-                            <i class="fa-solid fa-file-excel"></i>
+                            <i class="app-icon file-excel-solid-full"></i>
                             <span>Eksport Excel</span>
                         </button>
 
                         <button id="open-hire-drawer" class="workspace-primary-btn" type="button">
-                            <i class="fa-solid fa-plus"></i>
+                            <i class="app-icon plus-solid-full"></i>
                             <span>Dodaj pracownika</span>
                         </button>
                     </div>
@@ -104,7 +104,7 @@
 
                 <div class="table-header">
                     <button class="month-nav-btn" type="button" data-month-delta="-1" aria-label="Poprzedni miesiąc">
-                        <i class="fas fa-chevron-left"></i>
+                        <i class="app-icon chevron-left-solid-full"></i>
                     </button>
 
                     <div class="month-picker-container" id="month-trigger" role="button" tabindex="0"
@@ -114,7 +114,7 @@
                     </div>
 
                     <button class="month-nav-btn" type="button" data-month-delta="1" aria-label="Następny miesiąc">
-                        <i class="fas fa-chevron-right"></i>
+                        <i class="app-icon chevron-right-solid-full"></i>
                     </button>
                 </div>
 
@@ -153,7 +153,7 @@
                     </div>
 
                     <button id="close-hire-drawer" class="hire-drawer-close" type="button" aria-label="Zamknij panel">
-                        <i class="fa-solid fa-xmark"></i>
+                        <i class="app-icon xmark-solid-full"></i>
                     </button>
                 </div>
 
@@ -180,23 +180,43 @@
                         <div class="accessory-picker" id="accessory-picker">
 
                             <div class="accessory-item" data-item="mouse" title="Myszka">
-                                <i class="fas fa-mouse"></i>
+                                <i class="app-icon computer-mouse-solid-full"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="vertical-mouse" title="Mysz wertykalna">
+                                <i class="app-icon vertical-mouse-side-icon"></i>
                             </div>
 
                             <div class="accessory-item" data-item="keyboard" title="Klawiatura">
-                                <i class="fas fa-keyboard"></i>
+                                <i class="app-icon keyboard-solid-full"></i>
                             </div>
 
                             <div class="accessory-item" data-item="headset" title="Słuchawki">
-                                <i class="fas fa-headset"></i>
+                                <i class="app-icon headset-solid-full"></i>
                             </div>
 
                             <div class="accessory-item" data-item="monitor" title="Monitor">
-                                <i class="fas fa-desktop"></i>
+                                <i class="app-icon desktop-solid-full"></i>
                             </div>
 
                             <div class="accessory-item" data-item="bag" title="Torba">
-                                <i class="fas fa-briefcase"></i>
+                                <i class="app-icon briefcase-solid-full"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="backpack" title="Plecak">
+                                <i class="app-icon backpack-icon"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="pointer" title="Wskaźnik">
+                                <i class="app-icon pen-clip-solid-full"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="printer" title="Drukarka">
+                                <i class="app-icon print-solid-full"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="laptop-pad" title="Podkładka pod laptopa">
+                                <i class="app-icon table-cells-solid-full"></i>
                             </div>
 
                         </div>
@@ -244,8 +264,6 @@
     <script src="./js/shared/public-api.js" charset="utf-8"></script>
     <script src="./js/shared/global-ui.js" charset="utf-8"></script>
     <script src="./js/pages/hires/index.js" charset="utf-8"></script>
-    <script src="./js/demo/demo-seed-data.js" charset="utf-8"></script>
-    <script src="./js/demo/demo-controls.js" charset="utf-8"></script>
 
 </body>
 

@@ -50,14 +50,14 @@ function syncProtectedUi() {
 
 	if (openDrawerBtn) {
 		openDrawerBtn.innerHTML = guestMode
-			? '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj się, aby dodawać</span>'
-			: '<i class="fa-solid fa-plus"></i><span>Dodaj urządzenie</span>'
+			? '<i class="app-icon right-to-bracket-solid-full"></i><span>Zaloguj się, aby dodawać</span>'
+			: '<i class="app-icon plus-solid-full"></i><span>Dodaj urządzenie</span>'
 	}
 
 	if (importExcelTrigger) {
 		importExcelTrigger.innerHTML = guestMode
-			? '<i class="fa-solid fa-lock"></i><span>Import po zalogowaniu</span>'
-			: '<i class="fa-solid fa-file-import"></i><span>Import Excel</span>'
+			? '<i class="app-icon lock-solid-full"></i><span>Import po zalogowaniu</span>'
+			: '<i class="app-icon file-import-solid-full"></i><span>Import Excel</span>'
 	}
 
 	deviceForm
@@ -580,13 +580,13 @@ function renderTable() {
 			<td class="cell-center">
 				<div class="monitor-actions">
 					<button class="icon-button monitor-row-btn monitor-row-btn-extend" type="button" data-action="extend" data-index="${index}" aria-label="Przedłuż o 60 dni" title="${guestMode ? 'Zaloguj się, aby modyfikować urządzenia' : 'Przedłuż o 60 dni'}" ${guestMode ? 'disabled' : ''}>
-						<i class="fa-solid fa-rotate-right"></i>
+						<i class="app-icon rotate-right-solid-full"></i>
 					</button>
 					<button class="icon-button monitor-row-btn monitor-row-btn-edit" type="button" data-action="edit" data-index="${index}" aria-label="Edytuj urządzenie" title="${guestMode ? 'Zaloguj się, aby edytować urządzenia' : 'Edytuj urządzenie'}" ${guestMode ? 'disabled' : ''}>
-						<i class="fa-solid fa-pen-to-square"></i>
+						<i class="app-icon pen-to-square-solid-full"></i>
 					</button>
 					<button class="icon-button monitor-row-btn monitor-row-btn-danger" type="button" data-action="delete" data-index="${index}" aria-label="Usuń urządzenie" title="${guestMode ? 'Zaloguj się, aby usuwać urządzenia' : 'Usuń urządzenie'}" ${guestMode ? 'disabled' : ''}>
-						<i class="fa-solid fa-trash"></i>
+						<i class="app-icon trash-solid-full"></i>
 					</button>
 				</div>
 			</td>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 
 <head>
@@ -13,10 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <script src="https://kit.fontawesome.com/bc955bc9a2.js" crossorigin="anonymous"></script>
-
     <link rel="stylesheet" href="./styles/style.css">
     <link rel="stylesheet" href="./styles/dashboard.css">
+    <link rel="stylesheet" href="./styles/app-icons.css">
 </head>
 
 <body class="dashboard-page">
@@ -33,7 +32,7 @@
                     aria-haspopup="dialog" aria-controls="weather-search-form">
                     <div class="weather-main">
                         <div class="weather-icon" id="weather-icon">
-                            <i class="fa-solid fa-cloud-sun"></i>
+                            <i class="app-icon cloud-sun-solid-full"></i>
                         </div>
                         <div>
                             <div class="weather-temp" id="weather-temp">--°C</div>
@@ -62,7 +61,7 @@
                             <button type="submit" id="weather-search-btn">Zmień</button>
                         </div>
                         <button type="button" class="weather-location-btn" id="weather-current-location-btn">
-                            <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                            <i class="app-icon location-crosshairs-solid-full" aria-hidden="true"></i>
                             <span>Użyj aktualnej lokalizacji</span>
                         </button>
                     </form>
@@ -95,7 +94,7 @@
                 </div>
                 <button type="button" class="dashboard-scroll-cue" id="dashboard-scroll-cue"
                     aria-label="Przewiń do modułów dashboardu">
-                    <i class="fa-solid fa-arrow-down"></i>
+                    <i class="app-icon arrow-down-solid-full"></i>
                 </button>
             </header>
 
@@ -103,7 +102,7 @@
                 <div class="dashboard-menu-toolbar" aria-label="Ustawienia układu dashboardu">
                     <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
                         id="dashboard-menu-edit-btn">
-                        <i class="fa-solid fa-grip"></i>
+                        <i class="app-icon grip-solid-full"></i>
                         <span>Edytuj</span>
                     </button>
                     <div class="dashboard-menu-edit-actions" id="dashboard-menu-edit-actions" hidden>
@@ -113,7 +112,7 @@
                         </button>
                         <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
                             id="dashboard-menu-save-btn">
-                            <i class="fa-solid fa-check"></i>
+                            <i class="app-icon check-solid-full"></i>
                             <span>Zapisz układ</span>
                         </button>
                     </div>
@@ -123,7 +122,7 @@
                         data-menu-item-id="nowe-zatrudnienia">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
-                                <i class="fa-solid fa-user-plus"></i>
+                                <i class="app-icon user-plus-solid-full"></i>
                             </div>
                             <div class="card-copy">
                                 <span>Nowe Zatrudnienia</span>
@@ -136,7 +135,7 @@
                         data-menu-item-id="monitor-laptopow">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
-                                <i class="fa-solid fa-laptop"></i>
+                                <i class="app-icon laptop-solid-full"></i>
                             </div>
                             <div class="card-copy">
                                 <span>Urządzenia w domenie</span>
@@ -149,7 +148,7 @@
                         data-menu-item-id="wymiana-sprzetu">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
-                                <i class="fa-solid fa-right-left"></i>
+                                <i class="app-icon right-left-solid-full"></i>
                             </div>
                             <div class="card-copy">
                                 <span>Wymiana Sprzętu</span>
@@ -162,7 +161,7 @@
                         data-menu-item-id="rezerwacja-obiadow">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
-                                <i class="fa-solid fa-utensils"></i>
+                                <i class="app-icon utensils-solid-full"></i>
                             </div>
                             <div class="card-copy">
                                 <span>Rezerwacja Obiadów</span>
@@ -175,7 +174,7 @@
                     <a href="notatnik.html" target="_blank" class="menu-item notatnik" data-menu-item-id="notatnik">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
-                                <i class="fa-solid fa-comments"></i>
+                                <i class="app-icon comment-solid-full"></i>
                             </div>
                             <div class="card-copy">
                                 <span>Chat</span>
@@ -188,7 +187,7 @@
                         data-menu-item-id="panel-testerow">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
-                                <i class="fa-solid fa-bug"></i>
+                                <i class="app-icon bug-solid-full"></i>
                             </div>
                             <div class="card-copy">
                                 <span>Panel Testerów</span>
@@ -214,7 +213,7 @@
                         <h2 id="dashboard-bookmarks-title">Zakładki</h2>
                     </div>
                     <button type="button" class="dashboard-bookmarks-add-btn" id="dashboard-bookmark-add-btn">
-                        <i class="fa-solid fa-bookmark"></i>
+                        <i class="app-icon bookmark-solid-full"></i>
                         <span>Dodaj zakładkę</span>
                     </button>
                 </div>
@@ -249,7 +248,7 @@
             <div class="task-modal-backdrop" data-task-close></div>
             <section class="task-modal-card" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
                 <button type="button" class="task-modal-close" data-task-close aria-label="Zamknij planer">
-                    <i class="fa-solid fa-xmark"></i>
+                    <i class="app-icon xmark-solid-full"></i>
                 </button>
 
                 <label class="task-autoclear-toggle" for="task-autoclear-toggle">
@@ -274,12 +273,12 @@
                         <div class="task-calendar-head">
                             <button type="button" class="task-calendar-nav" id="task-calendar-prev"
                                 aria-label="Poprzedni miesiąc">
-                                <i class="fa-solid fa-chevron-left"></i>
+                                <i class="app-icon chevron-left-solid-full"></i>
                             </button>
                             <div class="task-calendar-month" id="task-calendar-month">--</div>
                             <button type="button" class="task-calendar-nav" id="task-calendar-next"
                                 aria-label="Następny miesiąc">
-                                <i class="fa-solid fa-chevron-right"></i>
+                                <i class="app-icon chevron-right-solid-full"></i>
                             </button>
                         </div>
                         <div class="task-calendar-weekdays" id="task-calendar-weekdays"></div>
@@ -354,7 +353,7 @@
                 aria-labelledby="dashboard-bookmark-modal-title">
                 <button type="button" class="dashboard-bookmark-modal-close" data-bookmark-close
                     aria-label="Zamknij panel zakładki">
-                    <i class="fa-solid fa-xmark"></i>
+                    <i class="app-icon xmark-solid-full"></i>
                 </button>
 
                 <div class="dashboard-bookmark-modal-copy">
@@ -407,8 +406,6 @@
     <script src="./js/pages/dashboard/tasks/planner.js" charset="utf-8"></script>
     <script src="./js/pages/dashboard/index.js" charset="utf-8"></script>
     <script src="./js/pages/dashboard/bookmarks.js" charset="utf-8"></script>
-    <script src="./js/demo/demo-seed-data.js" charset="utf-8"></script>
-    <script src="./js/demo/demo-controls.js" charset="utf-8"></script>
 </body>
 
 </html>

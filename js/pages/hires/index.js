@@ -45,14 +45,14 @@ function syncProtectedUi() {
 
 	if (openDrawerBtn) {
 		openDrawerBtn.innerHTML = guestMode
-			? '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj się, aby dodawać</span>'
-			: '<i class="fa-solid fa-plus"></i><span>Dodaj pracownika</span>'
+			? '<i class="app-icon right-to-bracket-solid-full"></i><span>Zaloguj się, aby dodawać</span>'
+			: '<i class="app-icon plus-solid-full"></i><span>Dodaj pracownika</span>'
 	}
 
 	if (importExcelTrigger) {
 		importExcelTrigger.innerHTML = guestMode
-			? '<i class="fa-solid fa-lock"></i><span>Import po zalogowaniu</span>'
-			: '<i class="fa-solid fa-file-import"></i><span>Import Excel</span>'
+			? '<i class="app-icon lock-solid-full"></i><span>Import po zalogowaniu</span>'
+			: '<i class="app-icon file-import-solid-full"></i><span>Import Excel</span>'
 	}
 
 	hiresForm
@@ -103,8 +103,18 @@ function loadData() {
 
 	const normalizedHires = parsedHires.map(hire => {
 		const normalizedDate = AppUtils.normalizeSpreadsheetDate(hire.date)
+		const rawAccessories = Array.isArray(hire.accessories)
+			? hire.accessories.filter(Boolean)
+			: typeof hire.accessories === 'string'
+				? hire.accessories.split(',').map(item => item.trim()).filter(Boolean)
+				: []
+		const normalizedAccessories = AppUtils.normalizeAccessories(rawAccessories)
 		const normalizedAudit = AppUtils.normalizeAuditFields(hire)
 		if (normalizedDate && normalizedDate !== hire.date) {
+			hasUpdates = true
+		}
+
+		if (JSON.stringify(normalizedAccessories) !== JSON.stringify(rawAccessories)) {
 			hasUpdates = true
 		}
 
@@ -119,6 +129,7 @@ function loadData() {
 		return {
 			...hire,
 			date: normalizedDate || hire.date || '',
+			accessories: normalizedAccessories,
 			...normalizedAudit,
 		}
 	})
@@ -518,10 +529,10 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 			<td class="cell-center">
 				<div class="hire-actions">
 					<button class="icon-button hire-action-btn" type="button" data-action="edit" data-index="${originalIndex}" aria-label="Edytuj wpis" title="${guestMode ? 'Zaloguj się, aby edytować wpisy' : 'Edytuj wpis'}" ${guestMode ? 'disabled' : ''}>
-						<i class="fas fa-pen"></i>
+						<i class="app-icon pen-solid-full"></i>
 					</button>
 					<button class="icon-button hire-action-btn hire-action-btn-danger" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usuń wpis" title="${guestMode ? 'Zaloguj się, aby usuwać wpisy' : 'Usuń wpis'}" ${guestMode ? 'disabled' : ''}>
-						<i class="fas fa-trash"></i>
+						<i class="app-icon trash-solid-full"></i>
 					</button>
 				</div>
 			</td>
@@ -606,7 +617,7 @@ function importExcel(event) {
 				ru: row['Dział / Stanowisko'] || '',
 				sn: AppUtils.normalizeSN(row['SN Sprzętu']),
 				date: AppUtils.normalizeSpreadsheetDate(row['Data rozpoczęcia']) || '',
-				accessories: row.Akcesoria ? row.Akcesoria.split(', ').filter(Boolean) : [],
+				accessories: AppUtils.normalizeAccessories(row.Akcesoria ? row.Akcesoria.split(',') : []),
 				createdBy: actor,
 				updatedBy: actor,
 				createdAt: importedAt,

@@ -735,7 +735,7 @@
 			}
 
 			const normalizedAuthorName = normalizedActor
-				? String(normalizedActor.fullName || normalizedActor.login || authorName || '').trim()
+				? String(normalizedActor.fullName || authorName || 'Użytkownik zespołu').trim()
 				: String(authorName || '').trim()
 			const normalizedArea = String(area || '').trim()
 			const normalizedMessage = String(message || '').trim()

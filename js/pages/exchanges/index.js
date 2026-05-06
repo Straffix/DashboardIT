@@ -46,14 +46,14 @@ function syncProtectedUi() {
 
 	if (openDrawerBtn) {
 		openDrawerBtn.innerHTML = guestMode
-			? '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj się, aby planować</span>'
-			: '<i class="fa-solid fa-plus"></i><span>Zaplanuj wymianę</span>'
+			? '<i class="app-icon right-to-bracket-solid-full"></i><span>Zaloguj się, aby planować</span>'
+			: '<i class="app-icon plus-solid-full"></i><span>Zaplanuj wymianę</span>'
 	}
 
 	if (importExcelTrigger) {
 		importExcelTrigger.innerHTML = guestMode
-			? '<i class="fa-solid fa-lock"></i><span>Import po zalogowaniu</span>'
-			: '<i class="fa-solid fa-file-import"></i><span>Import Excel</span>'
+			? '<i class="app-icon lock-solid-full"></i><span>Import po zalogowaniu</span>'
+			: '<i class="app-icon file-import-solid-full"></i><span>Import Excel</span>'
 	}
 
 	exchangeForm
@@ -104,8 +104,18 @@ function loadData() {
 
 	const normalizedExchanges = parsedExchanges.map(exchange => {
 		const normalizedDate = AppUtils.normalizeSpreadsheetDate(exchange.plannedDate)
+		const rawAccessories = Array.isArray(exchange.accessories)
+			? exchange.accessories.filter(Boolean)
+			: typeof exchange.accessories === 'string'
+				? exchange.accessories.split(',').map(item => item.trim()).filter(Boolean)
+				: []
+		const normalizedAccessories = AppUtils.normalizeAccessories(rawAccessories)
 		const normalizedAudit = AppUtils.normalizeAuditFields(exchange)
 		if (normalizedDate && normalizedDate !== exchange.plannedDate) {
+			hasUpdates = true
+		}
+
+		if (JSON.stringify(normalizedAccessories) !== JSON.stringify(rawAccessories)) {
 			hasUpdates = true
 		}
 
@@ -120,6 +130,7 @@ function loadData() {
 		return {
 			...exchange,
 			plannedDate: normalizedDate || exchange.plannedDate || '',
+			accessories: normalizedAccessories,
 			...normalizedAudit,
 		}
 	})
@@ -352,7 +363,7 @@ function resetFormState() {
 	if (submitBtn) {
 		submitBtn.classList.remove('btn-submit-primary')
 		submitBtn.classList.add('btn-submit-warning')
-		submitBtn.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Zatwierdź i zaplanuj'
+		submitBtn.innerHTML = '<i class="app-icon calendar-check-solid-full"></i> Zatwierdź i zaplanuj'
 	}
 	captureDrawerSnapshot()
 }
@@ -422,7 +433,7 @@ function startEditFlow(index) {
 	if (submitBtn) {
 		submitBtn.classList.remove('btn-submit-warning')
 		submitBtn.classList.add('btn-submit-primary')
-		submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Zapisz zmiany'
+		submitBtn.innerHTML = '<i class="app-icon floppy-disk-solid-full"></i> Zapisz zmiany'
 	}
 
 	monthPicker.setCurrentDate(AppUtils.parseDate(exchange.plannedDate) || new Date(), { render: false })
@@ -488,7 +499,7 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 		const infoHtml =
 			exchange.notes && exchange.notes.trim() !== ''
 				? `<div class="notes-tooltip-container">
-						<i class="fas fa-info-circle notes-icon"></i>
+						<i class="app-icon circle-info-solid-full notes-icon"></i>
 						<span class="notes-tooltip-text">${exchange.notes}</span>
 					</div>`
 				: '<span class="exchange-info-placeholder">-</span>'
@@ -526,15 +537,15 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 					${
 						!isDone
 							? `<button class="icon-button exchange-action-btn exchange-action-btn-complete" type="button" data-action="complete" data-index="${originalIndex}" aria-label="Finalizuj wymianę" title="${guestMode ? 'Zaloguj się, aby finalizować wymiany' : 'Finalizuj wymianę'}" ${guestMode ? 'disabled' : ''}>
-								<i class="fas fa-check"></i>
+								<i class="app-icon check-solid-full"></i>
 							</button>`
 							: ''
 					}
 					<button class="icon-button exchange-action-btn" type="button" data-action="edit" data-index="${originalIndex}" aria-label="Edytuj wymianę" title="${guestMode ? 'Zaloguj się, aby edytować wymiany' : 'Edytuj wymianę'}" ${guestMode ? 'disabled' : ''}>
-						<i class="fas fa-pen"></i>
+						<i class="app-icon pen-solid-full"></i>
 					</button>
 					<button class="icon-button exchange-action-btn exchange-action-btn-danger" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usuń wymianę" title="${guestMode ? 'Zaloguj się, aby usuwać wymiany' : 'Usuń wymianę'}" ${guestMode ? 'disabled' : ''}>
-						<i class="fas fa-trash"></i>
+						<i class="app-icon trash-solid-full"></i>
 					</button>
 				</div>
 			</td>
@@ -673,7 +684,7 @@ function importExcel(event) {
 						AppUtils.normalizeSpreadsheetDate(row.Data || row['Data planowanej wymiany']) || AppUtils.formatDate(new Date()),
 					oldSn: AppUtils.normalizeSN(row['Stary SN'] || row['SN do zwrotu'] || ''),
 					newSn: AppUtils.normalizeSN(row['Nowy SN'] || row['SN do wydania'] || ''),
-					accessories: row.Akcesoria ? row.Akcesoria.split(',').map(item => item.trim()).filter(Boolean) : [],
+					accessories: AppUtils.normalizeAccessories(row.Akcesoria ? row.Akcesoria.split(',') : []),
 					notes: row.Uwagi || '',
 					status: row.Status === 'Zakończono' ? 'done' : 'pending',
 					createdBy: actor,

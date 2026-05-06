@@ -8,12 +8,6 @@ const AUTH_CONFIG = {
 	coverOutputHeight: 360,
 	coverOutputQuality: 0.86,
 	defaultProfileAccentColor: '#0f766e',
-	testAdmin: {
-		id: 'user-test-admin',
-		fullName: 'Administrator Testowy',
-		login: 'admin',
-		password: 'admin321',
-	},
 	permissionOptions: [
 		{ id: 'it_support', label: 'Informatyk' },
 		{ id: 'network', label: 'Sieciowiec' },
@@ -21,9 +15,9 @@ const AUTH_CONFIG = {
 		{ id: 'rooms', label: 'Salkowy' },
 	],
 	themeOptions: [
-		{ id: 'light', label: 'Jasny', icon: 'fa-sun' },
-		{ id: 'dark', label: 'Ciemny', icon: 'fa-moon' },
-		{ id: 'rossmann', label: 'Ross', icon: 'fa-store' },
+		{ id: 'light', label: 'Jasny', icon: 'sun-solid-full' },
+		{ id: 'dark', label: 'Ciemny', icon: 'moon-solid-full' },
+		{ id: 'rossmann', label: 'Ross', icon: 'store-solid-full' },
 	],
 	avatarPresets: [
 		{ id: 'violet', label: 'Neutralny', gradient: 'linear-gradient(135deg, #64748b 0%, #94a3b8 100%)' },
@@ -118,7 +112,7 @@ const isRemoteAuthMode = () => Boolean(storageService?.isRemoteEnabled?.())
 
 const getAccountStorageLabel = () => (isRemoteAuthMode() ? 'na serwerze' : 'lokalnie w tej przegladarce')
 
-const getStorageModeTagLabel = () => (isRemoteAuthMode() ? 'Serwer plikowy PHP' : 'Lokalna przegladarka')
+const getStorageModeTagLabel = () => (isRemoteAuthMode() ? 'Tryb serwerowy' : 'Tryb lokalny')
 
 const requestRemoteAuth = ({ path = '', method = 'GET', payload = null } = {}) => {
 	const response = remoteApi?.requestAuth?.({
@@ -161,6 +155,11 @@ const normalizeProfileTitle = value => String(value || '').trim().slice(0, 80)
 const normalizeProfileBio = value => String(value || '').trim().slice(0, 240)
 
 const normalizeThemePreference = theme => (AUTH_CONFIG.themeOptions.some(option => option.id === theme) ? theme : 'light')
+
+const getVisibleUserName = (user, fallback = 'Użytkownik') => {
+	const fullName = String(user?.fullName || '').trim()
+	return fullName || fallback
+}
 
 const getCurrentThemePreference = () =>
 	normalizeThemePreference(preferencesService?.getTheme?.() || document.documentElement.getAttribute('data-theme') || 'light')
@@ -298,8 +297,6 @@ const mapStoredUser = user => ({
 	profileCoverImage: normalizeProfileCoverImage(user.profileCoverImage),
 	createdAt: user.createdAt || new Date().toISOString(),
 	updatedAt: user.updatedAt || user.createdAt || new Date().toISOString(),
-	isDemo: Boolean(user.isDemo),
-	isTestAccount: Boolean(user.isTestAccount),
 })
 
 const sanitizeUser = user => {
@@ -319,8 +316,6 @@ const sanitizeUser = user => {
 		profileCoverImage: normalizeProfileCoverImage(user.profileCoverImage),
 		createdAt: user.createdAt,
 		updatedAt: user.updatedAt,
-		isDemo: Boolean(user.isDemo),
-		isTestAccount: Boolean(user.isTestAccount),
 	}
 }
 
@@ -352,66 +347,18 @@ const findUserByLogin = login => authState.users.find(user => user.login === nor
 
 const isLocalPasswordMatch = (user, password) => String(user?.passwordHash || '') === encodeLocalPassword(password)
 
-const buildLocalTestAdminAccount = existingUser => {
-	const now = new Date().toISOString()
-	return {
-		...(existingUser || {}),
-		id: existingUser?.id || AUTH_CONFIG.testAdmin.id,
-		fullName: existingUser?.fullName || AUTH_CONFIG.testAdmin.fullName,
-		login: AUTH_CONFIG.testAdmin.login,
-		passwordHash: encodeLocalPassword(AUTH_CONFIG.testAdmin.password),
-		role: 'admin',
-		permissions: getAllPermissionIds(),
-		avatarId: existingUser?.avatarId || 'slate',
-		avatarImage: normalizeAvatarImage(existingUser?.avatarImage),
-		profileTitle: normalizeProfileTitle(existingUser?.profileTitle || 'Administrator systemu'),
-		profileBio: normalizeProfileBio(existingUser?.profileBio || 'Konto testowe do konfiguracji rol i klas uzytkownikow.'),
-		profileAccentColor: normalizeProfileAccentColor(existingUser?.profileAccentColor || '#0f766e'),
-		profileCoverImage: normalizeProfileCoverImage(existingUser?.profileCoverImage),
-		createdAt: existingUser?.createdAt || now,
-		updatedAt: now,
-		isTestAccount: true,
-		isDemo: Boolean(existingUser?.isDemo),
-	}
-}
-
-const ensureLocalTestAdminAccount = () => {
-	if (isRemoteAuthMode()) return
-
-	const adminLogin = AUTH_CONFIG.testAdmin.login
-	const adminIndex = authState.users.findIndex(user => user.login === adminLogin)
-	if (adminIndex === -1) {
-		saveUsers([...authState.users, buildLocalTestAdminAccount(null)])
-		return
-	}
-
-	const currentAdmin = authState.users[adminIndex]
-	const needsUpdate =
-		currentAdmin.role !== 'admin' ||
-		!isLocalPasswordMatch(currentAdmin, AUTH_CONFIG.testAdmin.password) ||
-		getEffectiveUserPermissions(currentAdmin).length !== getAllPermissionIds().length ||
-		!currentAdmin.isTestAccount
-
-	if (!needsUpdate) return
-
-	const updatedUsers = authState.users.map((user, index) =>
-		index === adminIndex ? buildLocalTestAdminAccount(user) : user
-	)
-	saveUsers(updatedUsers)
-}
-
 const renderAuthUi = () => {
 	if (!authState.trigger || !authState.popoverIdentity || !authState.popoverMeta || !authState.popoverActions) return
 
 	const currentUser = authState.currentUser
-	const identityLabel = currentUser ? currentUser.fullName : 'Gość'
+	const identityLabel = currentUser ? getVisibleUserName(currentUser) : 'Gość'
 	const metaLabel = currentUser
-		? `${getRoleLabel(currentUser.role)} · @${currentUser.login}`
+		? getRoleLabel(currentUser.role)
 		: 'Nie zalogowano'
 
 	authState.trigger.innerHTML = `
 		${createAvatarMarkup({
-			fullName: currentUser?.fullName || 'Gość systemu',
+			fullName: currentUser ? getVisibleUserName(currentUser) : 'Gość systemu',
 			avatarId: currentUser?.avatarId || AUTH_CONFIG.avatarPresets[0].id,
 			avatarImage: currentUser?.avatarImage || '',
 			extraClass: 'app-user-avatar-lg',
@@ -421,7 +368,7 @@ const renderAuthUi = () => {
 			<small>${metaLabel}</small>
 		</span>
 		<span class="app-user-trigger-chevron" aria-hidden="true">
-			<i class="fa-solid fa-chevron-down"></i>
+			<i class="app-icon chevron-down-solid-full"></i>
 		</span>
 	`
 
@@ -441,8 +388,8 @@ const renderAuthUi = () => {
 		? ''
 		: authState.users.length === 0
 			? isRemoteAuthMode()
-				? 'Konto lidera admin / admin321 jest gotowe do testów.'
-				: 'Konto lidera admin / admin321 jest gotowe do testów.'
+				? 'Załóż pierwsze konto zespołowe. Otrzyma rolę lidera.'
+				: 'Załóż pierwsze konto w tej przeglądarce. Otrzyma rolę lidera.'
 			: isRemoteAuthMode()
 				? 'Zaloguj sie lub zaloz nowe konto wspoldzielone na serwerze.'
 				: 'Zaloguj się lub załóż nowe konto lokalne.'
@@ -455,28 +402,28 @@ const renderAuthUi = () => {
 				currentUser.role === 'admin'
 					? `
 						<button type="button" class="app-user-action-btn" data-user-action="admin-users">
-							<i class="fa-solid fa-users-gear"></i>
+							<i class="app-icon user-gear-solid-full"></i>
 							<span>Użytkownicy</span>
 						</button>
 					`
 					: ''
 			}
 			<button type="button" class="app-user-action-btn" data-user-action="profile">
-				<i class="fa-solid fa-user-gear"></i>
+				<i class="app-icon user-gear-solid-full"></i>
 				<span>Profil</span>
 			</button>
 			<button type="button" class="app-user-action-btn" data-user-action="logout">
-				<i class="fa-solid fa-arrow-right-from-bracket"></i>
+				<i class="app-icon arrow-right-from-bracket-solid-full"></i>
 				<span>Wyloguj</span>
 			</button>
 		`
 		: `
 			<button type="button" class="app-user-action-btn" data-user-action="login">
-				<i class="fa-solid fa-right-to-bracket"></i>
+				<i class="app-icon right-to-bracket-solid-full"></i>
 				<span>Zaloguj się</span>
 			</button>
 			<button type="button" class="app-user-action-btn" data-user-action="register">
-				<i class="fa-solid fa-user-plus"></i>
+				<i class="app-icon user-plus-solid-full"></i>
 				<span>Załóż konto</span>
 			</button>
 		`
@@ -501,7 +448,6 @@ const setCurrentUser = user => {
 
 const syncCurrentUserFromSession = () => {
 	authState.users = loadUsers()
-	ensureLocalTestAdminAccount()
 	authState.session = loadSession()
 
 	if (!authState.session) {
@@ -865,6 +811,121 @@ const updateUserAccess = ({ userId, fullName, login, role, permissions } = {}) =
 	return sanitizeUser(matchedUser)
 }
 
+const filterStoredCollection = (storageKey, shouldRemoveRecord) => {
+	if (!storageKey || !storageService?.readJson || !storageService?.writeJson) return
+
+	const records = storageService.readJson(storageKey, [])
+	if (!Array.isArray(records)) return
+
+	const nextRecords = records.filter(record => !shouldRemoveRecord(record && typeof record === 'object' ? record : {}))
+	if (nextRecords.length !== records.length) {
+		storageService.writeJson(storageKey, nextRecords)
+	}
+}
+
+const mapStoredCollection = (storageKey, mapRecord) => {
+	if (!storageKey || !storageService?.readJson || !storageService?.writeJson) return
+
+	const records = storageService.readJson(storageKey, [])
+	if (!Array.isArray(records)) return
+
+	let hasChanges = false
+	const nextRecords = records.map(record => {
+		if (!record || typeof record !== 'object') return record
+
+		const nextRecord = mapRecord(record)
+		if (nextRecord !== record) {
+			hasChanges = true
+		}
+		return nextRecord
+	})
+
+	if (hasChanges) {
+		storageService.writeJson(storageKey, nextRecords)
+	}
+}
+
+const purgeDeletedUserLocalData = userId => {
+	const normalizedUserId = String(userId || '').trim()
+	if (!normalizedUserId || isRemoteAuthMode()) return
+
+	const storageKeys = APP_CONFIG?.STORAGE_KEYS || {}
+
+	filterStoredCollection(storageKeys.BOOKMARKS, record => String(record.userId || '') === normalizedUserId)
+	filterStoredCollection(storageKeys.DASHBOARD_ACTIVE_USERS, record => String(record.userId || '') === normalizedUserId)
+	filterStoredCollection(storageKeys.LUNCH, record => String(record.userId || '') === normalizedUserId)
+	filterStoredCollection(storageKeys.NOTES_ACTIVE_VIEWERS, record => String(record.userId || '') === normalizedUserId)
+	mapStoredCollection(storageKeys.NOTES, record =>
+		String(record.authorId || '') === normalizedUserId
+			? {
+				...record,
+				authorId: '',
+			}
+			: record
+	)
+	mapStoredCollection(storageKeys.ANNOUNCEMENTS, record =>
+		String(record.authorId || '') === normalizedUserId
+			? {
+				...record,
+				authorId: '',
+			}
+			: record
+	)
+	mapStoredCollection(storageKeys.TASKS, record =>
+		String(record.assignedToUserId || '') === normalizedUserId
+			? {
+				...record,
+				assignedToUserId: '',
+			}
+			: record
+	)
+	mapStoredCollection(storageKeys.TESTER_FEEDBACK, record =>
+		String(record.authorId || '') === normalizedUserId
+			? {
+				...record,
+				authorId: '',
+			}
+			: record
+	)
+}
+
+const deleteUserAccount = userId => {
+	if (!authState.currentUser || authState.currentUser.role !== 'admin') {
+		throw new Error('Tylko lider może usuwać konta.')
+	}
+
+	const normalizedUserId = String(userId || '').trim()
+	if (!normalizedUserId) {
+		throw new Error('Brak wskazanego użytkownika.')
+	}
+
+	if (normalizedUserId === String(authState.currentUser.id || '')) {
+		throw new Error('Nie usuniesz tutaj własnego konta lidera.')
+	}
+
+	const matchedUser = authState.users.find(user => String(user.id || '') === normalizedUserId)
+	if (!matchedUser) {
+		throw new Error('Nie znaleziono wskazanego użytkownika.')
+	}
+
+	if (isRemoteAuthMode()) {
+		const response = requestRemoteAuth({
+			path: 'delete.php',
+			method: 'POST',
+			payload: {
+				userId: normalizedUserId,
+			},
+		})
+
+		authState.users = loadUsers()
+		return sanitizeUser(response.user || matchedUser)
+	}
+
+	saveUsers(authState.users.filter(user => String(user.id || '') !== normalizedUserId))
+	purgeDeletedUserLocalData(normalizedUserId)
+	return sanitizeUser(matchedUser)
+}
+
 const createAvatarMarkup = ({ fullName, avatarId, avatarImage, extraClass = '' } = {}) => {
 	const preset = getAvatarPreset(avatarId)
 	const classes = ['app-user-avatar', extraClass].filter(Boolean).join(' ')
@@ -921,24 +982,24 @@ const notify = ({ message = '', title = '', type = 'info', duration = 4200 } = {
 	if (!stack) return null
 
 	const iconMap = {
-		success: 'fa-circle-check',
-		warning: 'fa-triangle-exclamation',
-		error: 'fa-circle-xmark',
-		info: 'fa-circle-info',
+		success: 'circle-check-solid-full',
+		warning: 'triangle-exclamation-solid-full',
+		error: 'circle-xmark-solid-full',
+		info: 'circle-info-solid-full',
 	}
 
 	const toast = document.createElement('article')
 	toast.className = `app-toast is-${type}`
 	toast.innerHTML = `
 		<div class="app-toast-icon" aria-hidden="true">
-			<i class="fa-solid ${iconMap[type] || iconMap.info}"></i>
+			${renderIcon(iconMap[type] || iconMap.info)}
 		</div>
 		<div class="app-toast-copy">
 			<strong>${title || getToastTitle(type)}</strong>
 			<span>${normalizedMessage}</span>
 		</div>
 		<button type="button" class="app-toast-close" aria-label="Zamknij komunikat">
-			<i class="fa-solid fa-xmark"></i>
+			<i class="app-icon xmark-solid-full"></i>
 		</button>
 	`
 
@@ -976,16 +1037,16 @@ const renderPageStatusStrip = () => {
 
 	const currentUser = authState.currentUser
 	const moduleLabel = getCurrentModuleLabel()
-	const identityLabel = currentUser ? currentUser.fullName : 'Gość systemu'
+	const identityLabel = currentUser ? getVisibleUserName(currentUser) : 'Gość systemu'
 	const metaLabel = currentUser
-		? `${getRoleLabel(currentUser.role)} · @${currentUser.login}`
+		? getRoleLabel(currentUser.role)
 		: isRemoteAuthMode()
 			? 'Tryb podgladu bez aktywnej sesji serwerowej'
 			: 'Tryb podgladu bez lokalnej sesji'
 
 	systemUiState.pageStatusIdentity.innerHTML = `
 		${createAvatarMarkup({
-			fullName: currentUser?.fullName || 'Gość systemu',
+			fullName: currentUser ? getVisibleUserName(currentUser) : 'Gość systemu',
 			avatarId: currentUser?.avatarId || AUTH_CONFIG.avatarPresets[0].id,
 			avatarImage: currentUser?.avatarImage || '',
 			extraClass: 'app-page-status-avatar',
@@ -1008,7 +1069,7 @@ const renderPageStatusStrip = () => {
 		<span class="app-page-status-tag ${currentUser?.role === 'admin' ? 'is-admin' : 'is-neutral'}">
 			${currentUser ? getRoleLabel(currentUser.role) : 'Gość'}
 		</span>
-		<span class="app-page-status-tag is-demo">${getStorageModeTagLabel()}</span>
+		<span class="app-page-status-tag is-storage">${getStorageModeTagLabel()}</span>
 		<span class="app-page-status-tag is-neutral">${isRemoteAuthMode() ? 'Wspolne dane zespolowe' : 'Frontend ready for API'}</span>
 	`
 
@@ -1018,28 +1079,28 @@ const renderPageStatusStrip = () => {
 				currentUser.role === 'admin'
 					? `
 						<button type="button" class="app-page-status-btn" data-user-action="admin-users">
-							<i class="fa-solid fa-users-gear"></i>
+							<i class="app-icon user-gear-solid-full"></i>
 							<span>Użytkownicy</span>
 						</button>
 					`
 					: ''
 			}
 			<button type="button" class="app-page-status-btn" data-user-action="profile">
-				<i class="fa-solid fa-user-gear"></i>
+				<i class="app-icon user-gear-solid-full"></i>
 				<span>Profil</span>
 			</button>
 			<button type="button" class="app-page-status-btn is-secondary" data-user-action="logout">
-				<i class="fa-solid fa-arrow-right-from-bracket"></i>
+				<i class="app-icon arrow-right-from-bracket-solid-full"></i>
 				<span>Wyloguj</span>
 			</button>
 		`
 		: `
 			<button type="button" class="app-page-status-btn" data-user-action="login">
-				<i class="fa-solid fa-right-to-bracket"></i>
+				<i class="app-icon right-to-bracket-solid-full"></i>
 				<span>Zaloguj się</span>
 			</button>
 			<button type="button" class="app-page-status-btn is-secondary" data-user-action="register">
-				<i class="fa-solid fa-user-plus"></i>
+				<i class="app-icon user-plus-solid-full"></i>
 				<span>Załóż konto</span>
 			</button>
 		`
@@ -1182,11 +1243,11 @@ const renderProfileCoverEditor = () => {
 					<img src="${escapeHtml(authState.profileCoverCropState.src)}" alt="" draggable="false" data-profile-cover-crop-image>
 					<div class="app-profile-cover-actions app-profile-cover-crop-actions">
 						<button type="button" class="app-avatar-upload-btn is-primary" data-profile-cover-apply>
-							<i class="fa-solid fa-check"></i>
+							<i class="app-icon check-solid-full"></i>
 							<span>Zastosuj kadr</span>
 						</button>
 						<button type="button" class="app-avatar-upload-btn is-secondary" data-profile-cover-cancel>
-							<i class="fa-solid fa-xmark"></i>
+							<i class="app-icon xmark-solid-full"></i>
 							<span>Anuluj</span>
 						</button>
 					</div>
@@ -1197,14 +1258,14 @@ const renderProfileCoverEditor = () => {
 			authState.profileCoverPreview.innerHTML = `
 				<div class="app-profile-cover-actions">
 					<button type="button" class="app-avatar-upload-btn is-primary" data-profile-cover-browse>
-						<i class="fa-solid fa-panorama"></i>
+						<i class="app-icon panorama-solid-full"></i>
 						<span>${coverImage ? 'Zmień tło' : 'Wgraj tło'}</span>
 					</button>
 					${
 						coverImage
 							? `
 								<button type="button" class="app-avatar-upload-btn is-secondary" data-profile-cover-reset>
-									<i class="fa-solid fa-trash-can"></i>
+									<i class="app-icon trash-can-solid-full"></i>
 									<span>Usuń tło</span>
 								</button>
 							`
@@ -1278,6 +1339,15 @@ const matchesAdminUsersSearch = (user, searchTerm) => {
 	return haystack.includes(searchTerm)
 }
 
+const getManagedUserDisplayLabel = user => {
+	return getVisibleUserName(user, 'to konto')
+}
+
+const confirmManagedUserDeletion = user =>
+	window.confirm(
+		`Usunąć konto ${getManagedUserDisplayLabel(user)}?\n\nTej operacji nie cofniesz. Konto i dane przypisane do tego użytkownika zostaną usunięte.`
+	)
+
 const syncTeamMemberCardState = card => {
 	if (!card) return
 
@@ -1316,13 +1386,13 @@ const createManagedUserCardMarkup = user => {
 			<div class="app-team-member-head">
 				<div class="app-team-member-identity">
 					${createAvatarMarkup({
-						fullName: user.fullName || user.login || 'Użytkownik',
+						fullName: getVisibleUserName(user),
 						avatarId: user.avatarId,
 						avatarImage: user.avatarImage,
 					})}
 					<div class="app-team-member-copy">
-						<strong>${escapeHtml(user.fullName || `@${user.login}`)}</strong>
-						<span>${getRoleLabel(user.role)} · @${escapeHtml(user.login || '')}</span>
+						<strong>${escapeHtml(getVisibleUserName(user))}</strong>
+						<span>${getRoleLabel(user.role)}</span>
 					</div>
 				</div>
 				<div class="app-team-member-details">
@@ -1371,10 +1441,16 @@ const createManagedUserCardMarkup = user => {
 							? `Klasy: ${permissions.map(getPermissionLabel).join(', ')}`
 							: 'Brak nadanych klas.'
 				}</p>
-				<button type="button" class="app-avatar-upload-btn is-primary app-team-member-save" data-team-save>
-					<i class="fa-solid fa-floppy-disk"></i>
-					<span>Zapisz konto</span>
-				</button>
+				<div class="app-team-member-actions">
+					<button type="button" class="app-avatar-upload-btn is-secondary app-team-member-delete" data-team-delete>
+						<i class="app-icon trash-can-solid-full"></i>
+						<span>Usuń konto</span>
+					</button>
+					<button type="button" class="app-avatar-upload-btn is-primary app-team-member-save" data-team-save>
+						<i class="app-icon floppy-disk-solid-full"></i>
+						<span>Zapisz konto</span>
+					</button>
+				</div>
 			</div>
 		</article>
 	`
@@ -1790,9 +1866,13 @@ const updateAuthMode = mode => {
 
 	if (authState.authCopy) {
 		authState.authCopy.textContent = isRegister
-			? isRemoteAuthMode()
-				? 'Konto zostanie zapisane na serwerze i będzie widoczne dla użytkowników tej aplikacji. Role nadaje lider.'
-				: 'Konto zostanie zapisane lokalnie w tej przeglądarce. Role nadaje lider.'
+			? authState.users.length === 0
+				? isRemoteAuthMode()
+					? 'Pierwsze konto zostanie zapisane na serwerze i otrzyma rolę lidera.'
+					: 'Pierwsze konto zostanie zapisane lokalnie w tej przeglądarce i otrzyma rolę lidera.'
+				: isRemoteAuthMode()
+					? 'Konto zostanie zapisane na serwerze i będzie widoczne dla użytkowników tej aplikacji. Role nadaje lider.'
+					: 'Konto zostanie zapisane lokalnie w tej przeglądarce. Role nadaje lider.'
 			: isReset
 				? 'Podaj login i ustaw nowe hasło dla lokalnego konta w tej przeglądarce.'
 				: isRemoteAuthMode()
@@ -1821,7 +1901,7 @@ const updateAuthMode = mode => {
 	if (authState.authPasswordRepeatInput) {
 		authState.authPasswordRepeatInput.placeholder = isReset ? 'Powtórz nowe hasło' : 'Powtórz hasło'
 	}
-	authState.authRoleHint?.classList.toggle('is-hidden', !isRegister)
+	authState.authRoleHint?.classList.toggle('is-hidden', !(isRegister && authState.users.length === 0))
 	authState.authAvatarPreview?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
 }
 
@@ -1938,7 +2018,7 @@ const ensureAuthUi = () => {
 		<div class="app-auth-modal-backdrop" data-auth-close></div>
 		<section class="app-auth-card" role="dialog" aria-modal="true" aria-labelledby="app-auth-title">
 			<button type="button" class="app-auth-close" data-auth-close aria-label="Zamknij panel logowania">
-				<i class="fa-solid fa-xmark"></i>
+				<i class="app-icon xmark-solid-full"></i>
 			</button>
 			<p class="app-auth-kicker">Panel użytkownika</p>
 			<h2 id="app-auth-title">Zaloguj się do systemu</h2>
@@ -1968,11 +2048,11 @@ const ensureAuthUi = () => {
 							<input type="file" id="app-auth-avatar-upload" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
 							<div class="app-avatar-upload-btn-row">
 								<button type="button" class="app-avatar-upload-btn is-primary" id="app-auth-avatar-browse-btn">
-									<i class="fa-solid fa-image"></i>
+									<i class="app-icon image-solid-full"></i>
 									<span>Przeglądaj</span>
 								</button>
 								<button type="button" class="app-avatar-upload-btn is-secondary" id="app-auth-avatar-reset-btn" hidden>
-									<i class="fa-solid fa-trash-can"></i>
+									<i class="app-icon trash-can-solid-full"></i>
 									<span>Usuń zdjęcie</span>
 								</button>
 							</div>
@@ -1980,7 +2060,7 @@ const ensureAuthUi = () => {
 						</div>
 					</div>
 				</div>
-				<p class="app-auth-role-hint is-hidden" id="app-auth-role-hint">Konto admin / admin321 ma rolę lidera i może nadawać klasy użytkownikom.</p>
+				<p class="app-auth-role-hint is-hidden" id="app-auth-role-hint">Pierwsze utworzone konto otrzyma rolę lidera i będzie mogło nadawać klasy użytkownikom.</p>
 				<div class="app-auth-actions">
 					<button type="submit" class="app-auth-submit">Zaloguj się</button>
 					<button type="button" class="app-auth-switch">Nie masz konta? Zarejestruj się</button>
@@ -1998,7 +2078,7 @@ const ensureAuthUi = () => {
 		<div class="app-auth-modal-backdrop" data-profile-close></div>
 		<section class="app-auth-card app-profile-card" role="dialog" aria-modal="true" aria-labelledby="app-profile-title">
 			<button type="button" class="app-auth-close" data-profile-close aria-label="Zamknij profil">
-				<i class="fa-solid fa-xmark"></i>
+				<i class="app-icon xmark-solid-full"></i>
 			</button>
 			<p class="app-auth-kicker">Twój profil</p>
 			<h2 id="app-profile-title">Panel użytkownika</h2>
@@ -2010,7 +2090,7 @@ const ensureAuthUi = () => {
 					<span>Rola</span>
 					<strong class="app-role-badge" id="app-profile-role-badge">Użytkownik</strong>
 					<button type="button" class="app-avatar-upload-btn is-secondary app-profile-admin-users-btn" id="app-profile-admin-users-btn" hidden>
-						<i class="fa-solid fa-users-gear"></i>
+						<i class="app-icon user-gear-solid-full"></i>
 						<span>Użytkownicy</span>
 					</button>
 				</div>
@@ -2075,11 +2155,11 @@ const ensureAuthUi = () => {
 								<input type="file" id="app-profile-avatar-upload" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
 								<div class="app-avatar-upload-btn-row">
 									<button type="button" class="app-avatar-upload-btn is-primary" id="app-profile-avatar-browse-btn">
-										<i class="fa-solid fa-image"></i>
+										<i class="app-icon image-solid-full"></i>
 										<span>Przeglądaj</span>
 									</button>
 									<button type="button" class="app-avatar-upload-btn is-secondary" id="app-profile-avatar-reset-btn" hidden>
-										<i class="fa-solid fa-trash-can"></i>
+										<i class="app-icon trash-can-solid-full"></i>
 										<span>Usuń zdjęcie</span>
 									</button>
 								</div>
@@ -2092,7 +2172,7 @@ const ensureAuthUi = () => {
 							.map(
 								option => `
 									<button type="button" class="app-profile-theme-btn" data-profile-theme="${option.id}" aria-pressed="false">
-										<i class="fa-solid ${option.icon}"></i>
+										${renderIcon(option.icon)}
 										<span>${option.label}</span>
 									</button>
 								`
@@ -2139,11 +2219,11 @@ const ensureAuthUi = () => {
 		<div class="app-auth-modal-backdrop" data-admin-users-close></div>
 		<section class="app-auth-card app-profile-card app-admin-users-card" role="dialog" aria-modal="true" aria-labelledby="app-admin-users-title">
 			<button type="button" class="app-auth-close" data-admin-users-close aria-label="Zamknij panel użytkowników">
-				<i class="fa-solid fa-xmark"></i>
+				<i class="app-icon xmark-solid-full"></i>
 			</button>
 			<p class="app-auth-kicker">Administracja</p>
 			<h2 id="app-admin-users-title">Konta użytkowników</h2>
-			<p class="app-auth-copy">Edytuj imiona, loginy, role oraz klasy dostępu pozostałych kont. Własne dane administratora zmienisz w profilu.</p>
+			<p class="app-auth-copy">Edytuj imiona, loginy, role i klasy dostępu pozostałych kont oraz usuwaj niepotrzebnych użytkowników. Własne dane administratora zmienisz w profilu.</p>
 			<div class="app-admin-users-toolbar">
 				<label class="app-auth-field app-admin-users-search">
 					<span>Szukaj użytkownika</span>
@@ -2292,7 +2372,41 @@ const ensureAuthUi = () => {
 	})
 
 	authState.adminUsersList?.addEventListener('click', event => {
-		const saveButton = getEventTargetElement(event.target)?.closest('[data-team-save]')
+		const actionTarget = getEventTargetElement(event.target)
+		const deleteButton = actionTarget?.closest('[data-team-delete]')
+		if (deleteButton) {
+			const memberCard = deleteButton.closest('.app-team-member-card')
+			const managedUser = authState.users.find(user => String(user.id || '') === String(memberCard?.dataset.userId || ''))
+			if (!managedUser) {
+				notify({
+					type: 'error',
+					title: 'Usunięcie nieudane',
+					message: 'Nie znaleziono wskazanego konta.',
+				})
+				return
+			}
+
+			if (!confirmManagedUserDeletion(managedUser)) return
+
+			try {
+				const deletedUser = deleteUserAccount(memberCard?.dataset.userId || '')
+				renderAdminUsersPanel()
+				notify({
+					type: 'success',
+					title: 'Konto usunięte',
+					message: `${getManagedUserDisplayLabel(deletedUser)} zostało usunięte z listy kont.`,
+				})
+			} catch (error) {
+				notify({
+					type: 'error',
+					title: 'Usunięcie nieudane',
+					message: error.message || 'Nie udało się usunąć konta użytkownika.',
+				})
+			}
+			return
+		}
+
+		const saveButton = actionTarget?.closest('[data-team-save]')
 		if (!saveButton) return
 
 		const memberCard = saveButton.closest('.app-team-member-card')
@@ -2592,8 +2706,7 @@ const getAuditActorSnapshot = (user = authState.currentUser) => {
 const getAuditActorLabel = actor => {
 	if (!actor) return 'Brak danych historycznych'
 	if (actor.fullName) return actor.fullName
-	if (actor.login) return `@${actor.login}`
-	return 'Brak danych historycznych'
+	return 'Użytkownik zespołu'
 }
 
 appServices.authService = {
@@ -2604,6 +2717,7 @@ appServices.authService = {
 	updateProfile: updateCurrentUserProfile,
 	changePassword: changeCurrentUserPassword,
 	updateUserAccess,
+	deleteUser: deleteUserAccount,
 	getCurrentUser,
 	isAuthenticated,
 	isCurrentUserAdmin,

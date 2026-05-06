@@ -85,13 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const escapeHtml = value => AppUtils.escapeHtml(String(value ?? ''))
-		const isDemoUser = user => {
-			const id = String(user?.id || '').trim()
-			const login = String(user?.login || '').trim().toLowerCase()
-			return Boolean(user?.isDemo || id === 'demo-admin' || /^demo-user-\d+$/.test(id) || login === 'demoarek')
-		}
 		const getUsers = () => (usersService.getAll?.() || []).filter(user => user?.id)
-		const getRegisteredUsers = users => users.filter(user => !isDemoUser(user))
 		const getActiveUserRecords = () => {
 			const now = Date.now()
 			const records = storageService.readJson?.(activeUsersStorageKey, []) || []
@@ -99,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				? records.filter(record => record?.userId && record?.tabId && now - (Date.parse(record.lastSeenAt) || 0) <= activeUserTtlMs)
 				: []
 		}
-		const getUserDisplayName = user => String(user?.fullName || user?.login || 'Użytkownik').trim()
+		const getUserDisplayName = user => String(user?.fullName || '').trim() || 'Użytkownik'
 		const normalizeProfileImage = value => {
 			const normalizedValue = String(value || '').trim()
 			return /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(normalizedValue) ? normalizedValue : ''
@@ -165,13 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		const refreshSummary = () => {
 			const users = getUsers()
-			const registeredUsers = getRegisteredUsers(users)
 			activeUsers = getActiveUsers(users)
 			if (rotationIndex >= activeUsers.length) {
 				rotationIndex = 0
 			}
 
-			registeredUsersCount.textContent = String(registeredUsers.length)
+			registeredUsersCount.textContent = String(users.length)
 			renderActiveUsersList()
 		}
 		const rotateVisibleUsers = () => {
@@ -213,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const shell = ensureUserProfilePreview()
 			const card = shell.querySelector('.dashboard-user-profile-card')
 			const roleLabel = AppUtils.auth?.getRoleLabel?.(user.role) || (user.role === 'admin' ? 'Lider' : 'Pracownik')
-			const loginLabel = user.login ? `@${user.login}` : 'Brak loginu'
+			const subtitle = String(user?.profileTitle || '').trim() || roleLabel
 			const name = getUserDisplayName(user)
 			const coverImage = normalizeProfileImage(user.profileCoverImage)
 			const accentColor = normalizeProfileAccentColor(user.profileAccentColor)
@@ -231,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			card.innerHTML = `
 				<div class="dashboard-user-profile-cover" aria-hidden="true"></div>
 				<button type="button" class="dashboard-user-profile-close" data-dashboard-user-profile-close aria-label="Zamknij profil">
-					<i class="fa-solid fa-xmark"></i>
+					<i class="app-icon xmark-solid-full"></i>
 				</button>
 				<div class="dashboard-user-profile-body">
 					<div class="dashboard-user-profile-head">
@@ -239,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						<div>
 							<p class="dashboard-kicker">Profil użytkownika</p>
 							<h2 id="dashboard-user-profile-title">${escapeHtml(name)}</h2>
-							<p>${escapeHtml(loginLabel)}</p>
+							<p>${escapeHtml(subtitle)}</p>
 						</div>
 					</div>
 					<div class="dashboard-user-profile-grid">

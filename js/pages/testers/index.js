@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	function syncAuthorField() {
 		const currentUser = getCurrentUser()
 		if (currentUser) {
-			authorNameInput.value = String(currentUser.fullName || currentUser.login || '').trim()
+			authorNameInput.value = String(currentUser.fullName || '').trim() || 'Użytkownik zespołu'
 			authorNameInput.readOnly = true
 			authorNameInput.setAttribute('aria-readonly', 'true')
 			authorNameInput.title = 'Zalogowany uzytkownik jest podpisywany automatycznie.'
@@ -147,9 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		const currentUser = getCurrentUser()
 		if (currentUser) {
 			authCallout.classList.add('is-active-user')
-			authTitle.textContent = `Dodajesz wpis jako ${currentUser.fullName || `@${currentUser.login}`}`
+			authTitle.textContent = `Dodajesz wpis jako ${String(currentUser.fullName || '').trim() || 'użytkownik zespołu'}`
 			authText.textContent = 'Masz aktywna sesje, wiec mozesz zapisywac nowe uwagi po testach na wspolnej tablicy.'
-			authBtn.innerHTML = '<i class="fa-solid fa-user-gear"></i><span>Otworz profil</span>'
+			authBtn.innerHTML = '<i class="app-icon user-gear-solid-full"></i><span>Otworz profil</span>'
 			authBtn.dataset.action = 'profile'
 			setComposerDisabled(false)
 			syncAuthorField()
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		authCallout.classList.remove('is-active-user')
 		authTitle.textContent = 'Podglad tablicy jest dostepny dla wszystkich'
 		authText.textContent = 'Aby dodac nowa uwage, zaloguj sie. Goscie moga tylko przegladac zapisane rekordy.'
-		authBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj sie</span>'
+		authBtn.innerHTML = '<i class="app-icon right-to-bracket-solid-full"></i><span>Zaloguj sie</span>'
 		authBtn.dataset.action = 'login'
 		setComposerDisabled(true)
 		authorNameInput.value = ''
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		entriesList.innerHTML = `
 			<div class="tester-empty-state">
 				<div class="tester-empty-icon">
-					<i class="fa-solid fa-clipboard-list"></i>
+					<i class="app-icon clipboard-list-solid-full"></i>
 				</div>
 				<h4>Brak wpisow w tym widoku</h4>
 				<p>Dodaj pierwsza uwage po testach albo zmien filtr, aby zobaczyc zapisane rekordy.</p>
@@ -205,8 +205,8 @@ document.addEventListener('DOMContentLoaded', () => {
 							})
 						: `<span class="tester-entry-avatar">${escapeHtml(String(entry.authorName || '?').slice(0, 1).toUpperCase())}</span>`
 				const areaMarkup = entry.area
-					? `<span class="tester-entry-inline-meta"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>${escapeHtml(entry.area)}</span></span>`
-					: `<span class="tester-entry-inline-meta is-muted"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Bez wskazanego obszaru</span></span>`
+					? `<span class="tester-entry-inline-meta"><i class="app-icon layer-group-solid-full" aria-hidden="true"></i><span>${escapeHtml(entry.area)}</span></span>`
+					: `<span class="tester-entry-inline-meta is-muted"><i class="app-icon circle-info-solid-full" aria-hidden="true"></i><span>Bez wskazanego obszaru</span></span>`
 				const authorSourceLabel = entry.authorId ? 'konto' : 'gosc'
 
 				return `
@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 						<div class="tester-entry-footer">
 							${areaMarkup}
-							<span class="tester-entry-inline-meta"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>Dodano ${formatDateTimeLabel(entry.createdAt)}</span></span>
+							<span class="tester-entry-inline-meta"><i class="app-icon clock-solid-full" aria-hidden="true"></i><span>Dodano ${formatDateTimeLabel(entry.createdAt)}</span></span>
 						</div>
 					</article>
 				`

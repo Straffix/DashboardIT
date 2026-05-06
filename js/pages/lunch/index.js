@@ -104,10 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	function renderAuthCallout(currentUser) {
 		if (currentUser) {
 			authCallout.classList.add('is-active-user')
-			authTitle.textContent = `Pracujesz jako ${currentUser.fullName || `@${currentUser.login}`}`
+			authTitle.textContent = `Pracujesz jako ${String(currentUser.fullName || '').trim() || 'użytkownik zespołu'}`
 			authText.textContent =
 				'Możesz zapisać się na jeden slot dziennie, anulować własną rezerwację i podejrzeć zajętość wszystkich godzin.'
-			authBtn.innerHTML = '<i class="fa-solid fa-user-gear"></i><span>Otwórz profil</span>'
+			authBtn.innerHTML = '<i class="app-icon user-gear-solid-full"></i><span>Otwórz profil</span>'
 			return
 		}
 
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		authTitle.textContent = 'Podgląd slotów jest dostępny dla wszystkich'
 		authText.textContent =
 			'Zaloguj się z paska statusu u góry, aby zapisać się na wybraną godzinę albo anulować swoją rezerwację.'
-		authBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj się</span>'
+		authBtn.innerHTML = '<i class="app-icon right-to-bracket-solid-full"></i><span>Zaloguj się</span>'
 	}
 
 	function buildSeatDotsMarkup(count) {
@@ -127,8 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	function buildAttendeeMarkup(reservation, currentUser) {
 		const user = getUserById(reservation.userId)
-		const displayName = user?.fullName || `Użytkownik ${reservation.userId}`
-		const secondaryLabel = user?.login ? `@${user.login}` : 'konto lokalne'
+		const displayName = String(user?.fullName || '').trim() || 'Użytkownik'
+		const secondaryLabel = user
+			? AppUtils.auth.getRoleLabel?.(user.role) || (user.role === 'admin' ? 'Lider' : 'Pracownik')
+			: 'Konto zespołowe'
 		const isCurrentUser = currentUser?.id === reservation.userId
 
 		return `
@@ -191,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!currentUser) {
 			myReservationBox.innerHTML = `
 				<strong>Nie jesteś zalogowany</strong>
-				<p>Zaloguj się z paska statusu u góry, aby wybrać godzinę obiadu dla swojego konta demo.</p>
+				<p>Zaloguj się z paska statusu u góry, aby wybrać godzinę obiadu dla swojego konta.</p>
 			`
 			return
 		}
@@ -210,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			<button type="button" class="lunch-summary-btn" data-summary-action="cancel" data-reservation-id="${escapeHtml(
 				myReservation.id
 			)}">
-				<i class="fa-solid fa-ban"></i>
+				<i class="app-icon ban-solid-full"></i>
 				<span>Anuluj rezerwację</span>
 			</button>
 		`
@@ -225,9 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		bookedStat.textContent = String(bookedSeats)
 		capacityStat.textContent = `z ${TIME_SLOTS.length * MAX_CAPACITY_PER_SLOT}`
 		openSlotsStat.textContent = String(openSlotCount)
-		userStat.textContent = currentUser ? currentUser.fullName || `@${currentUser.login}` : 'Gość'
+		userStat.textContent = currentUser ? String(currentUser.fullName || '').trim() || 'Użytkownik zespołu' : 'Gość'
 		userMetaStat.textContent = currentUser
-			? `${AppUtils.auth.getRoleLabel?.(currentUser.role) || (currentUser.role === 'admin' ? 'Lider' : 'Członek')} | konto demo aktywne`
+			? `${AppUtils.auth.getRoleLabel?.(currentUser.role) || (currentUser.role === 'admin' ? 'Lider' : 'Członek')} | konto aktywne`
 			: 'Podgląd bez możliwości zapisu'
 	}
 

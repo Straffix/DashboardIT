@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const getAuthorMeta = authorId => {
 		const matchedUser = getUsers().find(user => String(user.id) === String(authorId || ''))
-		const displayName = matchedUser?.fullName || matchedUser?.login || 'Nieznany użytkownik'
+		const displayName = String(matchedUser?.fullName || '').trim() || 'Użytkownik zespołu'
 
 		return {
 			id: String(authorId || ''),
@@ -129,7 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		const now = Date.now()
 		return getActiveViewerRecords()
 			.filter(record => record.userId && record.tabId && now - (Date.parse(record.lastSeenAt) || 0) <= presenceTtlMs)
-			.sort((leftRecord, rightRecord) => String(leftRecord.login || '').localeCompare(String(rightRecord.login || ''), 'pl'))
+			.sort((leftRecord, rightRecord) =>
+				String(leftRecord.fullName || '').localeCompare(String(rightRecord.fullName || ''), 'pl')
+			)
 	}
 
 	const syncCurrentViewerPresence = currentUser => {
@@ -178,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				<div class="notes-active-viewers-list">
 					${activeRecords
 						.map(record => {
-							const nick = record.login ? `@${record.login}` : record.fullName || 'aktywny'
+							const nick = String(record.fullName || '').trim() || 'aktywny użytkownik'
 							return `
 								<span class="notes-active-viewer-chip">
 									<span class="notes-active-dot" aria-hidden="true"></span>
@@ -252,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		authCallout.classList.remove('is-active-user')
 		authTitle.textContent = 'Zaloguj się, aby korzystać z czatu'
 		authText.textContent = 'Czat jest dostępny dla zalogowanych użytkowników. Po zalogowaniu zobaczysz historię wiadomości z serwera.'
-		authBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj się</span>'
+		authBtn.innerHTML = '<i class="app-icon right-to-bracket-solid-full"></i><span>Zaloguj się</span>'
 		userStatusBox.innerHTML = `
 			<strong>Gość</strong>
 			<p>Zaloguj się, aby zobaczyć chat, pisać wiadomości i przypinać ważne wpisy.</p>
@@ -281,23 +283,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const canEdit = canManageMessage(message, currentUser)
 		const pinLabel = message.isPinned ? 'Odepnij' : 'Przypnij'
-		const pinIcon = message.isPinned ? 'fa-xmark' : 'fa-thumbtack'
+		const pinIcon = message.isPinned ? 'xmark-solid-full' : 'thumbtack-solid-full'
 
 		return `
 			<div class="notes-message-actions">
 				<button type="button" class="notes-icon-btn" data-message-action="pin" data-message-id="${escapeHtml(message.id)}" aria-label="${pinLabel} wiadomość">
-					<i class="fa-solid ${pinIcon}"></i>
+					${renderIcon(pinIcon)}
 					<span>${pinLabel}</span>
 				</button>
 				${
 					canEdit
 						? `
 							<button type="button" class="notes-icon-btn" data-message-action="edit" data-message-id="${escapeHtml(message.id)}" aria-label="Edytuj wiadomość">
-								<i class="fa-solid fa-pen-to-square"></i>
+								<i class="app-icon pen-to-square-solid-full"></i>
 								<span>Edytuj</span>
 							</button>
 							<button type="button" class="notes-icon-btn is-danger" data-message-action="delete" data-message-id="${escapeHtml(message.id)}" aria-label="Usuń wiadomość">
-								<i class="fa-solid fa-trash-can"></i>
+								<i class="app-icon trash-can-solid-full"></i>
 								<span>Usuń</span>
 							</button>
 						`
@@ -307,10 +309,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		`
 	}
 
-	const createEmptyStateMarkup = ({ title, copy, icon = 'fa-comments' }) => `
+	const createEmptyStateMarkup = ({ title, copy, icon = 'comment-solid-full' }) => `
 		<div class="notes-empty-state">
 			<div class="notes-empty-icon">
-				<i class="fa-solid ${icon}"></i>
+				${renderIcon(icon)}
 			</div>
 			<strong>${escapeHtml(title)}</strong>
 			<p>${escapeHtml(copy)}</p>
@@ -322,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			chatList.innerHTML = createEmptyStateMarkup({
 				title: 'Chat czeka na logowanie',
 				copy: 'Po zalogowaniu zobaczysz wiadomości zapisane na serwerze.',
-				icon: 'fa-lock',
+				icon: 'lock-solid-full',
 			})
 			return
 		}
@@ -351,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
 								<strong>${escapeHtml(author.fullName)}</strong>
 								<time datetime="${escapeHtml(message.createdAt)}">${escapeHtml(formatDateTimeLabel(message.createdAt))}</time>
 								${isEdited ? '<span>edytowano</span>' : ''}
-								${message.isPinned ? '<span class="notes-pin-chip"><i class="fa-solid fa-thumbtack"></i> przypięte</span>' : ''}
+								${message.isPinned ? '<span class="notes-pin-chip"><i class="app-icon thumbtack-solid-full"></i> przypięte</span>' : ''}
 							</header>
 							<div class="notes-message-content">${renderMultilineText(message.content)}</div>
 							${createMessageActionsMarkup(message, currentUser)}
@@ -369,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			pinnedList.innerHTML = createEmptyStateMarkup({
 				title: 'Przypięte po zalogowaniu',
 				copy: 'Ten panel pokazuje najważniejsze wiadomości wybrane przez zespół.',
-				icon: 'fa-thumbtack',
+				icon: 'thumbtack-solid-full',
 			})
 			return
 		}
@@ -378,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			pinnedList.innerHTML = createEmptyStateMarkup({
 				title: 'Nic nie jest przypięte',
 				copy: 'Kliknij „Przypnij” przy wiadomości, aby dodać ją do tego panelu.',
-				icon: 'fa-thumbtack',
+				icon: 'thumbtack-solid-full',
 			})
 			return
 		}
@@ -409,8 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		cancelEditBtn.hidden = !state.editingMessageId
 		editIndicator.hidden = !state.editingMessageId
 		chatSubmit.innerHTML = state.editingMessageId
-			? '<i class="fa-solid fa-check"></i><span>Zapisz</span>'
-			: '<i class="fa-solid fa-paper-plane"></i><span>Wyślij</span>'
+			? '<i class="app-icon check-solid-full"></i><span>Zapisz</span>'
+			: '<i class="app-icon paper-plane-solid-full"></i><span>Wyślij</span>'
 		chatInput.focus()
 	}
 

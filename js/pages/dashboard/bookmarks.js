@@ -227,13 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		addBookmarkBtn.disabled = false
 
 		if (!currentUser) {
-			addBookmarkBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Zaloguj się, aby dodawać</span>'
+			addBookmarkBtn.innerHTML = '<i class="app-icon right-to-bracket-solid-full"></i><span>Zaloguj się, aby dodawać</span>'
 			bookmarkList.innerHTML = ''
 			setBookmarkPanelVisibility(false)
 			return
 		}
 
-		addBookmarkBtn.innerHTML = '<i class="fa-solid fa-bookmark"></i><span>Dodaj zakładkę</span>'
+		addBookmarkBtn.innerHTML = '<i class="app-icon bookmark-solid-full"></i><span>Dodaj zakładkę</span>'
 
 		if (userBookmarks.length === 0) {
 			bookmarkList.innerHTML = ''
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						<a class="dashboard-bookmark-tab-main" href="${safeHref}" target="_blank" rel="noopener noreferrer" title="${description}">
 							<span class="dashboard-bookmark-icon${initialFaviconUrl ? '' : ' is-fallback'}" data-bookmark-icon>
 								${initialFaviconUrl ? `<img class="dashboard-bookmark-favicon" src="${initialFaviconUrl}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-bookmark-favicon data-favicon-sources="${fallbackFaviconSources}">` : ''}
-								<i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+								<i class="app-icon bookmark-solid-full" aria-hidden="true"></i>
 							</span>
 							<span class="dashboard-bookmark-tab-copy">
 								<strong>${label}</strong>
@@ -267,10 +267,10 @@ document.addEventListener('DOMContentLoaded', () => {
 						</a>
 						<div class="dashboard-bookmark-actions">
 							<button type="button" class="dashboard-bookmark-icon-btn" data-bookmark-action="edit" data-bookmark-id="${bookmark.id}" aria-label="Edytuj zakładkę">
-								<i class="fa-solid fa-pen"></i>
+								<i class="app-icon pen-solid-full"></i>
 							</button>
 							<button type="button" class="dashboard-bookmark-icon-btn is-danger" data-bookmark-action="delete" data-bookmark-id="${bookmark.id}" aria-label="Usuń zakładkę">
-								<i class="fa-solid fa-trash"></i>
+								<i class="app-icon trash-solid-full"></i>
 							</button>
 						</div>
 					</article>

@@ -379,7 +379,7 @@
 					<span>${escapeHtml(subtitle)}</span>
 				</div>
 				<button type="button" class="task-toast-close" aria-label="Zamknij przypomnienie">
-					<i class="fa-solid fa-xmark"></i>
+					<i class="app-icon xmark-solid-full"></i>
 				</button>
 			`
 
@@ -408,7 +408,7 @@
 					<span>${escapeHtml(subtitle)}</span>
 				</div>
 				<button type="button" class="task-toast-close" aria-label="Zamknij przypomnienie">
-					<i class="fa-solid fa-xmark"></i>
+					<i class="app-icon xmark-solid-full"></i>
 				</button>
 			`
 
