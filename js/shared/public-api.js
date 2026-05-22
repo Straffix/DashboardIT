@@ -1,4 +1,4 @@
-/* === Shared Public API: Start === */
+﻿/* === Shared Public API: Start === */
 window.AppUtils = {
 	config: APP_CONFIG,
 	formatDate,

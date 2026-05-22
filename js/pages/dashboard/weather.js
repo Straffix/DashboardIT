@@ -1,4 +1,4 @@
-(function initializeDashboardWeatherModule() {
+﻿(function initializeDashboardWeatherModule() {
 	const dashboardModules = (window.DashboardModules = window.DashboardModules || {})
 	const preferenceKeys = window.AppUtils.config.PREFERENCE_KEYS
 

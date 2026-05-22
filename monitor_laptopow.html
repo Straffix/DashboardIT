@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Urządzenia w domenie</title>
+    <title>Dashboard IT | Urządzenia w domenie</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,35 +14,71 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
 
-    <link rel="stylesheet" href="./styles/style.css">
-    <link rel="stylesheet" href="./styles/monitor.css">
-    <link rel="stylesheet" href="./styles/app-icons.css">
+    <link rel="stylesheet" href="./styles/css/style.css">
+    <link rel="stylesheet" href="./styles/css/monitor.css">
+    <link rel="stylesheet" href="./styles/css/app-icons.css">
 </head>
 
-<body>
-
-    <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pełnoekranowy">
-        <i class="app-icon expand-solid-full"></i>
-    </button>
+<body class="module-page monitor-page">
 
     <div class="wrapper">
 
-        <header class="header">
-            <a href="index.html" class="menu-btn">
-                <i class="app-icon arrow-left-solid-full"></i> Powrót do menu
-            </a>
-
-            <div class="logo-section">
+        <header class="header module-header">
+            <div class="module-header-main">
+                <div class="logo-section">
 
                 <div class="icon-box">
                     <i class="app-icon shield-halved-solid-full"></i>
                 </div>
 
                 <div>
-                    <h1>Lista kontrolna urządzeń w domenie</h1>
-                    <p>Urządzenia na liście są sortowane chronologicznie <span>od najstarszego!</span></p>
+                    <h1>Urządzenia w domenie</h1>
+                    <p>Lista jest sortowana chronologicznie <span>od najstarszego wpisu.</span></p>
                 </div>
 
+            </div>
+            <div class="module-header-tools">
+                <div class="module-nav-dock">
+                    <div class="module-nav-flyout">
+                        <nav class="module-nav" aria-label="Nawigacja modulow">
+                    <a href="index.html" class="module-nav-link" data-return-dashboard>
+                        <i class="app-icon layer-group-solid-full" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="nowe_zatrudnienia.html" class="module-nav-link">
+                        <i class="app-icon user-plus-solid-full" aria-hidden="true"></i>
+                        <span>Nowe zatrudnienia</span>
+                    </a>
+                    <a href="monitor_laptopow.html" class="module-nav-link" aria-current="page">
+                        <i class="app-icon laptop-solid-full" aria-hidden="true"></i>
+                        <span>Urzadzenia</span>
+                    </a>
+                    <a href="wymiana_sprzetu.html" class="module-nav-link">
+                        <i class="app-icon right-left-solid-full" aria-hidden="true"></i>
+                        <span>Wymiana sprzetu</span>
+                    </a>
+                    <a href="rezerwacja_obiadow.html" class="module-nav-link">
+                        <i class="app-icon utensils-solid-full" aria-hidden="true"></i>
+                        <span>Obiady</span>
+                    </a>
+                    <a href="notatnik.html" class="module-nav-link">
+                        <i class="app-icon comment-solid-full" aria-hidden="true"></i>
+                        <span>Chat</span>
+                    </a>
+                        </nav>
+                    </div>
+
+                    <button class="module-nav-toggle" type="button" aria-label="Pokaz nawigacje modulow">
+                        <span class="module-nav-toggle-lines" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                    </button>
+                </div>
+
+                <div class="app-user-panel-slot" aria-label="Panel uzytkownika"></div>
+            </div>
             </div>
         </header>
 
@@ -82,16 +118,9 @@
 
         <div class="main-content monitor-content">
             <section class="monitor-workspace">
-                <div class="workspace-panel-top">
-                    <div class="workspace-copy">
-                        <span class="workspace-kicker">Urządzenia w domenie</span>
-                        <h2>Lista urządzeń</h2>
-                        <p id="monitor-summary">Ładowanie danych monitoringu...</p>
-                    </div>
-
-                    <div class="workspace-actions">
-                        <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
-
+                <div class="workspace-panel-top workspace-panel-top-compact">
+                    <div class="workspace-actions workspace-actions-has-dock">
+                        <div class="workspace-actions-group">
                         <button id="monitor-search-toggle" class="workspace-action-btn workspace-search-toggle"
                             type="button" aria-label="Otwórz wyszukiwarkę" aria-expanded="false"
                             aria-controls="monitor-search-panel">
@@ -106,21 +135,11 @@
                             </label>
                         </div>
 
-                        <button id="import-excel-trigger" class="workspace-action-btn" type="button">
-                            <i class="app-icon file-import-solid-full"></i>
-                            <span>Import Excel</span>
-                        </button>
-
-                        <button id="export-excel-btn" class="workspace-action-btn workspace-action-btn-green"
-                            type="button">
-                            <i class="app-icon file-excel-solid-full"></i>
-                            <span>Eksport Excel</span>
-                        </button>
-
                         <button id="open-monitor-drawer" class="workspace-primary-btn" type="button">
                             <i class="app-icon plus-solid-full"></i>
                             <span>Dodaj urządzenie</span>
                         </button>
+                        </div>
                     </div>
                 </div>
 
@@ -251,13 +270,22 @@
         </footer>
     </div>
 
-    <script src="./js/shared/base.js" charset="utf-8"></script>
-    <script src="./js/shared/runtime-config.js" charset="utf-8"></script>
-    <script src="./js/core/storage-service.js" charset="utf-8"></script>
-    <script src="./js/shared/auth.js" charset="utf-8"></script>
-    <script src="./js/shared/public-api.js" charset="utf-8"></script>
-    <script src="./js/shared/global-ui.js" charset="utf-8"></script>
-    <script src="./js/pages/monitor/index.js" charset="utf-8"></script>
+    <div class="workspace-backup-dock">
+        <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
+
+        <button id="import-excel-trigger" class="workspace-action-btn workspace-backup-btn" type="button">
+            <i class="app-icon file-import-solid-full"></i>
+            <span>Import Excel</span>
+        </button>
+
+        <button id="export-excel-btn" class="workspace-action-btn workspace-action-btn-green workspace-backup-btn"
+            type="button">
+            <i class="app-icon file-excel-solid-full"></i>
+            <span>Eksport Excel</span>
+        </button>
+    </div>
+
+    <script src="./js/script.js" charset="utf-8"></script>
 
 </body>
 

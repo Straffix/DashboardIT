@@ -11,7 +11,6 @@ TRUNCATE TABLE
 	dashboard_notes_active_viewers,
 	dashboard_announcements,
 	dashboard_tasks,
-	dashboard_tester_feedback,
 	dashboard_monitor_devices,
 	dashboard_hires,
 	dashboard_exchanges,

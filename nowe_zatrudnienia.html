@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Nowe zatrudnienia - Zarządzanie</title>
+    <title>Dashboard IT | Nowe zatrudnienia - Zarzadzanie</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,107 +15,114 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
 
-    <link rel="stylesheet" href="./styles/style.css">
-    <link rel="stylesheet" href="./styles/zatrudnienia.css">
-    <link rel="stylesheet" href="./styles/app-icons.css">
+    <link rel="stylesheet" href="./styles/css/style.css">
+    <link rel="stylesheet" href="./styles/css/zatrudnienia.css">
+    <link rel="stylesheet" href="./styles/css/app-icons.css">
 </head>
 
-<body>
-
-    <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pełnoekranowy">
-        <i class="app-icon expand-solid-full"></i>
-    </button>
+<body class="module-page hires-page">
 
     <div class="wrapper">
 
-        <header class="header">
+        <header class="header module-header">
+            <div class="module-header-main">
+                <div class="logo-section">
 
-            <a href="index.html" class="menu-btn">
-                <i class="app-icon arrow-left-solid-full"></i> Powrót do menu
-            </a>
+                    <div class="icon-box">
+                        <i class="app-icon user-plus-solid-full"></i>
+                    </div>
 
-            <div class="logo-section">
+                    <div>
+                        <h1>Nowe zatrudnienia</h1>
+                        <p>Lista przygotowania sprzetu dla nowego pracownika - <span>Onboarding</span></p>
+                    </div>
 
-                <div class="icon-box">
-                    <i class="app-icon user-plus-solid-full"></i>
                 </div>
 
-                <div>
-                    <h1>Nowe Zatrudnienia</h1>
-                    <p>Lista przygotowania sprzętu dla nowego pracownika - <span>Onboarding</span></p>
-                </div>
+                <div class="module-header-tools">
+                    <div class="module-nav-dock">
+                        <div class="module-nav-flyout">
+                            <nav class="module-nav" aria-label="Nawigacja modulow">
+                        <a href="index.html" class="module-nav-link" data-return-dashboard>
+                            <i class="app-icon layer-group-solid-full" aria-hidden="true"></i>
+                            <span>Strona Główna</span>
+                        </a>
+                        <a href="nowe_zatrudnienia.html" class="module-nav-link" aria-current="page">
+                            <i class="app-icon user-plus-solid-full" aria-hidden="true"></i>
+                            <span>Nowe zatrudnienia</span>
+                        </a>
+                        <a href="monitor_laptopow.html" class="module-nav-link">
+                            <i class="app-icon laptop-solid-full" aria-hidden="true"></i>
+                            <span>Urzadzenia</span>
+                        </a>
+                        <a href="wymiana_sprzetu.html" class="module-nav-link">
+                            <i class="app-icon right-left-solid-full" aria-hidden="true"></i>
+                            <span>Wymiana sprzetu</span>
+                        </a>
+                        <a href="rezerwacja_obiadow.html" class="module-nav-link">
+                            <i class="app-icon utensils-solid-full" aria-hidden="true"></i>
+                            <span>Obiady</span>
+                        </a>
+                        <a href="notatnik.html" class="module-nav-link">
+                            <i class="app-icon comment-solid-full" aria-hidden="true"></i>
+                            <span>Chat</span>
+                        </a>
+                            </nav>
+                        </div>
 
+                        <button class="module-nav-toggle" type="button" aria-label="Pokaz nawigacje modulow">
+                            <span class="module-nav-toggle-lines" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="app-user-panel-slot" aria-label="Panel uzytkownika"></div>
+                </div>
             </div>
-
         </header>
 
         <div class="main-content hires-content">
 
             <section class="hires-workspace">
 
-                <div class="workspace-panel-top">
-                    <div class="workspace-copy">
-                        <span class="workspace-kicker">Nowe zatrudnienia</span>
-                        <h2>Plan zatrudnień</h2>
-                        <p id="hires-month-summary">Ładowanie widoku miesiąca...</p>
-                    </div>
-
-                    <div class="workspace-actions">
-                        <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
-
-                        <button
-                            id="hire-search-toggle"
-                            class="workspace-action-btn workspace-search-toggle"
-                            type="button"
-                            aria-label="Otwórz wyszukiwarkę"
-                            aria-expanded="false"
-                            aria-controls="hire-search-panel">
-                            <i class="app-icon magnifying-glass-solid-full" aria-hidden="true"></i>
-                        </button>
-
-                        <div id="hire-search-panel" class="workspace-search-panel" hidden>
-                            <label class="workspace-search" for="hire-search-input">
-                                <i class="app-icon magnifying-glass-solid-full" aria-hidden="true"></i>
-                                <input
-                                    type="search"
-                                    id="hire-search-input"
-                                    placeholder="Szukaj w tabeli..."
-                                    autocomplete="off"
-                                    aria-label="Szukaj w tabeli nowych zatrudnień">
-                            </label>
+                <div class="workspace-panel-top workspace-panel-top-compact">
+                    <div class="workspace-actions workspace-actions-has-dock">
+                        <div class="workspace-month-slot">
+                            <div class="workspace-month-field" data-align="left">
+                                <div class="table-header table-header-inline table-header-inline-plain">
+                                    <div class="month-picker-container" id="month-trigger" role="button" tabindex="0"
+                                        aria-label="Wybierz miesiac">
+                                        <h2 id="current-month-display">MARZEC 2026</h2>
+                                        <input type="month" id="hidden-month-input" class="hidden-month-input"
+                                            aria-hidden="true">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        <div class="workspace-actions-group">
+                            <button id="hire-search-toggle" class="workspace-action-btn workspace-search-toggle"
+                                type="button" aria-label="Otworz wyszukiwarke" aria-expanded="false"
+                                aria-controls="hire-search-panel">
+                                <i class="app-icon magnifying-glass-solid-full" aria-hidden="true"></i>
+                            </button>
 
-                        <button id="import-excel-trigger" class="workspace-action-btn" type="button">
-                            <i class="app-icon file-import-solid-full"></i>
-                            <span>Import Excel</span>
-                        </button>
+                            <div id="hire-search-panel" class="workspace-search-panel" hidden>
+                                <label class="workspace-search" for="hire-search-input">
+                                    <i class="app-icon magnifying-glass-solid-full" aria-hidden="true"></i>
+                                    <input type="search" id="hire-search-input" placeholder="Szukaj w tabeli..."
+                                        autocomplete="off" aria-label="Szukaj w tabeli nowych zatrudnien">
+                                </label>
+                            </div>
 
-                        <button id="export-excel-btn" class="workspace-action-btn workspace-action-btn-green" type="button">
-                            <i class="app-icon file-excel-solid-full"></i>
-                            <span>Eksport Excel</span>
-                        </button>
-
-                        <button id="open-hire-drawer" class="workspace-primary-btn" type="button">
-                            <i class="app-icon plus-solid-full"></i>
-                            <span>Dodaj pracownika</span>
-                        </button>
+                            <button id="open-hire-drawer" class="workspace-primary-btn" type="button">
+                                <i class="app-icon plus-solid-full"></i>
+                                <span>Dodaj pracownika</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-
-                <div class="table-header">
-                    <button class="month-nav-btn" type="button" data-month-delta="-1" aria-label="Poprzedni miesiąc">
-                        <i class="app-icon chevron-left-solid-full"></i>
-                    </button>
-
-                    <div class="month-picker-container" id="month-trigger" role="button" tabindex="0"
-                        aria-label="Wybierz miesiąc">
-                        <h2 id="current-month-display">MARZEC 2026</h2>
-                        <input type="month" id="hidden-month-input" class="hidden-month-input" aria-hidden="true">
-                    </div>
-
-                    <button class="month-nav-btn" type="button" data-month-delta="1" aria-label="Następny miesiąc">
-                        <i class="app-icon chevron-right-solid-full"></i>
-                    </button>
                 </div>
 
                 <div class="table-container">
@@ -123,12 +130,17 @@
 
                         <thead>
                             <tr>
-                                <th>IMIĘ I NAZWISKO</th>
-                                <th>SEKCJA</th>
-                                <th>SPRZĘT / SN</th>
-                                <th>START</th>
-                                <th class="table-head-cell-center">AKCESORIA</th>
-                                <th class="table-head-cell-center">AKCJE</th>
+                                <th class="is-sticky-left-1 col-purchase">Service Desk</th>
+                                <th class="is-sticky-left-2 col-user">Użytkownik</th>
+                                <th class="col-date">Start</th>
+                                <th class="col-text">Laptop SN</th>
+                                <th class="col-text">Laptop RU</th>
+                                <th class="col-text">Laptop Status</th>
+                                <th class="col-text">Laptop eMag</th>
+                                <th class="col-text">Monitor RU</th>
+                                <th class="col-text">Monitor Status</th>
+                                <th class="col-text">Monitor eMag</th>
+                                <th class="is-sticky-right table-head-cell-center col-actions">Akcje</th>
                             </tr>
                         </thead>
 
@@ -149,7 +161,8 @@
                     <div>
                         <p class="hire-drawer-kicker">Nowe zatrudnienia</p>
                         <h2 id="hire-drawer-title">Dodaj pracownika</h2>
-                        <p id="hire-drawer-copy" class="hire-drawer-copy">Uzupełnij dane i zapisz nowy onboarding.</p>
+                        <p id="hire-drawer-copy" class="hire-drawer-copy">Uzupelnij dane i zapisz nowy onboarding.</p>
+                        <div id="hire-drawer-audit" class="hire-drawer-audit" hidden></div>
                     </div>
 
                     <button id="close-hire-drawer" class="hire-drawer-close" type="button" aria-label="Zamknij panel">
@@ -159,80 +172,221 @@
 
                 <form id="device-form" class="hire-drawer-form">
 
-                    <div class="input-group">
-                        <label>Imię i Nazwisko</label>
-                        <input type="text" id="name" required placeholder="np. Jan Kowalski">
-                    </div>
+                    <section class="hire-form-section">
+                        <div class="hire-form-section-heading">
+                            <h3>Dane główne</h3>
+                            <p>Pełny zestaw pol z Excela, ale rozlozony w wygodne sekcje.</p>
+                        </div>
 
-                    <div class="input-group">
-                        <label>Dział / Sekcja</label>
-                        <input type="text" id="ru" required placeholder="np. Administracja">
-                    </div>
-
-                    <div class="input-group">
-                        <label>SN Laptopa</label>
-                        <input type="text" id="sn" required placeholder="np. PF928402">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Akcesoria do wydania</label>
-
-                        <div class="accessory-picker" id="accessory-picker">
-
-                            <div class="accessory-item" data-item="mouse" title="Myszka">
-                                <i class="app-icon computer-mouse-solid-full"></i>
+                        <div class="hire-form-grid">
+                            <div class="input-group">
+                                <label>Zgloszenie na zakup sprzetu</label>
+                                <input type="text" id="purchaseRequest" placeholder="np. SD-2026-018">
                             </div>
 
-                            <div class="accessory-item" data-item="vertical-mouse" title="Mysz wertykalna">
-                                <i class="app-icon vertical-mouse-side-icon"></i>
+                            <div class="input-group">
+                                <label>Uzytkownik</label>
+                                <input type="text" id="targetUser" required placeholder="np. Jan Kowalski">
+                            </div>
+
+                            <div class="input-group">
+                                <label>Data rozpoczecia pracy</label>
+                                <input type="date" id="startDate" required>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Przygotowal/a</label>
+                                <select id="preparedBy">
+                                    <option value="">Wybierz osobe</option>
+                                    <option value="A. BISKUPSKA">Anna Biskupska</option>
+                                    <option value="A. LISIECKI">Arkadiusz Lisiecki</option>
+                                    <option value="B. BRODA">Bartosz Broda</option>
+                                    <option value="E. ŁAKOMY">Eryk Łakomy</option>
+                                    <option value="G. HADŁO">Gabriel Hadło</option>
+                                    <option value="J. GAUZE">Jakub Gauze</option>
+                                    <option value="K. FERENC">Kamil Ferenc</option>
+                                    <option value="K. GABOWSKA">Kamila Grabowska</option>
+                                    <option value="K. KOWALSKI">Kacper Kowalski</option>
+                                    <option value="K. KOZAKIEWICZ">Karol Kozakiewicz</option>
+                                    <option value="K. NARUK">Katarzyna Naruk</option>
+                                    <option value="L. DZIKIEWICZ">Leszek Dzikiewicz</option>
+                                    <option value="Ł. MAJDA">Łukasz Majda</option>
+                                    <option value="M. BAZAN">Monika Bazan</option>
+                                    <option value="M. PAWSKI">Marcin Pawski PAWSKI</option>
+                                    <option value="M. PĘDZIWIATR">Mariusz Pędziwiatr</option>
+                                    <option value="M. WOJTAL">Michał Wojtal</option>
+                                    <option value="O. ADAMSKA">Oliwia Adamska</option>
+                                    <option value="P. CZERSKI">Paweł Czerski</option>
+                                    <option value="P. LASKOWSKA">Paulina Laskowska</option>
+                                    <option value="P. SKIBA">Paweł Skiba</option>
+                                    <option value="R. GLIŃSKI">Rafał Gliński</option>
+                                    <option value="R. PŁACZEK">Rafał Płaczek</option>
+                                    <option value="S. WALINOWICZ">Sławomir Walinowicz</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group input-group-full">
+                                <label>Lokalizacja do wydania</label>
+                                <input type="text" id="deliveryLocation"
+                                    placeholder="np. Warszawa / Centrala / pok. 204">
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="hire-form-section">
+                        <div class="hire-form-section-heading">
+                            <h3>Laptop i monitor</h3>
+                            <p>Pola do statusow, RU i eMagazynu.</p>
+                        </div>
+
+                        <div class="hire-form-grid">
+                            <div class="input-group">
+                                <label>Laptop - SN</label>
+                                <input type="text" id="laptopModel" placeholder="np. ThinkPad T14 Gen 5">
+                            </div>
+
+                            <div class="input-group">
+                                <label>Laptop - RU</label>
+                                <input type="text" id="laptopRu" placeholder="np. RU123456">
+                            </div>
+
+                            <div class="input-group">
+                                <label>Laptop - Status</label>
+                                <select id="laptopStatus">
+                                    <option value="">Wybierz status</option>
+                                    <option value="W trakcie">W trakcie</option>
+                                    <option value="Gotowy do wydania">Gotowy do wydania</option>
+                                    <option value="Wydany">Wydany</option>
+                                    <option value="Nie został odebrany w terminie">Nie odebrano</option>
+                                    <option value="Do ponownej dystrybucji">Ponowna dystrybucja</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Laptop - eMagazyn</label>
+                                <select id="laptopWarehouse">
+                                    <option value="">Wybierz status</option>
+                                    <option value="Brak konta">Brak konta</option>
+                                    <option value="Dokument wystawiony, do potwierdzenia">Do potwierdzenia</option>
+                                    <option value="Dokument potwierdzony">Potwierdzony</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Monitor - RU</label>
+                                <input type="text" id="monitorRu">
+                            </div>
+
+                            <div class="input-group">
+                                <label>Monitor - Status</label>
+                                <select id="monitorStatus">
+                                    <option value="">Wybierz status</option>
+                                    <option value="W trakcie / czekamy na dostawe">W trakcie
+                                    </option>
+                                    <option value="Gotowy do wydania">Gotowy do wydania</option>
+                                    <option value="Wydany">Wydany</option>
+                                    <option value="Nie został odebrany w terminie">Nie odebrano</option>
+                                    <option value="Do ponownej dystrybucji">Ponowna dystrybucja</option>
+                                    <option value="Nie był zamówiony">Nie zamówiono</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group input-group-full">
+                                <label>Monitor - eMagazyn</label>
+                                <select id="monitorWarehouse">
+                                    <option value="">Wybierz status</option>
+                                    <option value="Brak konta">Brak konta</option>
+                                    <option value="Dokument wystawiony, do potwierdzenia">Dokument wystawiony, do
+                                        potwierdzenia</option>
+                                    <option value="Dokument potwierdzony">Dokument potwierdzony</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="hire-form-section">
+                        <div class="hire-form-section-heading">
+                            <h3>Peryferia</h3>
+                            <p>Ikonki zostaja. Kliknij te, ktore maja wejsc do wydania.</p>
+                        </div>
+
+                        <div class="accessory-picker accessory-picker-expanded" id="accessory-picker">
+                            <div class="accessory-item" data-item="monitorDock" title="Monitor ze stacja dokujaca">
+                                <i class="app-icon desktop-solid-full"></i>
+                                <span class="accessory-item-tag">Monitor</span>
+                            </div>
+
+                            <div class="accessory-item" data-item="keyboardMouseSet" title="Klawiatura + mysz">
+                                <i class="app-icon keyboard-solid-full"></i>
+                                <span class="accessory-item-tag">Klawiatura + Mysz</span>
+                            </div>
+
+                            <div class="accessory-item" data-item="mouse" title="Mysz">
+                                <i class="app-icon computer-mouse-solid-full"></i>
+                                <span class="accessory-item-tag">Mysz</span>
                             </div>
 
                             <div class="accessory-item" data-item="keyboard" title="Klawiatura">
                                 <i class="app-icon keyboard-solid-full"></i>
+                                <span class="accessory-item-tag">Klawiatura</span>
                             </div>
 
-                            <div class="accessory-item" data-item="headset" title="Słuchawki">
+                            <div class="accessory-item" data-item="yealink" title="Yealink">
                                 <i class="app-icon headset-solid-full"></i>
+                                <span class="accessory-item-tag">Yealink</span>
                             </div>
 
-                            <div class="accessory-item" data-item="monitor" title="Monitor">
-                                <i class="app-icon desktop-solid-full"></i>
+                            <div class="accessory-item" data-item="logiZoneVibe" title="Logi Zone Vibe">
+                                <i class="app-icon headset-solid-full"></i>
+                                <span class="accessory-item-tag">Logi Zone Vibe</span>
+                            </div>
+
+                            <div class="accessory-item" data-item="lenovo" title="Lenovo">
+                                <i class="app-icon box-solid-full"></i>
+                                <span class="accessory-item-tag">Lenovo</span>
                             </div>
 
                             <div class="accessory-item" data-item="bag" title="Torba">
                                 <i class="app-icon briefcase-solid-full"></i>
+                                <span class="accessory-item-tag">Torba</span>
                             </div>
 
                             <div class="accessory-item" data-item="backpack" title="Plecak">
                                 <i class="app-icon backpack-icon"></i>
+                                <span class="accessory-item-tag">Plecak</span>
                             </div>
 
-                            <div class="accessory-item" data-item="pointer" title="Wskaźnik">
+                            <div class="accessory-item" data-item="laptopStand" title="Podstawka pod laptop">
+                                <i class="app-icon table-cells-solid-full"></i>
+                                <span class="accessory-item-tag">Podstawka</span>
+                            </div>
+
+                            <div class="accessory-item" data-item="presenter" title="Prezenter">
                                 <i class="app-icon pen-clip-solid-full"></i>
+                                <span class="accessory-item-tag">Prezenter</span>
                             </div>
 
                             <div class="accessory-item" data-item="printer" title="Drukarka">
                                 <i class="app-icon print-solid-full"></i>
+                                <span class="accessory-item-tag">Drukarka</span>
                             </div>
-
-                            <div class="accessory-item" data-item="laptop-pad" title="Podkładka pod laptopa">
-                                <i class="app-icon table-cells-solid-full"></i>
-                            </div>
-
                         </div>
-                    </div>
 
-                    <div class="input-group" id="date-group">
-                        <label>Data rozpoczęcia pracy</label>
-                        <input type="date" id="date" required>
-                    </div>
+                        <div class="input-group input-group-full">
+                            <label>Uwagi do peryferiów</label>
+                            <textarea id="peripheralNotes" rows="4"
+                                placeholder="Komentarz, niestandardowe wyposazenie, dodatkowe ustalenia."></textarea>
+                        </div>
+                    </section>
 
                     <div class="hire-form-actions">
-                        <button type="button" id="cancel-hire-drawer" class="btn-submit btn-submit-muted btn-submit-tight">
+                        <button type="button" id="cancel-hire-drawer"
+                            class="btn-submit btn-submit-muted btn-submit-tight">
                             Anuluj
                         </button>
 
-                        <button type="submit" id="hire-submit-btn" class="btn-submit btn-submit-soft-danger btn-submit-tight">
+                        <button type="submit" id="hire-submit-btn"
+                            class="btn-submit btn-submit-soft-danger btn-submit-tight">
                             Dodaj do listy
                         </button>
                     </div>
@@ -257,13 +411,22 @@
 
     </div>
 
-    <script src="./js/shared/base.js" charset="utf-8"></script>
-    <script src="./js/shared/runtime-config.js" charset="utf-8"></script>
-    <script src="./js/core/storage-service.js" charset="utf-8"></script>
-    <script src="./js/shared/auth.js" charset="utf-8"></script>
-    <script src="./js/shared/public-api.js" charset="utf-8"></script>
-    <script src="./js/shared/global-ui.js" charset="utf-8"></script>
-    <script src="./js/pages/hires/index.js" charset="utf-8"></script>
+    <div class="workspace-backup-dock">
+        <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".xlsx, .xls">
+
+        <button id="import-excel-trigger" class="workspace-action-btn workspace-backup-btn" type="button">
+            <i class="app-icon file-import-solid-full"></i>
+            <span>Import Excel</span>
+        </button>
+
+        <button id="export-excel-btn" class="workspace-action-btn workspace-action-btn-green workspace-backup-btn"
+            type="button">
+            <i class="app-icon file-excel-solid-full"></i>
+            <span>Eksport Excel</span>
+        </button>
+    </div>
+
+    <script src="./js/script.js" charset="utf-8"></script>
 
 </body>
 

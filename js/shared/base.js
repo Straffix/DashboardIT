@@ -89,11 +89,9 @@ const APP_CONFIG = {
 		NOTES_ACTIVE_VIEWERS: 'dashboard_notes_active_viewers',
 		ANNOUNCEMENTS: 'dashboard_notes_announcements',
 		TASKS: 'dashboard_notes_tasks',
-		TESTER_FEEDBACK: 'dashboard_testers_feedback',
 	},
 	PREFERENCE_KEYS: {
 		THEME: 'dashboard-theme',
-		WIDE_MODE: 'dashboard-wide-mode',
 		WEATHER_LOCATION: 'dashboard-weather-location',
 		DASHBOARD_MENU_ORDER: 'dashboard-menu-order',
 		DASHBOARD_TASKS: 'dashboard-tasks',
@@ -735,6 +733,18 @@ const buildAuditMarkup = record => {
 
 /* === Shared Search Controller: Start === */
 const createSearchController = ({ panel, workspaceActions, toggleButton, input, onClear } = {}) => {
+	const focusInput = ({ selectValue = false } = {}) => {
+		if (!input) return
+
+		window.setTimeout(() => {
+			input.focus()
+
+			if (selectValue && typeof input.select === 'function') {
+				input.select()
+			}
+		}, 40)
+	}
+
 	const setOpen = isOpen => {
 		if (!panel) return
 
@@ -743,8 +753,13 @@ const createSearchController = ({ panel, workspaceActions, toggleButton, input, 
 		toggleButton?.setAttribute('aria-expanded', String(isOpen))
 
 		if (isOpen) {
-			window.setTimeout(() => input?.focus(), 40)
+			focusInput()
 		}
+	}
+
+	const open = ({ selectValue = false } = {}) => {
+		setOpen(true)
+		focusInput({ selectValue })
 	}
 
 	const close = ({ clearValue = true } = {}) => {
@@ -765,11 +780,26 @@ const createSearchController = ({ panel, workspaceActions, toggleButton, input, 
 			return
 		}
 
-		setOpen(true)
+		open({ selectValue: true })
 	}
+
+	window.addEventListener('keydown', event => {
+		const isFindShortcut =
+			(event.ctrlKey || event.metaKey) &&
+			!event.altKey &&
+			!event.shiftKey &&
+			String(event.key || '').toLowerCase() === 'f'
+
+		if (!isFindShortcut || !panel || !input || event.defaultPrevented) return
+
+		event.preventDefault()
+		event.stopPropagation()
+		open({ selectValue: true })
+	})
 
 	return {
 		setOpen,
+		open,
 		close,
 		toggle,
 		isOpen: () => Boolean(panel) && !panel.hidden,

@@ -2,10 +2,10 @@
 	"name": "dashboardit",
 	"private": true,
 	"scripts": {
-		"start": "node tools/dev-server.js",
-		"build:icons": "node tools/generate-icon-css.js",
-		"build:styles": "node tools/generate-icon-css.js && sass styles/scss/style.scss:styles/style.css styles/scss/pages/dashboard.scss:styles/dashboard.css styles/scss/pages/monitor.scss:styles/monitor.css styles/scss/pages/notes.scss:styles/notes.css styles/scss/pages/lunch.scss:styles/lunch.css styles/scss/pages/wymiany.scss:styles/wymiany.css styles/scss/pages/zatrudnienia.scss:styles/zatrudnienia.css styles/scss/pages/testers.scss:styles/testers.css",
-		"watch:styles": "sass --watch styles/scss/style.scss:styles/style.css styles/scss/pages/dashboard.scss:styles/dashboard.css styles/scss/pages/monitor.scss:styles/monitor.css styles/scss/pages/notes.scss:styles/notes.css styles/scss/pages/lunch.scss:styles/lunch.css styles/scss/pages/wymiany.scss:styles/wymiany.css styles/scss/pages/zatrudnienia.scss:styles/zatrudnienia.css styles/scss/pages/testers.scss:styles/testers.css",
+		"start": "node dev-server.js",
+		"build:icons": "node generate-icon-css.js",
+		"build:styles": "node generate-icon-css.js && sass styles/scss/style.scss:styles/css/style.css styles/scss/dashboard.scss:styles/css/dashboard.css styles/scss/monitor.scss:styles/css/monitor.css styles/scss/notes.scss:styles/css/notes.css styles/scss/lunch.scss:styles/css/lunch.css styles/scss/wymiany.scss:styles/css/wymiany.css styles/scss/zatrudnienia.scss:styles/css/zatrudnienia.css",
+		"watch:styles": "sass --watch styles/scss/style.scss:styles/css/style.css styles/scss/dashboard.scss:styles/css/dashboard.css styles/scss/monitor.scss:styles/css/monitor.css styles/scss/notes.scss:styles/css/notes.css styles/scss/lunch.scss:styles/css/lunch.css styles/scss/wymiany.scss:styles/css/wymiany.css styles/scss/zatrudnienia.scss:styles/css/zatrudnienia.css",
 		"lint:scripts": "eslint \"js/**/*.js\"",
 		"check": "npm run lint:scripts && npm run build:styles"
 	},

@@ -130,25 +130,6 @@ CREATE TABLE IF NOT EXISTS dashboard_tasks (
 
 CREATE INDEX IF NOT EXISTS dashboard_tasks_sort_idx ON dashboard_tasks (sort_order, updated_at);
 
-CREATE TABLE IF NOT EXISTS dashboard_tester_feedback (
-	id varchar(191) PRIMARY KEY,
-	sort_order integer NOT NULL DEFAULT 0,
-	author_name varchar(200) NOT NULL,
-	author_id varchar(191) REFERENCES dashboard_users(id) ON DELETE SET NULL,
-	author_avatar_id varchar(50) NOT NULL DEFAULT 'blue',
-	author_avatar_image text NOT NULL DEFAULT '',
-	area varchar(200) NOT NULL DEFAULT '',
-	category varchar(20) NOT NULL DEFAULT 'bug',
-	severity varchar(20) NOT NULL DEFAULT 'medium',
-	message text NOT NULL,
-	created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	CONSTRAINT dashboard_tester_feedback_category_check CHECK (category IN ('bug', 'ux', 'idea', 'note')),
-	CONSTRAINT dashboard_tester_feedback_severity_check CHECK (severity IN ('critical', 'high', 'medium', 'low'))
-);
-
-CREATE INDEX IF NOT EXISTS dashboard_tester_feedback_sort_idx ON dashboard_tester_feedback (sort_order, updated_at);
-
 CREATE TABLE IF NOT EXISTS dashboard_monitor_devices (
 	id bigserial PRIMARY KEY,
 	sort_order integer NOT NULL DEFAULT 0,
@@ -176,6 +157,7 @@ CREATE TABLE IF NOT EXISTS dashboard_hires (
 	sn varchar(120) NOT NULL,
 	hire_date date NULL,
 	accessories jsonb NOT NULL DEFAULT '[]'::jsonb,
+	details jsonb NOT NULL DEFAULT '{}'::jsonb,
 	created_by_actor jsonb NULL,
 	updated_by_actor jsonb NULL,
 	created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,

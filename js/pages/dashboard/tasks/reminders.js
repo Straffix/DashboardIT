@@ -1,4 +1,4 @@
-(function initializeDashboardTaskRemindersModule() {
+﻿(function initializeDashboardTaskRemindersModule() {
 	const dashboardModules = (window.DashboardModules = window.DashboardModules || {})
 	const escapeHtml =
 		window.AppUtils?.escapeHtml ||

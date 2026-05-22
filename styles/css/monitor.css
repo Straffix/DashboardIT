@@ -102,22 +102,23 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card.danger i {
 .workspace-copy {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .workspace-copy h2 {
   margin-bottom: 0;
-  font-size: 2rem;
+  font-size: 2.4rem;
+  line-height: 1.12;
 }
 .workspace-copy p {
   max-width: 680px;
   color: var(--text-muted);
-  font-size: 1.22rem;
-  line-height: 1.55;
+  font-size: 1.38rem;
+  line-height: 1.6;
 }
 .workspace-kicker {
-  font-size: 1rem;
+  font-size: 1.12rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--primary);
 }
@@ -135,6 +136,43 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card.danger i {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+}
+.workspace-actions button.workspace-action-btn:not(.workspace-search-toggle),
+.workspace-actions button.workspace-primary-btn {
+  position: relative;
+  flex: 0 0 48px;
+  width: 48px;
+  min-width: 48px;
+  padding: 0;
+  gap: 0;
+}
+.workspace-actions button.workspace-action-btn:not(.workspace-search-toggle) span,
+.workspace-actions button.workspace-primary-btn span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.workspace-actions.workspace-actions-has-dock {
+  align-items: center;
+  min-width: 0;
+}
+.workspace-actions-group {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+  margin-left: auto;
 }
 .workspace-search-toggle {
   flex: 0 0 48px;
@@ -160,9 +198,9 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card.danger i {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 48px;
+  min-height: 52px;
   width: 100%;
-  padding: 0 16px;
+  padding: 0 18px;
   border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--bg-panel);
@@ -176,7 +214,7 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card.danger i {
 }
 .workspace-search i {
   color: var(--primary);
-  font-size: 1.12rem;
+  font-size: 1.18rem;
 }
 .workspace-search input {
   flex: 1;
@@ -185,7 +223,7 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card.danger i {
   border: 0;
   background: transparent;
   color: var(--text-main);
-  font-size: 1.08rem;
+  font-size: 1.18rem;
   font-weight: 500;
   outline: none;
 }
@@ -207,18 +245,18 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card.danger i {
   background: var(--bg-panel);
   color: var(--text-main);
   font-size: 1.2rem;
-  font-weight: 600;
+  font-weight: 650;
   cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 .workspace-action-btn:hover, .workspace-primary-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-0.5px);
   border-color: var(--border-strong);
   background: var(--bg-panel-hover);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
 }
 .workspace-action-btn i, .workspace-primary-btn i {
-  font-size: 1.2rem;
+  font-size: 1.16rem;
 }
 .workspace-action-btn-green {
   background: rgba(16, 124, 65, 0.12);
@@ -233,11 +271,71 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card.danger i {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 14px 26px rgba(99, 102, 241, 0.18);
+  box-shadow: 0 10px 22px rgba(99, 102, 241, 0.16);
 }
 .workspace-primary-btn:hover {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
   color: #ffffff;
+  box-shadow: 0 12px 20px rgba(99, 102, 241, 0.18);
+}
+.workspace-backup-dock {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  left: auto;
+  top: auto;
+  z-index: 32;
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  width: -moz-max-content;
+  width: max-content;
+  min-width: 0;
+  max-width: calc(100vw - 32px);
+  margin-left: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  isolation: auto;
+}
+.workspace-backup-dock button.workspace-backup-btn {
+  position: relative;
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  gap: 0;
+  border-radius: 14px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+.workspace-backup-dock button.workspace-backup-btn span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.workspace-backup-dock button.workspace-backup-btn i {
+  font-size: 1.34rem;
+}
+.workspace-backup-dock button.workspace-backup-btn .app-icon.file-excel-solid-full {
+  font-size: 1.48rem;
+}
+.workspace-backup-dock button.workspace-backup-btn:hover {
+  transform: translateY(-1px);
 }
 
 body.theme-dark:not(.dashboard-page) .workspace-search {
@@ -252,6 +350,15 @@ body.theme-dark:not(.dashboard-page) .workspace-action-btn-green {
 body.theme-dark:not(.dashboard-page) .workspace-action-btn-green:hover {
   background: rgba(34, 197, 94, 0.22);
   color: #c8f7d6;
+}
+
+body.theme-dark:not(.dashboard-page) .workspace-backup-dock {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+body.theme-dark:not(.dashboard-page) .workspace-backup-dock button.workspace-backup-btn {
+  box-shadow: 0 12px 24px rgba(2, 8, 23, 0.32);
 }
 
 .table-container {
@@ -644,10 +751,6 @@ body.theme-dark:not(.dashboard-page) .monitor-row-btn:hover {
   box-shadow: 0 10px 22px rgba(2, 8, 23, 0.32);
 }
 
-body.wide-mode .main-content.monitor-content {
-  grid-template-columns: minmax(0, 1fr);
-}
-
 @media (max-width: 1180px) {
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -663,7 +766,7 @@ body.wide-mode .main-content.monitor-content {
 }
 @media (max-width: 640px) {
   .workspace-copy h2 {
-    font-size: 1.72rem;
+    font-size: 1.92rem;
   }
   .workspace-actions {
     display: grid;
@@ -676,12 +779,38 @@ body.wide-mode .main-content.monitor-content {
   .workspace-search-panel {
     width: 100%;
   }
-  .workspace-search-toggle, .workspace-action-btn, .workspace-primary-btn {
-    width: 100%;
-    max-width: none;
-  }
   .workspace-search-toggle {
+    width: 48px;
+    max-width: 48px;
     min-width: 0;
+  }
+  .workspace button.workspace-action-btn:not(.workspace-search-toggle),
+  .workspace button.workspace-primary-btn {
+    justify-self: start;
+  }
+  .workspace-actions.workspace-actions-has-dock {
+    display: block;
+    width: auto;
+  }
+  .workspace-backup-dock {
+    right: 12px;
+    bottom: 12px;
+    gap: 8px;
+    padding: 0;
+    border-radius: 0;
+    max-width: calc(100vw - 24px);
+  }
+  .workspace-backup-dock button.workspace-backup-btn {
+    flex-basis: 40px;
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .workspace-backup-dock button.workspace-backup-btn i {
+    font-size: 1.24rem;
+  }
+  .workspace-backup-dock button.workspace-backup-btn .app-icon.file-excel-solid-full {
+    font-size: 1.38rem;
   }
   .table-container {
     margin-inline: -6px;

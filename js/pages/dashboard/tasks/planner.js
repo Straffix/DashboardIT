@@ -1,4 +1,4 @@
-(function initializeDashboardTaskPlannerModule() {
+﻿(function initializeDashboardTaskPlannerModule() {
 	const dashboardModules = (window.DashboardModules = window.DashboardModules || {})
 	const escapeHtml =
 		window.AppUtils?.escapeHtml ||

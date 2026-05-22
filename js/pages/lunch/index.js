@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		!dateInput ||
 		!todayBtn ||
 		!slotGrid ||
-		!daySummary ||
 		!feedback ||
 		!authCallout ||
 		!authBtn ||
@@ -292,10 +291,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	function renderSummary(currentUser, reservationsForDate, myReservation) {
 		const occupiedSlots = new Set(reservationsForDate.map(reservation => reservation.timeSlot)).size
-		daySummary.textContent =
-			reservationsForDate.length > 0
-				? `${formatDateLabel(selectedDate)} | aktywne rezerwacje: ${reservationsForDate.length}, zajęte sloty: ${occupiedSlots}/${TIME_SLOTS.length}.`
-				: `${formatDateLabel(selectedDate)} | na ten dzień nie ma jeszcze żadnych rezerwacji obiadowych.`
+		if (daySummary) {
+			daySummary.textContent =
+				reservationsForDate.length > 0
+					? `${formatDateLabel(selectedDate)} | aktywne rezerwacje: ${reservationsForDate.length}, zajęte sloty: ${occupiedSlots}/${TIME_SLOTS.length}.`
+					: `${formatDateLabel(selectedDate)} | na ten dzień nie ma jeszcze żadnych rezerwacji obiadowych.`
+		}
 
 		renderAuthCallout(currentUser)
 		renderMyReservation(currentUser, myReservation)

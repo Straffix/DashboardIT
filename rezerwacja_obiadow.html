@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rezerwacja obiadów - DashboardIT</title>
+    <title>Dashboard IT | Rezerwacja obiadów</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,44 +12,74 @@
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="./styles/style.css">
-    <link rel="stylesheet" href="./styles/lunch.css">
-    <link rel="stylesheet" href="./styles/app-icons.css">
+    <link rel="stylesheet" href="./styles/css/style.css">
+    <link rel="stylesheet" href="./styles/css/lunch.css">
+    <link rel="stylesheet" href="./styles/css/app-icons.css">
 </head>
 
-<body class="lunch-page">
-
-    <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pełnoekranowy">
-        <i class="app-icon expand-solid-full"></i>
-    </button>
+<body class="module-page lunch-page">
 
     <div class="wrapper">
-        <header class="header">
-            <a href="index.html" class="menu-btn">
-                <i class="app-icon chevron-left-solid-full"></i> Powrót do Dashboardu
-            </a>
+        <header class="header module-header">
+            <div class="module-header-main">
+                <div class="logo-section">
+                    <div class="icon-box lunch-icon-box">
+                        <i class="app-icon utensils-solid-full"></i>
+                    </div>
 
-            <div class="logo-section">
-                <div class="icon-box lunch-icon-box">
-                    <i class="app-icon utensils-solid-full"></i>
+                    <div>
+                        <h1>Obiady</h1>
+                        <p>Wspólny harmonogram slotów obiadowych dla zespołu. <span>Smacznego!</span></p>
+                    </div>
                 </div>
+                <div class="module-header-tools">
+                    <div class="module-nav-dock">
+                        <div class="module-nav-flyout">
+                            <nav class="module-nav" aria-label="Nawigacja modulow">
+                        <a href="index.html" class="module-nav-link" data-return-dashboard>
+                            <i class="app-icon layer-group-solid-full" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="nowe_zatrudnienia.html" class="module-nav-link">
+                            <i class="app-icon user-plus-solid-full" aria-hidden="true"></i>
+                            <span>Nowe zatrudnienia</span>
+                        </a>
+                        <a href="monitor_laptopow.html" class="module-nav-link">
+                            <i class="app-icon laptop-solid-full" aria-hidden="true"></i>
+                            <span>Urzadzenia</span>
+                        </a>
+                        <a href="wymiana_sprzetu.html" class="module-nav-link">
+                            <i class="app-icon right-left-solid-full" aria-hidden="true"></i>
+                            <span>Wymiana sprzetu</span>
+                        </a>
+                        <a href="rezerwacja_obiadow.html" class="module-nav-link" aria-current="page">
+                            <i class="app-icon utensils-solid-full" aria-hidden="true"></i>
+                            <span>Obiady</span>
+                        </a>
+                        <a href="notatnik.html" class="module-nav-link">
+                            <i class="app-icon comment-solid-full" aria-hidden="true"></i>
+                            <span>Chat</span>
+                        </a>
+                            </nav>
+                        </div>
 
-                <div>
-                    <h1>Rezerwacja obiadów</h1>
-                    <p>Wspólny harmonogram slotów obiadowych dla zespołu. <span>Smacznego!</span></p>
+                        <button class="module-nav-toggle" type="button" aria-label="Pokaz nawigacje modulow">
+                            <span class="module-nav-toggle-lines" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="app-user-panel-slot" aria-label="Panel uzytkownika"></div>
                 </div>
             </div>
         </header>
 
         <main class="main-content lunch-content">
             <section class="lunch-workspace">
-                <div class="lunch-hero">
-                    <div class="lunch-hero-copy">
-                        <span class="lunch-kicker">Rezerwacja obiadów</span>
-                        <h2>Wybierz godzinę i sprawdź, kto już jest zapisany</h2>
-                        <p id="lunch-day-summary">Ładowanie harmonogramu obiadowego...</p>
-                    </div>
-
+                <div class="lunch-hero lunch-hero-compact">
                     <div class="lunch-hero-actions">
                         <label class="lunch-date-field" for="lunch-date">
                             <span>Data</span>
@@ -143,14 +173,7 @@
         </footer>
     </div>
 
-    <script src="./js/shared/base.js" charset="utf-8"></script>
-    <script src="./js/shared/runtime-config.js" charset="utf-8"></script>
-    <script src="./js/core/storage-service.js" charset="utf-8"></script>
-    <script src="./js/shared/auth.js" charset="utf-8"></script>
-    <script src="./js/shared/public-api.js" charset="utf-8"></script>
-    <script src="./js/shared/global-ui.js" charset="utf-8"></script>
-    <script src="./js/core/domain-services.js" charset="utf-8"></script>
-    <script src="./js/pages/lunch/index.js" charset="utf-8"></script>
+    <script src="./js/script.js" charset="utf-8"></script>
 
 </body>
 

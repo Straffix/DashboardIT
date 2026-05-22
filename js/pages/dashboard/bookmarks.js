@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const safeHref = escapeHtml(href)
 				return `
 					<article class="dashboard-bookmark-tab" data-bookmark-id="${bookmark.id}">
-						<a class="dashboard-bookmark-tab-main" href="${safeHref}" target="_blank" rel="noopener noreferrer" title="${description}">
+						<a class="dashboard-bookmark-tab-main" href="${safeHref}" rel="noopener noreferrer" title="${description}">
 							<span class="dashboard-bookmark-icon${initialFaviconUrl ? '' : ' is-fallback'}" data-bookmark-icon>
 								${initialFaviconUrl ? `<img class="dashboard-bookmark-favicon" src="${initialFaviconUrl}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-bookmark-favicon data-favicon-sources="${fallbackFaviconSources}">` : ''}
 								<i class="app-icon bookmark-solid-full" aria-hidden="true"></i>

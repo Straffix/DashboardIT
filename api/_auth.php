@@ -99,7 +99,7 @@ function dashboard_normalize_users_array($users): array
 
 function dashboard_users_config_path(): string
 {
-	return dirname(__DIR__) . '/config/users.json';
+	return __DIR__ . '/config/users.json';
 }
 
 function dashboard_load_user_config_entries(): array

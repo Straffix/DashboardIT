@@ -38,6 +38,7 @@ const authState = {
 	popover: null,
 	popoverIdentity: null,
 	popoverMeta: null,
+	popoverTheme: null,
 	popoverActions: null,
 	authModal: null,
 	authTitle: null,
@@ -90,6 +91,9 @@ const authState = {
 	customProfileCoverImage: '',
 	profileCoverCropState: null,
 }
+
+const USER_POPOVER_OFFSET = 12
+const USER_POPOVER_VIEWPORT_GAP = 16
 
 const systemUiState = {
 	toastStack: null,
@@ -164,27 +168,24 @@ const getVisibleUserName = (user, fallback = 'Użytkownik') => {
 const getCurrentThemePreference = () =>
 	normalizeThemePreference(preferencesService?.getTheme?.() || document.documentElement.getAttribute('data-theme') || 'light')
 
-const refreshThemeToggleState = theme => {
-	const normalizedTheme = normalizeThemePreference(theme)
-	const themeToggle = document.querySelector('.theme-toggle-btn')
-	if (!themeToggle) return
+const renderThemePreferenceButtons = ({ attributeName = 'data-profile-theme', buttonClassName = 'app-profile-theme-btn' } = {}) =>
+	AUTH_CONFIG.themeOptions.map(
+		option => `
+			<button type="button" class="${buttonClassName}" ${attributeName}="${option.id}" aria-pressed="false">
+				${renderIcon(option.icon)}
+				<span>${option.label}</span>
+			</button>
+		`
+	).join('')
 
-	const themeSequence = AUTH_CONFIG.themeOptions.map(option => option.id)
-	const activeIndex = themeSequence.indexOf(normalizedTheme)
-	const optionList = themeToggle.querySelector('.theme-toggle-option-list')
-	themeToggle.dataset.themeOption = normalizedTheme
-	themeToggle.dataset.nextTheme = themeSequence[(activeIndex + 1) % themeSequence.length] || 'light'
-	themeToggle.querySelectorAll('[data-theme-icon]').forEach(button => {
-		const isActive = button.dataset.themeIcon === normalizedTheme
+const syncThemeButtons = selector => {
+	const currentTheme = getCurrentThemePreference()
+	document.querySelectorAll(selector).forEach(button => {
+		const selectedTheme = button.dataset.profileTheme || button.dataset.userTheme || ''
+		const isActive = selectedTheme === currentTheme
 		button.classList.toggle('is-active', isActive)
 		button.setAttribute('aria-pressed', String(isActive))
 	})
-	if (optionList) {
-		[normalizedTheme, ...themeSequence.filter(themeOption => themeOption !== normalizedTheme)].forEach(themeOption => {
-			const button = optionList.querySelector(`[data-theme-icon="${themeOption}"]`)
-			if (button) optionList.appendChild(button)
-		})
-	}
 }
 
 const applyThemePreference = theme => {
@@ -210,7 +211,8 @@ const applyThemePreference = theme => {
 		document.documentElement.setAttribute('data-theme', normalizedTheme)
 	}
 
-	refreshThemeToggleState(normalizedTheme)
+	syncPopoverThemeEditor()
+	syncProfileThemeEditor()
 }
 
 const applyCurrentUserAppearance = user => {
@@ -395,6 +397,21 @@ const renderAuthUi = () => {
 				: 'Zaloguj się lub załóż nowe konto lokalne.'
 	authState.popoverMeta.textContent = popoverMetaText
 	authState.popoverMeta.hidden = !popoverMetaText
+	if (authState.popoverTheme) {
+		authState.popoverTheme.hidden = !currentUser
+		authState.popoverTheme.innerHTML = currentUser
+			? `
+				<p class="app-user-popover-section-title">Styl konta</p>
+				<div class="app-user-theme-picker" role="group" aria-label="Styl konta użytkownika">
+					${renderThemePreferenceButtons({
+						attributeName: 'data-user-theme',
+						buttonClassName: 'app-profile-theme-btn app-user-theme-btn',
+					})}
+				</div>
+				<small class="app-user-popover-note">Motyw zapisuje się do Twojego konta i działa we wszystkich modułach.</small>
+			`
+			: ''
+	}
 
 	authState.popoverActions.innerHTML = currentUser
 		? `
@@ -427,6 +444,8 @@ const renderAuthUi = () => {
 				<span>Załóż konto</span>
 			</button>
 		`
+
+	syncPopoverThemeEditor()
 
 	renderPageStatusStrip()
 }
@@ -1135,6 +1154,47 @@ const closeUserPopover = () => {
 	document.body.classList.remove('app-user-popover-open')
 }
 
+const positionUserPopover = () => {
+	if (!authState.trigger || !authState.popover || authState.popover.hidden) return
+
+	const popover = authState.popover
+	const triggerRect = authState.trigger.getBoundingClientRect()
+	popover.style.position = 'fixed'
+	popover.style.left = '0px'
+	popover.style.top = '0px'
+	popover.style.right = 'auto'
+	popover.style.bottom = 'auto'
+	popover.style.zIndex = '2001'
+	popover.style.maxWidth = `calc(100vw - ${USER_POPOVER_VIEWPORT_GAP * 2}px)`
+
+	const popoverRect = popover.getBoundingClientRect()
+	const maxLeft = Math.max(
+		USER_POPOVER_VIEWPORT_GAP,
+		window.innerWidth - popoverRect.width - USER_POPOVER_VIEWPORT_GAP
+	)
+	const left = Math.min(
+		Math.max(USER_POPOVER_VIEWPORT_GAP, triggerRect.right - popoverRect.width),
+		maxLeft
+	)
+	const preferredTop = triggerRect.bottom + USER_POPOVER_OFFSET
+	const preferredAboveTop = triggerRect.top - popoverRect.height - USER_POPOVER_OFFSET
+	const fitsBelow = preferredTop + popoverRect.height <= window.innerHeight - USER_POPOVER_VIEWPORT_GAP
+	const top = fitsBelow
+		? preferredTop
+		: preferredAboveTop >= USER_POPOVER_VIEWPORT_GAP
+			? preferredAboveTop
+			: Math.max(USER_POPOVER_VIEWPORT_GAP, window.innerHeight - popoverRect.height - USER_POPOVER_VIEWPORT_GAP)
+
+	popover.style.left = `${Math.round(left)}px`
+	popover.style.top = `${Math.round(top)}px`
+}
+
+const syncUserPopoverPosition = () => {
+	if (authState.popover?.hidden) return
+
+	positionUserPopover()
+}
+
 const openUserPopover = () => {
 	if (!authState.hub || !authState.popover) return
 
@@ -1142,6 +1202,8 @@ const openUserPopover = () => {
 	authState.hub.classList.add('is-open')
 	authState.trigger?.setAttribute('aria-expanded', 'true')
 	authState.popover.hidden = false
+	positionUserPopover()
+	window.requestAnimationFrame(positionUserPopover)
 	document.body.classList.add('app-user-popover-open')
 }
 
@@ -1152,6 +1214,20 @@ const toggleUserPopover = () => {
 	}
 
 	closeUserPopover()
+}
+
+const handleUserPopoverClick = event => {
+	const themeButton = getEventTargetElement(event.target)?.closest('[data-user-theme]')
+	if (themeButton) {
+		applyThemePreference(themeButton.dataset.userTheme)
+		window.requestAnimationFrame(positionUserPopover)
+		return
+	}
+
+	const actionButton = getEventTargetElement(event.target)?.closest('[data-user-action]')
+	if (!actionButton) return
+
+	handleUserAction(actionButton.dataset.userAction)
 }
 
 const closeModal = modal => {
@@ -1294,12 +1370,13 @@ const renderProfileCoverEditor = () => {
 const syncProfileThemeEditor = () => {
 	if (!authState.profileForm) return
 
-	const currentTheme = getCurrentThemePreference()
-	authState.profileForm.querySelectorAll('[data-profile-theme]').forEach(button => {
-		const isActive = button.dataset.profileTheme === currentTheme
-		button.classList.toggle('is-active', isActive)
-		button.setAttribute('aria-pressed', String(isActive))
-	})
+	syncThemeButtons('.app-profile-form [data-profile-theme]')
+}
+
+const syncPopoverThemeEditor = () => {
+	if (!authState.popoverTheme) return
+
+	syncThemeButtons('.app-user-popover [data-user-theme]')
 }
 
 const getManageableUsers = () => {
@@ -2006,6 +2083,7 @@ const ensureAuthUi = () => {
 		<div class="app-user-popover" hidden>
 			<div class="app-user-popover-identity"></div>
 			<p class="app-user-popover-meta"></p>
+			<div class="app-user-popover-theme" hidden></div>
 			<div class="app-user-popover-actions"></div>
 		</div>
 	`
@@ -2167,17 +2245,12 @@ const ensureAuthUi = () => {
 							</div>
 						</div>
 					</div>
-					<div class="app-profile-theme-picker" role="group" aria-label="Kolor strony">
-						${AUTH_CONFIG.themeOptions
-							.map(
-								option => `
-									<button type="button" class="app-profile-theme-btn" data-profile-theme="${option.id}" aria-pressed="false">
-										${renderIcon(option.icon)}
-										<span>${option.label}</span>
-									</button>
-								`
-							)
-							.join('')}
+					<div class="app-auth-field app-auth-field-wide">
+						<span>Motyw konta</span>
+						<div class="app-profile-theme-picker" role="group" aria-label="Motyw konta użytkownika">
+							${renderThemePreferenceButtons()}
+						</div>
+						<small>Motyw zapisuje się do Twojego konta i działa we wszystkich modułach.</small>
 					</div>
 				</section>
 				<section class="app-profile-section">
@@ -2263,6 +2336,7 @@ const ensureAuthUi = () => {
 	authState.popover = hub.querySelector('.app-user-popover')
 	authState.popoverIdentity = hub.querySelector('.app-user-popover-identity')
 	authState.popoverMeta = hub.querySelector('.app-user-popover-meta')
+	authState.popoverTheme = hub.querySelector('.app-user-popover-theme')
 	authState.popoverActions = hub.querySelector('.app-user-popover-actions')
 	authState.authModal = authModal
 	authState.authTitle = authModal.querySelector('#app-auth-title')
@@ -2308,6 +2382,10 @@ const ensureAuthUi = () => {
 	authState.profileAvatarResetBtn = profileModal.querySelector('#app-profile-avatar-reset-btn')
 	authState.profileLogoutBtn = profileModal.querySelector('#app-profile-logout-btn')
 
+	if (authState.popover?.parentElement !== document.body) {
+		document.body.appendChild(authState.popover)
+	}
+
 	renderRegisterAvatarEditor()
 	renderAuthUi()
 	updateAuthMode('login')
@@ -2317,15 +2395,11 @@ const ensureAuthUi = () => {
 		toggleUserPopover()
 	})
 
-	hub.addEventListener('click', event => {
-		const actionButton = getEventTargetElement(event.target)?.closest('[data-user-action]')
-		if (!actionButton) return
-
-		handleUserAction(actionButton.dataset.userAction)
-	})
+	authState.popover?.addEventListener('click', handleUserPopoverClick)
 
 	document.addEventListener('click', event => {
-		if (!hub.contains(event.target)) {
+		const target = getEventTargetElement(event.target)
+		if (!hub.contains(target) && !authState.popover?.contains(target)) {
 			closeUserPopover()
 		}
 	})
@@ -2530,7 +2604,6 @@ const ensureAuthUi = () => {
 		const themeButton = getEventTargetElement(event.target)?.closest('[data-profile-theme]')
 		if (themeButton && authState.profileForm?.contains(themeButton)) {
 			applyThemePreference(themeButton.dataset.profileTheme)
-			syncProfileThemeEditor()
 			return
 		}
 
@@ -2675,7 +2748,11 @@ const ensureAuthUi = () => {
 		if (authState.profileCoverCropState) {
 			syncProfileCoverCropperGeometry()
 		}
+
+		syncUserPopoverPosition()
 	})
+
+	window.addEventListener('scroll', syncUserPopoverPosition, true)
 
 	return authState
 }

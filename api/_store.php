@@ -9,7 +9,6 @@ const DASHBOARD_REMOTE_STORAGE_FILES = [
 	'dashboard_notes_active_viewers' => 'dashboard_notes_active_viewers',
 	'dashboard_notes_announcements' => 'dashboard_announcements',
 	'dashboard_notes_tasks' => 'dashboard_tasks',
-	'dashboard_testers_feedback' => 'dashboard_tester_feedback',
 	'monitor_laptopow_dane' => 'dashboard_monitor_devices',
 	'nowe_zatrudnienia_dane' => 'dashboard_hires',
 	'wymiana_sprzetu_dane' => 'dashboard_exchanges',
@@ -226,8 +225,6 @@ function dashboard_read_path_from_database(PDO $pdo, string $path, $fallback)
 			return dashboard_fetch_announcements_collection($pdo);
 		case 'dashboard_notes_tasks':
 			return dashboard_fetch_tasks_collection($pdo);
-		case 'dashboard_testers_feedback':
-			return dashboard_fetch_tester_feedback_collection($pdo);
 		case 'monitor_laptopow_dane':
 			return dashboard_fetch_monitor_collection($pdo);
 		case 'nowe_zatrudnienia_dane':
@@ -265,9 +262,6 @@ function dashboard_write_path_to_database(PDO $pdo, string $path, $data): void
 			return;
 		case 'dashboard_notes_tasks':
 			dashboard_replace_tasks_collection($pdo, $data);
-			return;
-		case 'dashboard_testers_feedback':
-			dashboard_replace_tester_feedback_collection($pdo, $data);
 			return;
 		case 'monitor_laptopow_dane':
 			dashboard_replace_monitor_collection($pdo, $data);
@@ -307,8 +301,6 @@ function dashboard_path_exists_in_database(PDO $pdo, string $path): bool
 			return dashboard_table_has_rows($pdo, 'dashboard_announcements');
 		case 'dashboard_notes_tasks':
 			return dashboard_table_has_rows($pdo, 'dashboard_tasks');
-		case 'dashboard_testers_feedback':
-			return dashboard_table_has_rows($pdo, 'dashboard_tester_feedback');
 		case 'monitor_laptopow_dane':
 			return dashboard_table_has_rows($pdo, 'dashboard_monitor_devices');
 		case 'nowe_zatrudnienia_dane':
@@ -458,23 +450,6 @@ function dashboard_schema_statements(): array
 			CONSTRAINT dashboard_tasks_priority_check CHECK (priority IN ('low', 'medium', 'high'))
 		)",
 		'CREATE INDEX IF NOT EXISTS dashboard_tasks_sort_idx ON dashboard_tasks (sort_order, updated_at)',
-		"CREATE TABLE IF NOT EXISTS dashboard_tester_feedback (
-			id varchar(191) PRIMARY KEY,
-			sort_order integer NOT NULL DEFAULT 0,
-			author_name varchar(200) NOT NULL,
-			author_id varchar(191) REFERENCES dashboard_users(id) ON DELETE SET NULL,
-			author_avatar_id varchar(50) NOT NULL DEFAULT 'blue',
-			author_avatar_image text NOT NULL DEFAULT '',
-			area varchar(200) NOT NULL DEFAULT '',
-			category varchar(20) NOT NULL DEFAULT 'bug',
-			severity varchar(20) NOT NULL DEFAULT 'medium',
-			message text NOT NULL,
-			created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			CONSTRAINT dashboard_tester_feedback_category_check CHECK (category IN ('bug', 'ux', 'idea', 'note')),
-			CONSTRAINT dashboard_tester_feedback_severity_check CHECK (severity IN ('critical', 'high', 'medium', 'low'))
-		)",
-		'CREATE INDEX IF NOT EXISTS dashboard_tester_feedback_sort_idx ON dashboard_tester_feedback (sort_order, updated_at)',
 		"CREATE TABLE IF NOT EXISTS dashboard_monitor_devices (
 			id bigserial PRIMARY KEY,
 			sort_order integer NOT NULL DEFAULT 0,
@@ -500,11 +475,13 @@ function dashboard_schema_statements(): array
 			sn varchar(120) NOT NULL,
 			hire_date date NULL,
 			accessories jsonb NOT NULL DEFAULT '[]'::jsonb,
+			details jsonb NOT NULL DEFAULT '{}'::jsonb,
 			created_by_actor jsonb NULL,
 			updated_by_actor jsonb NULL,
 			created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 		)",
+		"ALTER TABLE dashboard_hires ADD COLUMN IF NOT EXISTS details jsonb NOT NULL DEFAULT '{}'::jsonb",
 		'CREATE INDEX IF NOT EXISTS dashboard_hires_sort_idx ON dashboard_hires (sort_order, updated_at)',
 		'CREATE INDEX IF NOT EXISTS dashboard_hires_lookup_idx ON dashboard_hires (sn, hire_date)',
 		"CREATE TABLE IF NOT EXISTS dashboard_exchanges (
@@ -1347,78 +1324,6 @@ function dashboard_replace_tasks_collection(PDO $pdo, $records): void
 	dashboard_replace_rows($pdo, 'dashboard_tasks', $rows);
 }
 
-function dashboard_fetch_tester_feedback_collection(PDO $pdo): array
-{
-	$statement = $pdo->query(
-		'SELECT id, author_name, author_id, author_avatar_id, author_avatar_image, area, category, severity, message, created_at, updated_at
-		FROM dashboard_tester_feedback
-		ORDER BY sort_order ASC, updated_at DESC, id ASC'
-	);
-
-	$records = [];
-	while ($row = $statement->fetch()) {
-		$records[] = [
-			'id' => (string) ($row['id'] ?? ''),
-			'authorName' => dashboard_trim_string($row['author_name'] ?? ''),
-			'authorId' => (string) ($row['author_id'] ?? ''),
-			'authorAvatarId' => dashboard_trim_string($row['author_avatar_id'] ?? 'blue') ?: 'blue',
-			'authorAvatarImage' => dashboard_trim_string($row['author_avatar_image'] ?? ''),
-			'area' => dashboard_trim_string($row['area'] ?? ''),
-			'category' => dashboard_trim_string($row['category'] ?? 'bug') ?: 'bug',
-			'severity' => dashboard_trim_string($row['severity'] ?? 'medium') ?: 'medium',
-			'message' => dashboard_trim_string($row['message'] ?? ''),
-			'createdAt' => dashboard_format_datetime_output($row['created_at'] ?? ''),
-			'updatedAt' => dashboard_format_datetime_output($row['updated_at'] ?? ''),
-		];
-	}
-
-	return $records;
-}
-
-function dashboard_replace_tester_feedback_collection(PDO $pdo, $records): void
-{
-	$list = is_array($records) ? array_values(array_filter($records, 'is_array')) : [];
-	$now = dashboard_now_iso();
-	$rows = [];
-
-	foreach ($list as $index => $record) {
-		$authorName = dashboard_trim_string($record['authorName'] ?? '');
-		$message = dashboard_trim_string($record['message'] ?? '');
-		if ($authorName === '' || $message === '') {
-			continue;
-		}
-
-		$category = dashboard_trim_string($record['category'] ?? 'bug');
-		if (!in_array($category, ['bug', 'ux', 'idea', 'note'], true)) {
-			$category = 'bug';
-		}
-
-		$severity = dashboard_trim_string($record['severity'] ?? 'medium');
-		if (!in_array($severity, ['critical', 'high', 'medium', 'low'], true)) {
-			$severity = 'medium';
-		}
-
-		$authorId = dashboard_trim_string($record['authorId'] ?? '');
-		$seed = $authorName . ':' . $message . ':' . $index;
-		$rows[] = [
-			'id' => dashboard_trim_string($record['id'] ?? '') ?: dashboard_make_fallback_id('tester-feedback', $seed),
-			'sort_order' => $index,
-			'author_name' => $authorName,
-			'author_id' => $authorId !== '' ? $authorId : null,
-			'author_avatar_id' => dashboard_trim_string($record['authorAvatarId'] ?? 'blue') ?: 'blue',
-			'author_avatar_image' => dashboard_trim_string($record['authorAvatarImage'] ?? ''),
-			'area' => dashboard_trim_string($record['area'] ?? ''),
-			'category' => $category,
-			'severity' => $severity,
-			'message' => $message,
-			'created_at' => dashboard_normalize_datetime_value($record['createdAt'] ?? '', $now) ?? $now,
-			'updated_at' => dashboard_normalize_datetime_value($record['updatedAt'] ?? '', $now) ?? $now,
-		];
-	}
-
-	dashboard_replace_rows($pdo, 'dashboard_tester_feedback', $rows);
-}
-
 function dashboard_fetch_monitor_collection(PDO $pdo): array
 {
 	$statement = $pdo->query(
@@ -1488,21 +1393,138 @@ function dashboard_replace_monitor_collection(PDO $pdo, $records): void
 	dashboard_replace_rows($pdo, 'dashboard_monitor_devices', $rows, ['created_by_actor', 'updated_by_actor']);
 }
 
+function dashboard_hire_flag_keys(): array
+{
+	return [
+		'monitorDock',
+		'keyboardMouseSet',
+		'mouse',
+		'keyboard',
+		'yealink',
+		'logiZoneVibe',
+		'lenovo',
+		'bag',
+		'backpack',
+		'laptopStand',
+		'presenter',
+		'printer',
+	];
+}
+
+function dashboard_normalize_hire_flag_value($value): bool
+{
+	if (is_bool($value)) {
+		return $value;
+	}
+
+	if (is_int($value) || is_float($value)) {
+		return (float) $value === 1.0;
+	}
+
+	$normalizedValue = strtolower(trim((string) $value));
+	return in_array($normalizedValue, ['1', 'true', 'tak', 'yes', 'y', 'x', 'zamowione', 'ordered'], true);
+}
+
+function dashboard_normalize_hire_details(array $record): array
+{
+	$sourceDetails = isset($record['details']) && is_array($record['details']) ? $record['details'] : [];
+	$mergedRecord = array_merge($sourceDetails, $record);
+	$startDate = dashboard_normalize_date_value($mergedRecord['startDate'] ?? ($mergedRecord['date'] ?? ''));
+	$details = [
+		'purchaseRequest' => dashboard_trim_string($mergedRecord['purchaseRequest'] ?? '', 200),
+		'targetUser' => dashboard_trim_string($mergedRecord['targetUser'] ?? ($mergedRecord['name'] ?? ''), 200),
+		'startDate' => $startDate ?? '',
+		'laptopModel' => dashboard_trim_string($mergedRecord['laptopModel'] ?? ($mergedRecord['sn'] ?? ''), 200),
+		'laptopRu' => dashboard_trim_string($mergedRecord['laptopRu'] ?? ($mergedRecord['ru'] ?? ''), 200),
+		'laptopStatus' => dashboard_trim_string($mergedRecord['laptopStatus'] ?? '', 200),
+		'laptopWarehouse' => dashboard_trim_string($mergedRecord['laptopWarehouse'] ?? '', 200),
+		'monitorRu' => dashboard_trim_string($mergedRecord['monitorRu'] ?? '', 200),
+		'monitorStatus' => dashboard_trim_string($mergedRecord['monitorStatus'] ?? '', 200),
+		'monitorWarehouse' => dashboard_trim_string($mergedRecord['monitorWarehouse'] ?? '', 200),
+		'preparedBy' => dashboard_trim_string($mergedRecord['preparedBy'] ?? '', 200),
+		'deliveryLocation' => dashboard_trim_string($mergedRecord['deliveryLocation'] ?? '', 200),
+		'peripheralNotes' => dashboard_trim_string($mergedRecord['peripheralNotes'] ?? ($mergedRecord['notes'] ?? ''), 2000),
+	];
+
+	foreach (dashboard_hire_flag_keys() as $flagKey) {
+		$details[$flagKey] = dashboard_normalize_hire_flag_value($mergedRecord[$flagKey] ?? false);
+	}
+
+	return $details;
+}
+
+function dashboard_build_hire_accessories_from_details(array $details): array
+{
+	$accessories = [];
+
+	if (!empty($details['monitorDock'])) {
+		$accessories[] = 'monitor';
+	}
+	if (!empty($details['keyboardMouseSet'])) {
+		$accessories[] = 'keyboard';
+		$accessories[] = 'mouse';
+	}
+	if (!empty($details['mouse'])) {
+		$accessories[] = 'mouse';
+	}
+	if (!empty($details['keyboard'])) {
+		$accessories[] = 'keyboard';
+	}
+	if (!empty($details['yealink']) || !empty($details['logiZoneVibe'])) {
+		$accessories[] = 'headset';
+	}
+	if (!empty($details['bag'])) {
+		$accessories[] = 'bag';
+	}
+	if (!empty($details['backpack'])) {
+		$accessories[] = 'backpack';
+	}
+	if (!empty($details['laptopStand'])) {
+		$accessories[] = 'laptop-pad';
+	}
+	if (!empty($details['presenter'])) {
+		$accessories[] = 'pointer';
+	}
+	if (!empty($details['printer'])) {
+		$accessories[] = 'printer';
+	}
+
+	return array_values(array_unique($accessories));
+}
+
 function dashboard_fetch_hires_collection(PDO $pdo): array
 {
 	$statement = $pdo->query(
-		'SELECT external_id, name, ru, sn, hire_date, accessories, created_by_actor, updated_by_actor, created_at, updated_at
+		'SELECT external_id, name, ru, sn, hire_date, accessories, details, created_by_actor, updated_by_actor, created_at, updated_at
 		FROM dashboard_hires
 		ORDER BY sort_order ASC, updated_at DESC, id ASC'
 	);
 
 	$records = [];
 	while ($row = $statement->fetch()) {
-		$record = [
+		$legacyDate = dashboard_format_date_output($row['hire_date'] ?? '');
+		$legacyName = dashboard_trim_string($row['name'] ?? '');
+		$legacyRu = dashboard_trim_string($row['ru'] ?? '');
+		$legacySn = dashboard_trim_string($row['sn'] ?? '');
+		$detailsPayload = dashboard_decode_json_or_fallback($row['details'] ?? '{}', []);
+		$details = is_array($detailsPayload)
+			? dashboard_normalize_hire_details(array_merge($detailsPayload, [
+				'name' => $legacyName,
+				'ru' => $legacyRu,
+				'sn' => $legacySn,
+				'date' => $legacyDate,
+			]))
+			: dashboard_normalize_hire_details([
+				'name' => $legacyName,
+				'ru' => $legacyRu,
+				'sn' => $legacySn,
+				'date' => $legacyDate,
+			]);
+		$record = array_merge($details, [
 			'name' => dashboard_trim_string($row['name'] ?? ''),
 			'ru' => dashboard_trim_string($row['ru'] ?? ''),
 			'sn' => dashboard_trim_string($row['sn'] ?? ''),
-			'date' => dashboard_format_date_output($row['hire_date'] ?? ''),
+			'date' => $legacyDate,
 			'accessories' => dashboard_normalize_string_array(
 				dashboard_decode_json_or_fallback($row['accessories'] ?? '[]', [])
 			),
@@ -1514,7 +1536,7 @@ function dashboard_fetch_hires_collection(PDO $pdo): array
 			),
 			'createdAt' => dashboard_format_datetime_output($row['created_at'] ?? ''),
 			'updatedAt' => dashboard_format_datetime_output($row['updated_at'] ?? ''),
-		];
+		]);
 
 		$externalId = dashboard_trim_string($row['external_id'] ?? '');
 		if ($externalId !== '') {
@@ -1534,10 +1556,12 @@ function dashboard_replace_hires_collection(PDO $pdo, $records): void
 	$rows = [];
 
 	foreach ($list as $index => $record) {
-		$name = dashboard_trim_string($record['name'] ?? '');
-		$ru = dashboard_trim_string($record['ru'] ?? '');
-		$sn = dashboard_trim_string($record['sn'] ?? '');
-		if ($name === '' || $ru === '' || $sn === '') {
+		$details = dashboard_normalize_hire_details($record);
+		$name = $details['targetUser'];
+		$ru = $details['laptopRu'];
+		$sn = $details['laptopModel'];
+		$hireDate = dashboard_normalize_date_value($details['startDate'] ?? '');
+		if ($name === '' && $details['purchaseRequest'] === '' && $hireDate === null) {
 			continue;
 		}
 
@@ -1547,8 +1571,9 @@ function dashboard_replace_hires_collection(PDO $pdo, $records): void
 			'name' => $name,
 			'ru' => $ru,
 			'sn' => $sn,
-			'hire_date' => dashboard_normalize_date_value($record['date'] ?? ''),
-			'accessories' => dashboard_encode_json_value(dashboard_normalize_string_array($record['accessories'] ?? [])),
+			'hire_date' => $hireDate,
+			'accessories' => dashboard_encode_json_value(dashboard_build_hire_accessories_from_details($details)),
+			'details' => dashboard_encode_json_value($details),
 			'created_by_actor' => ($actor = dashboard_normalize_actor_snapshot($record['createdBy'] ?? null)) ? dashboard_encode_json_value($actor) : null,
 			'updated_by_actor' => ($actor = dashboard_normalize_actor_snapshot($record['updatedBy'] ?? null)) ? dashboard_encode_json_value($actor) : null,
 			'created_at' => dashboard_normalize_datetime_value($record['createdAt'] ?? '', $now) ?? $now,
@@ -1556,7 +1581,7 @@ function dashboard_replace_hires_collection(PDO $pdo, $records): void
 		];
 	}
 
-	dashboard_replace_rows($pdo, 'dashboard_hires', $rows, ['accessories', 'created_by_actor', 'updated_by_actor']);
+	dashboard_replace_rows($pdo, 'dashboard_hires', $rows, ['accessories', 'details', 'created_by_actor', 'updated_by_actor']);
 }
 
 function dashboard_fetch_exchanges_collection(PDO $pdo): array

@@ -1,4 +1,4 @@
-// Set storageMode to 'local' when the hosting does not provide a working PHP/database backend.
+﻿// Set storageMode to 'local' when the hosting does not provide a working PHP/database backend.
 const existingDashboardRuntimeConfig = window.DashboardRuntimeConfig || {}
 const defaultDashboardOneTimeResetConfig = {
 	version: '2026-04-24-clean-start',

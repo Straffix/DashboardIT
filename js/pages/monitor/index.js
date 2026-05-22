@@ -1,4 +1,4 @@
-(function initializeMonitorPage() {
+﻿(function initializeMonitorPage() {
 /* === Monitor State And References: Start === */
 let devices = []
 let editingDeviceIndex = null

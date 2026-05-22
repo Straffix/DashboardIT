@@ -1,4 +1,4 @@
-(function initializeExchangesPage() {
+﻿(function initializeExchangesPage() {
 /* === Exchanges State And References: Start === */
 let exchanges = []
 let editIndex = null

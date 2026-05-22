@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	if (
 		!notesService ||
-		!chatSummary ||
 		!feedback ||
 		!authCallout ||
 		!authTitle ||
@@ -265,6 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const renderSummary = (messages, pinnedMessages, currentUser) => {
+		if (!chatSummary) return
+
 		if (!currentUser) {
 			chatSummary.textContent = 'Zaloguj się, aby zobaczyć historię wiadomości i dopisać nową informację.'
 			return

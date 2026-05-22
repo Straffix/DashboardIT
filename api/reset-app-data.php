@@ -20,7 +20,6 @@ function dashboard_reset_target_tables(): array
 		'dashboard_notes_active_viewers',
 		'dashboard_announcements',
 		'dashboard_tasks',
-		'dashboard_tester_feedback',
 		'dashboard_monitor_devices',
 		'dashboard_hires',
 		'dashboard_exchanges',

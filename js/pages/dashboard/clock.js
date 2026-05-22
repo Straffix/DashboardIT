@@ -1,4 +1,4 @@
-(function initializeDashboardClockModule() {
+﻿(function initializeDashboardClockModule() {
 	const dashboardModules = (window.DashboardModules = window.DashboardModules || {})
 
 	const padNumber = value => String(value).padStart(2, '0')

@@ -28,7 +28,7 @@
 	const THEME_FALLBACK_USER_KEY_PREFIX = `${THEME_FALLBACK_KEY}::user::`
 	const DASHBOARD_MENU_ORDER_GUEST_KEY = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::guest`
 	const DASHBOARD_MENU_ORDER_USER_KEY_PREFIX = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::user::`
-	const USERS_CONFIG_PATH = 'config/users.json'
+	const USERS_CONFIG_PATH = 'api/config/users.json'
 	const USERS_CONFIG_PERMISSION_IDS = ['it_support', 'network', 'printers', 'rooms']
 	const REMOTE_SHARED_KEYS = new Set([
 		STORAGE_KEYS.HIRES,
@@ -45,7 +45,6 @@
 	])
 	const PROTECTED_WRITE_KEYS = new Set([
 		...REMOTE_SHARED_KEYS,
-		PREFERENCE_KEYS.WIDE_MODE,
 		DASHBOARD_MENU_ORDER_GUEST_KEY,
 		PREFERENCE_KEYS.DASHBOARD_MENU_ORDER,
 		PREFERENCE_KEYS.DASHBOARD_TASKS,
@@ -631,12 +630,6 @@
 		},
 		setThemeFallback(theme) {
 			storageService.setText(this.getThemeFallbackStorageKey(), theme === 'dark' ? 'dark' : 'light')
-		},
-		getWideMode() {
-			return storageService.getBoolean(PREFERENCE_KEYS.WIDE_MODE, false)
-		},
-		setWideMode(isWide) {
-			storageService.setBoolean(PREFERENCE_KEYS.WIDE_MODE, isWide)
 		},
 		getWeatherLocation(fallback = 'Warszawa') {
 			return storageService.getText(PREFERENCE_KEYS.WEATHER_LOCATION, fallback) || fallback

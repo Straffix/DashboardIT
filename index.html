@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="geoapify-api-key" content="">
-    <title>IT Management Dashboard</title>
+    <title>Dashboard IT | Strona Główna</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,9 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="./styles/style.css">
-    <link rel="stylesheet" href="./styles/dashboard.css">
-    <link rel="stylesheet" href="./styles/app-icons.css">
+    <link rel="stylesheet" href="./styles/css/style.css">
+    <link rel="stylesheet" href="./styles/css/dashboard.css">
+    <link rel="stylesheet" href="./styles/css/app-icons.css">
 </head>
 
 <body class="dashboard-page">
@@ -118,7 +118,7 @@
                     </div>
                 </div>
                 <nav class="menu-grid" id="dashboard-menu" aria-label="Moduły dashboardu">
-                    <a href="nowe_zatrudnienia.html" target="_blank" class="menu-item nowe-zatrudnienia"
+                    <a href="nowe_zatrudnienia.html" class="menu-item nowe-zatrudnienia"
                         data-menu-item-id="nowe-zatrudnienia">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
@@ -131,7 +131,7 @@
                         </article>
                     </a>
 
-                    <a href="monitor_laptopow.html" target="_blank" class="menu-item monitor-laptopow"
+                    <a href="monitor_laptopow.html" class="menu-item monitor-laptopow"
                         data-menu-item-id="monitor-laptopow">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
@@ -144,7 +144,7 @@
                         </article>
                     </a>
 
-                    <a href="wymiana_sprzetu.html" target="_blank" class="menu-item wymiana-sprzetu"
+                    <a href="wymiana_sprzetu.html" class="menu-item wymiana-sprzetu"
                         data-menu-item-id="wymiana-sprzetu">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
@@ -157,7 +157,7 @@
                         </article>
                     </a>
 
-                    <a href="rezerwacja_obiadow.html" target="_blank" class="menu-item rezerwacja-obiadow"
+                    <a href="rezerwacja_obiadow.html" class="menu-item rezerwacja-obiadow"
                         data-menu-item-id="rezerwacja-obiadow">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
@@ -171,28 +171,15 @@
                         </article>
                     </a>
 
-                    <a href="notatnik.html" target="_blank" class="menu-item notatnik" data-menu-item-id="notatnik">
+                    <a href="notatnik.html" class="menu-item notatnik" data-menu-item-id="notatnik">
                         <article class="dashboard-card">
                             <div class="card-icon-shell">
                                 <i class="app-icon comment-solid-full"></i>
                             </div>
                             <div class="card-copy">
                                 <span>Chat</span>
-                                <small>Czat operacyjny z przypiętymi wiadomościami i historią zapisywaną na serwerze.</small>
-                            </div>
-                        </article>
-                    </a>
-
-                    <a href="panel_testerow.html" target="_blank" class="menu-item panel-testerow"
-                        data-menu-item-id="panel-testerow">
-                        <article class="dashboard-card">
-                            <div class="card-icon-shell">
-                                <i class="app-icon bug-solid-full"></i>
-                            </div>
-                            <div class="card-copy">
-                                <span>Panel Testerów</span>
-                                <small>Publiczna tablica uwag po testach, widoczna dla wszystkich i zapisywana we
-                                    wspólnym storage.</small>
+                                <small>Czat operacyjny z przypiętymi wiadomościami i historią zapisywaną na
+                                    serwerze.</small>
                             </div>
                         </article>
                     </a>
@@ -393,19 +380,7 @@
 
     </div>
 
-    <script src="./js/shared/base.js" charset="utf-8"></script>
-    <script src="./js/shared/runtime-config.js" charset="utf-8"></script>
-    <script src="./js/core/storage-service.js" charset="utf-8"></script>
-    <script src="./js/shared/auth.js" charset="utf-8"></script>
-    <script src="./js/shared/public-api.js" charset="utf-8"></script>
-    <script src="./js/shared/global-ui.js" charset="utf-8"></script>
-    <script src="./js/pages/dashboard/clock.js" charset="utf-8"></script>
-    <script src="./js/pages/dashboard/topbar.js" charset="utf-8"></script>
-    <script src="./js/pages/dashboard/weather.js" charset="utf-8"></script>
-    <script src="./js/pages/dashboard/tasks/reminders.js" charset="utf-8"></script>
-    <script src="./js/pages/dashboard/tasks/planner.js" charset="utf-8"></script>
-    <script src="./js/pages/dashboard/index.js" charset="utf-8"></script>
-    <script src="./js/pages/dashboard/bookmarks.js" charset="utf-8"></script>
+    <script src="./js/script.js" charset="utf-8"></script>
 </body>
 
 </html>

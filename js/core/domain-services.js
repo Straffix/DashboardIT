@@ -14,7 +14,6 @@
 		NOTES_ACTIVE_VIEWERS: 'dashboard_notes_active_viewers',
 		ANNOUNCEMENTS: 'dashboard_notes_announcements',
 		TASKS: 'dashboard_notes_tasks',
-		TESTER_FEEDBACK: 'dashboard_testers_feedback',
 	}
 
 	const LUNCH_TIME_SLOTS = ['11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00']
@@ -229,34 +228,6 @@
 		updatedAt: record.updatedAt || record.createdAt || new Date().toISOString(),
 		status: TASK_STATUS_META[record.status] ? record.status : 'todo',
 		priority: TASK_PRIORITY_META[record.priority] ? record.priority : 'medium',
-	})
-
-	const TESTER_CATEGORY_META = {
-		bug: { label: 'Bug', order: 0, className: 'is-category-bug' },
-		ux: { label: 'UX', order: 1, className: 'is-category-ux' },
-		idea: { label: 'Pomysl', order: 2, className: 'is-category-idea' },
-		note: { label: 'Informacja', order: 3, className: 'is-category-note' },
-	}
-
-	const TESTER_SEVERITY_META = {
-		critical: { label: 'Krytyczny', order: 0, className: 'is-severity-critical' },
-		high: { label: 'Wysoki', order: 1, className: 'is-severity-high' },
-		medium: { label: 'Sredni', order: 2, className: 'is-severity-medium' },
-		low: { label: 'Niski', order: 3, className: 'is-severity-low' },
-	}
-
-	const normalizeTesterFeedbackRecord = record => ({
-		id: String(record.id || ''),
-		authorName: String(record.authorName || '').trim(),
-		authorId: String(record.authorId || ''),
-		authorAvatarId: String(record.authorAvatarId || 'blue'),
-		authorAvatarImage: String(record.authorAvatarImage || '').trim(),
-		area: String(record.area || '').trim(),
-		category: TESTER_CATEGORY_META[record.category] ? record.category : 'bug',
-		severity: TESTER_SEVERITY_META[record.severity] ? record.severity : 'medium',
-		message: String(record.message || '').trim(),
-		createdAt: record.createdAt || new Date().toISOString(),
-		updatedAt: record.updatedAt || record.createdAt || new Date().toISOString(),
 	})
 
 	const notesService = {
@@ -709,69 +680,6 @@
 		},
 	}
 
-	const testersService = {
-		loadEntries() {
-			return readArray(STORAGE_KEYS.TESTER_FEEDBACK).map(normalizeTesterFeedbackRecord)
-		},
-		saveEntries(entries) {
-			storageService.writeJson(STORAGE_KEYS.TESTER_FEEDBACK, entries)
-		},
-		getEntries() {
-			return this.loadEntries()
-				.filter(entry => entry.id && entry.authorName && entry.message)
-				.sort((leftEntry, rightEntry) => {
-					const severityDiff =
-						(TESTER_SEVERITY_META[leftEntry.severity] || TESTER_SEVERITY_META.medium).order -
-						(TESTER_SEVERITY_META[rightEntry.severity] || TESTER_SEVERITY_META.medium).order
-					if (severityDiff !== 0) return severityDiff
-
-					return sortByUpdatedDesc(leftEntry, rightEntry)
-				})
-		},
-		createEntry({ authorName, area, category, severity, message, actor }) {
-			const normalizedActor = actor && typeof actor === 'object' ? actor : null
-			if (!normalizedActor) {
-				throw new Error('Musisz byc zalogowany, aby dodac uwage testerow.')
-			}
-
-			const normalizedAuthorName = normalizedActor
-				? String(normalizedActor.fullName || authorName || 'Użytkownik zespołu').trim()
-				: String(authorName || '').trim()
-			const normalizedArea = String(area || '').trim()
-			const normalizedMessage = String(message || '').trim()
-			const normalizedCategory = TESTER_CATEGORY_META[category] ? category : 'bug'
-			const normalizedSeverity = TESTER_SEVERITY_META[severity] ? severity : 'medium'
-
-			if (!normalizedAuthorName) {
-				throw new Error('Podaj imie lub nazwe osoby zglaszajacej uwage.')
-			}
-
-			if (!normalizedMessage) {
-				throw new Error('Uzupelnij tresc uwagi przed zapisaniem.')
-			}
-
-			const entries = this.loadEntries()
-			const now = new Date().toISOString()
-			const nextEntry = {
-				id: createEntryId('tester-feedback'),
-				authorName: normalizedAuthorName,
-				authorId: String(normalizedActor?.id || ''),
-				authorAvatarId: String(normalizedActor?.avatarId || 'blue'),
-				authorAvatarImage: String(normalizedActor?.avatarImage || '').trim(),
-				area: normalizedArea,
-				category: normalizedCategory,
-				severity: normalizedSeverity,
-				message: normalizedMessage,
-				createdAt: now,
-				updatedAt: now,
-			}
-
-			entries.unshift(nextEntry)
-			this.saveEntries(entries)
-			return nextEntry
-		},
-	}
-
 	appServices.lunchDomainConfig = {
 		TIME_SLOTS: LUNCH_TIME_SLOTS,
 		MAX_CAPACITY_PER_SLOT: LUNCH_MAX_CAPACITY_PER_SLOT,
@@ -780,12 +688,7 @@
 		TASK_STATUS_META,
 		TASK_PRIORITY_META,
 	}
-	appServices.testersDomainConfig = {
-		CATEGORY_META: TESTER_CATEGORY_META,
-		SEVERITY_META: TESTER_SEVERITY_META,
-	}
 	appServices.lunchService = lunchService
 	appServices.notesService = notesService
 	appServices.tasksService = tasksService
-	appServices.testersService = testersService
 })()
