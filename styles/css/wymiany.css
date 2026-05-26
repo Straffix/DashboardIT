@@ -115,16 +115,16 @@
   min-height: 52px;
   width: 100%;
   padding: 0 18px;
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   border: 1px solid var(--border);
   background: var(--bg-panel);
   box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 .workspace-search:focus-within {
-  border-color: rgba(99, 102, 241, 0.45);
+  border-color: rgba(var(--primary-rgb), 0.45);
   background: var(--bg-panel-hover);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.12);
 }
 .workspace-search i {
   color: var(--primary);
@@ -141,9 +141,6 @@
   font-weight: 500;
   outline: none;
 }
-.workspace-search input::-moz-placeholder {
-  color: var(--text-muted);
-}
 .workspace-search input::placeholder {
   color: var(--text-muted);
 }
@@ -154,7 +151,7 @@
   gap: 10px;
   min-height: 48px;
   padding: 12px 18px;
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   border: 1px solid var(--border);
   background: var(--bg-panel);
   color: var(--text-main);
@@ -185,12 +182,12 @@
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 10px 22px rgba(99, 102, 241, 0.16);
+  box-shadow: 0 10px 22px rgba(var(--primary-rgb), 0.16);
 }
 .workspace-primary-btn:hover {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
   color: #ffffff;
-  box-shadow: 0 12px 20px rgba(99, 102, 241, 0.18);
+  box-shadow: 0 12px 20px rgba(var(--primary-rgb), 0.18);
 }
 .workspace-backup-dock {
   position: fixed;
@@ -205,7 +202,6 @@
   align-items: center;
   justify-content: flex-end;
   gap: 14px;
-  width: -moz-max-content;
   width: max-content;
   min-width: 0;
   max-width: calc(100vw - 32px);
@@ -227,7 +223,7 @@
   min-height: 44px;
   padding: 0;
   gap: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
 }
 .workspace-backup-dock button.workspace-backup-btn span {
@@ -382,7 +378,6 @@ body.exchange-month-transitioning {
 .exchange-state-badge {
   display: inline-flex;
   align-items: center;
-  width: -moz-fit-content;
   width: fit-content;
   padding: 5px 10px;
   border-radius: 999px;
@@ -766,4 +761,6 @@ body.theme-dark:not(.dashboard-page) .exchange-action-btn:hover {
   .exchange-form-actions {
     grid-template-columns: 1fr;
   }
-}/*# sourceMappingURL=wymiany.css.map */
+}
+
+/*# sourceMappingURL=wymiany.css.map */

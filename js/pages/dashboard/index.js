@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		const normalizeProfileAccentColor = value => {
 			const normalizedValue = String(value || '').trim().toLowerCase()
-			return /^#[0-9a-f]{6}$/.test(normalizedValue) ? normalizedValue : '#0f766e'
+			return /^#[0-9a-f]{6}$/.test(normalizedValue) ? normalizedValue : '#c8102e'
 		}
 		const mergeRecordWithUser = (record, user) => ({
 			id: String(record.userId || user?.id || ''),

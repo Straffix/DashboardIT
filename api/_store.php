@@ -1397,7 +1397,6 @@ function dashboard_hire_flag_keys(): array
 {
 	return [
 		'monitorDock',
-		'keyboardMouseSet',
 		'mouse',
 		'keyboard',
 		'yealink',
@@ -1430,6 +1429,7 @@ function dashboard_normalize_hire_details(array $record): array
 	$sourceDetails = isset($record['details']) && is_array($record['details']) ? $record['details'] : [];
 	$mergedRecord = array_merge($sourceDetails, $record);
 	$startDate = dashboard_normalize_date_value($mergedRecord['startDate'] ?? ($mergedRecord['date'] ?? ''));
+	$legacyKeyboardMouseSet = dashboard_normalize_hire_flag_value($mergedRecord['keyboardMouseSet'] ?? false);
 	$details = [
 		'purchaseRequest' => dashboard_trim_string($mergedRecord['purchaseRequest'] ?? '', 200),
 		'targetUser' => dashboard_trim_string($mergedRecord['targetUser'] ?? ($mergedRecord['name'] ?? ''), 200),
@@ -1450,6 +1450,11 @@ function dashboard_normalize_hire_details(array $record): array
 		$details[$flagKey] = dashboard_normalize_hire_flag_value($mergedRecord[$flagKey] ?? false);
 	}
 
+	if ($legacyKeyboardMouseSet) {
+		$details['mouse'] = true;
+		$details['keyboard'] = true;
+	}
+
 	return $details;
 }
 
@@ -1459,10 +1464,6 @@ function dashboard_build_hire_accessories_from_details(array $details): array
 
 	if (!empty($details['monitorDock'])) {
 		$accessories[] = 'monitor';
-	}
-	if (!empty($details['keyboardMouseSet'])) {
-		$accessories[] = 'keyboard';
-		$accessories[] = 'mouse';
 	}
 	if (!empty($details['mouse'])) {
 		$accessories[] = 'mouse';

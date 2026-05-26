@@ -1,17 +1,15 @@
 body.notes-page {
-	--primary: #0e7490;
-	--primary-strong: #16a34a;
-	--chat-ink: #12313d;
-	--chat-muted: #667085;
-	--chat-line: rgba(14, 116, 144, 0.15);
-	--chat-panel: rgba(255, 255, 255, 0.86);
-	--chat-soft: rgba(240, 253, 250, 0.78);
-	--border-strong: rgba(14, 116, 144, 0.28);
+	--chat-ink: #5a2330;
+	--chat-muted: #8c5a61;
+	--chat-line: rgba(200, 16, 46, 0.15);
+	--chat-panel: rgba(255, 250, 246, 0.9);
+	--chat-soft: rgba(255, 244, 240, 0.76);
+	--border-strong: rgba(200, 16, 46, 0.28);
 }
 
 .notes-icon-box {
-	background: linear-gradient(135deg, rgba(14, 165, 233, 0.16) 0%, rgba(34, 197, 94, 0.2) 100%);
-	color: #0e7490;
+	background: linear-gradient(135deg, rgba(200, 16, 46, 0.14) 0%, rgba(161, 13, 38, 0.18) 100%);
+	color: var(--primary-strong);
 }
 
 .sr-only {
@@ -102,14 +100,14 @@ body.notes-page {
 .notes-submit-btn {
 	background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
 	color: #ffffff;
-	box-shadow: 0 14px 24px rgba(13, 148, 136, 0.18);
+	box-shadow: 0 14px 24px rgba(var(--primary-rgb), 0.18);
 }
 
 .notes-secondary-btn,
 .notes-icon-btn {
-	background: rgba(255, 255, 255, 0.86);
-	color: #115e59;
-	border-color: rgba(15, 118, 110, 0.14);
+	background: rgba(255, 250, 246, 0.9);
+	color: var(--primary-strong);
+	border-color: rgba(var(--primary-rgb), 0.14);
 	box-shadow: none;
 }
 
@@ -141,9 +139,9 @@ body.notes-page {
 }
 
 .notes-feedback.is-info {
-	background: rgba(15, 118, 110, 0.12);
-	border-color: rgba(15, 118, 110, 0.22);
-	color: #115e59;
+	background: rgba(var(--primary-rgb), 0.12);
+	border-color: rgba(var(--primary-rgb), 0.22);
+	color: var(--primary-strong);
 }
 
 .notes-feedback.is-error {
@@ -170,7 +168,7 @@ body.notes-page {
 }
 
 .notes-auth-callout.is-active-user {
-	background: linear-gradient(135deg, rgba(240, 253, 250, 0.74) 0%, rgba(255, 255, 255, 0.88) 100%);
+	background: linear-gradient(135deg, rgba(255, 241, 237, 0.78) 0%, rgba(255, 255, 255, 0.9) 100%);
 }
 
 .notes-auth-callout strong {
@@ -220,9 +218,9 @@ body.notes-page {
 
 .notes-chat-message.is-mine .notes-message-bubble {
 	align-items: flex-end;
-	background: linear-gradient(135deg, rgba(14, 116, 144, 0.94) 0%, rgba(22, 163, 74, 0.88) 100%);
+	background: linear-gradient(135deg, rgba(200, 16, 46, 0.94) 0%, rgba(161, 13, 38, 0.88) 100%);
 	color: #ffffff;
-	border-color: rgba(14, 116, 144, 0.32);
+	border-color: rgba(200, 16, 46, 0.32);
 }
 
 .notes-chat-message.is-mine .notes-message-meta,
@@ -246,7 +244,7 @@ body.notes-page {
 	width: 44px;
 	height: 44px;
 	border-radius: 16px;
-	background: linear-gradient(135deg, rgba(14, 116, 144, 0.94) 0%, rgba(34, 197, 94, 0.88) 100%);
+	background: linear-gradient(135deg, rgba(200, 16, 46, 0.94) 0%, rgba(161, 13, 38, 0.88) 100%);
 	color: #ffffff;
 	font-size: 1.12rem;
 	font-weight: 800;
@@ -333,7 +331,7 @@ body.notes-page {
 	gap: 12px;
 	padding: 18px 20px 20px;
 	border-top: 1px solid var(--chat-line);
-	background: rgba(248, 250, 252, 0.72);
+	background: rgba(255, 247, 243, 0.78);
 }
 
 .notes-chat-composer textarea {
@@ -341,7 +339,7 @@ body.notes-page {
 	min-height: 72px;
 	max-height: 180px;
 	padding: 15px 16px;
-	border: 1px solid rgba(14, 116, 144, 0.16);
+	border: 1px solid rgba(var(--primary-rgb), 0.16);
 	border-radius: 20px;
 	background: rgba(255, 255, 255, 0.94);
 	color: var(--chat-ink);
@@ -354,8 +352,8 @@ body.notes-page {
 
 .notes-chat-composer textarea:focus {
 	outline: none;
-	border-color: rgba(14, 116, 144, 0.42);
-	box-shadow: 0 0 0 4px rgba(14, 116, 144, 0.12);
+	border-color: rgba(var(--primary-rgb), 0.42);
+	box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.12);
 }
 
 .notes-chat-composer.is-disabled textarea {
@@ -373,7 +371,7 @@ body.notes-page {
 
 .notes-chat-edit-indicator {
 	margin-right: auto;
-	color: #b45309;
+	color: var(--primary-strong);
 	font-size: 0.98rem;
 	font-weight: 800;
 }
@@ -384,7 +382,7 @@ body.notes-page {
 	justify-content: space-between;
 	gap: 12px;
 	padding: 12px 20px 16px;
-	border-top: 1px solid rgba(14, 116, 144, 0.12);
+	border-top: 1px solid rgba(var(--primary-rgb), 0.12);
 	background: rgba(255, 255, 255, 0.7);
 }
 

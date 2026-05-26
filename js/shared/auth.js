@@ -7,7 +7,7 @@ const AUTH_CONFIG = {
 	coverOutputWidth: 1200,
 	coverOutputHeight: 360,
 	coverOutputQuality: 0.86,
-	defaultProfileAccentColor: '#0f766e',
+	defaultProfileAccentColor: '#c8102e',
 	permissionOptions: [
 		{ id: 'it_support', label: 'Informatyk' },
 		{ id: 'network', label: 'Sieciowiec' },
@@ -17,7 +17,7 @@ const AUTH_CONFIG = {
 	themeOptions: [
 		{ id: 'light', label: 'Jasny', icon: 'sun-solid-full' },
 		{ id: 'dark', label: 'Ciemny', icon: 'moon-solid-full' },
-		{ id: 'rossmann', label: 'Ross', icon: 'store-solid-full' },
+		{ id: 'blush', label: 'Pink', icon: 'store-solid-full' },
 	],
 	avatarPresets: [
 		{ id: 'violet', label: 'Neutralny', gradient: 'linear-gradient(135deg, #64748b 0%, #94a3b8 100%)' },
@@ -158,7 +158,11 @@ const normalizeProfileTitle = value => String(value || '').trim().slice(0, 80)
 
 const normalizeProfileBio = value => String(value || '').trim().slice(0, 240)
 
-const normalizeThemePreference = theme => (AUTH_CONFIG.themeOptions.some(option => option.id === theme) ? theme : 'light')
+const normalizeThemePreference = theme => {
+	const normalizedTheme = String(theme || '').trim().toLowerCase()
+	if (normalizedTheme === 'rossmann') return 'blush'
+	return AUTH_CONFIG.themeOptions.some(option => option.id === normalizedTheme) ? normalizedTheme : 'light'
+}
 
 const getVisibleUserName = (user, fallback = 'Użytkownik') => {
 	const fullName = String(user?.fullName || '').trim()
@@ -190,7 +194,7 @@ const syncThemeButtons = selector => {
 
 const applyThemePreference = theme => {
 	const normalizedTheme = normalizeThemePreference(theme)
-	const fallbackTheme = normalizedTheme === 'rossmann'
+	const fallbackTheme = normalizedTheme === 'blush'
 		? preferencesService?.getThemeFallback?.() || 'light'
 		: normalizedTheme === 'dark'
 			? 'dark'
@@ -207,7 +211,7 @@ const applyThemePreference = theme => {
 		applyTheme(normalizedTheme)
 	} else {
 		document.body.classList.toggle('theme-dark', normalizedTheme === 'dark')
-		document.body.classList.toggle('theme-rossmann', normalizedTheme === 'rossmann')
+		document.body.classList.toggle('theme-blush', normalizedTheme === 'blush')
 		document.documentElement.setAttribute('data-theme', normalizedTheme)
 	}
 
@@ -354,9 +358,13 @@ const renderAuthUi = () => {
 
 	const currentUser = authState.currentUser
 	const identityLabel = currentUser ? getVisibleUserName(currentUser) : 'Gość'
-	const metaLabel = currentUser
-		? getRoleLabel(currentUser.role)
+	const isModulePage = document.body?.classList?.contains('module-page')
+	const triggerMetaLabel = currentUser
+		? isModulePage
+			? 'Panel pracownika'
+			: getRoleLabel(currentUser.role)
 		: 'Nie zalogowano'
+	const popoverMetaLabel = currentUser ? getRoleLabel(currentUser.role) : 'Nie zalogowano'
 
 	authState.trigger.innerHTML = `
 		${createAvatarMarkup({
@@ -367,7 +375,7 @@ const renderAuthUi = () => {
 		})}
 		<span class="app-user-trigger-copy">
 			<strong>${identityLabel}</strong>
-			<small>${metaLabel}</small>
+			<small>${triggerMetaLabel}</small>
 		</span>
 		<span class="app-user-trigger-chevron" aria-hidden="true">
 			<i class="app-icon chevron-down-solid-full"></i>
@@ -382,7 +390,7 @@ const renderAuthUi = () => {
 		})}
 		<div class="app-user-popover-copy">
 			<strong>${identityLabel}</strong>
-			<span>${metaLabel}</span>
+			<span>${popoverMetaLabel}</span>
 		</div>
 	`
 

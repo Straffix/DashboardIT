@@ -1,0 +1,40 @@
+$light-red: #c3002d;
+$light-white: #ffffff;
+$light-bg: #f5f7fa;
+$light-surface: rgba(255, 255, 255, 0.94);
+$light-surface-strong: rgba(255, 255, 255, 0.98);
+$light-panel: rgba(248, 250, 252, 0.92);
+$light-panel-hover: rgba(255, 255, 255, 0.98);
+$light-card: rgba(255, 255, 255, 0.95);
+$light-card-soft: rgba(247, 249, 251, 0.88);
+$light-text-main: #1f2937;
+$light-text-muted: #64748b;
+$light-text-soft: #94a3b8;
+$light-primary-strong: #970024;
+$light-success: #15803d;
+$light-warning: #b45309;
+$light-danger: #dc2626;
+$light-border: rgba(148, 163, 184, 0.22);
+$light-border-strong: rgba(100, 116, 139, 0.34);
+$light-scrollbar-track: rgba(203, 213, 225, 0.42);
+$light-scrollbar-thumb-solid: rgba(100, 116, 139, 0.56);
+$light-scrollbar-thumb:
+	linear-gradient(180deg, rgba(148, 163, 184, 0.82) 0%, rgba(100, 116, 139, 0.9) 100%);
+$light-scrollbar-thumb-hover:
+	linear-gradient(180deg, rgba(100, 116, 139, 0.92) 0%, rgba(71, 85, 105, 0.96) 100%);
+$light-scrollbar-thumb-border: rgba(255, 255, 255, 0.88);
+$light-dashboard-scrollbar-track: rgba(148, 163, 184, 0.18);
+$light-dashboard-scrollbar-thumb-solid: rgba(100, 116, 139, 0.42);
+$light-dashboard-scrollbar-thumb:
+	linear-gradient(180deg, rgba(148, 163, 184, 0.7) 0%, rgba(100, 116, 139, 0.78) 100%);
+$light-dashboard-scrollbar-thumb-hover:
+	linear-gradient(180deg, rgba(100, 116, 139, 0.82) 0%, rgba(71, 85, 105, 0.88) 100%);
+$light-dashboard-scrollbar-thumb-border: rgba(255, 255, 255, 0.9);
+$light-shadow-lg: 0 24px 64px rgba(148, 163, 184, 0.16);
+$light-shadow-md: 0 14px 32px rgba(148, 163, 184, 0.12);
+$light-shadow-sm: 0 10px 24px rgba(148, 163, 184, 0.1);
+$light-page-gradient:
+	radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0) 22%),
+	radial-gradient(circle at 84% 16%, rgba(195, 0, 45, 0.08) 0%, rgba(195, 0, 45, 0) 24%),
+	radial-gradient(circle at 50% 100%, rgba(148, 163, 184, 0.12) 0%, rgba(148, 163, 184, 0) 28%),
+	linear-gradient(135deg, #fbfcfd 0%, #f5f7fa 44%, #edf2f7 100%);

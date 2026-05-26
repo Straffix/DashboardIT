@@ -609,15 +609,21 @@
 		getTheme() {
 			const scopedKey = this.getThemeStorageKey()
 			const scopedTheme = storageService.getText(scopedKey, '')
-			if (['light', 'dark', 'rossmann'].includes(scopedTheme)) {
+			if (scopedTheme === 'rossmann') {
+				return 'blush'
+			}
+			if (['light', 'dark', 'blush'].includes(scopedTheme)) {
 				return scopedTheme
 			}
 
 			const legacyTheme = storageService.getText(PREFERENCE_KEYS.THEME, 'light') || 'light'
-			return ['light', 'dark', 'rossmann'].includes(legacyTheme) ? legacyTheme : 'light'
+			if (legacyTheme === 'rossmann') {
+				return 'blush'
+			}
+			return ['light', 'dark', 'blush'].includes(legacyTheme) ? legacyTheme : 'light'
 		},
 		setTheme(theme) {
-			const normalizedTheme = ['light', 'dark', 'rossmann'].includes(theme) ? theme : 'light'
+			const normalizedTheme = theme === 'rossmann' ? 'blush' : ['light', 'dark', 'blush'].includes(theme) ? theme : 'light'
 			storageService.setText(this.getThemeStorageKey(), normalizedTheme)
 		},
 		getThemeFallback() {

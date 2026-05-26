@@ -1,0 +1,39 @@
+$blush-red: #c33d7a;
+$blush-white: #ffffff;
+$blush-warm-white: #fff7fb;
+$blush-warm-white-strong: rgba(255, 249, 252, 0.96);
+$blush-panel: rgba(255, 244, 248, 0.84);
+$blush-panel-hover: rgba(255, 248, 251, 0.98);
+$blush-card: rgba(255, 255, 255, 0.92);
+$blush-card-soft: rgba(255, 243, 248, 0.78);
+$blush-text-main: #5c2740;
+$blush-text-muted: #93657a;
+$blush-text-soft: #c39aac;
+$blush-primary-strong: #a92f66;
+$blush-success: #4d8d6a;
+$blush-warning: #d48b3a;
+$blush-danger: #c33d57;
+$blush-border: rgba(195, 61, 122, 0.14);
+$blush-border-strong: rgba(195, 61, 122, 0.28);
+$blush-scrollbar-track: rgba(195, 61, 122, 0.12);
+$blush-scrollbar-thumb-solid: rgba(195, 61, 122, 0.72);
+$blush-scrollbar-thumb:
+	linear-gradient(180deg, rgba(195, 61, 122, 0.92) 0%, rgba(169, 47, 102, 0.96) 100%);
+$blush-scrollbar-thumb-hover:
+	linear-gradient(180deg, rgba(214, 81, 138, 0.96) 0%, rgba(169, 47, 102, 1) 100%);
+$blush-scrollbar-thumb-border: rgba(255, 246, 250, 0.8);
+$blush-dashboard-scrollbar-track: rgba(195, 61, 122, 0.1);
+$blush-dashboard-scrollbar-thumb-solid: rgba(195, 61, 122, 0.56);
+$blush-dashboard-scrollbar-thumb:
+	linear-gradient(180deg, rgba(195, 61, 122, 0.78) 0%, rgba(169, 47, 102, 0.84) 100%);
+$blush-dashboard-scrollbar-thumb-hover:
+	linear-gradient(180deg, rgba(214, 81, 138, 0.84) 0%, rgba(169, 47, 102, 0.9) 100%);
+$blush-dashboard-scrollbar-thumb-border: rgba(255, 244, 249, 0.86);
+$blush-shadow-lg: 0 24px 62px rgba(171, 101, 129, 0.18);
+$blush-shadow-md: 0 14px 32px rgba(171, 101, 129, 0.14);
+$blush-shadow-sm: 0 10px 24px rgba(171, 101, 129, 0.12);
+$blush-page-gradient:
+	radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 22%),
+	radial-gradient(circle at 84% 16%, rgba(195, 61, 122, 0.16) 0%, rgba(195, 61, 122, 0) 26%),
+	radial-gradient(circle at 50% 100%, rgba(243, 202, 214, 0.16) 0%, rgba(243, 202, 214, 0) 28%),
+	linear-gradient(135deg, #fffbfd 0%, #fff1f6 42%, #f9dde9 76%, #f3cbdc 100%);

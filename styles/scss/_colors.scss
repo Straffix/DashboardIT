@@ -1,19 +1,23 @@
-$bg-color: #f1f5f9;
-$card-bg: #ffffff;
-$text-main: #1e293b;
-$text-muted: #64748b;
-$primary: #6366f1;
-$success: #22c55e;
-$warning: #f59e0b;
-$danger: #ef4444;
-$border: #e2e8f0;
-$scrollbar-track: rgba(59, 130, 246, 0.14);
-$scrollbar-thumb-solid: rgba(79, 70, 229, 0.72);
-$scrollbar-thumb: linear-gradient(180deg, rgba(99, 102, 241, 0.92) 0%, rgba(37, 99, 235, 0.96) 100%);
-$scrollbar-thumb-hover: linear-gradient(180deg, rgba(79, 70, 229, 0.96) 0%, rgba(29, 78, 216, 1) 100%);
-$scrollbar-thumb-border: rgba(255, 255, 255, 0.72);
-$dashboard-scrollbar-track: rgba(17, 35, 72, 0.18);
-$dashboard-scrollbar-thumb-solid: rgba(46, 86, 150, 0.58);
-$dashboard-scrollbar-thumb: linear-gradient(180deg, rgba(37, 73, 132, 0.72) 0%, rgba(27, 57, 108, 0.78) 100%);
-$dashboard-scrollbar-thumb-hover: linear-gradient(180deg, rgba(50, 96, 170, 0.8) 0%, rgba(36, 73, 136, 0.86) 100%);
-$dashboard-scrollbar-thumb-border: rgba(13, 28, 60, 0.82);
+@use 'light-colors' as *;
+
+$bg-color: $light-bg;
+$card-bg: $light-card;
+$text-main: $light-text-main;
+$text-muted: $light-text-muted;
+$primary: $light-red;
+$success: $light-success;
+$warning: $light-warning;
+$danger: $light-danger;
+$border: $light-border;
+$scrollbar-track: $light-scrollbar-track;
+$scrollbar-thumb-solid: $light-scrollbar-thumb-solid;
+$scrollbar-thumb: $light-scrollbar-thumb;
+$scrollbar-thumb-hover: $light-scrollbar-thumb-hover;
+$scrollbar-thumb-border: $light-scrollbar-thumb-border;
+$dashboard-scrollbar-track: $light-dashboard-scrollbar-track;
+$dashboard-scrollbar-thumb-solid: $light-dashboard-scrollbar-thumb-solid;
+$dashboard-scrollbar-thumb: $light-dashboard-scrollbar-thumb;
+$dashboard-scrollbar-thumb-hover: $light-dashboard-scrollbar-thumb-hover;
+$dashboard-scrollbar-thumb-border: $light-dashboard-scrollbar-thumb-border;
+
+

@@ -5,15 +5,21 @@ const syncRootThemeState = () => {
 	const root = document.documentElement
 	root.classList.toggle('dashboard-page', document.body.classList.contains('dashboard-page'))
 	root.classList.toggle('theme-dark', document.body.classList.contains('theme-dark'))
-	root.classList.toggle('theme-rossmann', document.body.classList.contains('theme-rossmann'))
+	root.classList.toggle('theme-blush', document.body.classList.contains('theme-blush'))
+}
+
+const normalizeStoredTheme = theme => {
+	const normalizedTheme = String(theme || '').trim().toLowerCase()
+	if (normalizedTheme === 'rossmann') return 'blush'
+	return ['light', 'dark', 'blush'].includes(normalizedTheme) ? normalizedTheme : 'light'
 }
 
 const applyTheme = theme => {
-	const normalizedTheme = ['light', 'dark', 'rossmann'].includes(theme) ? theme : 'light'
+	const normalizedTheme = normalizeStoredTheme(theme)
 	const isDark = normalizedTheme === 'dark'
-	const isRossmann = normalizedTheme === 'rossmann'
+	const isBlush = normalizedTheme === 'blush'
 	document.body.classList.toggle('theme-dark', isDark)
-	document.body.classList.toggle('theme-rossmann', isRossmann)
+	document.body.classList.toggle('theme-blush', isBlush)
 	syncRootThemeState()
 	document.documentElement.setAttribute('data-theme', normalizedTheme)
 }
@@ -24,8 +30,6 @@ const USERS_STORAGE_KEY = APP_CONFIG.STORAGE_KEYS.USERS
 const ACTIVE_USERS_STORAGE_KEY = APP_CONFIG.STORAGE_KEYS.DASHBOARD_ACTIVE_USERS || 'dashboard_active_users'
 const ACTIVE_USER_TAB_ID_KEY = 'dashboard_active_user_tab_id'
 const ACTIVE_USER_TTL_MS = 45000
-
-const normalizeStoredTheme = theme => (['light', 'dark', 'rossmann'].includes(theme) ? theme : 'light')
 
 const getStoredTheme = () =>
 	normalizeStoredTheme(preferencesService?.getTheme?.() || storageService?.getText(THEME_STORAGE_KEY, 'light') || 'light')

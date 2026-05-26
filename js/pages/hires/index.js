@@ -10,18 +10,17 @@
 	const escapeHtml = window.AppUtils?.escapeHtml || (value => String(value ?? ''))
 
 	const ACCESSORY_FIELDS = [
-		{ key: 'monitorDock', label: 'Monitor ze stacja dokujaca', icon: 'desktop-solid-full', badge: 'D' },
-		{ key: 'keyboardMouseSet', label: 'Klawiatura + mysz', icon: 'keyboard-solid-full', badge: '+M' },
-		{ key: 'mouse', label: 'Mysz', icon: 'computer-mouse-solid-full', badge: '' },
-		{ key: 'keyboard', label: 'Klawiatura', icon: 'keyboard-solid-full', badge: '' },
-		{ key: 'yealink', label: 'Yealink', icon: 'headset-solid-full', badge: 'Y' },
-		{ key: 'logiZoneVibe', label: 'Logi Zone Vibe', icon: 'headset-solid-full', badge: 'LZ' },
-		{ key: 'lenovo', label: 'Lenovo', icon: 'box-solid-full', badge: 'L' },
-		{ key: 'bag', label: 'Torba', icon: 'briefcase-solid-full', badge: '' },
-		{ key: 'backpack', label: 'Plecak', icon: 'backpack-icon', badge: '' },
-		{ key: 'laptopStand', label: 'Podstawka pod laptop', icon: 'table-cells-solid-full', badge: '' },
-		{ key: 'presenter', label: 'Prezenter', icon: 'pen-clip-solid-full', badge: '' },
-		{ key: 'printer', label: 'Drukarka', icon: 'print-solid-full', badge: '' },
+		{ key: 'monitorDock', label: 'Monitor ze stacja dokujaca', previewLabel: 'Monitor + stacja', icon: 'desktop-solid-full' },
+		{ key: 'mouse', label: 'Mysz', previewLabel: 'Mysz', icon: 'computer-mouse-solid-full' },
+		{ key: 'keyboard', label: 'Klawiatura', previewLabel: 'Klawiatura', icon: 'keyboard-solid-full' },
+		{ key: 'yealink', label: 'Yealink', previewLabel: 'Yealink', icon: 'headset-solid-full' },
+		{ key: 'logiZoneVibe', label: 'Logi Zone Vibe', previewLabel: 'Logi Zone', icon: 'headset-solid-full' },
+		{ key: 'lenovo', label: 'Lenovo', previewLabel: 'Lenovo', icon: 'box-solid-full' },
+		{ key: 'bag', label: 'Torba', previewLabel: 'Torba', icon: 'briefcase-solid-full' },
+		{ key: 'backpack', label: 'Plecak', previewLabel: 'Plecak', icon: 'backpack-icon' },
+		{ key: 'laptopStand', label: 'Podstawka pod laptop', previewLabel: 'Podstawka', icon: 'table-cells-solid-full' },
+		{ key: 'presenter', label: 'Prezenter', previewLabel: 'Prezenter', icon: 'pen-clip-solid-full' },
+		{ key: 'printer', label: 'Drukarka', previewLabel: 'Drukarka', icon: 'print-solid-full' },
 	]
 
 	const ACCESSORY_FIELD_KEYS = ACCESSORY_FIELDS.map(field => field.key)
@@ -217,7 +216,6 @@
 			deliveryLocation: '',
 			peripheralNotes: '',
 			monitorDock: false,
-			keyboardMouseSet: false,
 			mouse: false,
 			keyboard: false,
 			yealink: false,
@@ -322,7 +320,6 @@
 		const accessories = []
 
 		if (record.monitorDock) accessories.push('monitor')
-		if (record.keyboardMouseSet) accessories.push('keyboard', 'mouse')
 		if (record.mouse) accessories.push('mouse')
 		if (record.keyboard) accessories.push('keyboard')
 		if (record.yealink || record.logiZoneVibe) accessories.push('headset')
@@ -355,7 +352,6 @@
 			deliveryLocation: normalizeText(normalizedRecord.deliveryLocation),
 			peripheralNotes: normalizeText(normalizedRecord.peripheralNotes || normalizedRecord.notes),
 			monitorDock: normalizeFlagValue(normalizedRecord.monitorDock),
-			keyboardMouseSet: normalizeFlagValue(normalizedRecord.keyboardMouseSet),
 			mouse: normalizeFlagValue(normalizedRecord.mouse),
 			keyboard: normalizeFlagValue(normalizedRecord.keyboard),
 			yealink: normalizeFlagValue(normalizedRecord.yealink),
@@ -386,6 +382,7 @@
 				: []
 		const normalizedLegacyAccessories = AppUtils.normalizeAccessories(rawAccessories)
 		const normalizedAudit = AppUtils.normalizeAuditFields(mergedRecord)
+		const hasLegacyKeyboardMouseSet = normalizeFlagValue(mergedRecord.keyboardMouseSet)
 
 		normalizedLegacyAccessories.forEach(accessory => {
 			const mappedField = LEGACY_ACCESSORY_TO_FIELD[accessory]
@@ -399,6 +396,11 @@
 				accessoryFlags[field.key] = normalizeFlagValue(mergedRecord[field.key])
 			}
 		})
+
+		if (hasLegacyKeyboardMouseSet) {
+			accessoryFlags.mouse = true
+			accessoryFlags.keyboard = true
+		}
 
 		const targetUser = normalizeText(mergedRecord.targetUser || mergedRecord.name)
 		const startDate = normalizeDateValue(mergedRecord.startDate || mergedRecord.date)
@@ -479,7 +481,12 @@
 		return Boolean(
 			getActiveAccessoryCount(record) > 0 ||
 			normalizeText(record?.preparedBy) ||
-			normalizeText(record?.peripheralNotes),
+			normalizeText(record?.peripheralNotes) ||
+			normalizeText(record?.deliveryLocation) ||
+			record?.createdBy ||
+			record?.updatedBy ||
+			record?.createdAt ||
+			record?.updatedAt,
 		)
 	}
 
@@ -878,11 +885,10 @@
 
 	function renderAccessoryPreviewIcon(field) {
 		if (!field) return ''
-		const badgeMarkup = field.badge ? `<small>${escapeHtml(field.badge)}</small>` : ''
 		return `
 			<span class="hire-accessory-preview-icon" title="${escapeHtml(field.label)}" aria-label="${escapeHtml(field.label)}">
 				<i class="app-icon ${field.icon}"></i>
-				${badgeMarkup}
+				<small>${escapeHtml(field.previewLabel || field.label)}</small>
 			</span>
 		`
 	}
@@ -903,10 +909,23 @@
 		`
 	}
 
+	function renderExpandedPanelAudit(record) {
+		const auditMarkup = AppUtils.buildAuditMarkup?.(record)
+		const content = auditMarkup || '<span class="hire-accessories-meta-placeholder">---</span>'
+
+		return `
+			<div class="hire-accessories-meta-item is-audit">
+				<span class="hire-accessories-meta-label">Historia wpisu</span>
+				${content}
+			</div>
+		`
+	}
+
 	function renderAccessoriesPanel(record) {
 		const activeAccessories = getActiveAccessoryFields(record)
 		const detailMarkup = [
 			renderExpandedPanelDetail('Przygotowal/a', record.preparedBy),
+			renderExpandedPanelAudit(record),
 			renderExpandedPanelDetail('Uwagi', record.peripheralNotes, { multiline: true }),
 			renderExpandedPanelDetail('Lokalizacja do wydania', record.deliveryLocation),
 		].join('')
@@ -928,6 +947,38 @@
 				${accessoriesGroupMarkup}
 			</div>
 		`
+	}
+
+	function getAccessoriesRowDomBundle(rowKey) {
+		if (!tableBody || !rowKey) return null
+
+		const mainRow = Array.from(tableBody.querySelectorAll('.hire-row-main')).find(row => row.dataset.rowKey === rowKey)
+		if (!mainRow) return null
+
+		return {
+			mainRow,
+			detailRow: Array.from(tableBody.querySelectorAll('.hire-accessories-row')).find(row => row.dataset.rowKey === rowKey) || null,
+			toggleButton: mainRow.querySelector('[data-action="toggle-accessories"]'),
+		}
+	}
+
+	function syncAccessoriesRowDomState(rowKey, isExpanded) {
+		const rowDomBundle = getAccessoriesRowDomBundle(rowKey)
+		if (!rowDomBundle) return false
+
+		rowDomBundle.mainRow.classList.toggle('is-accessories-open', isExpanded)
+		rowDomBundle.detailRow?.classList.toggle('is-open', isExpanded)
+		rowDomBundle.detailRow?.setAttribute('aria-hidden', isExpanded ? 'false' : 'true')
+
+		if (rowDomBundle.toggleButton) {
+			const buttonLabel = isExpanded ? 'Ukryj szczegoly' : 'Pokaz szczegoly'
+			rowDomBundle.toggleButton.classList.toggle('is-active', isExpanded)
+			rowDomBundle.toggleButton.setAttribute('aria-expanded', isExpanded ? 'true' : 'false')
+			rowDomBundle.toggleButton.setAttribute('aria-label', buttonLabel)
+			rowDomBundle.toggleButton.setAttribute('title', buttonLabel)
+		}
+
+		return true
 	}
 	/* === Hires View Helpers: End === */
 
@@ -1129,9 +1180,11 @@
 			const startDateBadge = getStartDateBadge(hire)
 			const rowKey = getHireRowKey(hire, originalIndex)
 			const isAccessoriesExpanded = expandedAccessoriesRowKey === rowKey
+			const canExpandAccessories = hasExpandedPanelContent(hire)
 
 			const row = document.createElement('tr')
 			row.className = `hire-row-main${isAccessoriesExpanded ? ' is-accessories-open' : ''}`
+			row.dataset.rowKey = rowKey
 			row.innerHTML = `
 				<td class="is-sticky-left-1">
 					${renderChip(hire.purchaseRequest, 'hire-chip-primary')}
@@ -1163,12 +1216,16 @@
 			`
 			tableBody.appendChild(row)
 
-			if (isAccessoriesExpanded) {
+			if (canExpandAccessories) {
 				const accessoriesRow = document.createElement('tr')
-				accessoriesRow.className = 'hire-accessories-row'
+				accessoriesRow.className = `hire-accessories-row${isAccessoriesExpanded ? ' is-open' : ''}`
+				accessoriesRow.dataset.rowKey = rowKey
+				accessoriesRow.setAttribute('aria-hidden', isAccessoriesExpanded ? 'false' : 'true')
 				accessoriesRow.innerHTML = `
 					<td colspan="${VISIBLE_TABLE_COLUMN_COUNT}" class="hire-accessories-cell">
-						${renderAccessoriesPanel(hire)}
+						<div class="hire-accessories-collapse">
+							${renderAccessoriesPanel(hire)}
+						</div>
 					</td>
 				`
 				tableBody.appendChild(accessoriesRow)
@@ -1243,8 +1300,18 @@
 		if (!hire) return
 
 		const rowKey = getHireRowKey(hire, index)
-		expandedAccessoriesRowKey = expandedAccessoriesRowKey === rowKey ? null : rowKey
-		renderTable({ animateContainer: true })
+		const isClosingCurrentRow = expandedAccessoriesRowKey === rowKey
+		const previouslyExpandedRowKey = expandedAccessoriesRowKey
+
+		if (previouslyExpandedRowKey && previouslyExpandedRowKey !== rowKey) {
+			syncAccessoriesRowDomState(previouslyExpandedRowKey, false)
+		}
+
+		expandedAccessoriesRowKey = isClosingCurrentRow ? null : rowKey
+
+		if (!syncAccessoriesRowDomState(rowKey, !isClosingCurrentRow)) {
+			renderTable()
+		}
 	}
 
 	async function removeItem(index) {
@@ -1360,6 +1427,11 @@
 						...Object.fromEntries(
 							ACCESSORY_FIELDS.map(field => [field.key, normalizeFlagValue(readImportedValue(lookup, IMPORT_ALIASES[field.key]))])
 						),
+					}
+
+					if (normalizeFlagValue(readImportedValue(lookup, IMPORT_ALIASES.keyboardMouseSet))) {
+						partialRecord.mouse = true
+						partialRecord.keyboard = true
 					}
 
 					const legacyAccessoriesValue = readImportedValue(lookup, IMPORT_ALIASES.legacyAccessories)

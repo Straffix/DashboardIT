@@ -233,7 +233,7 @@ body.theme-dark:not(.dashboard-page) {
 	}
 
 	&.monitor-row-btn-edit:hover {
-		color: #2563eb;
+		color: var(--primary);
 	}
 
 	&.monitor-row-btn-danger:hover {
@@ -302,7 +302,7 @@ body.theme-dark:not(.dashboard-page) {
 
 			&:focus-visible {
 				outline: none;
-				box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+				box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.25);
 			}
 		}
 	}
