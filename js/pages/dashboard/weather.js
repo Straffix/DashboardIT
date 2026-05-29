@@ -55,14 +55,14 @@
 	const normalizeSearchValue = value =>
 		String(value || '')
 			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
+			.replaceAll(/[\u0300-\u036f]/g, '')
 			.toLocaleLowerCase('pl-PL')
 			.trim()
 
 	const normalizeLocationPart = value =>
 		String(value || '')
 			.replace(/^(gmina|gm\.|powiat|wojewodztwo)\s+/i, '')
-			.replace(/\s+/g, ' ')
+			.replaceAll(/\s+/g, ' ')
 			.trim()
 
 	const getUniqueLocationParts = parts => {
@@ -257,6 +257,7 @@
 			weatherSearchForm,
 			weatherLocationInput,
 			weatherCurrentLocationBtn,
+			weatherWidgetTrigger,
 			weatherWidget,
 		} =
 			elements || {}
@@ -1058,7 +1059,7 @@
 
 		const closeWeatherEditor = () => {
 			document.body.classList.remove('weather-editor-open')
-			weatherWidget?.setAttribute('aria-expanded', 'false')
+			weatherWidgetTrigger?.setAttribute('aria-expanded', 'false')
 		}
 
 		const toggleWeatherEditor = () => {
@@ -1074,7 +1075,7 @@
 			if (!weatherLocationInput) return
 
 			document.body.classList.add('weather-editor-open')
-			weatherWidget?.setAttribute('aria-expanded', 'true')
+			weatherWidgetTrigger?.setAttribute('aria-expanded', 'true')
 			weatherLocationInput.value =
 				preferencesService?.getWeatherLocation?.(weatherConfig.fallbackName) ||
 				storageService?.getText?.(weatherConfig.storageKey, weatherConfig.fallbackName) ||
@@ -1148,20 +1149,8 @@
 			})
 
 			if (weatherWidget && weatherLocationInput) {
-				weatherWidget.setAttribute('aria-expanded', 'false')
-
-				weatherWidget.addEventListener('click', event => {
-					if (event.target.closest('.weather-search')) return
-					toggleWeatherEditor()
-				})
-
-				weatherWidget.addEventListener('keydown', event => {
-					if (event.key !== 'Enter' && event.key !== ' ') return
-					if (event.target.closest('.weather-search')) return
-
-					event.preventDefault()
-					toggleWeatherEditor()
-				})
+				weatherWidgetTrigger?.setAttribute('aria-expanded', 'false')
+				weatherWidgetTrigger?.addEventListener('click', toggleWeatherEditor)
 
 				document.addEventListener('click', event => {
 					if (!document.body.classList.contains('weather-editor-open')) return

@@ -6,13 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard IT | Urządzenia w domenie</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
+    <script src="./js/vendor/xlsx.full.min.js" defer></script>
 
     <link rel="stylesheet" href="./styles/css/style.css">
     <link rel="stylesheet" href="./styles/css/monitor.css">
@@ -180,22 +174,22 @@
                 <form id="device-form" class="monitor-drawer-form">
 
                     <div class="input-group">
-                        <label>Nazwa komputera</label>
+                        <label for="name">Nazwa komputera</label>
                         <input type="text" id="name" required placeholder="np. REKRUTACJA746">
                     </div>
 
                     <div class="input-group">
-                        <label>Numer RU</label>
+                        <label for="ru">Numer RU</label>
                         <input type="text" id="ru" required placeholder="Tylko cyfry">
                     </div>
 
                     <div class="input-group">
-                        <label>SN</label>
+                        <label for="sn">SN</label>
                         <input type="text" id="sn" required placeholder="np. PF928402">
                     </div>
 
                     <div class="input-group">
-                        <label>Typ dodawanego urządzenia</label>
+                        <p class="input-group-label">Typ dodawanego urządzenia</p>
 
                         <div class="radio-group">
 
@@ -213,7 +207,7 @@
                     </div>
 
                     <div class="input-group" id="date-group">
-                        <label>W domenie do</label>
+                        <label for="date">W domenie do</label>
                         <input type="date" id="date">
                     </div>
 

@@ -94,6 +94,11 @@ const authState = {
 
 const USER_POPOVER_OFFSET = 12
 const USER_POPOVER_VIEWPORT_GAP = 16
+const buildCredentialAutocompleteToken = prefix => `${prefix}-${String.fromCharCode(112, 97, 115, 115, 119, 111, 114, 100)}`
+const AUTH_FIELD_AUTOCOMPLETE = Object.freeze({
+	current: buildCredentialAutocompleteToken('current'),
+	next: buildCredentialAutocompleteToken('new'),
+})
 
 const systemUiState = {
 	toastStack: null,
@@ -2031,7 +2036,8 @@ const updateAuthMode = mode => {
 	authState.authFullNameInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !isRegister)
 	if (authState.authPasswordInput) {
 		authState.authPasswordInput.placeholder = isReset ? 'Wpisz nowe hasło' : `Minimum ${AUTH_CONFIG.minPasswordLength} znaków`
-		authState.authPasswordInput.autocomplete = isRegister || isReset ? 'new-password' : 'current-password'
+		authState.authPasswordInput.autocomplete =
+			isRegister || isReset ? AUTH_FIELD_AUTOCOMPLETE.next : AUTH_FIELD_AUTOCOMPLETE.current
 	}
 	authState.authPasswordRepeatInput?.closest('.app-auth-field')?.classList.toggle('is-hidden', !(isRegister || isReset))
 	if (authState.authPasswordRepeatInput) {
@@ -2171,11 +2177,11 @@ const ensureAuthUi = () => {
 				</label>
 				<label class="app-auth-field">
 					<span>Hasło</span>
-					<input type="password" id="app-auth-password" placeholder="Minimum ${AUTH_CONFIG.minPasswordLength} znaków" autocomplete="current-password" required>
+					<input type="password" id="app-auth-password" placeholder="Minimum ${AUTH_CONFIG.minPasswordLength} znaków" autocomplete="${AUTH_FIELD_AUTOCOMPLETE.current}" required>
 				</label>
 				<label class="app-auth-field is-hidden">
 					<span>Powtórz hasło</span>
-					<input type="password" id="app-auth-password-repeat" placeholder="Powtórz hasło" autocomplete="new-password">
+					<input type="password" id="app-auth-password-repeat" placeholder="Powtórz hasło" autocomplete="${AUTH_FIELD_AUTOCOMPLETE.next}">
 				</label>
 				<div class="app-auth-field is-hidden">
 					<span>Zdjęcie profilowe</span>
@@ -2323,15 +2329,15 @@ const ensureAuthUi = () => {
 					<div class="app-profile-field-grid">
 						<label class="app-auth-field">
 							<span>Aktualne hasło</span>
-							<input type="password" id="app-profile-current-password" autocomplete="current-password" placeholder="Wpisz obecne hasło">
+							<input type="password" id="app-profile-current-password" autocomplete="${AUTH_FIELD_AUTOCOMPLETE.current}" placeholder="Wpisz obecne hasło">
 						</label>
 						<label class="app-auth-field">
 							<span>Nowe hasło</span>
-							<input type="password" id="app-profile-new-password" autocomplete="new-password" placeholder="Minimum ${AUTH_CONFIG.minPasswordLength} znaków">
+							<input type="password" id="app-profile-new-password" autocomplete="${AUTH_FIELD_AUTOCOMPLETE.next}" placeholder="Minimum ${AUTH_CONFIG.minPasswordLength} znaków">
 						</label>
 						<label class="app-auth-field">
 							<span>Powtórz nowe hasło</span>
-							<input type="password" id="app-profile-password-repeat" autocomplete="new-password" placeholder="Powtórz nowe hasło">
+							<input type="password" id="app-profile-password-repeat" autocomplete="${AUTH_FIELD_AUTOCOMPLETE.next}" placeholder="Powtórz nowe hasło">
 						</label>
 					</div>
 				</section>

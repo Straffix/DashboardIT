@@ -264,8 +264,8 @@
 			.trim()
 			.toLowerCase()
 			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.replace(/[^a-z0-9]+/g, ' ')
+			.replaceAll(/[\u0300-\u036f]/g, '')
+			.replaceAll(/[^a-z0-9]+/g, ' ')
 			.trim()
 	}
 
@@ -968,7 +968,7 @@
 		const normalizedValue = normalizeText(value)
 		return normalizedValue
 			? multiline
-				? escapeHtml(normalizedValue).replace(/\n/g, '<br>')
+				? escapeHtml(normalizedValue).replaceAll('\n', '<br>')
 				: escapeHtml(normalizedValue)
 			: '<span class="hire-accessories-meta-placeholder">---</span>'
 	}

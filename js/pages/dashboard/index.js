@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		weatherSearchForm: document.getElementById('weather-search-form'),
 		weatherLocationInput: document.getElementById('weather-location-input'),
 		weatherCurrentLocationBtn: document.getElementById('weather-current-location-btn'),
+		weatherWidgetTrigger: document.getElementById('weather-widget-trigger'),
 		weatherWidget: document.querySelector('.weather-widget'),
 		registeredUsersCount: document.getElementById('dashboard-registered-users-count'),
 		activeUsersList: document.getElementById('dashboard-active-users-list'),

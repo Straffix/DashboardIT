@@ -96,7 +96,7 @@ body.dashboard-page .wrapper {
 	margin: 0 auto 48px;
 
 	h1 {
-		font-family: 'Audiowide', sans-serif;
+		font-family: 'Jura', 'M_PLUS_U', sans-serif;
 		font-size: clamp(3.1rem, 5vw, 5rem);
 		color: $light-text-main;
 		text-transform: uppercase;
@@ -219,6 +219,8 @@ body.weather-editor-open .dashboard-topbar {
 	border-radius: var(--radius-control);
 	background: transparent;
 	border: none;
+	color: inherit;
+	font: inherit;
 	box-shadow: none;
 	backdrop-filter: none;
 	-webkit-backdrop-filter: none;
@@ -285,8 +287,28 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn {
 	width: min(280px, 100%);
 	text-align: left;
 	background: transparent;
-	cursor: pointer;
+	cursor: default;
 	overflow: visible;
+}
+
+.weather-widget-trigger {
+	appearance: none;
+	width: 100%;
+	display: block;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-control);
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.weather-widget-trigger:focus-visible,
+.clock-widget:focus-visible {
+	outline: 2px solid rgba(var(--primary-rgb), 0.32);
+	outline-offset: 4px;
 }
 
 .weather-search {
@@ -573,6 +595,13 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn {
 	gap: 12px;
 }
 
+.weather-summary,
+.clock-meta {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
 .weather-icon {
 	--weather-icon-color: #{$light-red};
 	--weather-icon-bg: rgba(195, 0, 45, 0.1);
@@ -588,6 +617,7 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn {
 }
 
 .weather-temp {
+	display: block;
 	font-size: 2.45rem;
 	font-weight: 700;
 	line-height: 1;
@@ -595,6 +625,7 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn {
 }
 
 .weather-location {
+	display: block;
 	margin-top: 4px;
 	font-size: 1.32rem;
 	font-weight: 600;
@@ -796,6 +827,7 @@ body.weather-editor-open .weather-widget {
 }
 
 .clock-widget {
+	appearance: none;
 	position: relative;
 	display: flex;
 	align-items: center;
@@ -917,6 +949,7 @@ body.weather-editor-open .weather-widget {
 }
 
 .clock-time {
+	display: block;
 	font-size: 2rem;
 	font-weight: 700;
 	line-height: 1;
@@ -924,6 +957,7 @@ body.weather-editor-open .weather-widget {
 }
 
 .clock-date {
+	display: block;
 	margin-top: 6px;
 	font-size: 1.12rem;
 	color: #64748b;

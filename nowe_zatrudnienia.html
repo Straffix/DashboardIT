@@ -7,13 +7,7 @@
 
     <title>Dashboard IT | Nowe zatrudnienia - Zarzadzanie</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
+    <script src="./js/vendor/xlsx.full.min.js" defer></script>
 
     <link rel="stylesheet" href="./styles/css/style.css">
     <link rel="stylesheet" href="./styles/css/zatrudnienia.css">
@@ -92,11 +86,13 @@
                         <div class="workspace-month-slot">
                             <div class="workspace-month-field" data-align="left">
                                 <div class="table-header table-header-inline table-header-inline-plain">
-                                    <div class="month-picker-container" id="month-trigger" role="button" tabindex="0"
-                                        aria-label="Wybierz miesiac">
-                                        <h2 id="current-month-display">MARZEC 2026</h2>
+                                    <div class="month-picker-shell">
+                                        <button class="month-picker-container" id="month-trigger" type="button"
+                                            aria-label="Wybierz miesiac">
+                                            <span id="current-month-display" class="month-picker-display">MARZEC 2026</span>
+                                        </button>
                                         <input type="month" id="hidden-month-input" class="hidden-month-input"
-                                            aria-hidden="true">
+                                            tabindex="-1">
                                     </div>
                                 </div>
                             </div>
@@ -177,22 +173,22 @@
 
                         <div class="hire-form-grid">
                             <div class="input-group">
-                                <label>Service Desk</label>
+                                <label for="purchaseRequest">Service Desk</label>
                                 <input type="text" id="purchaseRequest" placeholder="np. SD-2026-018">
                             </div>
 
                             <div class="input-group">
-                                <label>Użytkownik</label>
+                                <label for="targetUser">Użytkownik</label>
                                 <input type="text" id="targetUser" required placeholder="np. Jan Kowalski">
                             </div>
 
                             <div class="input-group">
-                                <label>Data rozpoczęcia pracy</label>
+                                <label for="startDate">Data rozpoczęcia pracy</label>
                                 <input type="date" id="startDate" required>
                             </div>
 
                             <div class="input-group">
-                                <label>Przygotował/a</label>
+                                <label for="preparedBy">Przygotował/a</label>
                                 <select id="preparedBy">
                                     <option value="">Wybierz osobę</option>
                                     <option value="A. BISKUPSKA">Anna Biskupska</option>
@@ -223,7 +219,7 @@
                             </div>
 
                             <div class="input-group input-group-full">
-                                <label>Lokalizacja</label>
+                                <label for="deliveryLocation">Lokalizacja</label>
                                 <input type="text" id="deliveryLocation"
                                     placeholder="np. Warszawa / Centrala / pok. 204">
                             </div>
@@ -238,17 +234,17 @@
 
                         <div class="hire-form-grid">
                             <div class="input-group">
-                                <label>Laptop - SN</label>
+                                <label for="laptopModel">Laptop - SN</label>
                                 <input type="text" id="laptopModel" placeholder="np. ThinkPad T14 Gen 5">
                             </div>
 
                             <div class="input-group">
-                                <label>Laptop - RU</label>
+                                <label for="laptopRu">Laptop - RU</label>
                                 <input type="text" id="laptopRu" placeholder="np. RU123456">
                             </div>
 
                             <div class="input-group">
-                                <label>Laptop - Status</label>
+                                <label for="laptopStatus">Laptop - Status</label>
                                 <select id="laptopStatus">
                                     <option value="">Wybierz status</option>
                                     <option value="W trakcie">W trakcie</option>
@@ -260,7 +256,7 @@
                             </div>
 
                             <div class="input-group">
-                                <label>Laptop - eMagazyn</label>
+                                <label for="laptopWarehouse">Laptop - eMagazyn</label>
                                 <select id="laptopWarehouse">
                                     <option value="">Wybierz status</option>
                                     <option value="Brak konta">Brak konta</option>
@@ -270,12 +266,12 @@
                             </div>
 
                             <div class="input-group">
-                                <label>Monitor - RU</label>
+                                <label for="monitorRu">Monitor - RU</label>
                                 <input type="text" id="monitorRu">
                             </div>
 
                             <div class="input-group">
-                                <label>Monitor - Status</label>
+                                <label for="monitorStatus">Monitor - Status</label>
                                 <select id="monitorStatus">
                                     <option value="">Wybierz status</option>
                                     <option value="W trakcie / czekamy na dostawe">W trakcie
@@ -289,7 +285,7 @@
                             </div>
 
                             <div class="input-group input-group-full">
-                                <label>Monitor - eMagazyn</label>
+                                <label for="monitorWarehouse">Monitor - eMagazyn</label>
                                 <select id="monitorWarehouse">
                                     <option value="">Wybierz status</option>
                                     <option value="Brak konta">Brak konta</option>
@@ -365,7 +361,7 @@
                         </div>
 
                         <div class="input-group input-group-full">
-                            <label>Uwagi</label>
+                            <label for="peripheralNotes">Uwagi</label>
                             <textarea id="peripheralNotes" rows="4"
                                 placeholder="Komentarz, niestandardowe wyposazenie, dodatkowe ustalenia."></textarea>
                         </div>

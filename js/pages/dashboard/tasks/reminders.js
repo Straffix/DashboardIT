@@ -4,15 +4,15 @@
 		window.AppUtils?.escapeHtml ||
 		(value =>
 			String(value || '')
-				.replace(/&/g, '&amp;')
-				.replace(/</g, '&lt;')
-				.replace(/>/g, '&gt;')
-				.replace(/"/g, '&quot;')
-				.replace(/'/g, '&#39;'))
+				.replaceAll('&', '&amp;')
+				.replaceAll('<', '&lt;')
+				.replaceAll('>', '&gt;')
+				.replaceAll('"', '&quot;')
+				.replaceAll("'", '&#39;'))
 
 	const writeWaveString = (view, offset, value) => {
 		for (let index = 0; index < value.length; index += 1) {
-			view.setUint8(offset + index, value.charCodeAt(index))
+			view.setUint8(offset + index, value.codePointAt(index) || 0)
 		}
 	}
 

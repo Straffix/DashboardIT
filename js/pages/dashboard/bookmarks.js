@@ -72,11 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (/^\\\\/.test(trimmedValue)) {
-			return `file://${trimmedValue.replace(/\\/g, '/')}`
+			return `file://${trimmedValue.replaceAll('\\', '/')}`
 		}
 
 		if (/^[a-zA-Z]:\\/.test(trimmedValue)) {
-			return `file:///${trimmedValue.replace(/\\/g, '/')}`
+			return `file:///${trimmedValue.replaceAll('\\', '/')}`
 		}
 
 		return `https://${trimmedValue.replace(/^\/+/, '')}`

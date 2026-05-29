@@ -176,16 +176,16 @@ const isSameMonth = (leftValue, rightValue) => {
 	return leftDate.getFullYear() === rightDate.getFullYear() && leftDate.getMonth() === rightDate.getMonth()
 }
 
-const normalizeSN = sn => (sn ? sn.toString().trim().replace(/-/g, '').toUpperCase() : '')
+const normalizeSN = sn => (sn ? sn.toString().trim().replaceAll('-', '').toUpperCase() : '')
 
 const normalizeSearchText = value => {
 	const rawValue = String(value ?? '').trim()
 	if (!rawValue) return ''
 
 	const withoutDiacritics =
-		typeof rawValue.normalize === 'function' ? rawValue.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : rawValue
+		typeof rawValue.normalize === 'function' ? rawValue.normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '') : rawValue
 
-	return withoutDiacritics.replace(/\s+/g, ' ').toUpperCase()
+	return withoutDiacritics.replaceAll(/\s+/g, ' ').toUpperCase()
 }
 
 const matchesSearchQuery = (fields, query) => {
@@ -198,11 +198,11 @@ const matchesSearchQuery = (fields, query) => {
 
 const escapeHtml = value =>
 	String(value || '')
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#39;')
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&#39;')
 
 const formatDateTimeLabel = value => {
 	const parsedDate = parseDate(value) || new Date(String(value || ''))
@@ -258,9 +258,9 @@ const normalizeAccessoryLookup = value =>
 		.trim()
 		.toLocaleLowerCase('pl-PL')
 		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-		.replace(/_/g, '-')
-		.replace(/\s+/g, ' ')
+		.replaceAll(/[\u0300-\u036f]/g, '')
+		.replaceAll('_', '-')
+		.replaceAll(/\s+/g, ' ')
 
 const normalizeAccessoryKey = accessory => {
 	const normalizedValue = normalizeAccessoryLookup(accessory)
@@ -684,11 +684,13 @@ const createMonthPicker = ({
 		const trigger = document.getElementById(triggerId)
 		if (trigger) {
 			trigger.addEventListener('click', openPicker)
-			trigger.addEventListener('keydown', event => {
-				if (event.key === 'Enter' || event.key === ' ') {
-					openPicker(event)
-				}
-			})
+			if (trigger.tagName !== 'BUTTON') {
+				trigger.addEventListener('keydown', event => {
+					if (event.key === 'Enter' || event.key === ' ') {
+						openPicker(event)
+					}
+				})
+			}
 		}
 	}
 

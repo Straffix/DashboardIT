@@ -1278,7 +1278,8 @@ body:not(.dashboard-page) .wrapper > .hire-drawer-shell {
 .hire-drawer-form .input-group {
   margin-bottom: 0;
 }
-.hire-drawer-form .input-group label {
+.hire-drawer-form .input-group label,
+.hire-drawer-form .input-group .input-group-label {
   font-size: 1rem;
 }
 

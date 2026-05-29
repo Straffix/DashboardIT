@@ -624,7 +624,8 @@ body:not(.dashboard-page) .wrapper > .monitor-drawer-shell {
 .monitor-drawer-form .input-group {
   margin-bottom: 18px;
 }
-.monitor-drawer-form .input-group label {
+.monitor-drawer-form .input-group label,
+.monitor-drawer-form .input-group .input-group-label {
   font-size: 1.18rem;
 }
 

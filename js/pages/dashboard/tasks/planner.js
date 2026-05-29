@@ -4,11 +4,11 @@
 		window.AppUtils?.escapeHtml ||
 		(value =>
 			String(value || '')
-				.replace(/&/g, '&amp;')
-				.replace(/</g, '&lt;')
-				.replace(/>/g, '&gt;')
-				.replace(/"/g, '&quot;')
-				.replace(/'/g, '&#39;'))
+				.replaceAll('&', '&amp;')
+				.replaceAll('<', '&lt;')
+				.replaceAll('>', '&gt;')
+				.replaceAll('"', '&quot;')
+				.replaceAll("'", '&#39;'))
 
 	const priorityMap = {
 		high: { label: 'Wysoki', className: 'is-high' },
@@ -193,7 +193,7 @@
 			taskPreviewList.innerHTML = ''
 
 			if (todayTasks.length === 0) {
-				const emptyState = document.createElement('div')
+				const emptyState = document.createElement('span')
 				emptyState.className = 'task-preview-empty'
 				emptyState.textContent = 'Brak zadań na dzisiaj'
 				taskPreviewList.appendChild(emptyState)
@@ -202,7 +202,7 @@
 
 			todayTasks.forEach(task => {
 				const priority = priorityMap[task.priority] || priorityMap.medium
-				const item = document.createElement('div')
+				const item = document.createElement('span')
 				item.className = 'task-preview-item'
 				item.innerHTML = `
 					<span class="task-preview-dot ${priority.className}"></span>
@@ -476,11 +476,6 @@
 			}
 
 			clockWidgetTrigger.addEventListener('click', handleTaskPlannerOpen)
-			clockWidgetTrigger.addEventListener('keydown', event => {
-				if (event.key !== 'Enter' && event.key !== ' ') return
-				event.preventDefault()
-				handleTaskPlannerOpen()
-			})
 
 			taskModal.addEventListener('click', event => {
 				if (event.target.closest('[data-task-close]')) {

@@ -49,7 +49,7 @@ function dashboard_database_config(): array
 		throw new RuntimeException('Brak konfiguracji bazy danych dashboardu.');
 	}
 
-	$config = require $configPath;
+	$config = require_once $configPath;
 	if (!is_array($config)) {
 		throw new RuntimeException('Nieprawidlowa konfiguracja bazy danych dashboardu.');
 	}

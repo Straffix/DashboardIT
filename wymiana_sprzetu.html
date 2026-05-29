@@ -6,13 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard IT | Wymiany sprzętu</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
-        rel="stylesheet" />
-
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
+    <script src="./js/vendor/xlsx.full.min.js" defer></script>
 
     <link rel="stylesheet" href="./styles/css/style.css" />
     <link rel="stylesheet" href="./styles/css/wymiany.css" />
@@ -73,7 +67,7 @@
                     </div>
 
                     <div class="app-user-panel-slot" aria-label="Panel uzytkownika"></div>
-                </a>
+                </div>
             </div>
         </header>
 
@@ -84,11 +78,13 @@
                         <div class="workspace-month-slot">
                             <div class="workspace-month-field" data-align="left">
                                 <div class="table-header table-header-inline table-header-inline-plain">
-                                    <div class="month-picker-container" id="month-trigger" role="button" tabindex="0"
-                                        aria-label="Wybierz miesiac">
-                                        <h2 id="current-month-display">MARZEC 2026</h2>
+                                    <div class="month-picker-shell">
+                                        <button class="month-picker-container" id="month-trigger" type="button"
+                                            aria-label="Wybierz miesiac">
+                                            <span id="current-month-display" class="month-picker-display">MARZEC 2026</span>
+                                        </button>
                                         <input type="month" id="hidden-month-input" class="hidden-month-input"
-                                            aria-hidden="true" />
+                                            tabindex="-1" />
                                     </div>
                                 </div>
                             </div>
@@ -114,7 +110,7 @@
                         </button>
                         </div>
                     </div>
-                </a>
+                </div>
 
                 <div class="table-container">
                     <table class="exchange-table">

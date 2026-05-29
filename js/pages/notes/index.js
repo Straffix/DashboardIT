@@ -133,7 +133,7 @@
 		}
 	}
 
-	const renderMultilineText = value => escapeHtml(value).replace(/\n/g, '<br>')
+	const renderMultilineText = value => escapeHtml(value).replaceAll('\n', '<br>')
 
 	const getActiveViewerRecords = () => {
 		const records = storageService?.readJson?.(activeViewersStorageKey, []) || []

@@ -16,6 +16,8 @@
 	// LIVE_SERVER_FALLBACK_START
 	const liveServerBrowserFallbackConfig = runtimeConfig.liveServerBrowserFallback || {}
 	// LIVE_SERVER_FALLBACK_END
+	const DEFAULT_API_BASE = './api/'
+	const URL_SCHEME_PATTERN = /^[a-z][a-z0-9+.-]*:/i
 	const THEME_FALLBACK_KEY = `${PREFERENCE_KEYS.THEME}-fallback`
 	const THEME_GUEST_KEY = `${PREFERENCE_KEYS.THEME}::guest`
 	const THEME_USER_KEY_PREFIX = `${PREFERENCE_KEYS.THEME}::user::`
@@ -78,14 +80,55 @@
 	// LIVE_SERVER_FALLBACK_END
 
 	const getConfiguredApiBase = () => {
-		const configuredBase = String(runtimeConfig.apiBaseUrl || './api/').trim()
-		if (!configuredBase) return './api/'
-		return configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`
+		const documentUrl = new URL(document.baseURI)
+		const configuredBase = String(runtimeConfig.apiBaseUrl || DEFAULT_API_BASE).trim()
+		const candidateBase = configuredBase || DEFAULT_API_BASE
+		const normalizedBase = candidateBase.endsWith('/') ? candidateBase : `${candidateBase}/`
+
+		try {
+			const resolvedBase = new URL(normalizedBase, documentUrl)
+			const isSafeProtocol = ['http:', 'https:', 'file:'].includes(resolvedBase.protocol)
+			const isSameOrigin = documentUrl.protocol === 'file:'
+				? resolvedBase.protocol === 'file:'
+				: resolvedBase.origin === documentUrl.origin
+
+			if (isSafeProtocol && isSameOrigin) {
+				return resolvedBase
+			}
+		} catch (error) {
+			// Ignore invalid runtime config values and fall back to the bundled API path.
+		}
+
+		return new URL(DEFAULT_API_BASE, documentUrl)
 	}
 
 	const resolveApiUrl = path => {
-		const apiBaseUrl = new URL(getConfiguredApiBase(), document.baseURI)
-		return new URL(path, apiBaseUrl).toString()
+		const apiBaseUrl = getConfiguredApiBase()
+		const rawPath = String(path || '').trim()
+		if (!rawPath) return ''
+
+		const normalizedPath = rawPath.replace(/^\/+/, '')
+		const pathWithoutSearch = normalizedPath.split(/[?#]/, 1)[0]
+		const pathSegments = pathWithoutSearch.split('/').filter(Boolean)
+		const hasUnsafeTraversal = pathSegments.includes('..')
+		const hasUnsafeCharacters = /[\r\n\\]/.test(normalizedPath)
+		const hasExplicitScheme = URL_SCHEME_PATTERN.test(normalizedPath)
+		const isProtocolRelative = normalizedPath.startsWith('//')
+
+		if (hasUnsafeTraversal || hasUnsafeCharacters || hasExplicitScheme || isProtocolRelative) {
+			return ''
+		}
+
+		const resolvedUrl = new URL(normalizedPath, apiBaseUrl)
+		const isSameOrigin = apiBaseUrl.protocol === 'file:'
+			? resolvedUrl.protocol === 'file:'
+			: resolvedUrl.origin === apiBaseUrl.origin
+
+		if (!isSameOrigin || !resolvedUrl.pathname.startsWith(apiBaseUrl.pathname)) {
+			return ''
+		}
+
+		return resolvedUrl.toString()
 	}
 
 	const readBrowserJsonValue = (key, fallback) => {
@@ -190,6 +233,14 @@
 	const sendRemoteRequest = ({ method = 'GET', path = '', body = null } = {}) => {
 		const xhr = new XMLHttpRequest()
 		const url = resolveApiUrl(path)
+		if (!url) {
+			return {
+				ok: false,
+				status: 0,
+				message: 'Konfiguracja adresu API jest nieprawidlowa.',
+				payload: null,
+			}
+		}
 
 		try {
 			xhr.open(method, url, false)
@@ -286,7 +337,7 @@
 		const normalizedMessage = String(message || '').trim()
 		if (!normalizedMessage) return
 
-		console.error(normalizedMessage)
+		console.error('Storage synchronization error.')
 
 		const now = Date.now()
 		if (normalizedMessage === lastStorageErrorMessage && now - lastStorageErrorAt < 2500) {

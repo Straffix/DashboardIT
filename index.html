@@ -7,12 +7,6 @@
     <meta name="geoapify-api-key" content="">
     <title>Dashboard IT | Strona Główna</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-
     <link rel="stylesheet" href="./styles/css/style.css">
     <link rel="stylesheet" href="./styles/css/dashboard.css">
 </head>
@@ -27,21 +21,23 @@
             <div class="dashboard-orb dashboard-orb-right" aria-hidden="true"></div>
             <div class="dashboard-grid-glow" aria-hidden="true"></div>
             <section class="dashboard-topbar" aria-label="Panel informacji">
-                <article class="dashboard-widget weather-widget" aria-live="polite" role="button" tabindex="0"
-                    aria-haspopup="dialog" aria-controls="weather-search-form">
-                    <div class="weather-main">
-                        <div class="weather-icon" id="weather-icon">
+                <section class="dashboard-widget weather-widget" aria-live="polite">
+                    <button type="button" class="weather-widget-trigger" id="weather-widget-trigger"
+                        aria-haspopup="dialog" aria-controls="weather-search-form" aria-expanded="false">
+                        <span class="weather-main">
+                            <span class="weather-icon" id="weather-icon">
                             <i class="app-icon cloud-sun-solid-full"></i>
-                        </div>
-                        <div>
-                            <div class="weather-temp" id="weather-temp">--°C</div>
-                            <div class="weather-location" id="weather-location">Warszawa</div>
-                        </div>
-                    </div>
-                    <div class="weather-meta">
+                            </span>
+                            <span class="weather-summary">
+                                <span class="weather-temp" id="weather-temp">--°C</span>
+                                <span class="weather-location" id="weather-location">Warszawa</span>
+                            </span>
+                        </span>
+                        <span class="weather-meta">
                         <span id="weather-description">Ładowanie danych...</span>
                         <span id="weather-wind">Wiatr -- km/h</span>
-                    </div>
+                        </span>
+                    </button>
                     <form class="weather-search" id="weather-search-form">
                         <label class="weather-search-label" for="weather-location-input">Wybierz miasto</label>
                         <p class="weather-search-hint">Kliknij dzień, aby zobaczyć prognozę godzinową.</p>
@@ -64,24 +60,24 @@
                             <span>Użyj aktualnej lokalizacji</span>
                         </button>
                     </form>
-                </article>
+                </section>
 
-                <article class="dashboard-widget clock-widget" id="clock-widget-trigger" aria-label="Zegar lokalny"
-                    role="button" tabindex="0" aria-haspopup="dialog" aria-controls="task-modal">
-                    <div class="clock-face" aria-hidden="true">
+                <button type="button" class="dashboard-widget clock-widget" id="clock-widget-trigger"
+                    aria-label="Zegar lokalny" aria-haspopup="dialog" aria-controls="task-modal">
+                    <span class="clock-face" aria-hidden="true">
                         <span class="clock-face-ring"></span>
                         <span class="clock-face-glow"></span>
                         <span class="clock-hand hour-hand" id="clock-hour"></span>
                         <span class="clock-hand minute-hand" id="clock-minute"></span>
                         <span class="clock-hand second-hand" id="clock-second"></span>
                         <span class="clock-center-dot"></span>
-                    </div>
-                    <div class="clock-meta">
-                        <div class="clock-time" id="clock-digital">--:--</div>
-                        <div class="clock-date" id="clock-date">--</div>
-                        <div class="task-preview-list" id="task-preview-list" aria-live="polite"></div>
-                    </div>
-                </article>
+                    </span>
+                    <span class="clock-meta">
+                        <span class="clock-time" id="clock-digital">--:--</span>
+                        <span class="clock-date" id="clock-date">--</span>
+                        <span class="task-preview-list" id="task-preview-list" aria-live="polite"></span>
+                    </span>
+                </button>
             </section>
 
             <header class="dashboard-header">

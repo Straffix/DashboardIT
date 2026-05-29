@@ -1,6 +1,13 @@
 @font-face {
+  font-family: "Jura";
+  src: url("../../font/Jura/Jura-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
   font-family: "M_PLUS_U";
-  src: url("../../FONT/M_PLUS_U/MPLUSU-VariableFont_wght.ttf") format("truetype");
+  src: url("../../font/M_PLUS_U/MPLUSU-VariableFont_wght.ttf") format("truetype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -37,7 +44,7 @@
   --shadow-lg: 0 24px 64px rgba(148, 163, 184, 0.16);
   --shadow-md: 0 14px 32px rgba(148, 163, 184, 0.12);
   --shadow-sm: 0 10px 24px rgba(148, 163, 184, 0.1);
-  --font-ui-panels: 'M_PLUS_U', 'Poppins', 'Segoe UI', sans-serif;
+  --font-ui-panels: 'M_PLUS_U', 'Segoe UI', sans-serif;
   --page-gradient: radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0) 22%), radial-gradient(circle at 84% 16%, rgba(195, 0, 45, 0.08) 0%, rgba(195, 0, 45, 0) 24%), radial-gradient(circle at 50% 100%, rgba(148, 163, 184, 0.12) 0%, rgba(148, 163, 184, 0) 28%), linear-gradient(135deg, #fbfcfd 0%, #f5f7fa 44%, #edf2f7 100%);
   --radius-shell: 18px;
   --radius-shell-inner: 12px;
@@ -2489,7 +2496,7 @@ body.theme-blush .app-page-status-tag.is-neutral {
 }
 .logo-section h1 {
   font-size: 2.4rem;
-  font-family: "Audiowide", sans-serif;
+  font-family: "Jura", "M_PLUS_U", sans-serif;
   color: var(--text-main);
   text-transform: uppercase;
   transition: font-size 0.35s ease;
@@ -3188,6 +3195,12 @@ table tr:last-child td {
   margin-bottom: 8px;
   font-weight: 600;
 }
+.input-group .input-group-label {
+  display: block;
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
 .input-group input:not([type=radio]):not([type=checkbox]) {
   width: 100%;
   padding: 12px;
@@ -3351,24 +3364,37 @@ table tr:last-child td {
   min-height: 60px;
   overflow: visible;
 }
-.table-header .month-picker-container {
+.table-header .month-picker-shell {
   position: relative;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 11px 28px;
-  border-radius: 12px;
   min-width: 240px;
   overflow: visible;
 }
-.table-header .month-picker-container h2 {
+.table-header .month-picker-container {
+  appearance: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 11px 28px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  overflow: visible;
+}
+.table-header .month-picker-container .month-picker-display {
   margin: 0;
   font-size: 1.9rem;
   pointer-events: none;
   z-index: 1;
 }
-.table-header .month-picker-container .hidden-month-input {
+.table-header .month-picker-shell .hidden-month-input {
   position: absolute;
   top: 0;
   left: 0;
@@ -3475,7 +3501,7 @@ table tr:last-child td {
   box-shadow: var(--shadow-sm);
 }
 
-.table-header-inline .month-picker-container h2 {
+.table-header-inline .month-picker-container .month-picker-display {
   font-size: 1.26rem;
   white-space: nowrap;
 }
@@ -3498,7 +3524,7 @@ table tr:last-child td {
   box-shadow: none;
 }
 
-.table-header-inline-plain .month-picker-container h2 {
+.table-header-inline-plain .month-picker-container .month-picker-display {
   font-size: 3rem;
   font-weight: 800;
   line-height: 1.05;
@@ -3506,8 +3532,8 @@ table tr:last-child td {
   transition: color 0.2s ease, text-shadow 0.2s ease;
 }
 
-.table-header-inline-plain .month-picker-container:hover h2,
-.table-header-inline-plain .month-picker-container:focus-visible h2 {
+.table-header-inline-plain .month-picker-container:hover .month-picker-display,
+.table-header-inline-plain .month-picker-container:focus-visible .month-picker-display {
   color: var(--primary);
   text-shadow: 0 0 18px rgba(var(--primary-rgb), 0.12);
 }
