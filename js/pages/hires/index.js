@@ -1,5 +1,25 @@
 (function initializeHiresPage() {
 	/* === Hires State And References: Start === */
+	const pageScope = window.AppPageRuntime?.createScope?.('nowe_zatrudnienia.html') || null
+	const runWhenReady = callback => {
+		if (typeof pageScope?.runWhenReady === 'function') {
+			pageScope.runWhenReady(callback)
+			return
+		}
+
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', callback, { once: true })
+			return
+		}
+
+		callback()
+	}
+	const listen = (target, type, listener, options = undefined) => {
+		if (!target?.addEventListener) return
+		const nextOptions = pageScope?.signal ? { ...(options || {}), signal: pageScope.signal } : options
+		target.addEventListener(type, listener, nextOptions)
+	}
+	const scheduleTimeout = typeof pageScope?.setTimeout === 'function' ? pageScope.setTimeout.bind(pageScope) : window.setTimeout.bind(window)
 	let hires = []
 	let editIndex = null
 	let drawerInitialState = ''
@@ -10,7 +30,7 @@
 	const escapeHtml = window.AppUtils?.escapeHtml || (value => String(value ?? ''))
 
 	const ACCESSORY_FIELDS = [
-		{ key: 'monitorDock', label: 'Monitor ze stacja dokujaca', previewLabel: 'Monitor + stacja', icon: 'desktop-solid-full' },
+		{ key: 'monitorDock', label: 'Monitor', previewLabel: 'Monitor', icon: 'desktop-solid-full' },
 		{ key: 'mouse', label: 'Mysz', previewLabel: 'Mysz', icon: 'computer-mouse-solid-full' },
 		{ key: 'keyboard', label: 'Klawiatura', previewLabel: 'Klawiatura', icon: 'keyboard-solid-full' },
 		{ key: 'yealink', label: 'Yealink', previewLabel: 'Yealink', icon: 'headset-solid-full' },
@@ -38,9 +58,9 @@
 	}
 
 	const EXPORT_COLUMNS = [
-		{ key: 'purchaseRequest', header: 'Zgloszenie na zakup sprzetu' },
-		{ key: 'targetUser', header: 'Uzytkownik docelowy' },
-		{ key: 'startDate', header: 'Data rozpoczecia pracy' },
+		{ key: 'purchaseRequest', header: 'Service Desk' },
+		{ key: 'targetUser', header: 'Użytkownik' },
+		{ key: 'startDate', header: 'Data rozpoczęcia pracy' },
 		{ key: 'laptopModel', header: 'Laptop - model' },
 		{ key: 'laptopRu', header: 'Laptop - RU' },
 		{ key: 'laptopStatus', header: 'Laptop - Status' },
@@ -48,9 +68,9 @@
 		{ key: 'monitorRu', header: 'Monitor - RU' },
 		{ key: 'monitorStatus', header: 'Monitor - Status' },
 		{ key: 'monitorWarehouse', header: 'Monitor - eMagazyn' },
-		{ key: 'preparedBy', header: 'Przygotowal/a' },
-		{ key: 'deliveryLocation', header: 'Lokalizacja do wydania' },
-		{ key: 'peripheralNotes', header: 'Uwagi do peryferiow' },
+		{ key: 'preparedBy', header: 'Przygotował/a' },
+		{ key: 'deliveryLocation', header: 'Lokalizacja' },
+		{ key: 'peripheralNotes', header: 'Uwagi' },
 		...ACCESSORY_FIELDS.map(field => ({
 			key: field.key,
 			header: field.label,
@@ -59,27 +79,27 @@
 	]
 
 	const IMPORT_ALIASES = {
-		purchaseRequest: ['zgloszenie na zakup sprzetu', 'zakup sprzetu', 'zakup'],
-		targetUser: ['uzytkownik docelowy', 'imie i nazwisko'],
-		startDate: ['data rozpoczecia pracy', 'data rozpoczecia', 'start'],
-		laptopModel: ['laptop model', 'sprzet sn', 'sn sprzetu', 'sprzet / sn'],
-		laptopRu: ['laptop ru', 'ru laptopa', 'dzial stanowisko', 'sekcja'],
+		purchaseRequest: ['service desk', 'zgłoszenie na zakup sprzętu', 'zakup sprzętu', 'zakup'],
+		targetUser: ['użytkownik', 'użytkownik docelowy', 'imię i nazwisko'],
+		startDate: ['data rozpoczęcia pracy', 'data rozpoczęcia', 'start'],
+		laptopModel: ['laptop model', 'sprzęt sn', 'sn sprzętu', 'sprzęt / sn'],
+		laptopRu: ['laptop ru', 'ru laptopa', 'dział stanowisko', 'sekcja'],
 		laptopStatus: ['laptop status'],
 		laptopWarehouse: ['laptop emagazyn', 'laptop e magazyn'],
 		monitorRu: ['monitor ru'],
 		monitorStatus: ['monitor status'],
 		monitorWarehouse: ['monitor emagazyn', 'monitor e magazyn'],
-		preparedBy: ['przygotowal a', 'przygotowal'],
-		deliveryLocation: ['lokalizacja do wydania'],
+		preparedBy: ['przygotował/a', 'przygotował'],
+		deliveryLocation: ['lokalizacja', 'lokalizacja do wydania'],
 		peripheralNotes: [
-			'uwagi do peryferiow',
-			'uwagi dot peryferiow',
-			'prosze o wpisanie w kolumnach obok',
-			'peryferiow jakie zostaly zamowione',
+			'uwagi',
+			'uwagi do peryferiów',
+			'uwagi dot. peryferiów',
+			'proszę o wpisanie w kolumnach obok',
+			'peryferiów jakie zostały zamówione',
 			'komentarz',
 		],
-		monitorDock: ['monitor ze stacja dokujaca'],
-		keyboardMouseSet: ['klawiatura mysz', 'klawiatura + mysz'],
+		monitorDock: ['monitor'],
 		mouse: ['mysz'],
 		keyboard: ['klawiatura'],
 		yealink: ['yealink'],
@@ -87,7 +107,7 @@
 		lenovo: ['lenovo'],
 		bag: ['torba'],
 		backpack: ['plecak'],
-		laptopStand: ['podstawka pod laptop', 'podstawka pod laptopa', 'podkladka pod laptopa'],
+		laptopStand: ['podstawka pod laptop', 'podstawka pod laptopa', 'podkładka pod laptopa'],
 		presenter: ['prezenter'],
 		printer: ['drukarka'],
 		legacyAccessories: ['akcesoria'],
@@ -226,6 +246,7 @@
 			laptopStand: false,
 			presenter: false,
 			printer: false,
+			preparedAccessories: [],
 			name: '',
 			ru: '',
 			sn: '',
@@ -316,6 +337,62 @@
 		return ['1', 'true', 'tak', 'yes', 'y', 'x', 'zamowione', 'ordered'].includes(normalized)
 	}
 
+	function getNormalizedAccessoryFlags(source) {
+		const normalizedRecord = source && typeof source === 'object' ? source : {}
+		const accessoryFlags = Object.fromEntries(ACCESSORY_FIELDS.map(field => [field.key, false]))
+		const rawAccessories = Array.isArray(normalizedRecord.accessories)
+			? normalizedRecord.accessories
+			: typeof normalizedRecord.accessories === 'string'
+				? normalizedRecord.accessories.split(',')
+				: []
+		const normalizedLegacyAccessories = AppUtils.normalizeAccessories(rawAccessories)
+		const hasLegacyKeyboardMouseSet = normalizeFlagValue(normalizedRecord.keyboardMouseSet)
+
+		normalizedLegacyAccessories.forEach(accessory => {
+			const mappedField = LEGACY_ACCESSORY_TO_FIELD[accessory]
+			if (mappedField) {
+				accessoryFlags[mappedField] = true
+			}
+		})
+
+		ACCESSORY_FIELDS.forEach(field => {
+			if (Object.prototype.hasOwnProperty.call(normalizedRecord, field.key)) {
+				accessoryFlags[field.key] = normalizeFlagValue(normalizedRecord[field.key])
+			}
+		})
+
+		if (hasLegacyKeyboardMouseSet) {
+			accessoryFlags.mouse = true
+			accessoryFlags.keyboard = true
+		}
+
+		return accessoryFlags
+	}
+
+	function normalizePreparedAccessories(value, activeAccessorySource = null) {
+		const rawPreparedAccessories = Array.isArray(value)
+			? value
+			: typeof value === 'string'
+				? value.split(',')
+				: []
+		const activeAccessoryFlags = activeAccessorySource && typeof activeAccessorySource === 'object'
+			? getNormalizedAccessoryFlags(activeAccessorySource)
+			: null
+		const activeAccessoryKeys = activeAccessoryFlags
+			? new Set(ACCESSORY_FIELD_KEYS.filter(key => activeAccessoryFlags[key]))
+			: null
+		const normalizedKeys = new Set()
+
+		rawPreparedAccessories.forEach(entry => {
+			const normalizedEntry = LEGACY_ACCESSORY_TO_FIELD[normalizeText(entry)] || normalizeText(entry)
+			if (!normalizedEntry || !ACCESSORY_FIELD_KEYS.includes(normalizedEntry)) return
+			if (activeAccessoryKeys && !activeAccessoryKeys.has(normalizedEntry)) return
+			normalizedKeys.add(normalizedEntry)
+		})
+
+		return ACCESSORY_FIELD_KEYS.filter(key => normalizedKeys.has(key))
+	}
+
 	function buildLegacyAccessories(record) {
 		const accessories = []
 
@@ -335,6 +412,7 @@
 	function buildComparableSnapshot(record) {
 		const normalizedRecord = record && typeof record === 'object' ? record : {}
 		const normalizedAudit = AppUtils.normalizeAuditFields(normalizedRecord)
+		const accessoryFlags = getNormalizedAccessoryFlags(normalizedRecord)
 
 		return {
 			id: normalizeText(normalizedRecord.id),
@@ -351,18 +429,19 @@
 			preparedBy: normalizeText(normalizedRecord.preparedBy),
 			deliveryLocation: normalizeText(normalizedRecord.deliveryLocation),
 			peripheralNotes: normalizeText(normalizedRecord.peripheralNotes || normalizedRecord.notes),
-			monitorDock: normalizeFlagValue(normalizedRecord.monitorDock),
-			mouse: normalizeFlagValue(normalizedRecord.mouse),
-			keyboard: normalizeFlagValue(normalizedRecord.keyboard),
-			yealink: normalizeFlagValue(normalizedRecord.yealink),
-			logiZoneVibe: normalizeFlagValue(normalizedRecord.logiZoneVibe),
-			lenovo: normalizeFlagValue(normalizedRecord.lenovo),
-			bag: normalizeFlagValue(normalizedRecord.bag),
-			backpack: normalizeFlagValue(normalizedRecord.backpack),
-			laptopStand: normalizeFlagValue(normalizedRecord.laptopStand),
-			presenter: normalizeFlagValue(normalizedRecord.presenter),
-			printer: normalizeFlagValue(normalizedRecord.printer),
-			accessories: buildLegacyAccessories(normalizedRecord),
+			monitorDock: accessoryFlags.monitorDock,
+			mouse: accessoryFlags.mouse,
+			keyboard: accessoryFlags.keyboard,
+			yealink: accessoryFlags.yealink,
+			logiZoneVibe: accessoryFlags.logiZoneVibe,
+			lenovo: accessoryFlags.lenovo,
+			bag: accessoryFlags.bag,
+			backpack: accessoryFlags.backpack,
+			laptopStand: accessoryFlags.laptopStand,
+			presenter: accessoryFlags.presenter,
+			printer: accessoryFlags.printer,
+			preparedAccessories: normalizePreparedAccessories(normalizedRecord.preparedAccessories, accessoryFlags),
+			accessories: buildLegacyAccessories({ ...normalizedRecord, ...accessoryFlags }),
 			createdBy: normalizedAudit.createdBy,
 			updatedBy: normalizedAudit.updatedBy,
 			createdAt: normalizedAudit.createdAt,
@@ -374,38 +453,14 @@
 		const rawRecord = source && typeof source === 'object' ? source : {}
 		const details = rawRecord.details && typeof rawRecord.details === 'object' ? rawRecord.details : {}
 		const mergedRecord = { ...rawRecord, ...details }
-		const accessoryFlags = Object.fromEntries(ACCESSORY_FIELDS.map(field => [field.key, false]))
-		const rawAccessories = Array.isArray(mergedRecord.accessories)
-			? mergedRecord.accessories
-			: typeof mergedRecord.accessories === 'string'
-				? mergedRecord.accessories.split(',')
-				: []
-		const normalizedLegacyAccessories = AppUtils.normalizeAccessories(rawAccessories)
 		const normalizedAudit = AppUtils.normalizeAuditFields(mergedRecord)
-		const hasLegacyKeyboardMouseSet = normalizeFlagValue(mergedRecord.keyboardMouseSet)
-
-		normalizedLegacyAccessories.forEach(accessory => {
-			const mappedField = LEGACY_ACCESSORY_TO_FIELD[accessory]
-			if (mappedField) {
-				accessoryFlags[mappedField] = true
-			}
-		})
-
-		ACCESSORY_FIELDS.forEach(field => {
-			if (Object.prototype.hasOwnProperty.call(mergedRecord, field.key)) {
-				accessoryFlags[field.key] = normalizeFlagValue(mergedRecord[field.key])
-			}
-		})
-
-		if (hasLegacyKeyboardMouseSet) {
-			accessoryFlags.mouse = true
-			accessoryFlags.keyboard = true
-		}
+		const accessoryFlags = getNormalizedAccessoryFlags(mergedRecord)
 
 		const targetUser = normalizeText(mergedRecord.targetUser || mergedRecord.name)
 		const startDate = normalizeDateValue(mergedRecord.startDate || mergedRecord.date)
 		const laptopModel = normalizeText(mergedRecord.laptopModel || mergedRecord.sn)
 		const laptopRu = normalizeText(mergedRecord.laptopRu || mergedRecord.ru)
+		const preparedAccessories = normalizePreparedAccessories(mergedRecord.preparedAccessories, accessoryFlags)
 
 		return {
 			...createEmptyHireRecord(),
@@ -425,6 +480,7 @@
 			deliveryLocation: normalizeText(mergedRecord.deliveryLocation),
 			peripheralNotes: normalizeText(mergedRecord.peripheralNotes || mergedRecord.notes),
 			...accessoryFlags,
+			preparedAccessories,
 			name: targetUser,
 			ru: laptopRu,
 			sn: laptopModel,
@@ -796,7 +852,7 @@
 		}
 
 		hiresWorkspace.addEventListener('transitionend', finishAnimation)
-		workspaceHeightAnimationFallbackId = window.setTimeout(() => finishAnimation(), 460)
+		workspaceHeightAnimationFallbackId = scheduleTimeout(() => finishAnimation(), 460)
 
 		requestAnimationFrame(() => {
 			hiresWorkspace.style.transition = 'height 360ms cubic-bezier(0.22, 1, 0.36, 1)'
@@ -883,28 +939,52 @@
 		`
 	}
 
-	function renderAccessoryPreviewIcon(field) {
+	function renderAccessoryPreviewIcon(field, { index = -1, guestMode = false, isPrepared = false } = {}) {
 		if (!field) return ''
+		const buttonLabel = guestMode
+			? `${field.label}: zaloguj sie, aby oznaczac przygotowane akcesoria.`
+			: isPrepared
+				? `${field.label}: oznaczone jako przygotowane. Kliknij, aby oznaczyc jako nieprzygotowane.`
+				: `${field.label}: kliknij, aby oznaczyc jako przygotowane.`
 		return `
-			<span class="hire-accessory-preview-icon" title="${escapeHtml(field.label)}" aria-label="${escapeHtml(field.label)}">
+			<button
+				class="hire-accessory-preview-icon ${isPrepared ? 'is-prepared' : ''}"
+				type="button"
+				data-action="toggle-accessory-prepared"
+				data-index="${index}"
+				data-accessory-key="${escapeHtml(field.key)}"
+				aria-pressed="${isPrepared ? 'true' : 'false'}"
+				aria-label="${escapeHtml(buttonLabel)}"
+				title="${escapeHtml(buttonLabel)}"
+				${guestMode ? 'disabled' : ''}
+			>
 				<i class="app-icon ${field.icon}"></i>
 				<small>${escapeHtml(field.previewLabel || field.label)}</small>
-			</span>
+			</button>
 		`
 	}
 
-	function renderExpandedPanelDetail(label, value, { multiline = false } = {}) {
+	function renderExpandedPanelValue(value, { multiline = false } = {}) {
 		const normalizedValue = normalizeText(value)
-		const content = normalizedValue
+		return normalizedValue
 			? multiline
 				? escapeHtml(normalizedValue).replace(/\n/g, '<br>')
 				: escapeHtml(normalizedValue)
 			: '<span class="hire-accessories-meta-placeholder">---</span>'
+	}
+
+	function renderExpandedPanelDetail(label, value, { multiline = false, wide = false, className = '', scrollable = false } = {}) {
+		const content = renderExpandedPanelValue(value, { multiline })
+		const itemClasses = ['hire-accessories-meta-item']
+		if (multiline) itemClasses.push('is-notes')
+		if (wide) itemClasses.push('is-wide')
+		if (scrollable) itemClasses.push('is-scrollable')
+		if (className) itemClasses.push(className)
 
 		return `
-			<div class="hire-accessories-meta-item ${multiline ? 'is-notes' : ''}">
+			<div class="${itemClasses.join(' ')}">
 				<span class="hire-accessories-meta-label">${escapeHtml(label)}</span>
-				<span class="hire-accessories-meta-value">${content}</span>
+				<div class="hire-accessories-meta-value">${content}</div>
 			</div>
 		`
 	}
@@ -914,23 +994,34 @@
 		const content = auditMarkup || '<span class="hire-accessories-meta-placeholder">---</span>'
 
 		return `
-			<div class="hire-accessories-meta-item is-audit">
+			<div class="hire-accessories-meta-item is-audit is-history">
 				<span class="hire-accessories-meta-label">Historia wpisu</span>
 				${content}
 			</div>
 		`
 	}
 
-	function renderAccessoriesPanel(record) {
+	function renderAccessoriesPanel(record, index, guestMode = false) {
 		const activeAccessories = getActiveAccessoryFields(record)
+		const preparedAccessories = new Set(normalizePreparedAccessories(record.preparedAccessories, record))
 		const detailMarkup = [
-			renderExpandedPanelDetail('Przygotowal/a', record.preparedBy),
+			renderExpandedPanelDetail('Przygotował/a', record.preparedBy),
 			renderExpandedPanelAudit(record),
-			renderExpandedPanelDetail('Uwagi', record.peripheralNotes, { multiline: true }),
-			renderExpandedPanelDetail('Lokalizacja do wydania', record.deliveryLocation),
+			renderExpandedPanelDetail('Uwagi', record.peripheralNotes, {
+				multiline: true,
+				className: 'is-notes-panel',
+				scrollable: true,
+			}),
+			renderExpandedPanelDetail('Lokalizacja', record.deliveryLocation, {
+				className: 'is-location-panel',
+			}),
 		].join('')
 		const accessoriesMarkup = activeAccessories
-			.map(field => renderAccessoryPreviewIcon(field))
+			.map(field => renderAccessoryPreviewIcon(field, {
+				index,
+				guestMode,
+				isPrepared: preparedAccessories.has(field.key),
+			}))
 			.join('')
 		const accessoriesGroupMarkup = `
 			<div class="hire-accessories-group ${accessoriesMarkup ? 'has-icons' : 'is-empty'}">
@@ -1040,7 +1131,7 @@
 		document.body.classList.add('hire-drawer-open')
 
 		const firstField = document.getElementById('purchaseRequest') || document.getElementById('targetUser')
-		window.setTimeout(() => firstField?.focus(), 80)
+		scheduleTimeout(() => firstField?.focus(), 80)
 	}
 
 	async function closeDrawer({ force = false } = {}) {
@@ -1159,7 +1250,7 @@
 		if (filteredHires.length === 0) {
 			if (searchQuery.trim()) {
 				tableBody.innerHTML =
-					`<tr><td colspan="${VISIBLE_TABLE_COLUMN_COUNT}" class="empty-state-cell">Brak wynikow wyszukiwania na stronie nowych zatrudnien.<br><small>Sprawdz uzytkownika docelowego, statusy, lokalizacje lub ikonowe peryferia.</small></td></tr>`
+					`<tr><td colspan="${VISIBLE_TABLE_COLUMN_COUNT}" class="empty-state-cell">Brak wyników wyszukiwania na stronie nowych zatrudnień.<br><small>Sprawdź użytkownika, statusy, lokalizacje lub akcesoria.</small></td></tr>`
 				return
 			}
 
@@ -1224,7 +1315,7 @@
 				accessoriesRow.innerHTML = `
 					<td colspan="${VISIBLE_TABLE_COLUMN_COUNT}" class="hire-accessories-cell">
 						<div class="hire-accessories-collapse">
-							${renderAccessoriesPanel(hire)}
+							${renderAccessoriesPanel(hire, originalIndex, guestMode)}
 						</div>
 					</td>
 				`
@@ -1292,6 +1383,36 @@
 		}
 
 		inlineEditState = null
+		saveData()
+	}
+
+	function togglePreparedAccessory(index, accessoryKey) {
+		if (!ACCESSORY_FIELD_KEYS.includes(accessoryKey)) return
+		if (!requireAuthenticatedAction('Musisz byc zalogowany, aby oznaczac przygotowane akcesoria.')) return
+
+		const hire = hires[index]
+		if (!hire || !normalizeFlagValue(hire[accessoryKey])) return
+
+		const preparedAccessories = new Set(normalizePreparedAccessories(hire.preparedAccessories, hire))
+		if (preparedAccessories.has(accessoryKey)) {
+			preparedAccessories.delete(accessoryKey)
+		} else {
+			preparedAccessories.add(accessoryKey)
+		}
+
+		const actor = AppUtils.auth.getAuditActorSnapshot()
+		const now = new Date().toISOString()
+		hires[index] = normalizeHireRecord({
+			...hire,
+			preparedAccessories: ACCESSORY_FIELD_KEYS.filter(key => preparedAccessories.has(key)),
+			updatedBy: actor,
+			updatedAt: now,
+		})
+
+		if (editIndex === index) {
+			setDrawerAudit(hires[index])
+		}
+
 		saveData()
 	}
 
@@ -1429,11 +1550,6 @@
 						),
 					}
 
-					if (normalizeFlagValue(readImportedValue(lookup, IMPORT_ALIASES.keyboardMouseSet))) {
-						partialRecord.mouse = true
-						partialRecord.keyboard = true
-					}
-
 					const legacyAccessoriesValue = readImportedValue(lookup, IMPORT_ALIASES.legacyAccessories)
 					if (legacyAccessoriesValue) {
 						AppUtils.normalizeAccessories(String(legacyAccessoriesValue).split(',')).forEach(accessory => {
@@ -1516,19 +1632,19 @@
 	/* === Hires Excel Backup: End === */
 
 	/* === Hires Init: Start === */
-	document.addEventListener('DOMContentLoaded', () => {
+	runWhenReady(() => {
 		monthPicker.init()
 		resetFormState()
 		syncSemanticSelects()
 
 		document.querySelectorAll('[data-month-delta]').forEach(button => {
-			button.addEventListener('click', () => {
+			listen(button, 'click', () => {
 				monthPicker.changeMonth(Number(button.dataset.monthDelta))
 			})
 		})
 
 		if (accessoryPicker) {
-			accessoryPicker.addEventListener('click', event => {
+			listen(accessoryPicker, 'click', event => {
 				const item = event.target.closest('.accessory-item')
 				if (!item) return
 				if (!requireAuthenticatedAction()) return
@@ -1539,11 +1655,13 @@
 
 		SEMANTIC_SELECT_FIELD_IDS.forEach(fieldId => {
 			const field = document.getElementById(fieldId)
-			field?.addEventListener('change', () => syncSemanticSelectAppearance(field))
+			if (field) {
+				listen(field, 'change', () => syncSemanticSelectAppearance(field))
+			}
 		})
 
 		if (tableBody) {
-			tableBody.addEventListener('pointerdown', event => {
+			listen(tableBody, 'pointerdown', event => {
 				const inlineTrigger = event.target.closest('[data-action="start-inline-edit"]')
 				if (!inlineTrigger || !inlineEditState) return
 
@@ -1556,7 +1674,7 @@
 				startInlineEdit(index, fieldId)
 			})
 
-			tableBody.addEventListener('change', event => {
+			listen(tableBody, 'change', event => {
 				const inlineSelect = event.target.closest('.hire-inline-select')
 				if (!inlineSelect) return
 
@@ -1567,7 +1685,7 @@
 				)
 			})
 
-			tableBody.addEventListener('focusout', event => {
+			listen(tableBody, 'focusout', event => {
 				const inlineSelect = event.target.closest('.hire-inline-select')
 				if (!inlineSelect) return
 				const nextInlineTrigger = event.relatedTarget?.closest?.('[data-action="start-inline-edit"]')
@@ -1583,7 +1701,7 @@
 				})
 			})
 
-			tableBody.addEventListener('keydown', event => {
+			listen(tableBody, 'keydown', event => {
 				const inlineSelect = event.target.closest('.hire-inline-select')
 				if (!inlineSelect) return
 
@@ -1593,7 +1711,7 @@
 				}
 			})
 
-			tableBody.addEventListener('click', event => {
+			listen(tableBody, 'click', event => {
 				const actionButton = event.target.closest('[data-action]')
 				if (!actionButton) return
 
@@ -1610,6 +1728,11 @@
 					return
 				}
 
+				if (action === 'toggle-accessory-prepared') {
+					togglePreparedAccessory(index, actionButton.dataset.accessoryKey || '')
+					return
+				}
+
 				if (!requireAuthenticatedAction()) return
 
 				if (action === 'edit') startEditFlow(index)
@@ -1618,22 +1741,22 @@
 		}
 
 		if (openDrawerBtn) {
-			openDrawerBtn.addEventListener('click', startCreateFlow)
+			listen(openDrawerBtn, 'click', startCreateFlow)
 		}
 
 		if (closeDrawerBtn) {
-			closeDrawerBtn.addEventListener('click', () => void closeDrawer())
+			listen(closeDrawerBtn, 'click', () => void closeDrawer())
 		}
 
 		if (cancelDrawerBtn) {
-			cancelDrawerBtn.addEventListener('click', () => void closeDrawer())
+			listen(cancelDrawerBtn, 'click', () => void closeDrawer())
 		}
 
 		if (drawerBackdrop) {
-			drawerBackdrop.addEventListener('click', () => void closeDrawer())
+			listen(drawerBackdrop, 'click', () => void closeDrawer())
 		}
 
-		window.addEventListener('keydown', event => {
+		listen(window, 'keydown', event => {
 			if (event.key === 'Escape' && searchController.isOpen()) {
 				searchController.close()
 				return
@@ -1645,7 +1768,7 @@
 		})
 
 		if (hiresForm) {
-			hiresForm.addEventListener('submit', async event => {
+			listen(hiresForm, 'submit', async event => {
 				event.preventDefault()
 				if (!requireAuthenticatedAction()) return
 
@@ -1654,7 +1777,7 @@
 					AppUtils.notify({
 						type: 'warning',
 						title: 'Brak wymaganych danych',
-						message: 'Uzupelnij uzytkownika docelowego oraz date rozpoczecia pracy.',
+						message: 'Uzupełnij użytkownika oraz datę rozpoczęcia pracy.',
 					})
 					return
 				}
@@ -1698,27 +1821,27 @@
 			})
 		}
 
-		if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)
+		if (exportExcelBtn) listen(exportExcelBtn, 'click', exportExcel)
 		if (importExcelTrigger && importExcelInput) {
-			importExcelTrigger.addEventListener('click', () => {
+			listen(importExcelTrigger, 'click', () => {
 				if (!requireAuthenticatedAction('Musisz byc zalogowany, aby importowac dane nowych zatrudnien.')) return
 				importExcelInput.click()
 			})
-			importExcelInput.addEventListener('change', importExcel)
+			listen(importExcelInput, 'change', importExcel)
 		}
 
 		if (searchInput) {
-			searchInput.addEventListener('input', event => {
+			listen(searchInput, 'input', event => {
 				searchQuery = event.target.value || ''
 				renderTable()
 			})
 		}
 
 		if (searchToggleBtn) {
-			searchToggleBtn.addEventListener('click', searchController.toggle)
+			listen(searchToggleBtn, 'click', searchController.toggle)
 		}
 
-		document.addEventListener('app-auth-changed', () => {
+		listen(document, 'app-auth-changed', () => {
 			syncProtectedUi()
 			renderTable()
 		})

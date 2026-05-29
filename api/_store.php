@@ -412,6 +412,7 @@ function dashboard_schema_statements(): array
 			pinned_by varchar(191) NULL
 		)",
 		'CREATE INDEX IF NOT EXISTS dashboard_notes_sort_idx ON dashboard_notes (sort_order, created_at)',
+		'CREATE INDEX IF NOT EXISTS dashboard_notes_pinned_idx ON dashboard_notes (is_pinned, pinned_at, updated_at)',
 		"CREATE TABLE IF NOT EXISTS dashboard_notes_active_viewers (
 			tab_id varchar(191) PRIMARY KEY,
 			sort_order integer NOT NULL DEFAULT 0,
@@ -1148,6 +1149,184 @@ function dashboard_replace_notes_collection(PDO $pdo, $records): void
 	dashboard_replace_rows($pdo, 'dashboard_notes', $rows);
 }
 
+function dashboard_generate_entry_id(string $prefix): string
+{
+	try {
+		$suffix = bin2hex(random_bytes(4));
+	} catch (Throwable $error) {
+		$suffix = substr(md5(uniqid((string) mt_rand(), true)), 0, 8);
+	}
+
+	return sprintf('%s-%s-%s', $prefix, (string) round(microtime(true) * 1000), $suffix);
+}
+
+function dashboard_map_notes_row(array $row): array
+{
+	return [
+		'id' => (string) ($row['id'] ?? ''),
+		'content' => dashboard_trim_string($row['content'] ?? ''),
+		'authorId' => (string) ($row['author_id'] ?? ''),
+		'createdAt' => dashboard_format_datetime_output($row['created_at'] ?? ''),
+		'updatedAt' => dashboard_format_datetime_output($row['updated_at'] ?? ''),
+		'isPinned' => dashboard_boolean_from_database($row['is_pinned'] ?? false),
+		'pinnedAt' => dashboard_format_datetime_output($row['pinned_at'] ?? ''),
+		'pinnedBy' => dashboard_trim_string($row['pinned_by'] ?? ''),
+	];
+}
+
+function dashboard_fetch_note_message_row(PDO $pdo, string $messageId): ?array
+{
+	$statement = $pdo->prepare(
+		'SELECT id, sort_order, content, author_id, created_at, updated_at, is_pinned, pinned_at, pinned_by
+		FROM dashboard_notes
+		WHERE id = :id
+		LIMIT 1'
+	);
+	$statement->execute([
+		'id' => $messageId,
+	]);
+
+	$row = $statement->fetch();
+	return is_array($row) ? $row : null;
+}
+
+function dashboard_fetch_note_message(PDO $pdo, string $messageId): ?array
+{
+	$row = dashboard_fetch_note_message_row($pdo, $messageId);
+	return $row ? dashboard_map_notes_row($row) : null;
+}
+
+function dashboard_create_chat_message(PDO $pdo, string $content, string $authorId): array
+{
+	$normalizedContent = dashboard_trim_string($content, 1600);
+	$normalizedAuthorId = dashboard_trim_string($authorId);
+	if ($normalizedContent === '' || $normalizedAuthorId === '') {
+		throw new InvalidArgumentException('Nie mozna zapisac pustej wiadomosci.');
+	}
+
+	dashboard_lock_storage_path($pdo, 'dashboard_notes_entries');
+	$sortOrder = (int) $pdo->query('SELECT COALESCE(MAX(sort_order), -1) + 1 FROM dashboard_notes')->fetchColumn();
+	$messageId = dashboard_generate_entry_id('chat-message');
+	$now = dashboard_now_iso();
+	$statement = $pdo->prepare(
+		'INSERT INTO dashboard_notes (id, sort_order, content, author_id, created_at, updated_at, is_pinned, pinned_at, pinned_by)
+		VALUES (:id, :sort_order, :content, :author_id, :created_at, :updated_at, FALSE, NULL, \'\')'
+	);
+	$statement->execute([
+		'id' => $messageId,
+		'sort_order' => $sortOrder,
+		'content' => $normalizedContent,
+		'author_id' => $normalizedAuthorId,
+		'created_at' => $now,
+		'updated_at' => $now,
+	]);
+
+	$message = dashboard_fetch_note_message($pdo, $messageId);
+	if (!$message) {
+		throw new RuntimeException('Nie udalo sie odczytac zapisanej wiadomosci.');
+	}
+
+	return $message;
+}
+
+function dashboard_update_chat_message(PDO $pdo, string $messageId, string $content, array $actor): array
+{
+	$existingRow = dashboard_fetch_note_message_row($pdo, $messageId);
+	if (!$existingRow) {
+		throw new InvalidArgumentException('Nie znaleziono wiadomosci do edycji.');
+	}
+
+	$actorId = dashboard_trim_string($actor['id'] ?? '');
+	$actorRole = dashboard_store_normalize_role((string) ($actor['role'] ?? 'user'));
+	if ($actorId === '' || ($actorRole !== 'admin' && (string) ($existingRow['author_id'] ?? '') !== $actorId)) {
+		throw new InvalidArgumentException('Mozesz edytowac tylko swoje wiadomosci.');
+	}
+
+	$normalizedContent = dashboard_trim_string($content, 1600);
+	if ($normalizedContent === '') {
+		throw new InvalidArgumentException('Wiadomosc nie moze byc pusta.');
+	}
+
+	dashboard_lock_storage_path($pdo, 'dashboard_notes_entries');
+	$statement = $pdo->prepare(
+		'UPDATE dashboard_notes
+		SET content = :content, updated_at = :updated_at
+		WHERE id = :id'
+	);
+	$statement->execute([
+		'id' => $messageId,
+		'content' => $normalizedContent,
+		'updated_at' => dashboard_now_iso(),
+	]);
+
+	$message = dashboard_fetch_note_message($pdo, $messageId);
+	if (!$message) {
+		throw new RuntimeException('Nie udalo sie odczytac zaktualizowanej wiadomosci.');
+	}
+
+	return $message;
+}
+
+function dashboard_delete_chat_message(PDO $pdo, string $messageId, array $actor): array
+{
+	$existingRow = dashboard_fetch_note_message_row($pdo, $messageId);
+	if (!$existingRow) {
+		throw new InvalidArgumentException('Nie znaleziono wiadomosci do usuniecia.');
+	}
+
+	$actorId = dashboard_trim_string($actor['id'] ?? '');
+	$actorRole = dashboard_store_normalize_role((string) ($actor['role'] ?? 'user'));
+	if ($actorId === '' || ($actorRole !== 'admin' && (string) ($existingRow['author_id'] ?? '') !== $actorId)) {
+		throw new InvalidArgumentException('Mozesz usuwac tylko swoje wiadomosci.');
+	}
+
+	$deletedMessage = dashboard_map_notes_row($existingRow);
+	dashboard_lock_storage_path($pdo, 'dashboard_notes_entries');
+	$statement = $pdo->prepare('DELETE FROM dashboard_notes WHERE id = :id');
+	$statement->execute([
+		'id' => $messageId,
+	]);
+
+	return $deletedMessage;
+}
+
+function dashboard_set_chat_message_pinned(PDO $pdo, string $messageId, bool $isPinned, array $actor): array
+{
+	$existingRow = dashboard_fetch_note_message_row($pdo, $messageId);
+	if (!$existingRow) {
+		throw new InvalidArgumentException('Nie znaleziono wiadomosci do przypiecia.');
+	}
+
+	$actorId = dashboard_trim_string($actor['id'] ?? '');
+	if ($actorId === '') {
+		throw new InvalidArgumentException('Musisz byc zalogowany, aby przypinac wiadomosci.');
+	}
+
+	dashboard_lock_storage_path($pdo, 'dashboard_notes_entries');
+	$statement = $pdo->prepare(
+		'UPDATE dashboard_notes
+		SET is_pinned = :is_pinned,
+			pinned_at = :pinned_at,
+			pinned_by = :pinned_by,
+			updated_at = :updated_at
+		WHERE id = :id'
+	);
+	$statement->execute([
+		'id' => $messageId,
+		'is_pinned' => $isPinned,
+		'pinned_at' => $isPinned ? dashboard_now_iso() : null,
+		'pinned_by' => $isPinned ? $actorId : '',
+		'updated_at' => dashboard_now_iso(),
+	]);
+
+	$message = dashboard_fetch_note_message($pdo, $messageId);
+	if (!$message) {
+		throw new RuntimeException('Nie udalo sie odczytac przypietej wiadomosci.');
+	}
+
+	return $message;
+}
+
 function dashboard_fetch_notes_active_viewers_collection(PDO $pdo): array
 {
 	$statement = $pdo->query(
@@ -1424,11 +1603,45 @@ function dashboard_normalize_hire_flag_value($value): bool
 	return in_array($normalizedValue, ['1', 'true', 'tak', 'yes', 'y', 'x', 'zamowione', 'ordered'], true);
 }
 
+function dashboard_normalize_hire_prepared_accessories($value, array $details): array
+{
+	$rawPreparedAccessories = [];
+	if (is_array($value)) {
+		$rawPreparedAccessories = $value;
+	} elseif (is_string($value)) {
+		$rawPreparedAccessories = explode(',', $value);
+	}
+
+	$allowedKeys = array_flip(dashboard_hire_flag_keys());
+	$normalizedKeys = [];
+
+	foreach ($rawPreparedAccessories as $rawAccessoryKey) {
+		$accessoryKey = trim((string) $rawAccessoryKey);
+		if ($accessoryKey === '') {
+			continue;
+		}
+		if (!isset($allowedKeys[$accessoryKey])) {
+			continue;
+		}
+		if (empty($details[$accessoryKey])) {
+			continue;
+		}
+
+		$normalizedKeys[$accessoryKey] = true;
+	}
+
+	return array_values(array_filter(
+		dashboard_hire_flag_keys(),
+		static fn(string $flagKey): bool => isset($normalizedKeys[$flagKey])
+	));
+}
+
 function dashboard_normalize_hire_details(array $record): array
 {
 	$sourceDetails = isset($record['details']) && is_array($record['details']) ? $record['details'] : [];
 	$mergedRecord = array_merge($sourceDetails, $record);
 	$startDate = dashboard_normalize_date_value($mergedRecord['startDate'] ?? ($mergedRecord['date'] ?? ''));
+	// Preserve legacy records saved before the keyboard+mouse bundle was removed.
 	$legacyKeyboardMouseSet = dashboard_normalize_hire_flag_value($mergedRecord['keyboardMouseSet'] ?? false);
 	$details = [
 		'purchaseRequest' => dashboard_trim_string($mergedRecord['purchaseRequest'] ?? '', 200),
@@ -1454,6 +1667,8 @@ function dashboard_normalize_hire_details(array $record): array
 		$details['mouse'] = true;
 		$details['keyboard'] = true;
 	}
+
+	$details['preparedAccessories'] = dashboard_normalize_hire_prepared_accessories($mergedRecord['preparedAccessories'] ?? [], $details);
 
 	return $details;
 }

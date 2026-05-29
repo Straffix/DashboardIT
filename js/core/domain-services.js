@@ -2,6 +2,7 @@
 	const appServices = (window.AppServices = window.AppServices || {})
 	const storageService = appServices.storageService
 	const usersService = appServices.usersService
+	const remoteApi = appServices.remoteApi
 
 	if (!storageService) {
 		return
@@ -16,7 +17,7 @@
 		TASKS: 'dashboard_notes_tasks',
 	}
 
-	const LUNCH_TIME_SLOTS = ['11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00']
+	const LUNCH_TIME_SLOTS = ['11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30']
 	const LUNCH_MAX_CAPACITY_PER_SLOT = 4
 
 	const TASK_STATUS_META = {
@@ -94,7 +95,7 @@
 	}
 
 	const lunchService = {
-		// TODO: replace this localStorage implementation with fetch/API calls once backend lunch endpoints are ready.
+		// Shared lunch records are synchronized through the storage service and backend API.
 		loadReservations() {
 			return readArray(STORAGE_KEYS.LUNCH).map(normalizeReservationRecord)
 		},
@@ -124,12 +125,17 @@
 		reserveSlot({ date, timeSlot, userId }) {
 			const normalizedDate = formatDateValue(date)
 			const normalizedUserId = String(userId || '')
+			const todayDate = formatDateValue(new Date())
 			if (!normalizedUserId) {
 				throw new Error('Musisz byc zalogowany, aby zapisac sie na obiad.')
 			}
 
 			if (!normalizedDate) {
 				throw new Error('Wybierz poprawna date rezerwacji.')
+			}
+
+			if (normalizedDate !== todayDate) {
+				throw new Error('Rezerwacje obiadowe sa dostepne tylko na dzisiejszy dzien.')
 			}
 
 			if (!LUNCH_TIME_SLOTS.includes(timeSlot)) {
@@ -245,11 +251,11 @@
 			storageService.writeJson(STORAGE_KEYS.ANNOUNCEMENTS, announcements)
 		},
 		getNotes() {
-			return this.loadNotes().filter(note => note.id && note.content && note.authorId).sort(sortByUpdatedDesc)
+			return this.loadNotes().filter(note => note.id && note.content).sort(sortByUpdatedDesc)
 		},
 		getChatMessages() {
 			return this.loadNotes()
-				.filter(note => note.id && note.content && note.authorId)
+				.filter(note => note.id && note.content)
 				.sort((leftNote, rightNote) => getTimestamp(leftNote.createdAt) - getTimestamp(rightNote.createdAt))
 		},
 		getPinnedChatMessages() {
@@ -277,6 +283,30 @@
 		},
 		getAnnouncementById(announcementId) {
 			return this.getAnnouncements().find(announcement => announcement.id === String(announcementId || '')) || null
+		},
+		canUseRemoteChatApi() {
+			return Boolean(remoteApi?.isRemoteEnabled?.()) && !Boolean(storageService?.isBrowserFallbackMode?.())
+		},
+		requestRemoteChatApi({ method = 'GET', messageId = '', body = null } = {}) {
+			if (!this.canUseRemoteChatApi() || typeof remoteApi?.request !== 'function') {
+				return {
+					ok: false,
+					message: 'Zdalne API czatu nie jest obecnie dostepne.',
+				}
+			}
+
+			const query = new URLSearchParams()
+			if (messageId) {
+				query.set('messageId', String(messageId))
+			}
+
+			const queryString = query.toString()
+			const path = `chat-messages.php${queryString ? `?${queryString}` : ''}`
+			return remoteApi.request({
+				method,
+				path,
+				body,
+			})
 		},
 		createNote({ content, authorId }) {
 			const normalizedContent = String(content || '').trim()
@@ -313,6 +343,20 @@
 
 			if (!normalizedContent) {
 				throw new Error('Wpisz tresc wiadomosci przed wyslaniem.')
+			}
+
+			if (this.canUseRemoteChatApi()) {
+				const response = this.requestRemoteChatApi({
+					method: 'POST',
+					body: {
+						content: normalizedContent,
+					},
+				})
+				if (!response.ok) {
+					throw new Error(response.message || 'Nie udalo sie zapisac wiadomosci na serwerze.')
+				}
+
+				return normalizeNoteRecord(response.chatMessage || {})
 			}
 
 			const notes = this.loadNotes()
@@ -362,6 +406,22 @@
 		updateChatMessage({ messageId, content, actor }) {
 			const normalizedMessageId = String(messageId || '')
 			const normalizedContent = String(content || '').trim()
+
+			if (this.canUseRemoteChatApi()) {
+				const response = this.requestRemoteChatApi({
+					method: 'PATCH',
+					body: {
+						messageId: normalizedMessageId,
+						content: normalizedContent,
+					},
+				})
+				if (!response.ok) {
+					throw new Error(response.message || 'Nie udalo sie zaktualizowac wiadomosci.')
+				}
+
+				return normalizeNoteRecord(response.chatMessage || {})
+			}
+
 			const notes = this.loadNotes()
 			const messageIndex = notes.findIndex(note => note.id === normalizedMessageId)
 
@@ -404,6 +464,19 @@
 		},
 		deleteChatMessage({ messageId, actor }) {
 			const normalizedMessageId = String(messageId || '')
+
+			if (this.canUseRemoteChatApi()) {
+				const response = this.requestRemoteChatApi({
+					method: 'DELETE',
+					messageId: normalizedMessageId,
+				})
+				if (!response.ok) {
+					throw new Error(response.message || 'Nie udalo sie usunac wiadomosci.')
+				}
+
+				return normalizeNoteRecord(response.chatMessage || {})
+			}
+
 			const notes = this.loadNotes()
 			const messageToDelete = notes.find(note => note.id === normalizedMessageId)
 
@@ -420,6 +493,22 @@
 		},
 		setChatMessagePinned({ messageId, isPinned, actor }) {
 			const normalizedMessageId = String(messageId || '')
+
+			if (this.canUseRemoteChatApi()) {
+				const response = this.requestRemoteChatApi({
+					method: 'PATCH',
+					body: {
+						messageId: normalizedMessageId,
+						isPinned: Boolean(isPinned),
+					},
+				})
+				if (!response.ok) {
+					throw new Error(response.message || 'Nie udalo sie zmienic przypiecia wiadomosci.')
+				}
+
+				return normalizeNoteRecord(response.chatMessage || {})
+			}
+
 			const notes = this.loadNotes()
 			const messageIndex = notes.findIndex(note => note.id === normalizedMessageId)
 
@@ -528,7 +617,7 @@
 	}
 
 	const tasksService = {
-		// TODO: replace this localStorage implementation with fetch/API calls once backend task endpoints are ready.
+		// Shared task records are synchronized through the storage service and backend API.
 		loadTasks() {
 			return readArray(STORAGE_KEYS.TASKS).map(normalizeTaskRecord)
 		},

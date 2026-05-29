@@ -17,7 +17,6 @@
 
     <link rel="stylesheet" href="./styles/css/style.css">
     <link rel="stylesheet" href="./styles/css/zatrudnienia.css">
-    <link rel="stylesheet" href="./styles/css/app-icons.css">
 </head>
 
 <body class="module-page hires-page">
@@ -53,11 +52,11 @@
                         </a>
                         <a href="monitor_laptopow.html" class="module-nav-link">
                             <i class="app-icon laptop-solid-full" aria-hidden="true"></i>
-                            <span>Urzadzenia</span>
+                            <span>Urządzenia</span>
                         </a>
                         <a href="wymiana_sprzetu.html" class="module-nav-link">
                             <i class="app-icon right-left-solid-full" aria-hidden="true"></i>
-                            <span>Wymiana sprzetu</span>
+                            <span>Wymiana sprzętu</span>
                         </a>
                         <a href="rezerwacja_obiadow.html" class="module-nav-link">
                             <i class="app-icon utensils-solid-full" aria-hidden="true"></i>
@@ -161,7 +160,6 @@
                     <div>
                         <p class="hire-drawer-kicker">Nowe zatrudnienia</p>
                         <h2 id="hire-drawer-title">Dodaj pracownika</h2>
-                        <p id="hire-drawer-copy" class="hire-drawer-copy">Uzupelnij dane i zapisz nowy onboarding.</p>
                         <div id="hire-drawer-audit" class="hire-drawer-audit" hidden></div>
                     </div>
 
@@ -175,29 +173,28 @@
                     <section class="hire-form-section">
                         <div class="hire-form-section-heading">
                             <h3>Dane główne</h3>
-                            <p>Pełny zestaw pol z Excela, ale rozlozony w wygodne sekcje.</p>
                         </div>
 
                         <div class="hire-form-grid">
                             <div class="input-group">
-                                <label>Zgloszenie na zakup sprzetu</label>
+                                <label>Service Desk</label>
                                 <input type="text" id="purchaseRequest" placeholder="np. SD-2026-018">
                             </div>
 
                             <div class="input-group">
-                                <label>Uzytkownik</label>
+                                <label>Użytkownik</label>
                                 <input type="text" id="targetUser" required placeholder="np. Jan Kowalski">
                             </div>
 
                             <div class="input-group">
-                                <label>Data rozpoczecia pracy</label>
+                                <label>Data rozpoczęcia pracy</label>
                                 <input type="date" id="startDate" required>
                             </div>
 
                             <div class="input-group">
-                                <label>Przygotowal/a</label>
+                                <label>Przygotował/a</label>
                                 <select id="preparedBy">
-                                    <option value="">Wybierz osobe</option>
+                                    <option value="">Wybierz osobę</option>
                                     <option value="A. BISKUPSKA">Anna Biskupska</option>
                                     <option value="A. LISIECKI">Arkadiusz Lisiecki</option>
                                     <option value="B. BRODA">Bartosz Broda</option>
@@ -226,7 +223,7 @@
                             </div>
 
                             <div class="input-group input-group-full">
-                                <label>Lokalizacja do wydania</label>
+                                <label>Lokalizacja</label>
                                 <input type="text" id="deliveryLocation"
                                     placeholder="np. Warszawa / Centrala / pok. 204">
                             </div>
@@ -368,7 +365,7 @@
                         </div>
 
                         <div class="input-group input-group-full">
-                            <label>Uwagi do peryferiów</label>
+                            <label>Uwagi</label>
                             <textarea id="peripheralNotes" rows="4"
                                 placeholder="Komentarz, niestandardowe wyposazenie, dodatkowe ustalenia."></textarea>
                         </div>

@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS dashboard_notes (
 );
 
 CREATE INDEX IF NOT EXISTS dashboard_notes_sort_idx ON dashboard_notes (sort_order, created_at);
+CREATE INDEX IF NOT EXISTS dashboard_notes_pinned_idx ON dashboard_notes (is_pinned, pinned_at, updated_at);
 
 CREATE TABLE IF NOT EXISTS dashboard_notes_active_viewers (
 	tab_id varchar(191) PRIMARY KEY,

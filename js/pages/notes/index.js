@@ -1,4 +1,27 @@
-document.addEventListener('DOMContentLoaded', () => {
+(function initializeNotesPage() {
+	const pageScope = window.AppPageRuntime?.createScope?.('notatnik.html') || null
+	const runWhenReady = callback => {
+		if (typeof pageScope?.runWhenReady === 'function') {
+			pageScope.runWhenReady(callback)
+			return
+		}
+
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', callback, { once: true })
+			return
+		}
+
+		callback()
+	}
+	const listen = (target, type, listener, options = undefined) => {
+		if (!target?.addEventListener) return
+		const nextOptions = pageScope?.signal ? { ...(options || {}), signal: pageScope.signal } : options
+		target.addEventListener(type, listener, nextOptions)
+	}
+	const scheduleTimeout = typeof pageScope?.setTimeout === 'function' ? pageScope.setTimeout.bind(pageScope) : window.setTimeout.bind(window)
+	const scheduleInterval = typeof pageScope?.setInterval === 'function' ? pageScope.setInterval.bind(pageScope) : window.setInterval.bind(window)
+
+	runWhenReady(() => {
 	const notesService = window.AppServices?.notesService
 	const usersService = window.AppServices?.usersService
 	const storageService = window.AppServices?.storageService
@@ -10,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const presenceTtlMs = 45000
 
 	const chatSummary = document.getElementById('notes-chat-summary')
-	const feedback = document.getElementById('notes-feedback')
 	const authCallout = document.getElementById('notes-auth-callout')
 	const authTitle = document.getElementById('notes-auth-title')
 	const authText = document.getElementById('notes-auth-text')
@@ -29,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	if (
 		!notesService ||
-		!feedback ||
 		!authCallout ||
 		!authTitle ||
 		!authText ||
@@ -55,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const state = {
 		editingMessageId: '',
-		feedbackTimeoutId: null,
 		refreshTimerId: 0,
 		presenceTimerId: 0,
 	}
@@ -155,6 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		saveActiveViewerRecords(records)
 	}
 
+	pageScope?.onCleanup?.(() => {
+		clearCurrentViewerPresence()
+	})
+
 	const renderActiveViewers = (currentUser, { syncPresence = true } = {}) => {
 		if (!currentUser) {
 			clearCurrentViewerPresence()
@@ -209,18 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	const canManageMessage = (message, currentUser) =>
 		Boolean(message && currentUser && String(message.authorId) === String(currentUser.id))
 
-	const showFeedbackMessage = (message, type = 'info') => {
-		if (state.feedbackTimeoutId) {
-			window.clearTimeout(state.feedbackTimeoutId)
-		}
-
-		feedback.textContent = message
-		feedback.className = `notes-feedback is-${type}`
-
-		state.feedbackTimeoutId = window.setTimeout(() => {
-			feedback.className = 'notes-feedback is-hidden'
-			feedback.textContent = ''
-		}, 3800)
+	const notifyNotes = ({ message = '', type = 'info', title = '', silentSuccess = true } = {}) => {
+		if (!message || typeof AppUtils.notify !== 'function') return
+		if (silentSuccess && type === 'success') return
+		AppUtils.notify({ message, type, title })
 	}
 
 	const isChatNearBottom = () => chatWindow.scrollTop + chatWindow.clientHeight >= chatWindow.scrollHeight - 120
@@ -279,30 +295,49 @@ document.addEventListener('DOMContentLoaded', () => {
 		chatSummary.textContent = `${messages.length} wiadomości, ${pinnedMessages.length} przypiętych. Ostatnia zmiana: ${getLatestUpdateLabel(messages)}.`
 	}
 
-	const createMessageActionsMarkup = (message, currentUser) => {
+	const createMessageActionsMarkup = (message, currentUser, { variant = 'default' } = {}) => {
 		if (!currentUser) return ''
 
 		const canEdit = canManageMessage(message, currentUser)
 		const pinLabel = message.isPinned ? 'Odepnij' : 'Przypnij'
 		const pinIcon = message.isPinned ? 'xmark-solid-full' : 'thumbtack-solid-full'
+		const isCompact = variant === 'compact'
+		const actionsClassName = ['notes-message-actions', isCompact ? 'is-compact' : ''].filter(Boolean).join(' ')
+		const renderActionButton = ({ action, icon, label, isDanger = false }) => `
+			<button
+				type="button"
+				class="notes-icon-btn${isDanger ? ' is-danger' : ''}"
+				data-message-action="${action}"
+				data-message-id="${escapeHtml(message.id)}"
+				aria-label="${label}"
+				title="${label}"
+			>
+				${renderIcon(icon)}
+				${isCompact ? '' : `<span>${label}</span>`}
+			</button>
+		`
 
 		return `
-			<div class="notes-message-actions">
-				<button type="button" class="notes-icon-btn" data-message-action="pin" data-message-id="${escapeHtml(message.id)}" aria-label="${pinLabel} wiadomość">
-					${renderIcon(pinIcon)}
-					<span>${pinLabel}</span>
-				</button>
+			<div class="${actionsClassName}">
+				${renderActionButton({
+					action: 'pin',
+					icon: pinIcon,
+					label: `${pinLabel} wiadomość`,
+				})}
 				${
 					canEdit
 						? `
-							<button type="button" class="notes-icon-btn" data-message-action="edit" data-message-id="${escapeHtml(message.id)}" aria-label="Edytuj wiadomość">
-								<i class="app-icon pen-to-square-solid-full"></i>
-								<span>Edytuj</span>
-							</button>
-							<button type="button" class="notes-icon-btn is-danger" data-message-action="delete" data-message-id="${escapeHtml(message.id)}" aria-label="Usuń wiadomość">
-								<i class="app-icon trash-can-solid-full"></i>
-								<span>Usuń</span>
-							</button>
+							${renderActionButton({
+								action: 'edit',
+								icon: 'pen-to-square-solid-full',
+								label: 'Edytuj wiadomość',
+							})}
+							${renderActionButton({
+								action: 'delete',
+								icon: 'trash-can-solid-full',
+								label: 'Usuń wiadomość',
+								isDanger: true,
+							})}
 						`
 						: ''
 				}
@@ -346,9 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 				return `
 					<article class="notes-chat-message ${isMine ? 'is-mine' : ''} ${message.isPinned ? 'is-pinned' : ''}" data-message-id="${escapeHtml(message.id)}">
-						<div class="notes-message-avatar">
-							${createAvatarMarkup(author, 'notes-avatar')}
-						</div>
 						<div class="notes-message-bubble">
 							<header class="notes-message-meta">
 								<strong>${escapeHtml(author.fullName)}</strong>
@@ -357,8 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
 								${message.isPinned ? '<span class="notes-pin-chip"><i class="app-icon thumbtack-solid-full"></i> przypięte</span>' : ''}
 							</header>
 							<div class="notes-message-content">${renderMultilineText(message.content)}</div>
-							${createMessageActionsMarkup(message, currentUser)}
 						</div>
+						${createMessageActionsMarkup(message, currentUser, { variant: 'compact' })}
 					</article>
 				`
 			})
@@ -366,21 +398,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const renderPinnedMessages = (pinnedMessages, currentUser) => {
-		pinnedCount.textContent = String(currentUser ? pinnedMessages.length : 0)
-
-		if (!currentUser) {
-			pinnedList.innerHTML = createEmptyStateMarkup({
-				title: 'Przypięte po zalogowaniu',
-				copy: 'Ten panel pokazuje najważniejsze wiadomości wybrane przez zespół.',
-				icon: 'thumbtack-solid-full',
-			})
-			return
-		}
+		pinnedCount.textContent = String(pinnedMessages.length)
 
 		if (pinnedMessages.length === 0) {
 			pinnedList.innerHTML = createEmptyStateMarkup({
-				title: 'Nic nie jest przypięte',
-				copy: 'Kliknij „Przypnij” przy wiadomości, aby dodać ją do tego panelu.',
+				title: 'Brak przypiętych wiadomości',
+				copy: currentUser
+					? 'Kliknij „Przypnij” przy wiadomości, aby dodać ją do tego panelu.'
+					: 'Po przypięciu ważne wiadomości będą widoczne tutaj dla całego zespołu.',
 				icon: 'thumbtack-solid-full',
 			})
 			return
@@ -420,8 +445,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const refreshView = ({ forceScrollBottom = false } = {}) => {
 		const currentUser = getCurrentUser()
 		const shouldStickToBottom = forceScrollBottom || isChatNearBottom()
-		const messages = currentUser ? getMessages() : []
-		const pinnedMessages = currentUser ? getPinnedMessages() : []
+		const allMessages = getMessages()
+		const messages = currentUser ? allMessages : []
+		const pinnedMessages = getPinnedMessages()
 
 		renderAuthState(currentUser)
 		renderSummary(messages, pinnedMessages, currentUser)
@@ -434,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (shouldStickToBottom) {
-			window.setTimeout(scrollChatToBottom, 0)
+			scheduleTimeout(scrollChatToBottom, 0)
 		}
 	}
 
@@ -453,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const message = findMessageById(messageId)
 
 		if (!message) {
-			showFeedbackMessage('Nie znaleziono wiadomości.', 'error')
+			notifyNotes({ message: 'Nie znaleziono wiadomości.', type: 'error', title: 'Brak wiadomości' })
 			refreshView()
 			return
 		}
@@ -465,16 +491,23 @@ document.addEventListener('DOMContentLoaded', () => {
 					isPinned: !message.isPinned,
 					actor: currentUser,
 				})
-				showFeedbackMessage(message.isPinned ? 'Wiadomość odpięta.' : 'Wiadomość przypięta po prawej stronie.', 'success')
 				refreshView()
 			} catch (error) {
-				showFeedbackMessage(error.message || 'Nie udało się zmienić przypięcia.', 'error')
+				notifyNotes({
+					message: error.message || 'Nie udało się zmienić przypięcia.',
+					type: 'error',
+					title: 'Błąd przypięcia',
+				})
 			}
 			return
 		}
 
 		if (!canManageMessage(message, currentUser)) {
-			showFeedbackMessage('Możesz edytować i usuwać tylko swoje wiadomości.', 'error')
+			notifyNotes({
+				message: 'Możesz edytować i usuwać tylko swoje wiadomości.',
+				type: 'warning',
+				title: 'Brak uprawnień',
+			})
 			return
 		}
 
@@ -499,18 +532,21 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (state.editingMessageId === messageId) {
 				setEditMode(null)
 			}
-			showFeedbackMessage('Wiadomość usunięta.', 'success')
 			refreshView()
 		} catch (error) {
-			showFeedbackMessage(error.message || 'Nie udało się usunąć wiadomości.', 'error')
+			notifyNotes({
+				message: error.message || 'Nie udało się usunąć wiadomości.',
+				type: 'error',
+				title: 'Błąd usuwania',
+			})
 		}
 	}
 
-	authBtn.addEventListener('click', () => {
+	listen(authBtn, 'click', () => {
 		AppUtils.auth.openAuthModal('login')
 	})
 
-	chatForm.addEventListener('submit', event => {
+	listen(chatForm, 'submit', event => {
 		event.preventDefault()
 		const currentUser = getCurrentUser()
 
@@ -526,41 +562,43 @@ document.addEventListener('DOMContentLoaded', () => {
 					content: chatInput.value,
 					actor: currentUser,
 				})
-				showFeedbackMessage('Wiadomość zaktualizowana.', 'success')
 			} else {
 				notesService.createChatMessage({
 					content: chatInput.value,
 					actor: currentUser,
 				})
-				showFeedbackMessage('Wiadomość wysłana.', 'success')
 			}
 
 			setEditMode(null)
 			refreshView({ forceScrollBottom: true })
 		} catch (error) {
-			showFeedbackMessage(error.message || 'Nie udało się zapisać wiadomości.', 'error')
+			notifyNotes({
+				message: error.message || 'Nie udało się zapisać wiadomości.',
+				type: 'error',
+				title: 'Błąd wiadomości',
+			})
 		}
 	})
 
-	cancelEditBtn.addEventListener('click', () => {
+	listen(cancelEditBtn, 'click', () => {
 		setEditMode(null)
 	})
 
-	chatInput.addEventListener('keydown', event => {
+	listen(chatInput, 'keydown', event => {
 		if (event.key !== 'Enter' || event.shiftKey) return
 		event.preventDefault()
 		chatForm.requestSubmit()
 	})
 
-	chatList.addEventListener('click', handleMessageAction)
-	pinnedList.addEventListener('click', handleMessageAction)
+	listen(chatList, 'click', handleMessageAction)
+	listen(pinnedList, 'click', handleMessageAction)
 
-	document.addEventListener('app-auth-changed', () => {
+	listen(document, 'app-auth-changed', () => {
 		setEditMode(null)
 		refreshView({ forceScrollBottom: true })
 	})
 
-	window.addEventListener('storage', event => {
+	listen(window, 'storage', event => {
 		if (event.key === activeViewersStorageKey) {
 			renderActiveViewers(getCurrentUser(), { syncPresence: false })
 			return
@@ -571,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	})
 
-	document.addEventListener('visibilitychange', () => {
+	listen(document, 'visibilitychange', () => {
 		if (document.hidden) {
 			clearCurrentViewerPresence()
 			return
@@ -580,21 +618,20 @@ document.addEventListener('DOMContentLoaded', () => {
 		refreshView()
 	})
 
-	state.refreshTimerId = window.setInterval(() => {
+	state.refreshTimerId = scheduleInterval(() => {
 		if (document.hidden) return
 		refreshView()
 	}, 15000)
 
-	state.presenceTimerId = window.setInterval(() => {
+	state.presenceTimerId = scheduleInterval(() => {
 		if (document.hidden) return
 		renderActiveViewers(getCurrentUser())
 	}, 10000)
 
-	window.addEventListener('beforeunload', () => {
+	listen(window, 'beforeunload', () => {
 		clearCurrentViewerPresence()
-		window.clearInterval(state.refreshTimerId)
-		window.clearInterval(state.presenceTimerId)
 	})
 
 	refreshView({ forceScrollBottom: true })
 })
+})()

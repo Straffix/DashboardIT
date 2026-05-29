@@ -114,9 +114,13 @@ const remoteApi = appServices.remoteApi
 
 const isRemoteAuthMode = () => Boolean(storageService?.isRemoteEnabled?.())
 
-const getAccountStorageLabel = () => (isRemoteAuthMode() ? 'na serwerze' : 'lokalnie w tej przegladarce')
+// LIVE_SERVER_FALLBACK_START
+const isBrowserFallbackAuthMode = () => Boolean(storageService?.isBrowserFallbackMode?.())
+// LIVE_SERVER_FALLBACK_END
 
-const getStorageModeTagLabel = () => (isRemoteAuthMode() ? 'Tryb serwerowy' : 'Tryb lokalny')
+const getAccountStorageLabel = () => (isRemoteAuthMode() ? 'na serwerze' : 'tymczasowo w tej przegladarce')
+
+const getStorageModeTagLabel = () => (isRemoteAuthMode() ? 'Tryb serwerowy' : 'Tryb przegladarkowy')
 
 const requestRemoteAuth = ({ path = '', method = 'GET', payload = null } = {}) => {
 	const response = remoteApi?.requestAuth?.({
@@ -349,6 +353,14 @@ const saveSession = session => {
 	sessionService?.save?.(authState.session)
 }
 
+const broadcastSessionChange = () => {
+	storageService?.touch?.(APP_CONFIG.STORAGE_KEYS.SESSION)
+}
+
+const broadcastUserDirectoryChange = () => {
+	storageService?.touch?.(APP_CONFIG.STORAGE_KEYS.USERS)
+}
+
 const findUserByLogin = login => authState.users.find(user => user.login === normalizeUserLogin(login))
 
 const isLocalPasswordMatch = (user, password) => String(user?.passwordHash || '') === encodeLocalPassword(password)
@@ -394,7 +406,7 @@ const renderAuthUi = () => {
 		</div>
 	`
 
-	const popoverMetaText = currentUser
+	let popoverMetaText = currentUser
 		? ''
 		: authState.users.length === 0
 			? isRemoteAuthMode()
@@ -403,6 +415,13 @@ const renderAuthUi = () => {
 			: isRemoteAuthMode()
 				? 'Zaloguj sie lub zaloz nowe konto wspoldzielone na serwerze.'
 				: 'Zaloguj się lub załóż nowe konto lokalne.'
+	// LIVE_SERVER_FALLBACK_START
+	if (!currentUser && !isRemoteAuthMode()) {
+		popoverMetaText = authState.users.length === 0
+			? 'Zaloz pierwsze konto tymczasowo w tej przegladarce. Otrzyma role lidera.'
+			: 'Zaloguj sie lub zaloz konto tymczasowo zapisane w tej przegladarce.'
+	}
+	// LIVE_SERVER_FALLBACK_END
 	authState.popoverMeta.textContent = popoverMetaText
 	authState.popoverMeta.hidden = !popoverMetaText
 	if (authState.popoverTheme) {
@@ -525,6 +544,8 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 		})
 
 		syncCurrentUserFromSession()
+		broadcastUserDirectoryChange()
+		broadcastSessionChange()
 		return sanitizeUser(authState.currentUser)
 	}
 
@@ -568,6 +589,7 @@ const loginUser = ({ login, password }) => {
 		})
 
 		syncCurrentUserFromSession()
+		broadcastSessionChange()
 		return sanitizeUser(authState.currentUser)
 	}
 
@@ -676,6 +698,8 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage, prof
 		})
 
 		syncCurrentUserFromSession()
+		broadcastUserDirectoryChange()
+		broadcastSessionChange()
 		return sanitizeUser(authState.currentUser)
 	}
 
@@ -739,6 +763,7 @@ const changeCurrentUserPassword = ({ currentPassword, newPassword }) => {
 		})
 
 		syncCurrentUserFromSession()
+		broadcastSessionChange()
 		return true
 	}
 
@@ -807,6 +832,7 @@ const updateUserAccess = ({ userId, fullName, login, role, permissions } = {}) =
 		})
 
 		authState.users = loadUsers()
+		broadcastUserDirectoryChange()
 		return sanitizeUser(response.user || authState.users.find(user => String(user.id || '') === normalizedUserId) || null)
 	}
 
@@ -945,6 +971,7 @@ const deleteUserAccount = userId => {
 		})
 
 		authState.users = loadUsers()
+		broadcastUserDirectoryChange()
 		return sanitizeUser(response.user || matchedUser)
 	}
 
@@ -1065,11 +1092,17 @@ const renderPageStatusStrip = () => {
 	const currentUser = authState.currentUser
 	const moduleLabel = getCurrentModuleLabel()
 	const identityLabel = currentUser ? getVisibleUserName(currentUser) : 'Gość systemu'
-	const metaLabel = currentUser
+	let metaLabel = currentUser
 		? getRoleLabel(currentUser.role)
 		: isRemoteAuthMode()
 			? 'Tryb podgladu bez aktywnej sesji serwerowej'
 			: 'Tryb podgladu bez lokalnej sesji'
+
+	// LIVE_SERVER_FALLBACK_START
+	if (!currentUser && isBrowserFallbackAuthMode()) {
+		metaLabel = 'Tryb przegladarkowy bez aktywnej sesji'
+	}
+	// LIVE_SERVER_FALLBACK_END
 
 	systemUiState.pageStatusIdentity.innerHTML = `
 		${createAvatarMarkup({
@@ -1092,6 +1125,13 @@ const renderPageStatusStrip = () => {
 			? `Przegladasz modul ${moduleLabel} jako gosc. Zaloguj sie, aby pracowac na wspolnych danych serwerowych.`
 			: `Przeglądasz moduł ${moduleLabel} jako gość. Zaloguj się, aby korzystać z funkcji zapisujących dane i historii zmian.`
 
+	// LIVE_SERVER_FALLBACK_START
+	if (isBrowserFallbackAuthMode()) {
+		systemUiState.pageStatusText.textContent = currentUser
+			? `Pracujesz w module ${moduleLabel} w trybie przegladarkowym. Dane zapisuja sie tymczasowo tylko w tej przegladarce.`
+			: `Przegladasz modul ${moduleLabel} w trybie przegladarkowym. Zaloguj sie lub zaloz konto, aby testowac zapis danych.`
+	}
+	// LIVE_SERVER_FALLBACK_END
 	systemUiState.pageStatusTags.innerHTML = `
 		<span class="app-page-status-tag ${currentUser?.role === 'admin' ? 'is-admin' : 'is-neutral'}">
 			${currentUser ? getRoleLabel(currentUser.role) : 'Gość'}
@@ -1100,6 +1140,17 @@ const renderPageStatusStrip = () => {
 		<span class="app-page-status-tag is-neutral">${isRemoteAuthMode() ? 'Wspolne dane zespolowe' : 'Frontend ready for API'}</span>
 	`
 
+	// LIVE_SERVER_FALLBACK_START
+	if (isBrowserFallbackAuthMode()) {
+		systemUiState.pageStatusTags.innerHTML = `
+			<span class="app-page-status-tag ${currentUser?.role === 'admin' ? 'is-admin' : 'is-neutral'}">
+				${currentUser ? getRoleLabel(currentUser.role) : 'Gosc'}
+			</span>
+			<span class="app-page-status-tag is-storage">${getStorageModeTagLabel()}</span>
+			<span class="app-page-status-tag is-neutral">Dane tymczasowe w przegladarce</span>
+		`
+	}
+	// LIVE_SERVER_FALLBACK_END
 	systemUiState.pageStatusActions.innerHTML = currentUser
 		? `
 			${

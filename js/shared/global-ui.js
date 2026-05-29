@@ -136,8 +136,11 @@ const syncWorkspaceActionButtonTitles = () => {
 	})
 }
 
+const getModuleNavDocks = () => Array.from(document.querySelectorAll('.module-nav-dock'))
+let moduleNavDocksGlobalListenersReady = false
+
 const initializeModuleNavDocks = () => {
-	const docks = Array.from(document.querySelectorAll('.module-nav-dock'))
+	const docks = getModuleNavDocks()
 	if (!docks.length) return
 
 	const clearDockState = dock => {
@@ -209,8 +212,12 @@ const initializeModuleNavDocks = () => {
 		})
 	})
 
+	if (moduleNavDocksGlobalListenersReady) return
+
+	moduleNavDocksGlobalListenersReady = true
+
 	document.addEventListener('click', event => {
-		docks.forEach(dock => {
+		getModuleNavDocks().forEach(dock => {
 			if (dock.contains(event.target)) return
 			clearDockState(dock)
 		})
@@ -218,9 +225,22 @@ const initializeModuleNavDocks = () => {
 
 	document.addEventListener('keydown', event => {
 		if (event.key !== 'Escape') return
-		docks.forEach(clearDockState)
+		getModuleNavDocks().forEach(clearDockState)
 	})
 }
+
+const refreshModuleShellUi = () => {
+	syncRootThemeState()
+	syncHeaderUserPanelSlot()
+	initializeModuleNavDocks()
+	syncWorkspaceActionButtonTitles()
+}
+
+window.AppUi = Object.assign(window.AppUi || {}, {
+	refreshModuleShellUi,
+	syncHeaderUserPanelSlot,
+	syncWorkspaceActionButtonTitles,
+})
 
 document.addEventListener('DOMContentLoaded', () => {
 	syncRootThemeState()

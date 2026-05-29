@@ -227,6 +227,9 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card.danger i {
   font-weight: 500;
   outline: none;
 }
+.workspace-search input::-moz-placeholder {
+  color: var(--text-muted);
+}
 .workspace-search input::placeholder {
   color: var(--text-muted);
 }
@@ -288,6 +291,7 @@ body.theme-dark:not(.dashboard-page) .stats-grid .stat-card.danger i {
   align-items: center;
   justify-content: flex-end;
   gap: 14px;
+  width: -moz-max-content;
   width: max-content;
   min-width: 0;
   max-width: calc(100vw - 32px);
@@ -482,7 +486,8 @@ body.theme-dark:not(.dashboard-page) .workspace-backup-dock button.workspace-bac
   background-color: var(--bg-panel);
 }
 .radio-group .radio-item input[type=radio] {
-  appearance: none;
+  -moz-appearance: none;
+       appearance: none;
   -webkit-appearance: none;
   width: 18px;
   height: 18px;
@@ -836,6 +841,4 @@ body.theme-dark:not(.dashboard-page) .monitor-row-btn:hover {
   .monitor-confirm-shell {
     padding: 16px;
   }
-}
-
-/*# sourceMappingURL=monitor.css.map */
+}/*# sourceMappingURL=monitor.css.map */

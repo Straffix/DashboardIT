@@ -1,5 +1,25 @@
 ﻿(function initializeMonitorPage() {
 /* === Monitor State And References: Start === */
+const pageScope = window.AppPageRuntime?.createScope?.('monitor_laptopow.html') || null
+const runWhenReady = callback => {
+	if (typeof pageScope?.runWhenReady === 'function') {
+		pageScope.runWhenReady(callback)
+		return
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', callback, { once: true })
+		return
+	}
+
+	callback()
+}
+const listen = (target, type, listener, options = undefined) => {
+	if (!target?.addEventListener) return
+	const nextOptions = pageScope?.signal ? { ...(options || {}), signal: pageScope.signal } : options
+	target.addEventListener(type, listener, nextOptions)
+}
+const scheduleTimeout = typeof pageScope?.setTimeout === 'function' ? pageScope.setTimeout.bind(pageScope) : window.setTimeout.bind(window)
 let devices = []
 let editingDeviceIndex = null
 let drawerInitialState = ''
@@ -259,7 +279,7 @@ function openDrawer() {
 	drawerShell.setAttribute('aria-hidden', 'false')
 	document.body.classList.add('monitor-drawer-open')
 
-	window.setTimeout(() => nameInput?.focus(), 80)
+	scheduleTimeout(() => nameInput?.focus(), 80)
 }
 
 async function closeDrawer({ force = false } = {}) {
@@ -621,20 +641,20 @@ function toggleDateInput() {
 /* === Monitor Form State: End === */
 
 /* === Monitor Init: Start === */
-document.addEventListener('DOMContentLoaded', () => {
+runWhenReady(() => {
 	resetFormState()
 
 	if (ruInput) {
-		ruInput.addEventListener('input', () => {
+		listen(ruInput, 'input', () => {
 			ruInput.value = ruInput.value.replace(/[^0-9]/g, '')
 		})
 	}
 
-	if (newRadio) newRadio.addEventListener('change', toggleDateInput)
-	if (oldRadio) oldRadio.addEventListener('change', toggleDateInput)
+	if (newRadio) listen(newRadio, 'change', toggleDateInput)
+	if (oldRadio) listen(oldRadio, 'change', toggleDateInput)
 
 	if (tableBody) {
-		tableBody.addEventListener('click', event => {
+		listen(tableBody, 'click', event => {
 			const actionButton = event.target.closest('[data-action]')
 			if (!actionButton) return
 			if (!requireAuthenticatedAction()) return
@@ -647,22 +667,22 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	if (openDrawerBtn) {
-		openDrawerBtn.addEventListener('click', () => void startCreateFlow())
+		listen(openDrawerBtn, 'click', () => void startCreateFlow())
 	}
 
 	if (closeDrawerBtn) {
-		closeDrawerBtn.addEventListener('click', () => void closeDrawer())
+		listen(closeDrawerBtn, 'click', () => void closeDrawer())
 	}
 
 	if (cancelDrawerBtn) {
-		cancelDrawerBtn.addEventListener('click', () => void closeDrawer())
+		listen(cancelDrawerBtn, 'click', () => void closeDrawer())
 	}
 
 	if (drawerBackdrop) {
-		drawerBackdrop.addEventListener('click', () => void closeDrawer())
+		listen(drawerBackdrop, 'click', () => void closeDrawer())
 	}
 
-	window.addEventListener('keydown', event => {
+	listen(window, 'keydown', event => {
 		if (event.key === 'Escape' && searchController.isOpen()) {
 			searchController.close()
 			return
@@ -674,7 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	})
 
 	if (deviceForm) {
-		deviceForm.addEventListener('submit', async event => {
+		listen(deviceForm, 'submit', async event => {
 			event.preventDefault()
 			if (!requireAuthenticatedAction()) return
 
@@ -762,27 +782,27 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	}
 
-	if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)
+	if (exportExcelBtn) listen(exportExcelBtn, 'click', exportExcel)
 	if (importExcelTrigger && importExcelInput) {
-		importExcelTrigger.addEventListener('click', () => {
+		listen(importExcelTrigger, 'click', () => {
 			if (!requireAuthenticatedAction('Musisz byc zalogowany, aby importowac dane urzadzen.')) return
 			importExcelInput.click()
 		})
-		importExcelInput.addEventListener('change', importExcel)
+		listen(importExcelInput, 'change', importExcel)
 	}
 
 	if (searchInput) {
-		searchInput.addEventListener('input', event => {
+		listen(searchInput, 'input', event => {
 			searchQuery = event.target.value || ''
 			renderTable()
 		})
 	}
 
 	if (searchToggleBtn) {
-		searchToggleBtn.addEventListener('click', searchController.toggle)
+		listen(searchToggleBtn, 'click', searchController.toggle)
 	}
 
-	document.addEventListener('app-auth-changed', () => {
+	listen(document, 'app-auth-changed', () => {
 		syncProtectedUi()
 		renderTable()
 	})

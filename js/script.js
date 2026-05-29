@@ -11,6 +11,7 @@
 	const sharedScripts = [
 		'./js/shared/base.js',
 		'./js/shared/runtime-config.js',
+		'./js/shared/page-router.js',
 		'./js/core/storage-service.js',
 		'./js/shared/auth.js',
 		'./js/shared/public-api.js',
@@ -23,6 +24,7 @@
 	})()
 
 	const pageScriptsByFile = {
+		'dashboard.html': [],
 		'index.html': [
 			'./js/pages/dashboard/clock.js',
 			'./js/pages/dashboard/topbar.js',
@@ -37,6 +39,11 @@
 		'nowe_zatrudnienia.html': ['./js/pages/hires/index.js'],
 		'rezerwacja_obiadow.html': ['./js/core/domain-services.js', './js/pages/lunch/index.js'],
 		'wymiana_sprzetu.html': ['./js/pages/exchanges/index.js'],
+	}
+
+	window.__dashboardRuntimeScriptRegistry = {
+		sharedScripts: [...sharedScripts],
+		pageScriptsByFile: { ...pageScriptsByFile },
 	}
 
 	const scriptPaths = [...sharedScripts, ...(pageScriptsByFile[pageName] || [])]

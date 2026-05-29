@@ -1,5 +1,25 @@
 ﻿(function initializeExchangesPage() {
 /* === Exchanges State And References: Start === */
+const pageScope = window.AppPageRuntime?.createScope?.('wymiana_sprzetu.html') || null
+const runWhenReady = callback => {
+	if (typeof pageScope?.runWhenReady === 'function') {
+		pageScope.runWhenReady(callback)
+		return
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', callback, { once: true })
+		return
+	}
+
+	callback()
+}
+const listen = (target, type, listener, options = undefined) => {
+	if (!target?.addEventListener) return
+	const nextOptions = pageScope?.signal ? { ...(options || {}), signal: pageScope.signal } : options
+	target.addEventListener(type, listener, nextOptions)
+}
+const scheduleTimeout = typeof pageScope?.setTimeout === 'function' ? pageScope.setTimeout.bind(pageScope) : window.setTimeout.bind(window)
 let exchanges = []
 let editIndex = null
 let drawerInitialState = ''
@@ -331,7 +351,7 @@ function animateWorkspaceHeight(renderContent) {
 	}
 
 	exchangeWorkspace.addEventListener('transitionend', finishAnimation)
-	workspaceHeightAnimationFallbackId = window.setTimeout(() => finishAnimation(), 460)
+	workspaceHeightAnimationFallbackId = scheduleTimeout(() => finishAnimation(), 460)
 
 	requestAnimationFrame(() => {
 		exchangeWorkspace.style.transition = 'height 360ms cubic-bezier(0.22, 1, 0.36, 1)'
@@ -376,7 +396,7 @@ function openDrawer() {
 	document.body.classList.add('exchange-drawer-open')
 
 	const firstField = document.getElementById('emp-name')
-	window.setTimeout(() => firstField?.focus(), 80)
+	scheduleTimeout(() => firstField?.focus(), 80)
 }
 
 async function closeDrawer({ force = false } = {}) {
@@ -760,32 +780,32 @@ function importExcel(event) {
 /* === Exchanges Excel Backup: End === */
 
 /* === Exchanges Init: Start === */
-document.addEventListener('DOMContentLoaded', () => {
+runWhenReady(() => {
 	monthPicker.init()
 	resetFormState()
 
 	document.querySelectorAll('[data-month-delta]').forEach(button => {
-		button.addEventListener('click', () => {
+		listen(button, 'click', () => {
 			monthPicker.changeMonth(Number(button.dataset.monthDelta))
 		})
 	})
 
 	if (accessoryPicker) {
-		accessoryPicker.addEventListener('click', event => {
+		listen(accessoryPicker, 'click', event => {
 			const item = event.target.closest('.accessory-item')
 			if (!item) return
 			if (!requireAuthenticatedAction()) return
 
 			item.classList.toggle('active')
 			item.classList.add('is-tapped')
-			setTimeout(() => {
+			scheduleTimeout(() => {
 				item.classList.remove('is-tapped')
 			}, 100)
 		})
 	}
 
 	if (tableBody) {
-		tableBody.addEventListener('click', event => {
+		listen(tableBody, 'click', event => {
 			const actionButton = event.target.closest('[data-action]')
 			if (!actionButton) return
 			if (!requireAuthenticatedAction()) return
@@ -800,22 +820,22 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	if (openDrawerBtn) {
-		openDrawerBtn.addEventListener('click', startCreateFlow)
+		listen(openDrawerBtn, 'click', startCreateFlow)
 	}
 
 	if (closeDrawerBtn) {
-		closeDrawerBtn.addEventListener('click', () => void closeDrawer())
+		listen(closeDrawerBtn, 'click', () => void closeDrawer())
 	}
 
 	if (cancelEditBtn) {
-		cancelEditBtn.addEventListener('click', () => void closeDrawer())
+		listen(cancelEditBtn, 'click', () => void closeDrawer())
 	}
 
 	if (drawerBackdrop) {
-		drawerBackdrop.addEventListener('click', () => void closeDrawer())
+		listen(drawerBackdrop, 'click', () => void closeDrawer())
 	}
 
-	window.addEventListener('keydown', event => {
+	listen(window, 'keydown', event => {
 		if (event.key === 'Escape' && searchController.isOpen()) {
 			searchController.close()
 			return
@@ -827,7 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	})
 
 	if (exchangeForm) {
-		exchangeForm.addEventListener('submit', async event => {
+		listen(exchangeForm, 'submit', async event => {
 			event.preventDefault()
 			if (!requireAuthenticatedAction()) return
 
@@ -875,27 +895,27 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	}
 
-	if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)
+	if (exportExcelBtn) listen(exportExcelBtn, 'click', exportExcel)
 	if (importExcelTrigger && importExcelInput) {
-		importExcelTrigger.addEventListener('click', () => {
+		listen(importExcelTrigger, 'click', () => {
 			if (!requireAuthenticatedAction('Musisz byc zalogowany, aby importowac plan wymian.')) return
 			importExcelInput.click()
 		})
-		importExcelInput.addEventListener('change', importExcel)
+		listen(importExcelInput, 'change', importExcel)
 	}
 
 	if (searchInput) {
-		searchInput.addEventListener('input', event => {
+		listen(searchInput, 'input', event => {
 			searchQuery = event.target.value || ''
 			renderTable()
 		})
 	}
 
 	if (searchToggleBtn) {
-		searchToggleBtn.addEventListener('click', searchController.toggle)
+		listen(searchToggleBtn, 'click', searchController.toggle)
 	}
 
-	document.addEventListener('app-auth-changed', () => {
+	listen(document, 'app-auth-changed', () => {
 		syncProtectedUi()
 		renderTable()
 	})

@@ -13,14 +13,9 @@
 	}
 
 	const runtimeConfig = window.DashboardRuntimeConfig || {}
-	const normalizeStorageMode = value => {
-		const normalizedValue = String(value || '')
-			.trim()
-			.toLowerCase()
-		return ['auto', 'local', 'remote'].includes(normalizedValue) ? normalizedValue : 'auto'
-	}
-	const storageMode = normalizeStorageMode(runtimeConfig.storageMode)
-	const allowRemoteFallback = storageMode !== 'remote' && runtimeConfig.fallbackToLocalOnRemoteError !== false
+	// LIVE_SERVER_FALLBACK_START
+	const liveServerBrowserFallbackConfig = runtimeConfig.liveServerBrowserFallback || {}
+	// LIVE_SERVER_FALLBACK_END
 	const THEME_FALLBACK_KEY = `${PREFERENCE_KEYS.THEME}-fallback`
 	const THEME_GUEST_KEY = `${PREFERENCE_KEYS.THEME}::guest`
 	const THEME_USER_KEY_PREFIX = `${PREFERENCE_KEYS.THEME}::user::`
@@ -28,8 +23,15 @@
 	const THEME_FALLBACK_USER_KEY_PREFIX = `${THEME_FALLBACK_KEY}::user::`
 	const DASHBOARD_MENU_ORDER_GUEST_KEY = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::guest`
 	const DASHBOARD_MENU_ORDER_USER_KEY_PREFIX = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::user::`
-	const USERS_CONFIG_PATH = 'api/config/users.json'
-	const USERS_CONFIG_PERMISSION_IDS = ['it_support', 'network', 'printers', 'rooms']
+	// LIVE_SERVER_FALLBACK_START
+	const LIVE_SERVER_BROWSER_RESET_MARKER_PREFIX = 'dashboard_live_server_fallback_reset::'
+	const LIVE_SERVER_BROWSER_RESET_KEY_PREFIXES = [
+		THEME_USER_KEY_PREFIX,
+		THEME_FALLBACK_USER_KEY_PREFIX,
+		DASHBOARD_MENU_ORDER_USER_KEY_PREFIX,
+		'dashboard_app_remote_reset::',
+	]
+	// LIVE_SERVER_FALLBACK_END
 	const REMOTE_SHARED_KEYS = new Set([
 		STORAGE_KEYS.HIRES,
 		STORAGE_KEYS.MONITOR,
@@ -59,10 +61,21 @@
 
 	let remoteEnabledCache = null
 	let remoteHealthChecked = false
-	let remoteStorageFallbackActive = false
-	let remoteStorageFallbackNotified = false
-	let usersConfigLoaded = false
-	let usersConfigEntries = []
+	let lastStorageErrorMessage = ''
+	let lastStorageErrorAt = 0
+
+	// LIVE_SERVER_FALLBACK_START
+	const isLiveServerBrowserFallbackAllowed = () => {
+		if (liveServerBrowserFallbackConfig?.enabled === false) return false
+		if (window.location.protocol === 'file:') return true
+
+		const allowedHosts = Array.isArray(liveServerBrowserFallbackConfig?.allowedHosts) && liveServerBrowserFallbackConfig.allowedHosts.length > 0
+			? liveServerBrowserFallbackConfig.allowedHosts
+			: ['127.0.0.1', 'localhost']
+		const currentHost = String(window.location.hostname || '').trim().toLowerCase()
+		return allowedHosts.map(host => String(host || '').trim().toLowerCase()).includes(currentHost)
+	}
+	// LIVE_SERVER_FALLBACK_END
 
 	const getConfiguredApiBase = () => {
 		const configuredBase = String(runtimeConfig.apiBaseUrl || './api/').trim()
@@ -75,131 +88,7 @@
 		return new URL(path, apiBaseUrl).toString()
 	}
 
-	const normalizeConfigLogin = value =>
-		String(value || '')
-			.toLowerCase()
-			.trim()
-			.replace(/\s+/g, '')
-			.replace(/[^a-z0-9._-]/g, '')
-	const normalizeConfigId = value => String(value || '').trim()
-	const normalizeConfigRole = value => (value === 'admin' ? 'admin' : 'user')
-	const normalizeConfigPermissions = permissions => {
-		if (!Array.isArray(permissions)) return []
-
-		const allowedPermissions = new Set(USERS_CONFIG_PERMISSION_IDS)
-		return [
-			...new Set(
-				permissions
-					.map(permission => String(permission || '').trim())
-					.filter(permission => allowedPermissions.has(permission))
-			),
-		]
-	}
-	const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key)
-	const readUsersConfigEntries = () => {
-		if (usersConfigLoaded) return usersConfigEntries
-
-		usersConfigLoaded = true
-
-		if (window.location.protocol === 'file:') return usersConfigEntries
-
-		const xhr = new XMLHttpRequest()
-		try {
-			xhr.open('GET', new URL(USERS_CONFIG_PATH, document.baseURI).toString(), false)
-			xhr.setRequestHeader('Accept', 'application/json')
-			xhr.send(null)
-		} catch (error) {
-			return usersConfigEntries
-		}
-
-		if (xhr.status !== 200) return usersConfigEntries
-
-		try {
-			const payload = JSON.parse(xhr.responseText || '{}')
-			const entries = Array.isArray(payload) ? payload : Array.isArray(payload?.users) ? payload.users : []
-			usersConfigEntries = entries.filter(
-				entry => entry && typeof entry === 'object' && (normalizeConfigId(entry.id) || normalizeConfigLogin(entry.login))
-			)
-		} catch (error) {
-			usersConfigEntries = []
-		}
-
-		return usersConfigEntries
-	}
-	const applyUsersConfig = users => {
-		const configEntries = readUsersConfigEntries()
-		if (!configEntries.length) return users
-
-		const configById = new Map(
-			configEntries
-				.map(entry => [normalizeConfigId(entry.id), entry])
-				.filter(([id]) => id)
-		)
-		const configByLogin = new Map(
-			configEntries
-				.map(entry => [normalizeConfigLogin(entry.login), entry])
-				.filter(([login]) => login)
-		)
-		const loginOwners = new Map(
-			users
-				.map(user => {
-					const login = normalizeConfigLogin(user?.login)
-					return login ? [login, normalizeConfigId(user?.id) || login] : null
-				})
-				.filter(Boolean)
-		)
-
-		return users.map(user => {
-			const userId = normalizeConfigId(user?.id)
-			const currentLogin = normalizeConfigLogin(user?.login)
-			const userOwner = userId || currentLogin
-			const config = (userId && configById.get(userId)) || configByLogin.get(currentLogin)
-			if (!config) return user
-
-			const role = hasOwn(config, 'role') ? normalizeConfigRole(config.role) : normalizeConfigRole(user.role)
-			const nextUser = {
-				...user,
-				role,
-				permissions: role === 'admin'
-					? [...USERS_CONFIG_PERMISSION_IDS]
-					: hasOwn(config, 'permissions')
-						? normalizeConfigPermissions(config.permissions)
-						: normalizeConfigPermissions(user.permissions),
-			}
-
-			if (hasOwn(config, 'fullName')) {
-				const fullName = String(config.fullName || '').trim()
-				if (fullName) nextUser.fullName = fullName
-			}
-			if (hasOwn(config, 'login')) {
-				const login = normalizeConfigLogin(config.login)
-				const claimedOwner = loginOwners.get(login)
-				if (login && (!claimedOwner || claimedOwner === userOwner)) {
-					if (currentLogin && loginOwners.get(currentLogin) === userOwner) {
-						loginOwners.delete(currentLogin)
-					}
-					loginOwners.set(login, userOwner)
-					nextUser.login = login
-				}
-			}
-			if (hasOwn(config, 'avatarId')) nextUser.avatarId = String(config.avatarId || nextUser.avatarId || 'violet').trim() || 'violet'
-			if (hasOwn(config, 'avatarImage')) nextUser.avatarImage = String(config.avatarImage || '').trim()
-			if (hasOwn(config, 'profileTitle')) nextUser.profileTitle = String(config.profileTitle || '').trim().slice(0, 80)
-			if (hasOwn(config, 'profileBio')) nextUser.profileBio = String(config.profileBio || '').trim().slice(0, 240)
-			if (hasOwn(config, 'profileAccentColor')) {
-				const accentColor = String(config.profileAccentColor || '').trim().toLowerCase()
-				nextUser.profileAccentColor = /^#[0-9a-f]{6}$/.test(accentColor) ? accentColor : nextUser.profileAccentColor
-			}
-			if (hasOwn(config, 'profileCoverImage')) nextUser.profileCoverImage = String(config.profileCoverImage || '').trim()
-
-			return nextUser
-		})
-	}
-
-	const isRemoteServerFailure = status => status === 0 || status >= 500
-	const shouldFallbackToLocal = status => allowRemoteFallback && isRemoteServerFailure(status)
-
-	const readLocalJsonValue = (key, fallback) => {
+	const readBrowserJsonValue = (key, fallback) => {
 		try {
 			const storedValue = localStorage.getItem(key)
 			if (!storedValue) return cloneValue(fallback)
@@ -209,43 +98,94 @@
 		}
 	}
 
-	const writeLocalJsonValue = (key, value) => {
+	const writeBrowserJsonValue = (key, value) => {
 		try {
 			localStorage.setItem(key, JSON.stringify(value))
 		} catch (error) {
-			// Ignore local cache write failures and keep the app responsive.
+			// Ignore browser preference storage failures and keep the app responsive.
 		}
 	}
 
-	const removeLocalValue = key => {
+	const readBrowserTextValue = (key, fallback = '') => {
+		try {
+			const storedValue = localStorage.getItem(key)
+			return storedValue === null ? fallback : storedValue
+		} catch (error) {
+			return fallback
+		}
+	}
+
+	const writeBrowserTextValue = (key, value) => {
+		try {
+			localStorage.setItem(key, String(value ?? ''))
+		} catch (error) {
+			// Ignore browser preference storage failures and keep the app responsive.
+		}
+	}
+
+	const removeBrowserValue = key => {
 		try {
 			localStorage.removeItem(key)
 		} catch (error) {
-			// Ignore local cache cleanup failures.
+			// Ignore browser storage cleanup failures.
 		}
 	}
 
-	const cacheRemoteJsonValue = (key, value) => {
-		writeLocalJsonValue(key, value)
+	const pulseBrowserStorageKey = key => {
+		try {
+			localStorage.setItem(
+				String(key || ''),
+				JSON.stringify({
+					syncedAt: new Date().toISOString(),
+				})
+			)
+		} catch (error) {
+			// Ignore sync pulse failures. They are best-effort only.
+		}
 	}
 
-	const activateRemoteStorageFallback = message => {
-		if (!allowRemoteFallback) return
-		remoteStorageFallbackActive = true
-		if (remoteStorageFallbackNotified) return
-		remoteStorageFallbackNotified = true
-		if (typeof window.AppUtils?.notify === 'function') {
-			window.AppUtils.notify({
-				type: 'warning',
-				title: 'Tryb lokalny',
-				message:
-					'Serwer synchronizacji jest chwilowo niedostepny. Aplikacja przelaczyla sie na lokalny zapis w tej przegladarce.',
-			})
-		}
-		if (message) {
-			console.warn(message)
+	// LIVE_SERVER_FALLBACK_START
+	const clearBrowserFallbackStorageOnce = () => {
+		const resetVersion = String(liveServerBrowserFallbackConfig?.resetVersion || '').trim()
+		if (!resetVersion) return
+		if (remoteApi.isRemoteEnabled() || !isLiveServerBrowserFallbackAllowed()) return
+
+		const resetMarkerKey = `${LIVE_SERVER_BROWSER_RESET_MARKER_PREFIX}${resetVersion}`
+
+		try {
+			if (localStorage.getItem(resetMarkerKey)) {
+				return
+			}
+
+			const keysToRemove = new Set([
+				...Object.values(STORAGE_KEYS || {}),
+				...Object.values(PREFERENCE_KEYS || {}),
+				THEME_FALLBACK_KEY,
+				THEME_GUEST_KEY,
+				THEME_FALLBACK_GUEST_KEY,
+				DASHBOARD_MENU_ORDER_GUEST_KEY,
+			])
+			const dynamicKeys = []
+
+			for (let index = 0; index < localStorage.length; index += 1) {
+				const storageKey = localStorage.key(index)
+				if (!storageKey || storageKey === resetMarkerKey) continue
+				if (
+					LIVE_SERVER_BROWSER_RESET_KEY_PREFIXES.some(prefix => storageKey.startsWith(prefix)) ||
+					storageKey.startsWith(LIVE_SERVER_BROWSER_RESET_MARKER_PREFIX)
+				) {
+					dynamicKeys.push(storageKey)
+				}
+			}
+
+			dynamicKeys.forEach(storageKey => keysToRemove.add(storageKey))
+			keysToRemove.forEach(storageKey => localStorage.removeItem(storageKey))
+			localStorage.setItem(resetMarkerKey, new Date().toISOString())
+		} catch (error) {
+			// Ignore browser reset failures and keep the fallback mode available.
 		}
 	}
+	// LIVE_SERVER_FALLBACK_END
 
 	const sendRemoteRequest = ({ method = 'GET', path = '', body = null } = {}) => {
 		const xhr = new XMLHttpRequest()
@@ -319,25 +259,18 @@
 			if (remoteHealthChecked) return Boolean(remoteEnabledCache)
 			remoteHealthChecked = true
 
-			if (window.location.protocol === 'file:' || storageMode === 'local') {
+			if (window.location.protocol === 'file:') {
 				remoteEnabledCache = false
 				return false
 			}
 
-			if (storageMode === 'remote') {
-				remoteEnabledCache = true
-				return true
-			}
-
 			const response = sendRemoteRequest({ path: 'health.php' })
-			const remoteMode = String(response.payload?.mode || '').toLowerCase()
-			remoteEnabledCache = Boolean(response.ok && ['postgresql', 'pgsql'].includes(remoteMode))
+			remoteEnabledCache = Boolean(response.ok)
 			return Boolean(remoteEnabledCache)
 		},
 	}
 
-	const isRemoteKey = key =>
-		remoteApi.isRemoteEnabled() && !remoteStorageFallbackActive && REMOTE_SHARED_KEYS.has(String(key || ''))
+	const isRemoteKey = key => REMOTE_SHARED_KEYS.has(String(key || ''))
 	const isProtectedWriteKey = key => {
 		const normalizedKey = String(key || '')
 		if (PUBLIC_WRITE_KEYS.has(normalizedKey)) return false
@@ -350,57 +283,80 @@
 	const canWriteProtectedKey = key => !isProtectedWriteKey(key) || Boolean(window.AppUtils?.auth?.isAuthenticated?.())
 
 	const notifyStorageError = message => {
-		console.error(message)
+		const normalizedMessage = String(message || '').trim()
+		if (!normalizedMessage) return
+
+		console.error(normalizedMessage)
+
+		const now = Date.now()
+		if (normalizedMessage === lastStorageErrorMessage && now - lastStorageErrorAt < 2500) {
+			return
+		}
+
+		lastStorageErrorMessage = normalizedMessage
+		lastStorageErrorAt = now
+
 		if (typeof window.AppUtils?.notify === 'function') {
 			window.AppUtils.notify({
 				type: 'error',
 				title: 'Blad synchronizacji',
-				message,
+				message: normalizedMessage,
 			})
 		}
 	}
 
 	const storageService = {
 		isRemoteEnabled() {
-			return remoteApi.isRemoteEnabled() && !remoteStorageFallbackActive
+			return remoteApi.isRemoteEnabled()
+		},
+		// LIVE_SERVER_FALLBACK_START
+		isBrowserFallbackMode() {
+			return !remoteApi.isRemoteEnabled() && isLiveServerBrowserFallbackAllowed()
+		},
+		// LIVE_SERVER_FALLBACK_END
+		touch(key) {
+			pulseBrowserStorageKey(key)
 		},
 		getText(key, fallback = '') {
-			try {
-				const storedValue = localStorage.getItem(key)
-				return storedValue === null ? fallback : storedValue
-			} catch (error) {
-				return fallback
-			}
+			return readBrowserTextValue(key, fallback)
 		},
 		setText(key, value) {
 			if (!canWriteProtectedKey(key)) return
-			localStorage.setItem(key, String(value ?? ''))
+			writeBrowserTextValue(key, value)
 		},
 		readJson(key, fallback) {
 			if (isRemoteKey(key)) {
+				// LIVE_SERVER_FALLBACK_START
+				if (!remoteApi.isRemoteEnabled() && this.isBrowserFallbackMode()) {
+					return readBrowserJsonValue(key, fallback)
+				}
+				// LIVE_SERVER_FALLBACK_END
+
 				const response = remoteApi.request({
 					path: `storage.php?key=${encodeURIComponent(String(key || ''))}`,
 				})
 
 				if (!response.ok) {
-					if (shouldFallbackToLocal(response.status)) {
-						activateRemoteStorageFallback(response.message)
-						return readLocalJsonValue(key, fallback)
-					}
 					notifyStorageError(response.message || 'Nie udalo sie pobrac danych z serwera.')
 					return cloneValue(fallback)
 				}
 
-				cacheRemoteJsonValue(key, response.value ?? fallback)
 				return cloneValue(response.value ?? fallback)
 			}
 
-			return readLocalJsonValue(key, fallback)
+			return readBrowserJsonValue(key, fallback)
 		},
 		writeJson(key, value) {
 			if (!canWriteProtectedKey(key)) return
 
 			if (isRemoteKey(key)) {
+				// LIVE_SERVER_FALLBACK_START
+				if (!remoteApi.isRemoteEnabled() && this.isBrowserFallbackMode()) {
+					writeBrowserJsonValue(key, value)
+					return
+				}
+				// LIVE_SERVER_FALLBACK_END
+
 				const response = remoteApi.request({
 					method: 'POST',
 					path: 'storage.php',
@@ -411,43 +367,43 @@
 				})
 
 				if (!response.ok) {
-					if (shouldFallbackToLocal(response.status)) {
-						activateRemoteStorageFallback(response.message)
-						writeLocalJsonValue(key, value)
-						return
-					}
 					notifyStorageError(response.message || 'Nie udalo sie zapisac danych na serwerze.')
 					return
 				}
-				cacheRemoteJsonValue(key, value)
+
+				pulseBrowserStorageKey(key)
 				return
 			}
 
-			writeLocalJsonValue(key, value)
+			writeBrowserJsonValue(key, value)
 		},
 		remove(key) {
 			if (!canWriteProtectedKey(key)) return
 
 			if (isRemoteKey(key)) {
+				// LIVE_SERVER_FALLBACK_START
+				if (!remoteApi.isRemoteEnabled() && this.isBrowserFallbackMode()) {
+					removeBrowserValue(key)
+					return
+				}
+				// LIVE_SERVER_FALLBACK_END
+
 				const response = remoteApi.request({
 					method: 'DELETE',
 					path: `storage.php?key=${encodeURIComponent(String(key || ''))}`,
 				})
 
 				if (!response.ok) {
-					if (shouldFallbackToLocal(response.status)) {
-						activateRemoteStorageFallback(response.message)
-						removeLocalValue(key)
-						return
-					}
 					notifyStorageError(response.message || 'Nie udalo sie usunac danych z serwera.')
 					return
 				}
-				removeLocalValue(key)
+
+				pulseBrowserStorageKey(key)
+				removeBrowserValue(key)
 				return
 			}
 
-			removeLocalValue(key)
+			removeBrowserValue(key)
 		},
 		getBoolean(key, fallback = false) {
 			const storedValue = this.getText(key, '')
@@ -461,7 +417,7 @@
 
 	const createCollectionService = storageKey => ({
 		storageKey,
-		// TODO: replace this localStorage implementation with fetch/API calls when backend endpoints are ready.
+		// Shared collections are synchronized through the generic storage endpoint.
 		getAll() {
 			const records = storageService.readJson(storageKey, [])
 			return Array.isArray(records) ? records : []
@@ -474,110 +430,113 @@
 	const usersService = {
 		storageKey: STORAGE_KEYS.USERS,
 		getAll() {
-			if (remoteApi.isRemoteEnabled()) {
-				const response = remoteApi.requestAuth({ path: 'users.php' })
-				if (!response.ok) {
-					if (shouldFallbackToLocal(response.status)) {
-						activateRemoteStorageFallback(response.message)
-						const cachedUsers = readLocalJsonValue(this.storageKey, [])
-						return Array.isArray(cachedUsers) ? applyUsersConfig(cachedUsers) : []
-					}
-					notifyStorageError(response.message || 'Nie udalo sie pobrac listy uzytkownikow.')
-					return []
-				}
+			// LIVE_SERVER_FALLBACK_START
+			if (!remoteApi.isRemoteEnabled() && storageService.isBrowserFallbackMode()) {
+				const users = readBrowserJsonValue(this.storageKey, [])
+				return Array.isArray(users) ? cloneValue(users) : []
+			}
+			// LIVE_SERVER_FALLBACK_END
 
-				const users = Array.isArray(response.users) ? response.users : []
-				cacheRemoteJsonValue(this.storageKey, users)
-				return cloneValue(users)
+			const response = remoteApi.requestAuth({ path: 'users.php' })
+			if (!response.ok) {
+				notifyStorageError(response.message || 'Nie udalo sie pobrac listy uzytkownikow.')
+				return []
 			}
 
-			const storedUsers = storageService.readJson(this.storageKey, [])
-			return Array.isArray(storedUsers) ? applyUsersConfig(storedUsers) : []
+			const users = Array.isArray(response.users) ? response.users : []
+			return cloneValue(users)
 		},
 		saveAll(users) {
-			if (remoteApi.isRemoteEnabled()) {
-				notifyStorageError('Bezposredni zapis listy uzytkownikow jest w trybie zdalnym zablokowany.')
+			// LIVE_SERVER_FALLBACK_START
+			if (!remoteApi.isRemoteEnabled() && storageService.isBrowserFallbackMode()) {
+				writeBrowserJsonValue(this.storageKey, Array.isArray(users) ? users : [])
 				return
 			}
+			// LIVE_SERVER_FALLBACK_END
 
-			storageService.writeJson(this.storageKey, Array.isArray(users) ? users : [])
+			notifyStorageError('Bezposredni zapis listy uzytkownikow jest w trybie serwerowym zablokowany.')
+		},
+		touch() {
+			storageService.touch(this.storageKey)
 		},
 	}
 
 	const sessionService = {
 		storageKey: STORAGE_KEYS.SESSION,
 		getCurrent() {
-			if (remoteApi.isRemoteEnabled()) {
-				const response = remoteApi.requestAuth({ path: 'session.php' })
-				if (!response.ok) {
-					if (shouldFallbackToLocal(response.status)) {
-						activateRemoteStorageFallback(response.message)
-						const cachedSession = readLocalJsonValue(this.storageKey, null)
-						if (!cachedSession || typeof cachedSession !== 'object' || !cachedSession.userId) {
-							return null
-						}
-
-						return {
-							userId: String(cachedSession.userId),
-							loginAt: cachedSession.loginAt || new Date().toISOString(),
-						}
-					}
-					notifyStorageError(response.message || 'Nie udalo sie odczytac sesji z serwera.')
-					return null
-				}
-
-				const session = response.session
+			// LIVE_SERVER_FALLBACK_START
+			if (!remoteApi.isRemoteEnabled() && storageService.isBrowserFallbackMode()) {
+				const session = readBrowserJsonValue(this.storageKey, null)
 				if (!session || typeof session !== 'object' || !session.userId) {
-					removeLocalValue(this.storageKey)
 					return null
 				}
 
-				cacheRemoteJsonValue(this.storageKey, session)
 				return {
 					userId: String(session.userId),
 					loginAt: session.loginAt || new Date().toISOString(),
 				}
 			}
+			// LIVE_SERVER_FALLBACK_END
 
-			const storedSession = storageService.readJson(this.storageKey, null)
-			if (!storedSession || typeof storedSession !== 'object' || !storedSession.userId) {
+			const response = remoteApi.requestAuth({ path: 'session.php' })
+			if (!response.ok) {
+				notifyStorageError(response.message || 'Nie udalo sie odczytac sesji z serwera.')
+				return null
+			}
+
+			const session = response.session
+			if (!session || typeof session !== 'object' || !session.userId) {
 				return null
 			}
 
 			return {
-				userId: String(storedSession.userId),
-				loginAt: storedSession.loginAt || new Date().toISOString(),
+				userId: String(session.userId),
+				loginAt: session.loginAt || new Date().toISOString(),
 			}
 		},
 		save(session) {
-			if (remoteApi.isRemoteEnabled()) {
-				notifyStorageError('Sesja serwerowa jest zarzadzana przez API logowania i nie moze byc zapisana lokalnie.')
-				return
-			}
-
-			storageService.writeJson(this.storageKey, session)
-		},
-		clear() {
-			if (remoteApi.isRemoteEnabled()) {
-				const response = remoteApi.requestAuth({
-					method: 'DELETE',
-					path: 'session.php',
-				})
-
-				if (!response.ok) {
-					if (shouldFallbackToLocal(response.status)) {
-						activateRemoteStorageFallback(response.message)
-						removeLocalValue(this.storageKey)
-						return
-					}
-					notifyStorageError(response.message || 'Nie udalo sie wylogowac sesji serwerowej.')
+			// LIVE_SERVER_FALLBACK_START
+			if (!remoteApi.isRemoteEnabled() && storageService.isBrowserFallbackMode()) {
+				if (!session || typeof session !== 'object' || !session.userId) {
+					this.clear()
 					return
 				}
-				removeLocalValue(this.storageKey)
+
+				writeBrowserJsonValue(this.storageKey, session)
+				return
+			}
+			// LIVE_SERVER_FALLBACK_END
+
+			if (!session || typeof session !== 'object' || !session.userId) {
+				this.clear()
 				return
 			}
 
-			storageService.remove(this.storageKey)
+			storageService.touch(this.storageKey)
+		},
+		clear() {
+			// LIVE_SERVER_FALLBACK_START
+			if (!remoteApi.isRemoteEnabled() && storageService.isBrowserFallbackMode()) {
+				removeBrowserValue(this.storageKey)
+				return
+			}
+			// LIVE_SERVER_FALLBACK_END
+
+			const response = remoteApi.requestAuth({
+				method: 'DELETE',
+				path: 'session.php',
+			})
+
+			if (!response.ok) {
+				notifyStorageError(response.message || 'Nie udalo sie wylogowac sesji serwerowej.')
+				return
+			}
+
+			pulseBrowserStorageKey(this.storageKey)
+			removeBrowserValue(this.storageKey)
+		},
+		touch() {
+			storageService.touch(this.storageKey)
 		},
 	}
 
@@ -681,6 +640,10 @@
 			storageService.setBoolean(PREFERENCE_KEYS.DASHBOARD_TASK_AUTOCLEAR, isEnabled)
 		},
 	}
+
+	// LIVE_SERVER_FALLBACK_START
+	clearBrowserFallbackStorageOnce()
+	// LIVE_SERVER_FALLBACK_END
 
 	appServices.storageService = storageService
 	appServices.remoteApi = remoteApi

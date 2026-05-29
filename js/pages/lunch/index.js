@@ -1,4 +1,25 @@
-document.addEventListener('DOMContentLoaded', () => {
+(function initializeLunchPage() {
+	const pageScope = window.AppPageRuntime?.createScope?.('rezerwacja_obiadow.html') || null
+	const runWhenReady = callback => {
+		if (typeof pageScope?.runWhenReady === 'function') {
+			pageScope.runWhenReady(callback)
+			return
+		}
+
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', callback, { once: true })
+			return
+		}
+
+		callback()
+	}
+	const listen = (target, type, listener, options = undefined) => {
+		if (!target?.addEventListener) return
+		const nextOptions = pageScope?.signal ? { ...(options || {}), signal: pageScope.signal } : options
+		target.addEventListener(type, listener, nextOptions)
+	}
+
+	runWhenReady(() => {
 	const lunchDomainConfig = window.AppServices?.lunchDomainConfig
 	const TIME_SLOTS = Array.isArray(lunchDomainConfig?.TIME_SLOTS) ? lunchDomainConfig.TIME_SLOTS : []
 	const MAX_CAPACITY_PER_SLOT = Number(lunchDomainConfig?.MAX_CAPACITY_PER_SLOT || 0)
@@ -8,31 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const getInitials = AppUtils.getInitials
 	const escapeHtml = AppUtils.escapeHtml
 
-	const dateInput = document.getElementById('lunch-date')
-	const todayBtn = document.getElementById('lunch-today-btn')
 	const slotGrid = document.getElementById('lunch-slot-grid')
-	const daySummary = document.getElementById('lunch-day-summary')
-	const feedback = document.getElementById('lunch-feedback')
-	const authCallout = document.getElementById('lunch-auth-callout')
-	const authTitle = document.getElementById('lunch-auth-title')
-	const authText = document.getElementById('lunch-auth-text')
-	const authBtn = document.getElementById('lunch-auth-btn')
-	const myReservationBox = document.getElementById('lunch-my-reservation')
-	const bookedStat = document.getElementById('lunch-stat-booked')
-	const capacityStat = document.getElementById('lunch-stat-capacity')
-	const openSlotsStat = document.getElementById('lunch-stat-open-slots')
-	const userStat = document.getElementById('lunch-stat-user')
-	const userMetaStat = document.getElementById('lunch-stat-user-meta')
 
-	if (
-		!dateInput ||
-		!todayBtn ||
-		!slotGrid ||
-		!feedback ||
-		!authCallout ||
-		!authBtn ||
-		!myReservationBox
-	) {
+	if (!slotGrid) {
 		return
 	}
 
@@ -48,8 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	let selectedDate = getTodayDate()
-	let feedbackTimeoutId = null
-
 	function getTodayDate() {
 		return AppUtils.formatDate(new Date())
 	}
@@ -85,36 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	}
 
-	function showFeedbackMessage(message, type = 'info') {
-		if (feedbackTimeoutId) {
-			window.clearTimeout(feedbackTimeoutId)
-			feedbackTimeoutId = null
-		}
-
-		feedback.textContent = message
-		feedback.className = `lunch-feedback is-${type}`
-
-		feedbackTimeoutId = window.setTimeout(() => {
-			feedback.className = 'lunch-feedback is-hidden'
-			feedback.textContent = ''
-		}, 4200)
-	}
-
-	function renderAuthCallout(currentUser) {
-		if (currentUser) {
-			authCallout.classList.add('is-active-user')
-			authTitle.textContent = `Pracujesz jako ${String(currentUser.fullName || '').trim() || 'użytkownik zespołu'}`
-			authText.textContent =
-				'Możesz zapisać się na jeden slot dziennie, anulować własną rezerwację i podejrzeć zajętość wszystkich godzin.'
-			authBtn.innerHTML = '<i class="app-icon user-gear-solid-full"></i><span>Otwórz profil</span>'
-			return
-		}
-
-		authCallout.classList.remove('is-active-user')
-		authTitle.textContent = 'Podgląd slotów jest dostępny dla wszystkich'
-		authText.textContent =
-			'Zaloguj się z paska statusu u góry, aby zapisać się na wybraną godzinę albo anulować swoją rezerwację.'
-		authBtn.innerHTML = '<i class="app-icon right-to-bracket-solid-full"></i><span>Zaloguj się</span>'
+	function notifyLunch(message, type = 'info', title = '') {
+		if (!message || type === 'success' || typeof AppUtils.notify !== 'function') return
+		AppUtils.notify({ message, type, title })
 	}
 
 	function buildSeatDotsMarkup(count) {
@@ -188,50 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	function renderMyReservation(currentUser, myReservation) {
-		if (!currentUser) {
-			myReservationBox.innerHTML = `
-				<strong>Nie jesteś zalogowany</strong>
-				<p>Zaloguj się z paska statusu u góry, aby wybrać godzinę obiadu dla swojego konta.</p>
-			`
-			return
-		}
-
-		if (!myReservation) {
-			myReservationBox.innerHTML = `
-				<strong>Brak aktywnej rezerwacji</strong>
-				<p>Na dzień ${escapeHtml(formatDateLabel(selectedDate))} nie masz jeszcze wybranego slotu obiadowego.</p>
-			`
-			return
-		}
-
-		myReservationBox.innerHTML = `
-			<strong>${escapeHtml(myReservation.timeSlot)} | ${escapeHtml(formatDateLabel(selectedDate))}</strong>
-			<p>Twój lunch jest zapisany w tym slocie. Możesz go anulować z tej karty albo bezpośrednio z siatki terminów.</p>
-			<button type="button" class="lunch-summary-btn" data-summary-action="cancel" data-reservation-id="${escapeHtml(
-				myReservation.id
-			)}">
-				<i class="app-icon ban-solid-full"></i>
-				<span>Anuluj rezerwację</span>
-			</button>
-		`
-	}
-
-	function renderStats(currentUser, reservationsForDate) {
-		const bookedSeats = reservationsForDate.length
-		const openSlotCount = TIME_SLOTS.filter(
-			timeSlot => reservationsForDate.filter(reservation => reservation.timeSlot === timeSlot).length < MAX_CAPACITY_PER_SLOT
-		).length
-
-		bookedStat.textContent = String(bookedSeats)
-		capacityStat.textContent = `z ${TIME_SLOTS.length * MAX_CAPACITY_PER_SLOT}`
-		openSlotsStat.textContent = String(openSlotCount)
-		userStat.textContent = currentUser ? String(currentUser.fullName || '').trim() || 'Użytkownik zespołu' : 'Gość'
-		userMetaStat.textContent = currentUser
-			? `${AppUtils.auth.getRoleLabel?.(currentUser.role) || (currentUser.role === 'admin' ? 'Lider' : 'Członek')} | konto aktywne`
-			: 'Podgląd bez możliwości zapisu'
-	}
-
 	function renderSlots(currentUser, reservationsForDate, myReservation) {
 		slotGrid.innerHTML = TIME_SLOTS.map(timeSlot => {
 			const slotReservations = reservationsForDate.filter(reservation => reservation.timeSlot === timeSlot)
@@ -290,26 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function renderSummary(currentUser, reservationsForDate, myReservation) {
-		const occupiedSlots = new Set(reservationsForDate.map(reservation => reservation.timeSlot)).size
-		if (daySummary) {
-			daySummary.textContent =
-				reservationsForDate.length > 0
-					? `${formatDateLabel(selectedDate)} | aktywne rezerwacje: ${reservationsForDate.length}, zajęte sloty: ${occupiedSlots}/${TIME_SLOTS.length}.`
-					: `${formatDateLabel(selectedDate)} | na ten dzień nie ma jeszcze żadnych rezerwacji obiadowych.`
-		}
-
-		renderAuthCallout(currentUser)
-		renderMyReservation(currentUser, myReservation)
-		renderStats(currentUser, reservationsForDate)
 		renderSlots(currentUser, reservationsForDate, myReservation)
 	}
 
 	function syncUi() {
+		selectedDate = getTodayDate()
 		const currentUser = getCurrentUser()
 		const reservationsForDate = lunchService.getReservationsForDate(selectedDate)
 		const myReservation = currentUser ? lunchService.getUserReservationForDate(selectedDate, currentUser.id) : null
 
-		dateInput.value = selectedDate
 		renderSummary(currentUser, reservationsForDate, myReservation)
 	}
 
@@ -317,13 +232,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		const currentUser = getCurrentUser()
 		if (!currentUser) {
 			AppUtils.auth.openAuthModal?.('login')
-			showFeedbackMessage('Zaloguj się, aby anulować swoją rezerwację.', 'warning')
+			notifyLunch('Zaloguj się, aby anulować swoją rezerwację.', 'warning', 'Tylko podgląd')
 			return
 		}
 
 		const myReservation = lunchService.getUserReservationForDate(selectedDate, currentUser.id)
 		if (!myReservation || myReservation.id !== reservationId) {
-			showFeedbackMessage('Nie znaleziono Twojej aktywnej rezerwacji na ten dzień.', 'error')
+			notifyLunch('Nie znaleziono Twojej aktywnej rezerwacji na ten dzień.', 'error', 'Brak rezerwacji')
 			syncUi()
 			return
 		}
@@ -342,10 +257,9 @@ document.addEventListener('DOMContentLoaded', () => {
 				reservationId: myReservation.id,
 				userId: currentUser.id,
 			})
-			showFeedbackMessage(`Anulowano rezerwację na ${myReservation.timeSlot}.`, 'success')
 			syncUi()
 		} catch (error) {
-			showFeedbackMessage(error.message || 'Nie udało się anulować rezerwacji.', 'error')
+			notifyLunch(error.message || 'Nie udało się anulować rezerwacji.', 'error', 'Błąd rezerwacji')
 		}
 	}
 
@@ -353,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const currentUser = getCurrentUser()
 		if (!currentUser) {
 			AppUtils.auth.openAuthModal?.('login')
-			showFeedbackMessage('Zaloguj się, aby zapisać się na wybrany termin.', 'warning')
+			notifyLunch('Zaloguj się, aby zapisać się na wybrany termin.', 'warning', 'Tylko podgląd')
 			return
 		}
 
@@ -363,33 +277,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				timeSlot,
 				userId: currentUser.id,
 			})
-			showFeedbackMessage(`Zarezerwowano slot ${timeSlot} na ${formatDateLabel(selectedDate)}.`, 'success')
 			syncUi()
 		} catch (error) {
-			showFeedbackMessage(error.message || 'Nie udało się zapisać rezerwacji.', 'error')
+			notifyLunch(error.message || 'Nie udało się zapisać rezerwacji.', 'error', 'Błąd rezerwacji')
 		}
 	}
 
-	dateInput.addEventListener('change', () => {
-		selectedDate = AppUtils.formatDate(dateInput.value) || getTodayDate()
-		syncUi()
-	})
-
-	todayBtn.addEventListener('click', () => {
-		selectedDate = getTodayDate()
-		syncUi()
-	})
-
-	authBtn.addEventListener('click', () => {
-		if (getCurrentUser()) {
-			AppUtils.auth.openProfileModal?.()
-			return
-		}
-
-		AppUtils.auth.openAuthModal?.('login')
-	})
-
-	slotGrid.addEventListener('click', event => {
+	listen(slotGrid, 'click', event => {
 		const actionButton = event.target.closest('[data-slot-action]')
 		if (!actionButton) return
 
@@ -411,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const currentUser = getCurrentUser()
 			const myReservation = currentUser ? lunchService.getUserReservationForDate(selectedDate, currentUser.id) : null
 			if (!myReservation) {
-				showFeedbackMessage('Nie znaleziono aktywnej rezerwacji do anulowania.', 'error')
+				notifyLunch('Nie znaleziono aktywnej rezerwacji do anulowania.', 'error', 'Brak rezerwacji')
 				return
 			}
 
@@ -419,20 +313,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	})
 
-	myReservationBox.addEventListener('click', event => {
-		const actionButton = event.target.closest('[data-summary-action="cancel"]')
-		if (!actionButton) return
-
-		const reservationId = actionButton.getAttribute('data-reservation-id')
-		if (!reservationId) return
-		void handleCancelReservation(reservationId)
-	})
-
-	document.addEventListener('app-auth-changed', () => {
+	listen(document, 'app-auth-changed', () => {
 		syncUi()
 	})
 
-	window.addEventListener('storage', event => {
+	listen(window, 'storage', event => {
 		if (event.key === STORAGE_KEY || event.key === AppUtils.config.STORAGE_KEYS.USERS || event.key === AppUtils.config.STORAGE_KEYS.SESSION) {
 			syncUi()
 		}
@@ -441,3 +326,4 @@ document.addEventListener('DOMContentLoaded', () => {
 	selectedDate = getTodayDate()
 	syncUi()
 })
+})()

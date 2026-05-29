@@ -707,20 +707,21 @@ const createMonthPicker = ({
 /* === Shared Audit Helpers: Start === */
 const normalizeAuditFields = record => ({
 	createdBy: record?.createdBy || null,
-	updatedBy: record?.updatedBy || record?.createdBy || null,
+	updatedBy: record?.updatedBy || null,
 	createdAt: record?.createdAt || '',
-	updatedAt: record?.updatedAt || record?.createdAt || '',
+	updatedAt: record?.updatedAt || '',
 })
 
 const buildAuditMarkup = record => {
 	const authUtils = window.AppUtils?.auth
-	const createdByLabel = authUtils?.getAuditActorLabel?.(record?.createdBy) || 'Nieznany'
-	const updatedByLabel = authUtils?.getAuditActorLabel?.(record?.updatedBy || record?.createdBy) || createdByLabel
-	const createdAtLabel = formatDate(record?.createdAt)
-	const updatedAtLabel = formatDate(record?.updatedAt)
+	const normalizedAudit = normalizeAuditFields(record)
+	const createdByLabel = authUtils?.getAuditActorLabel?.(normalizedAudit.createdBy) || 'Nieznany'
+	const updatedByLabel = authUtils?.getAuditActorLabel?.(normalizedAudit.updatedBy) || createdByLabel
+	const createdAtLabel = formatDate(normalizedAudit.createdAt)
+	const updatedAtLabel = formatDate(normalizedAudit.updatedAt)
 	const createdLine = createdAtLabel ? `${createdByLabel} · ${createdAtLabel}` : createdByLabel
 	const updatedLine = updatedAtLabel ? `${updatedByLabel} · ${updatedAtLabel}` : updatedByLabel
-	const shouldShowUpdate = Boolean(record?.updatedBy || record?.updatedAt) && updatedLine !== createdLine
+	const shouldShowUpdate = Boolean(normalizedAudit.updatedBy || normalizedAudit.updatedAt) && updatedLine !== createdLine
 
 	return `
 		<div class="record-audit">

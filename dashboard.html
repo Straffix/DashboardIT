@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard IT | Notatnik</title>
+    <title>Dashboard IT | Moduły operacyjne</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,24 +15,29 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
 
     <link rel="stylesheet" href="./styles/css/style.css">
-    <link rel="stylesheet" href="./styles/css/notes.css">
+    <link rel="stylesheet" href="./styles/css/zatrudnienia.css">
 </head>
 
-<body class="module-page notes-page">
+<body class="module-page module-shell-page hires-page" data-module-page="">
 
     <div class="wrapper">
+
         <header class="header module-header">
             <div class="module-header-main">
                 <a href="index.html" class="logo-section module-home-link" aria-label="Przejdz do strony glownej">
-                    <div class="icon-box notes-icon-box">
-                        <i class="app-icon comment-solid-full"></i>
+
+                    <div class="icon-box">
+                        <i class="app-icon layer-group-solid-full"></i>
                     </div>
 
                     <div>
-                        <h1>Chat</h1>
-                        <p>Czat operacyjny zespołu z przypiętymi wiadomościami po prawej stronie.</p>
+                        <h1>Dashboard IT</h1>
+                        <p>Ładowanie modułu operacyjnego... <span>Przełączanie bez pełnego przeładowania strony.</span>
+                        </p>
                     </div>
+
                 </a>
+
                 <div class="module-header-tools">
                     <div class="module-nav-dock">
                         <div class="module-nav-flyout">
@@ -41,23 +46,23 @@
                                     <i class="app-icon layer-group-solid-full" aria-hidden="true"></i>
                                     <span>Dashboard</span>
                                 </a>
-                                <a href="nowe_zatrudnienia.html" class="module-nav-link">
+                                <a href="#nowe-zatrudnienia" class="module-nav-link" data-module-route="nowe-zatrudnienia">
                                     <i class="app-icon user-plus-solid-full" aria-hidden="true"></i>
                                     <span>Nowe zatrudnienia</span>
                                 </a>
-                                <a href="monitor_laptopow.html" class="module-nav-link">
+                                <a href="#urzadzenia" class="module-nav-link" data-module-route="urzadzenia">
                                     <i class="app-icon laptop-solid-full" aria-hidden="true"></i>
                                     <span>Urzadzenia</span>
                                 </a>
-                                <a href="wymiana_sprzetu.html" class="module-nav-link">
+                                <a href="#wymiana-sprzetu" class="module-nav-link" data-module-route="wymiana-sprzetu">
                                     <i class="app-icon right-left-solid-full" aria-hidden="true"></i>
                                     <span>Wymiana sprzetu</span>
                                 </a>
-                                <a href="rezerwacja_obiadow.html" class="module-nav-link">
+                                <a href="#obiady" class="module-nav-link" data-module-route="obiady">
                                     <i class="app-icon utensils-solid-full" aria-hidden="true"></i>
                                     <span>Obiady</span>
                                 </a>
-                                <a href="notatnik.html" class="module-nav-link" aria-current="page">
+                                <a href="#chat" class="module-nav-link" data-module-route="chat">
                                     <i class="app-icon comment-solid-full" aria-hidden="true"></i>
                                     <span>Chat</span>
                                 </a>
@@ -74,64 +79,30 @@
                     </div>
 
                     <div class="app-user-panel-slot" aria-label="Panel uzytkownika"></div>
-                    </a>
                 </div>
+            </div>
         </header>
 
-        <main class="notes-chat-shell">
-            <section class="notes-chat-panel" aria-labelledby="notes-chat-title">
-                <h2 id="notes-chat-title" class="sr-only">Chat zespołu</h2>
-
-                <div id="notes-auth-callout" class="notes-auth-callout">
-                    <div>
-                        <strong id="notes-auth-title">Zaloguj się, aby korzystać z czatu</strong>
-                        <p id="notes-auth-text">Wiadomości są zapisywane na serwerze i widoczne dla zalogowanych
-                            użytkowników.</p>
-                        <div id="notes-user-status" class="sr-only">
-                            <strong>Gość</strong>
-                            <p>Zaloguj się, aby zobaczyć chat i pisać wiadomości.</p>
-                        </div>
-                    </div>
-                    <button type="button" id="notes-auth-btn" class="notes-auth-btn">
-                        <i class="app-icon right-to-bracket-solid-full"></i>
-                        <span>Zaloguj się</span>
-                    </button>
+        <div class="main-content hires-content">
+            <section class="hires-workspace">
+                <div class="table-container">
+                    <table class="hires-table">
+                        <thead>
+                            <tr>
+                                <th>Moduł</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Dashboard IT</td>
+                                <td>Ładowanie zawartości modułu...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-
-                <div class="notes-chat-window" id="notes-chat-window">
-                    <div class="notes-chat-list" id="notes-chat-list" aria-live="polite"></div>
-                </div>
-
-                <form id="notes-chat-form" class="notes-chat-composer">
-                    <label class="sr-only" for="notes-chat-input">Treść wiadomości</label>
-                    <textarea id="notes-chat-input" maxlength="1600" rows="2"
-                        placeholder="Napisz wiadomość do zespołu..." required></textarea>
-                    <div class="notes-chat-composer-actions">
-                        <span id="notes-chat-edit-indicator" class="notes-chat-edit-indicator" hidden>Edytujesz
-                            wiadomość</span>
-                        <button type="button" id="notes-chat-cancel-edit" class="notes-secondary-btn"
-                            hidden>Anuluj</button>
-                        <button type="submit" id="notes-chat-submit" class="notes-submit-btn">
-                            <i class="app-icon paper-plane-solid-full"></i>
-                            <span>Wyślij</span>
-                        </button>
-                    </div>
-                </form>
-                <div id="notes-active-viewers" class="notes-active-viewers" aria-live="polite" hidden></div>
             </section>
-
-            <aside class="notes-pinned-panel" aria-labelledby="notes-pinned-title">
-                <div class="notes-pinned-head">
-                    <div>
-                        <span class="notes-kicker">Przypięte</span>
-                        <h2 id="notes-pinned-title">Przypięte zadania</h2>
-                    </div>
-                    <span id="notes-pinned-count" class="notes-pinned-count">0</span>
-                </div>
-
-                <div id="notes-pinned-list" class="notes-pinned-list" aria-live="polite"></div>
-            </aside>
-        </main>
+        </div>
 
         <footer class="main-footer">
             <div class="footer-content">
@@ -146,6 +117,7 @@
                 </p>
             </div>
         </footer>
+
     </div>
 
     <script src="./js/script.js" charset="utf-8"></script>

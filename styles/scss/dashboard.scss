@@ -4301,10 +4301,14 @@ body.dashboard-page.theme-blush {
 
 	.dashboard-menu-stage {
 		position: relative;
-		height: calc(100svh - 12px);
-		min-height: calc(100svh - 12px);
+		width: 100%;
+		min-width: 0;
+		height: auto;
+		min-height: 0;
 		display: flex;
+		flex-direction: column;
 		align-items: stretch;
+		gap: 10px;
 		padding: 0;
 	}
 
@@ -4352,18 +4356,24 @@ body.dashboard-page.theme-blush {
 	}
 
 	.menu-grid {
-		flex: 1 1 auto;
-		height: 100%;
+		flex: 0 1 auto;
+		width: 100%;
+		max-width: 100%;
+		height: auto;
+		min-width: 0;
 		margin-top: 0;
 		padding-top: 0;
-		gap: 6px;
-		grid-template-columns: 1fr;
-		grid-template-rows: repeat(3, minmax(0, 1fr));
-		align-content: stretch;
+		gap: 10px;
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: none;
+		grid-auto-rows: minmax(0, auto);
+		align-content: start;
 	}
 
 	.menu-item {
 		min-height: 0;
+		min-width: 0;
+		width: 100%;
 	}
 
 	.dashboard-card {
@@ -4371,7 +4381,8 @@ body.dashboard-page.theme-blush {
 		align-items: center;
 		justify-content: flex-start;
 		gap: 12px;
-		height: 100%;
+		width: 100%;
+		height: auto;
 		min-height: 0;
 		padding: 6px 10px;
 		border-radius: 12px;

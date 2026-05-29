@@ -12,9 +12,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
+
     <link rel="stylesheet" href="./styles/css/style.css">
     <link rel="stylesheet" href="./styles/css/lunch.css">
-    <link rel="stylesheet" href="./styles/css/app-icons.css">
 </head>
 
 <body class="module-page lunch-page">
@@ -79,83 +80,8 @@
 
         <main class="main-content lunch-content">
             <section class="lunch-workspace">
-                <div class="lunch-hero lunch-hero-compact">
-                    <div class="lunch-hero-actions">
-                        <label class="lunch-date-field" for="lunch-date">
-                            <span>Data</span>
-                            <input type="date" id="lunch-date" required>
-                        </label>
-
-                        <button type="button" class="lunch-today-btn" id="lunch-today-btn">
-                            <i class="app-icon calendar-day-solid-full"></i>
-                            <span>Dzisiaj</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="lunch-feedback" class="lunch-feedback is-hidden" aria-live="polite"></div>
-
-                <div id="lunch-auth-callout" class="lunch-auth-callout">
-                    <div class="lunch-auth-copy">
-                        <strong id="lunch-auth-title">Podgląd slotów jest dostępny dla wszystkich</strong>
-                        <p id="lunch-auth-text">Zaloguj się, aby zapisać się na wybraną godzinę albo anulować swoją
-                            rezerwację.</p>
-                    </div>
-
-                    <button type="button" id="lunch-auth-btn" class="lunch-auth-btn">
-                        <i class="app-icon right-to-bracket-solid-full"></i>
-                        <span>Zaloguj się</span>
-                    </button>
-                </div>
-
                 <div class="lunch-slot-grid" id="lunch-slot-grid" aria-live="polite"></div>
             </section>
-
-            <aside class="lunch-sidebar">
-                <div class="lunch-sidebar-stack">
-                    <article class="lunch-side-card">
-                        <p class="lunch-side-kicker">Twoja rezerwacja</p>
-                        <div id="lunch-my-reservation" class="lunch-my-reservation">
-                            <strong>Brak danych</strong>
-                            <p>Ładowanie statusu rezerwacji...</p>
-                        </div>
-                    </article>
-
-                    <article class="lunch-side-card">
-                        <p class="lunch-side-kicker">Podsumowanie dnia</p>
-                        <div class="lunch-side-stats">
-                            <div class="lunch-side-stat">
-                                <span>Zajęte miejsca</span>
-                                <strong id="lunch-stat-booked">0</strong>
-                                <small id="lunch-stat-capacity">z 36</small>
-                            </div>
-
-                            <div class="lunch-side-stat">
-                                <span>Sloty z wolnym miejscem</span>
-                                <strong id="lunch-stat-open-slots">0</strong>
-                                <small>aktywnie dostępne</small>
-                            </div>
-
-                            <div class="lunch-side-stat">
-                                <span>Status konta</span>
-                                <strong id="lunch-stat-user">Gość</strong>
-                                <small id="lunch-stat-user-meta">Podgląd bez zapisu</small>
-                            </div>
-                        </div>
-                    </article>
-
-                    <article class="lunch-side-card">
-                        <p class="lunch-side-kicker">Zasady modułu</p>
-                        <ul class="lunch-rule-list">
-                            <li>Sloty działają od 11:00 do 15:00 co 30 minut.</li>
-                            <li>Na jeden termin obowiązuje limit 4 osób.</li>
-                            <li>Zalogowany użytkownik może mieć jedną aktywną rezerwację na dany dzień.</li>
-                            <li>W trybie lokalnym dane są widoczne tylko w tej przeglądarce, a w trybie serwerowym
-                                są współdzielone dla zespołu.</li>
-                        </ul>
-                    </article>
-                </div>
-            </aside>
         </main>
 
         <footer class="main-footer">

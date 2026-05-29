@@ -1,44 +1,14 @@
 .lunch-content {
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
-}
-
-.lunch-workspace,
-.lunch-sidebar {
-  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .lunch-workspace {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 22px;
 }
 
-.lunch-hero {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 24px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(255, 246, 242, 0.94) 0%, rgba(255, 234, 228, 0.88) 100%);
-  border: 1px solid rgba(var(--primary-rgb), 0.14);
-  box-shadow: 0 18px 34px rgba(var(--shadow-rgb), 0.08);
-}
-
-.lunch-hero-compact {
-  justify-content: flex-end;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.lunch-hero-copy {
-  min-width: 0;
-}
-
-.lunch-kicker,
-.lunch-side-kicker,
 .lunch-slot-kicker {
   display: inline-flex;
   margin-bottom: 10px;
@@ -49,73 +19,6 @@
   text-transform: uppercase;
 }
 
-.lunch-hero-copy h2 {
-  margin-bottom: 12px;
-  font-size: 2.4rem;
-  line-height: 1.2;
-}
-
-.lunch-hero-copy p {
-  max-width: 700px;
-  color: var(--text-muted);
-  font-size: 1.28rem;
-  line-height: 1.7;
-}
-
-.lunch-hero-actions {
-  display: grid;
-  gap: 12px;
-  min-width: min(220px, 100%);
-}
-
-.lunch-hero-compact .lunch-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: flex-end;
-  gap: 12px;
-  min-width: 0;
-  margin-left: auto;
-}
-
-.lunch-date-field {
-  display: grid;
-  gap: 8px;
-  padding: 14px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(var(--primary-rgb), 0.16);
-}
-
-.lunch-date-field span {
-  color: var(--text-muted);
-  font-size: 0.96rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.lunch-date-field input {
-  width: 100%;
-  min-height: 46px;
-  padding: 12px 14px;
-  border: 1px solid rgba(var(--primary-rgb), 0.14);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--text-main);
-  font: inherit;
-  font-size: 1.2rem;
-}
-
-.lunch-date-field input:focus {
-  outline: none;
-  border-color: rgba(var(--primary-rgb), 0.4);
-  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.12);
-}
-
-.lunch-today-btn,
-.lunch-auth-btn,
-.lunch-summary-btn,
 .lunch-slot-action {
   display: inline-flex;
   align-items: center;
@@ -131,66 +34,17 @@
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
-.lunch-today-btn:hover,
-.lunch-auth-btn:hover,
-.lunch-summary-btn:hover,
 .lunch-slot-action:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
-.lunch-today-btn {
-  background: rgba(255, 255, 255, 0.88);
-  border-color: rgba(var(--primary-rgb), 0.18);
-  color: var(--primary-strong);
-}
-
-.lunch-auth-callout {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 18px 20px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(var(--primary-rgb), 0.12);
-  box-shadow: var(--shadow-sm);
-}
-
-.lunch-auth-callout.is-active-user {
-  background: linear-gradient(135deg, rgba(255, 243, 239, 0.9) 0%, rgba(255, 255, 255, 0.82) 100%);
-}
-
-.lunch-auth-copy {
-  min-width: 0;
-}
-
-.lunch-auth-copy strong {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 1.38rem;
-  color: var(--text-main);
-}
-
-.lunch-auth-copy p {
-  color: var(--text-muted);
-  font-size: 1.16rem;
-  line-height: 1.65;
-}
-
-.lunch-auth-btn,
-.lunch-summary-btn,
 .lunch-slot-action {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
   color: #ffffff;
   box-shadow: 0 14px 24px rgba(var(--primary-rgb), 0.18);
 }
 
-.lunch-summary-btn {
-  margin-top: 14px;
-}
-
-.lunch-slot-action.is-cancel,
-.lunch-summary-btn {
+.lunch-slot-action.is-cancel {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   box-shadow: 0 14px 24px rgba(239, 68, 68, 0.16);
 }
@@ -202,40 +56,9 @@
   transform: none;
 }
 
-.lunch-feedback {
-  padding: 15px 18px;
-  border-radius: 18px;
-  border: 1px solid transparent;
-  font-size: 1.16rem;
-  font-weight: 600;
-  line-height: 1.55;
-}
-
-.lunch-feedback.is-hidden {
-  display: none;
-}
-
-.lunch-feedback.is-success {
-  background: rgba(34, 197, 94, 0.12);
-  border-color: rgba(34, 197, 94, 0.22);
-  color: #166534;
-}
-
-.lunch-feedback.is-warning {
-  background: rgba(var(--primary-rgb), 0.12);
-  border-color: rgba(var(--primary-rgb), 0.2);
-  color: var(--primary-strong);
-}
-
-.lunch-feedback.is-error {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.18);
-  color: #b91c1c;
-}
-
 .lunch-slot-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -396,16 +219,13 @@
   flex: 1;
 }
 
-.lunch-attendee-copy strong,
-.lunch-my-reservation strong {
+.lunch-attendee-copy strong {
   display: block;
   font-size: 1.16rem;
   color: var(--text-main);
 }
 
-.lunch-attendee-copy span,
-.lunch-my-reservation p,
-.lunch-rule-list li {
+.lunch-attendee-copy span {
   color: var(--text-muted);
   font-size: 1.05rem;
   line-height: 1.55;
@@ -423,115 +243,15 @@
   font-weight: 700;
 }
 
-.lunch-sidebar-stack {
-  display: grid;
-  gap: 18px;
-}
-
-.lunch-side-card {
-  padding: 18px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(226, 232, 240, 0.94);
-}
-
-.lunch-my-reservation {
-  display: grid;
-  gap: 8px;
-}
-
-.lunch-side-stats {
-  display: grid;
-  gap: 12px;
-}
-
-.lunch-side-stat {
-  display: grid;
-  gap: 6px;
-  padding: 14px;
-  border-radius: 16px;
-  background: rgba(248, 250, 252, 0.94);
-  border: 1px solid rgba(226, 232, 240, 0.92);
-}
-
-.lunch-side-stat span {
-  color: var(--text-soft);
-  font-size: 0.98rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.lunch-side-stat strong {
-  font-size: 1.72rem;
-  color: var(--text-main);
-  line-height: 1;
-}
-
-.lunch-side-stat small {
-  color: var(--text-muted);
-  font-size: 1.02rem;
-}
-
-.lunch-rule-list {
-  display: grid;
-  gap: 10px;
-  padding-left: 18px;
-}
-
-.lunch-rule-list li::marker {
-  color: var(--primary);
-}
-
-body.theme-dark.lunch-page .lunch-hero {
-  background: linear-gradient(135deg, rgba(73, 33, 12, 0.92) 0%, rgba(37, 24, 18, 0.82) 100%);
-  border-color: rgba(251, 146, 60, 0.18);
-  box-shadow: 0 20px 40px rgba(2, 8, 23, 0.34);
-}
-
-body.theme-dark.lunch-page .lunch-kicker,
-body.theme-dark.lunch-page .lunch-side-kicker,
 body.theme-dark.lunch-page .lunch-slot-kicker {
   color: #fdba74;
 }
 
-body.theme-dark.lunch-page .lunch-date-field,
-body.theme-dark.lunch-page .lunch-auth-callout,
 body.theme-dark.lunch-page .lunch-slot-card,
-body.theme-dark.lunch-page .lunch-side-card,
 body.theme-dark.lunch-page .lunch-attendee,
-body.theme-dark.lunch-page .lunch-attendee-empty,
-body.theme-dark.lunch-page .lunch-side-stat {
+body.theme-dark.lunch-page .lunch-attendee-empty {
   background: rgba(15, 24, 42, 0.82);
   border-color: rgba(124, 140, 255, 0.18);
-}
-
-body.theme-dark.lunch-page .lunch-auth-callout.is-active-user {
-  background: linear-gradient(135deg, rgba(62, 32, 18, 0.9) 0%, rgba(15, 24, 42, 0.82) 100%);
-}
-
-body.theme-dark.lunch-page .lunch-date-field input {
-  background: rgba(9, 16, 31, 0.92);
-  border-color: rgba(251, 146, 60, 0.18);
-  color: var(--text-main);
-}
-
-body.theme-dark.lunch-page .lunch-today-btn {
-  background: rgba(15, 24, 42, 0.88);
-  border-color: rgba(251, 146, 60, 0.18);
-  color: #fdba74;
-}
-
-body.theme-dark.lunch-page .lunch-feedback.is-success {
-  color: #86efac;
-}
-
-body.theme-dark.lunch-page .lunch-feedback.is-warning {
-  color: #fdba74;
-}
-
-body.theme-dark.lunch-page .lunch-feedback.is-error {
-  color: #fca5a5;
 }
 
 body.theme-dark.lunch-page .lunch-slot-pill {
@@ -554,43 +274,35 @@ body.theme-dark.lunch-page .lunch-attendee-badge {
   color: #fdba74;
 }
 
-@media (max-width: 1080px) {
-  .lunch-content {
-    grid-template-columns: minmax(0, 1fr);
+@media (max-width: 1500px) {
+  .lunch-slot-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .lunch-sidebar {
-    width: 100%;
+}
+@media (max-width: 1180px) {
+  .lunch-slot-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .lunch-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 760px) {
-  .lunch-hero,
-  .lunch-auth-callout {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .lunch-hero-actions {
-    min-width: 0;
-  }
   .lunch-slot-grid {
     grid-template-columns: 1fr;
   }
 }
 @media (max-width: 640px) {
-  .lunch-hero,
-  .lunch-slot-card,
-  .lunch-side-card {
+  .lunch-slot-card {
     padding: 18px;
   }
   .lunch-slot-top {
     flex-direction: column;
     align-items: flex-start;
   }
-  .lunch-today-btn,
-  .lunch-auth-btn,
-  .lunch-summary-btn,
   .lunch-slot-action {
     width: 100%;
   }
-}
-
-/*# sourceMappingURL=lunch.css.map */
+}/*# sourceMappingURL=lunch.css.map */

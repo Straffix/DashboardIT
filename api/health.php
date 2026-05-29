@@ -17,7 +17,7 @@ try {
 } catch (Throwable $error) {
 	dashboard_json_response([
 		'ok' => false,
-		'message' => 'Nie udalo sie polaczyc z baza danych dashboardu.',
+		'message' => 'Nie udalo sie uruchomic backendu DashboardIT.',
 		'version' => 3,
 	], 500);
 }

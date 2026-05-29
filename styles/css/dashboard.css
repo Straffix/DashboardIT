@@ -175,6 +175,7 @@ body.weather-editor-open .dashboard-topbar {
   z-index: 1001;
   display: grid;
   align-items: start;
+  width: -moz-max-content;
   width: max-content;
   max-width: calc(100vw - 40px);
   isolation: isolate;
@@ -303,7 +304,9 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn {
 }
 
 .weather-forecast-card {
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   position: relative;
   width: 100%;
   display: grid;
@@ -583,7 +586,8 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn {
   scrollbar-width: none;
   cursor: var(--weather-cursor-grab);
   touch-action: pan-y;
-  user-select: none;
+  -moz-user-select: none;
+       user-select: none;
   -webkit-user-select: none;
 }
 .weather-workday-track::-webkit-scrollbar {
@@ -1706,7 +1710,8 @@ body.task-modal-open {
 
 .dashboard-menu-stage.is-editing .menu-item.is-reorderable {
   touch-action: none;
-  user-select: none;
+  -moz-user-select: none;
+       user-select: none;
   -webkit-user-select: none;
 }
 
@@ -1739,7 +1744,9 @@ body.task-modal-open {
   line-height: 1;
   letter-spacing: -0.08em;
   color: rgba(100, 116, 139, 0.22);
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 
 .card-placeholder-badge {
@@ -1919,7 +1926,8 @@ body.dashboard-page.dashboard-bookmark-modal-open {
   width: 16px;
   height: 16px;
   border-radius: 4px;
-  object-fit: cover;
+  -o-object-fit: cover;
+     object-fit: cover;
 }
 
 .dashboard-bookmark-actions {
@@ -2532,6 +2540,9 @@ body.dashboard-page.theme-dark .dashboard-bookmarks-add-btn:hover:not(:disabled)
   background: rgba(43, 39, 72, 0.92);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 28px rgba(0, 0, 0, 0.28);
 }
+body.dashboard-page.theme-dark .weather-search input::-moz-placeholder, body.dashboard-page.theme-dark .task-field input::-moz-placeholder, body.dashboard-page.theme-dark .task-field textarea::-moz-placeholder {
+  color: #8f86ab;
+}
 body.dashboard-page.theme-dark .weather-search input::placeholder,
 body.dashboard-page.theme-dark .task-field input::placeholder,
 body.dashboard-page.theme-dark .task-field textarea::placeholder {
@@ -3032,6 +3043,9 @@ body.dashboard-page.theme-dark .dashboard-bookmarks-add-btn:hover:not(:disabled)
   background: rgba(74, 80, 89, 0.96);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 28px rgba(15, 23, 42, 0.22);
 }
+body.dashboard-page.theme-dark .weather-search input::-moz-placeholder, body.dashboard-page.theme-dark .task-field input::-moz-placeholder, body.dashboard-page.theme-dark .task-field textarea::-moz-placeholder {
+  color: var(--text-soft);
+}
 body.dashboard-page.theme-dark .weather-search input::placeholder,
 body.dashboard-page.theme-dark .task-field input::placeholder,
 body.dashboard-page.theme-dark .task-field textarea::placeholder {
@@ -3321,6 +3335,9 @@ body.dashboard-page.theme-blush .theme-toggle-btn {
   background: rgba(255, 250, 252, 0.96);
   box-shadow: 0 16px 30px rgba(171, 101, 129, 0.14);
   color: #5c2740;
+}
+body.dashboard-page.theme-blush .weather-search input::-moz-placeholder, body.dashboard-page.theme-blush .task-field input::-moz-placeholder, body.dashboard-page.theme-blush .task-field textarea::-moz-placeholder {
+  color: rgba(147, 101, 122, 0.82);
 }
 body.dashboard-page.theme-blush .weather-search input::placeholder,
 body.dashboard-page.theme-blush .task-field input::placeholder,
@@ -3686,10 +3703,14 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
   }
   .dashboard-menu-stage {
     position: relative;
-    height: calc(100svh - 12px);
-    min-height: calc(100svh - 12px);
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
     display: flex;
+    flex-direction: column;
     align-items: stretch;
+    gap: 10px;
     padding: 0;
   }
   .dashboard-bookmarks-stage {
@@ -3727,24 +3748,31 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
     width: 100%;
   }
   .menu-grid {
-    flex: 1 1 auto;
-    height: 100%;
+    flex: 0 1 auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-width: 0;
     margin-top: 0;
     padding-top: 0;
-    gap: 6px;
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(3, minmax(0, 1fr));
-    align-content: stretch;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: minmax(0, auto);
+    align-content: start;
   }
   .menu-item {
     min-height: 0;
+    min-width: 0;
+    width: 100%;
   }
   .dashboard-card {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 12px;
-    height: 100%;
+    width: 100%;
+    height: auto;
     min-height: 0;
     padding: 6px 10px;
     border-radius: 12px;
@@ -4050,6 +4078,4 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
     font-size: 1.8rem;
   }
 }
-/* === Dashboard Larger Breakpoints: End === */
-
-/*# sourceMappingURL=dashboard.css.map */
+/* === Dashboard Larger Breakpoints: End === *//*# sourceMappingURL=dashboard.css.map */

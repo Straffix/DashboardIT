@@ -1,16 +1,28 @@
-﻿// Set storageMode to 'local' when the hosting does not provide a working PHP/database backend.
+// DashboardIT prefers the PHP/PostgreSQL backend, with an optional browser-only fallback for local Live Server testing.
 const existingDashboardRuntimeConfig = window.DashboardRuntimeConfig || {}
 const defaultDashboardOneTimeResetConfig = {
-	version: '2026-04-24-clean-start',
+	version: '',
 	apiPath: 'reset-app-data.php',
-	clearLocalData: true,
-	clearRemoteData: true,
+	clearRemoteData: false,
 }
+// LIVE_SERVER_FALLBACK_START
+const defaultLiveServerBrowserFallbackConfig = {
+	enabled: true,
+	allowedHosts: ['127.0.0.1', 'localhost'],
+	resetVersion: '2026-05-27-clean-live-server-auth',
+}
+// LIVE_SERVER_FALLBACK_END
 
 window.DashboardRuntimeConfig = {
-	storageMode: 'auto',
-	fallbackToLocalOnRemoteError: true,
+	storageMode: 'remote',
+	fallbackToLocalOnRemoteError: false,
 	...existingDashboardRuntimeConfig,
+	// LIVE_SERVER_FALLBACK_START
+	liveServerBrowserFallback: {
+		...defaultLiveServerBrowserFallbackConfig,
+		...(existingDashboardRuntimeConfig.liveServerBrowserFallback || {}),
+	},
+	// LIVE_SERVER_FALLBACK_END
 	oneTimeReset: {
 		...defaultDashboardOneTimeResetConfig,
 		...(existingDashboardRuntimeConfig.oneTimeReset || {}),
@@ -26,39 +38,7 @@ window.DashboardRuntimeConfig = {
 		return
 	}
 
-	const localMarkerKey = `dashboard_app_local_reset::${resetVersion}`
 	const remoteMarkerKey = `dashboard_app_remote_reset::${resetVersion}`
-	const localOnlyStorageKeys = new Set(['monitor_laptopow_dane', 'nowe_zatrudnienia_dane', 'wymiana_sprzetu_dane'])
-	const shouldResetKey = key => {
-		if (!key || key === localMarkerKey || key === remoteMarkerKey) {
-			return false
-		}
-
-		return key.startsWith('dashboard') || localOnlyStorageKeys.has(key)
-	}
-
-	const removeMatchingKeys = storage => {
-		if (!storage) {
-			return
-		}
-
-		const keysToRemove = []
-		for (let index = 0; index < storage.length; index += 1) {
-			const key = storage.key(index)
-			if (shouldResetKey(key)) {
-				keysToRemove.push(key)
-			}
-		}
-
-		keysToRemove.forEach(key => {
-			try {
-				storage.removeItem(key)
-			} catch (error) {
-				// Ignore storage cleanup failures and continue with the reset flow.
-			}
-		})
-	}
-
 	const readStorageFlag = key => {
 		try {
 			return localStorage.getItem(key)
@@ -73,12 +53,6 @@ window.DashboardRuntimeConfig = {
 		} catch (error) {
 			// Ignore marker write failures and keep the reset best-effort.
 		}
-	}
-
-	if (resetConfig.clearLocalData !== false && !readStorageFlag(localMarkerKey)) {
-		removeMatchingKeys(localStorage)
-		removeMatchingKeys(sessionStorage)
-		writeStorageFlag(localMarkerKey)
 	}
 
 	if (resetConfig.clearRemoteData === false || readStorageFlag(remoteMarkerKey) || window.location.protocol === 'file:') {

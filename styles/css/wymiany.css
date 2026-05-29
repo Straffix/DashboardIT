@@ -141,6 +141,9 @@
   font-weight: 500;
   outline: none;
 }
+.workspace-search input::-moz-placeholder {
+  color: var(--text-muted);
+}
 .workspace-search input::placeholder {
   color: var(--text-muted);
 }
@@ -202,6 +205,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 14px;
+  width: -moz-max-content;
   width: max-content;
   min-width: 0;
   max-width: calc(100vw - 32px);
@@ -378,6 +382,7 @@ body.exchange-month-transitioning {
 .exchange-state-badge {
   display: inline-flex;
   align-items: center;
+  width: -moz-fit-content;
   width: fit-content;
   padding: 5px 10px;
   border-radius: 999px;
@@ -761,6 +766,4 @@ body.theme-dark:not(.dashboard-page) .exchange-action-btn:hover {
   .exchange-form-actions {
     grid-template-columns: 1fr;
   }
-}
-
-/*# sourceMappingURL=wymiany.css.map */
+}/*# sourceMappingURL=wymiany.css.map */
