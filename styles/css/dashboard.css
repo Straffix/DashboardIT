@@ -256,7 +256,9 @@ body.dashboard-page .dashboard-container > .theme-toggle-btn {
 }
 
 .weather-widget-trigger {
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   width: 100%;
   display: block;
   padding: 0;
@@ -746,7 +748,9 @@ body.weather-editor-open .weather-widget {
 }
 
 .clock-widget {
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   position: relative;
   display: flex;
   align-items: center;

@@ -3189,12 +3189,7 @@ table tr:last-child td {
 .input-group {
   margin-bottom: 15px;
 }
-.input-group label {
-  display: block;
-  font-size: 1.2rem;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
+.input-group label,
 .input-group .input-group-label {
   display: block;
   font-size: 1.2rem;
@@ -3373,7 +3368,9 @@ table tr:last-child td {
   overflow: visible;
 }
 .table-header .month-picker-container {
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   position: relative;
   display: flex;
   align-items: center;
