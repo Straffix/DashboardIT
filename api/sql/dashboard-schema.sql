@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS dashboard_users (
 	profile_title varchar(80) NOT NULL DEFAULT '',
 	profile_bio varchar(240) NOT NULL DEFAULT '',
 	profile_accent_color varchar(7) NOT NULL DEFAULT '#0f766e',
+	bookmark_default_color varchar(7) NOT NULL DEFAULT '#94a3b8',
 	profile_cover_image text NOT NULL DEFAULT '',
 	created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS dashboard_user_permissions (
 );
 
 CREATE INDEX IF NOT EXISTS dashboard_users_login_idx ON dashboard_users (login);
+ALTER TABLE dashboard_users ADD COLUMN IF NOT EXISTS bookmark_default_color varchar(7) NOT NULL DEFAULT '#94a3b8';
 
 CREATE TABLE IF NOT EXISTS dashboard_bookmarks (
 	id varchar(191) PRIMARY KEY,
@@ -33,11 +35,15 @@ CREATE TABLE IF NOT EXISTS dashboard_bookmarks (
 	label varchar(200) NOT NULL,
 	url text NOT NULL,
 	description text NOT NULL DEFAULT '',
+	color_hex varchar(7) NOT NULL DEFAULT '',
+	icon_name varchar(80) NOT NULL DEFAULT '',
 	created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS dashboard_bookmarks_user_idx ON dashboard_bookmarks (user_id, sort_order);
+ALTER TABLE dashboard_bookmarks ADD COLUMN IF NOT EXISTS color_hex varchar(7) NOT NULL DEFAULT '';
+ALTER TABLE dashboard_bookmarks ADD COLUMN IF NOT EXISTS icon_name varchar(80) NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS dashboard_active_users (
 	tab_id varchar(191) PRIMARY KEY,

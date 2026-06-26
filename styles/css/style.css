@@ -2496,7 +2496,9 @@ body.theme-blush .app-page-status-tag.is-neutral {
 }
 .logo-section h1 {
   font-size: 2.4rem;
-  font-family: "Jura", "M_PLUS_U", sans-serif;
+  font-family: var(--font-ui-panels);
+  font-weight: 700;
+  letter-spacing: 0.04em;
   color: var(--text-main);
   text-transform: uppercase;
   transition: font-size 0.35s ease;

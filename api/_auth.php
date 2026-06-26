@@ -9,6 +9,7 @@ const DASHBOARD_MIN_PASSWORD_LENGTH = 8;
 const DASHBOARD_PROFILE_IMAGE_MAX_LENGTH = 2500000;
 const DASHBOARD_LOGIN_MAX_ATTEMPTS = 10;
 const DASHBOARD_LOGIN_WINDOW_SECONDS = 300;
+const DASHBOARD_DEFAULT_BOOKMARK_COLOR = '#94a3b8';
 
 function dashboard_start_session(): void
 {
@@ -80,6 +81,12 @@ function dashboard_normalize_profile_accent_color(string $accentColor): string
 {
 	$normalizedColor = strtolower(trim($accentColor));
 	return preg_match('/^#[0-9a-f]{6}$/', $normalizedColor) === 1 ? $normalizedColor : '#0f766e';
+}
+
+function dashboard_normalize_bookmark_default_color(string $bookmarkColor): string
+{
+	$normalizedColor = strtolower(trim($bookmarkColor));
+	return preg_match('/^#[0-9a-f]{6}$/', $normalizedColor) === 1 ? $normalizedColor : DASHBOARD_DEFAULT_BOOKMARK_COLOR;
 }
 
 function dashboard_normalize_profile_title(string $profileTitle): string
@@ -169,6 +176,9 @@ function dashboard_apply_user_config_overlay(array $user, array $config): array
 	}
 	if (array_key_exists('profileAccentColor', $config)) {
 		$nextUser['profileAccentColor'] = dashboard_normalize_profile_accent_color((string) ($config['profileAccentColor'] ?? '#0f766e'));
+	}
+	if (array_key_exists('bookmarkDefaultColor', $config)) {
+		$nextUser['bookmarkDefaultColor'] = dashboard_normalize_bookmark_default_color((string) ($config['bookmarkDefaultColor'] ?? DASHBOARD_DEFAULT_BOOKMARK_COLOR));
 	}
 	if (array_key_exists('profileCoverImage', $config)) {
 		$nextUser['profileCoverImage'] = dashboard_normalize_profile_cover_image((string) ($config['profileCoverImage'] ?? ''));
@@ -263,6 +273,7 @@ function dashboard_user_config_export_record(array $user): array
 		'profileTitle' => $sanitizedUser['profileTitle'],
 		'profileBio' => $sanitizedUser['profileBio'],
 		'profileAccentColor' => $sanitizedUser['profileAccentColor'],
+		'bookmarkDefaultColor' => $sanitizedUser['bookmarkDefaultColor'],
 		'profileCoverImage' => $sanitizedUser['profileCoverImage'],
 	];
 }
@@ -349,6 +360,7 @@ function dashboard_sanitize_user(array $user): array
 		'profileTitle' => dashboard_normalize_profile_title((string) ($user['profileTitle'] ?? '')),
 		'profileBio' => dashboard_normalize_profile_bio((string) ($user['profileBio'] ?? '')),
 		'profileAccentColor' => dashboard_normalize_profile_accent_color((string) ($user['profileAccentColor'] ?? '#0f766e')),
+		'bookmarkDefaultColor' => dashboard_normalize_bookmark_default_color((string) ($user['bookmarkDefaultColor'] ?? DASHBOARD_DEFAULT_BOOKMARK_COLOR)),
 		'profileCoverImage' => dashboard_normalize_profile_cover_image((string) ($user['profileCoverImage'] ?? '')),
 		'createdAt' => (string) ($user['createdAt'] ?? gmdate('c')),
 		'updatedAt' => (string) ($user['updatedAt'] ?? gmdate('c')),

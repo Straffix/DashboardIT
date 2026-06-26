@@ -350,11 +350,13 @@ function dashboard_schema_statements(): array
 			profile_title varchar(80) NOT NULL DEFAULT '',
 			profile_bio varchar(240) NOT NULL DEFAULT '',
 			profile_accent_color varchar(7) NOT NULL DEFAULT '#0f766e',
+			bookmark_default_color varchar(7) NOT NULL DEFAULT '#94a3b8',
 			profile_cover_image text NOT NULL DEFAULT '',
 			created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			CONSTRAINT dashboard_users_role_check CHECK (role IN ('user', 'admin'))
 		)",
+		"ALTER TABLE dashboard_users ADD COLUMN IF NOT EXISTS bookmark_default_color varchar(7) NOT NULL DEFAULT '#94a3b8'",
 		"CREATE TABLE IF NOT EXISTS dashboard_user_permissions (
 			user_id varchar(191) NOT NULL REFERENCES dashboard_users(id) ON DELETE CASCADE,
 			permission_id varchar(50) NOT NULL,
@@ -368,9 +370,13 @@ function dashboard_schema_statements(): array
 			label varchar(200) NOT NULL,
 			url text NOT NULL,
 			description text NOT NULL DEFAULT '',
+			color_hex varchar(7) NOT NULL DEFAULT '',
+			icon_name varchar(80) NOT NULL DEFAULT '',
 			created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 		)",
+		"ALTER TABLE dashboard_bookmarks ADD COLUMN IF NOT EXISTS color_hex varchar(7) NOT NULL DEFAULT ''",
+		"ALTER TABLE dashboard_bookmarks ADD COLUMN IF NOT EXISTS icon_name varchar(80) NOT NULL DEFAULT ''",
 		'CREATE INDEX IF NOT EXISTS dashboard_bookmarks_user_idx ON dashboard_bookmarks (user_id, sort_order)',
 		"CREATE TABLE IF NOT EXISTS dashboard_active_users (
 			tab_id varchar(191) PRIMARY KEY,
@@ -561,6 +567,27 @@ function dashboard_store_normalize_permissions($permissions): array
 	return array_keys($normalizedPermissions);
 }
 
+function dashboard_store_default_bookmark_color(): string
+{
+	return '#94a3b8';
+}
+
+function dashboard_store_normalize_bookmark_color($value, string $fallback = ''): string
+{
+	$normalizedValue = strtolower(trim((string) $value));
+	if (preg_match('/^#[0-9a-f]{6}$/', $normalizedValue) === 1) {
+		return $normalizedValue;
+	}
+
+	return $fallback;
+}
+
+function dashboard_store_normalize_bookmark_icon_name($value): string
+{
+	$normalizedValue = strtolower(trim((string) $value));
+	return preg_match('/^[a-z0-9-]{1,80}$/', $normalizedValue) === 1 ? $normalizedValue : '';
+}
+
 function dashboard_normalize_date_value($value): ?string
 {
 	$stringValue = trim((string) $value);
@@ -726,6 +753,7 @@ function dashboard_fetch_users_collection(PDO $pdo): array
 			u.profile_title,
 			u.profile_bio,
 			u.profile_accent_color,
+			u.bookmark_default_color,
 			u.profile_cover_image,
 			u.created_at,
 			u.updated_at,
@@ -746,6 +774,7 @@ function dashboard_fetch_users_collection(PDO $pdo): array
 			u.profile_title,
 			u.profile_bio,
 			u.profile_accent_color,
+			u.bookmark_default_color,
 			u.profile_cover_image,
 			u.created_at,
 			u.updated_at
@@ -770,6 +799,10 @@ function dashboard_fetch_users_collection(PDO $pdo): array
 			'profileTitle' => dashboard_trim_string($row['profile_title'] ?? '', 80),
 			'profileBio' => dashboard_trim_string($row['profile_bio'] ?? '', 240),
 			'profileAccentColor' => dashboard_trim_string($row['profile_accent_color'] ?? '#0f766e') ?: '#0f766e',
+			'bookmarkDefaultColor' => dashboard_store_normalize_bookmark_color(
+				$row['bookmark_default_color'] ?? dashboard_store_default_bookmark_color(),
+				dashboard_store_default_bookmark_color()
+			),
 			'profileCoverImage' => dashboard_trim_string($row['profile_cover_image'] ?? ''),
 			'createdAt' => dashboard_format_datetime_output($row['created_at'] ?? ''),
 			'updatedAt' => dashboard_format_datetime_output($row['updated_at'] ?? ''),
@@ -805,6 +838,10 @@ function dashboard_replace_users_collection(PDO $pdo, $users): void
 			'profileTitle' => dashboard_trim_string($user['profileTitle'] ?? '', 80),
 			'profileBio' => dashboard_trim_string($user['profileBio'] ?? '', 240),
 			'profileAccentColor' => dashboard_trim_string($user['profileAccentColor'] ?? '#0f766e') ?: '#0f766e',
+			'bookmarkDefaultColor' => dashboard_store_normalize_bookmark_color(
+				$user['bookmarkDefaultColor'] ?? dashboard_store_default_bookmark_color(),
+				dashboard_store_default_bookmark_color()
+			),
 			'profileCoverImage' => dashboard_trim_string($user['profileCoverImage'] ?? ''),
 			'createdAt' => dashboard_normalize_datetime_value($user['createdAt'] ?? '', $now) ?? $now,
 			'updatedAt' => dashboard_normalize_datetime_value($user['updatedAt'] ?? '', $now) ?? $now,
@@ -826,6 +863,7 @@ function dashboard_replace_users_collection(PDO $pdo, $users): void
 			profile_title,
 			profile_bio,
 			profile_accent_color,
+			bookmark_default_color,
 			profile_cover_image,
 			created_at,
 			updated_at
@@ -840,6 +878,7 @@ function dashboard_replace_users_collection(PDO $pdo, $users): void
 			:profile_title,
 			:profile_bio,
 			:profile_accent_color,
+			:bookmark_default_color,
 			:profile_cover_image,
 			:created_at,
 			:updated_at
@@ -854,6 +893,7 @@ function dashboard_replace_users_collection(PDO $pdo, $users): void
 			profile_title = EXCLUDED.profile_title,
 			profile_bio = EXCLUDED.profile_bio,
 			profile_accent_color = EXCLUDED.profile_accent_color,
+			bookmark_default_color = EXCLUDED.bookmark_default_color,
 			profile_cover_image = EXCLUDED.profile_cover_image,
 			created_at = EXCLUDED.created_at,
 			updated_at = EXCLUDED.updated_at"
@@ -875,6 +915,7 @@ function dashboard_replace_users_collection(PDO $pdo, $users): void
 			'profile_title' => $user['profileTitle'],
 			'profile_bio' => $user['profileBio'],
 			'profile_accent_color' => $user['profileAccentColor'],
+			'bookmark_default_color' => $user['bookmarkDefaultColor'],
 			'profile_cover_image' => $user['profileCoverImage'],
 			'created_at' => $user['createdAt'],
 			'updated_at' => $user['updatedAt'],
@@ -912,7 +953,7 @@ function dashboard_replace_users_collection(PDO $pdo, $users): void
 function dashboard_fetch_bookmarks_collection(PDO $pdo): array
 {
 	$statement = $pdo->query(
-		'SELECT id, user_id, label, url, description, created_at, updated_at
+		'SELECT id, user_id, label, url, description, color_hex, icon_name, created_at, updated_at
 		FROM dashboard_bookmarks
 		ORDER BY sort_order ASC, created_at ASC, id ASC'
 	);
@@ -925,6 +966,8 @@ function dashboard_fetch_bookmarks_collection(PDO $pdo): array
 			'label' => dashboard_trim_string($row['label'] ?? ''),
 			'url' => dashboard_trim_string($row['url'] ?? ''),
 			'description' => dashboard_trim_string($row['description'] ?? ''),
+			'colorHex' => dashboard_store_normalize_bookmark_color($row['color_hex'] ?? '', ''),
+			'iconName' => dashboard_store_normalize_bookmark_icon_name($row['icon_name'] ?? ''),
 			'createdAt' => dashboard_format_datetime_output($row['created_at'] ?? ''),
 			'updatedAt' => dashboard_format_datetime_output($row['updated_at'] ?? ''),
 		];
@@ -955,6 +998,8 @@ function dashboard_replace_bookmarks_collection(PDO $pdo, $records): void
 			'label' => $label,
 			'url' => $url,
 			'description' => dashboard_trim_string($record['description'] ?? ''),
+			'color_hex' => dashboard_store_normalize_bookmark_color($record['colorHex'] ?? '', ''),
+			'icon_name' => dashboard_store_normalize_bookmark_icon_name($record['iconName'] ?? ''),
 			'created_at' => dashboard_normalize_datetime_value($record['createdAt'] ?? '', $now) ?? $now,
 			'updated_at' => dashboard_normalize_datetime_value($record['updatedAt'] ?? '', $now) ?? $now,
 		];

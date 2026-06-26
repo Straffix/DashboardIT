@@ -95,21 +95,23 @@
 
             <section class="dashboard-menu-stage">
                 <div class="dashboard-menu-toolbar" aria-label="Ustawienia układu dashboardu">
-                    <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
-                        id="dashboard-menu-edit-btn">
-                        <i class="app-icon grip-solid-full"></i>
-                        <span>Edytuj</span>
-                    </button>
-                    <div class="dashboard-menu-edit-actions" id="dashboard-menu-edit-actions" hidden>
-                        <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
-                            id="dashboard-menu-cancel-btn">
-                            <span>Anuluj</span>
+                    <div class="dashboard-menu-edit-stack">
+                            <button type="button" class="dashboard-toolbar-btn dashboard-menu-edit-btn"
+                            id="dashboard-menu-edit-btn">
+                            <i class="app-icon grip-solid-full"></i>
+                            <span>Edytuj</span>
                         </button>
-                        <button type="button" class="dashboard-bookmarks-add-btn dashboard-menu-edit-btn"
+                        <div class="dashboard-menu-edit-actions" id="dashboard-menu-edit-actions" aria-hidden="true">
+                            <button type="button" class="dashboard-toolbar-btn dashboard-menu-edit-btn"
+                                id="dashboard-menu-cancel-btn">
+                                <span>Anuluj</span>
+                            </button>
+                        <button type="button" class="dashboard-toolbar-btn dashboard-menu-edit-btn"
                             id="dashboard-menu-save-btn">
                             <i class="app-icon check-solid-full"></i>
                             <span>Zapisz układ</span>
                         </button>
+                        </div>
                     </div>
                 </div>
                 <nav class="menu-grid" id="dashboard-menu" aria-label="Moduły dashboardu">
@@ -194,10 +196,6 @@
                     <div class="dashboard-bookmarks-copy">
                         <h2 id="dashboard-bookmarks-title">Zakładki</h2>
                     </div>
-                    <button type="button" class="dashboard-bookmarks-add-btn" id="dashboard-bookmark-add-btn">
-                        <i class="app-icon bookmark-solid-full"></i>
-                        <span>Dodaj zakładkę</span>
-                    </button>
                 </div>
                 <div class="dashboard-bookmarks-panel">
                     <div class="dashboard-bookmarks-list" id="dashboard-bookmarks-list" aria-live="polite"></div>
@@ -232,17 +230,6 @@
                 <button type="button" class="task-modal-close" data-task-close aria-label="Zamknij planer">
                     <i class="app-icon xmark-solid-full"></i>
                 </button>
-
-                <label class="task-autoclear-toggle" for="task-autoclear-toggle">
-                    <span class="task-autoclear-copy">
-                        <strong>Auto-usuwanie</strong>
-                        <small>Kasuj zadania po upływie ich godziny</small>
-                    </span>
-                    <span class="task-autoclear-switch">
-                        <input type="checkbox" id="task-autoclear-toggle">
-                        <span class="task-autoclear-slider" aria-hidden="true"></span>
-                    </span>
-                </label>
 
                 <div class="task-modal-copy">
                     <p class="task-modal-kicker">Planer dnia</p>
@@ -341,10 +328,22 @@
                 <div class="dashboard-bookmark-modal-copy">
                     <p class="dashboard-kicker">Zakładki użytkownika</p>
                     <h2 id="dashboard-bookmark-modal-title">Dodaj zakładkę</h2>
-                    <p id="dashboard-bookmark-modal-text">Zapisz szybki link tylko dla swojego konta.</p>
                 </div>
 
                 <form class="dashboard-bookmark-form" id="dashboard-bookmark-form" novalidate>
+                    <label class="dashboard-bookmark-field">
+                        <span>Kolor zakladki</span>
+                        <div class="dashboard-bookmark-color-tools">
+                            <input type="color" id="dashboard-bookmark-color" value="#94a3b8">
+                        </div>
+                    </label>
+
+                    <label class="dashboard-bookmark-field">
+                        <span>Ikonka</span>
+                        <input type="hidden" id="dashboard-bookmark-icon" value="">
+                        <div class="dashboard-bookmark-icon-grid" id="dashboard-bookmark-icon-grid"></div>
+                    </label>
+
                     <label class="dashboard-bookmark-field">
                         <span>Nazwa</span>
                         <input type="text" id="dashboard-bookmark-label" maxlength="60" placeholder="Np. Raport wymian"
@@ -354,7 +353,7 @@
                     <label class="dashboard-bookmark-field">
                         <span>Adres lub ścieżka</span>
                         <input type="text" id="dashboard-bookmark-url"
-                            placeholder="https://..., \\\\serwer\\plik.xlsx albo C:\\folder\\plik.xlsx" required>
+                            placeholder="https://..." required>
                     </label>
 
                     <label class="dashboard-bookmark-field">

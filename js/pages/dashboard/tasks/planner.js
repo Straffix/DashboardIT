@@ -18,10 +18,10 @@
 	const preferenceKeys = window.AppUtils.config.PREFERENCE_KEYS
 
 	const weekdayLabels = ['Pn', 'Wt', 'Sr', 'Cz', 'Pt', 'Sb', 'Nd']
+	const legacyAutoclearKey = 'dashboard-task-autoclear'
 	const taskConfig = {
 		storageKey: preferenceKeys.DASHBOARD_TASKS,
 		reminderKey: preferenceKeys.DASHBOARD_TASK_REMINDERS,
-		autoclearKey: preferenceKeys.DASHBOARD_TASK_AUTOCLEAR,
 		reminderLeadMinutes: 5,
 		reminderGraceMinutes: 10,
 	}
@@ -73,7 +73,6 @@
 			taskCalendarPrev,
 			taskCalendarNext,
 			taskToastStack,
-			taskAutoclearToggle,
 		} = elements || {}
 		const { storageService, preferencesService } = services || {}
 
@@ -89,7 +88,6 @@
 		let selectedTaskDate = formatTaskDateKey(new Date())
 		let calendarCursor = new Date()
 		let remindedTaskIds = new Set()
-		let autoClearEnabled = false
 		let reminderTimerId = null
 		const isAuthenticated = () => Boolean(window.AppUtils?.auth?.isAuthenticated?.())
 		const requireAuthenticatedAction = (message = 'Musisz byc zalogowany, aby zarzadzac zadaniami dashboardu.') => {
@@ -111,9 +109,6 @@
 			return storedTasks.map(normalizeStoredTask).filter(Boolean).sort(compareTasks)
 		}
 
-		const loadAutoclearPreference = () =>
-			(preferencesService?.getDashboardTaskAutoclear?.() ?? storageService?.getBoolean?.(taskConfig.autoclearKey, false)) || false
-
 		const loadRemindedTasks = () => {
 			const storedReminders = preferencesService?.getDashboardTaskReminders?.() || storageService?.readJson?.(taskConfig.reminderKey, []) || []
 			return new Set(Array.isArray(storedReminders) ? storedReminders : [])
@@ -125,10 +120,6 @@
 
 		const saveRemindedTasks = () => {
 			preferencesService?.saveDashboardTaskReminders?.([...remindedTaskIds]) || storageService?.writeJson?.(taskConfig.reminderKey, [...remindedTaskIds])
-		}
-
-		const saveAutoclearPreference = () => {
-			preferencesService?.setDashboardTaskAutoclear?.(autoClearEnabled) || storageService?.setBoolean?.(taskConfig.autoclearKey, autoClearEnabled)
 		}
 
 		const createTaskId = () => `task-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
@@ -342,27 +333,7 @@
 			}
 		}
 
-		const removeExpiredTasks = () => {
-			if (!autoClearEnabled) return
-
-			const now = new Date()
-			const initialTaskCount = tasks.length
-			tasks = tasks.filter(task => getTaskDateTime(task) >= now)
-			if (tasks.length === initialTaskCount) return
-
-			saveTasks()
-			cleanupReminderCache()
-
-			if (getTasksForDate(selectedTaskDate).length === 0) {
-				selectTaskDate(formatTaskDateKey(now), { syncCursor: true })
-			}
-
-			syncTaskUi()
-		}
-
 		const checkTaskReminders = () => {
-			removeExpiredTasks()
-
 			const now = new Date()
 
 			tasks.forEach(task => {
@@ -406,23 +377,13 @@
 			if (
 				changedKey &&
 				changedKey !== taskConfig.storageKey &&
-				changedKey !== taskConfig.reminderKey &&
-				changedKey !== taskConfig.autoclearKey
+				changedKey !== taskConfig.reminderKey
 			) {
 				return
 			}
 
 			tasks = loadTasks()
 			remindedTaskIds = loadRemindedTasks()
-			autoClearEnabled = loadAutoclearPreference()
-
-			if (taskAutoclearToggle) {
-				taskAutoclearToggle.checked = autoClearEnabled
-				taskAutoclearToggle.disabled = !isAuthenticated()
-				taskAutoclearToggle.title = isAuthenticated()
-					? 'Automatycznie usuwaj przeterminowane zadania'
-					: 'Zaloguj sie, aby zmieniac ustawienia planera'
-			}
 
 			cleanupReminderCache()
 
@@ -460,20 +421,13 @@
 		const init = () => {
 			if (!clockWidgetTrigger || !taskModal || !taskForm) return false
 
+			storageService?.remove?.(legacyAutoclearKey)
 			tasks = loadTasks()
 			remindedTaskIds = loadRemindedTasks()
-			autoClearEnabled = loadAutoclearPreference()
 
 			populateTimeSelects()
 			setDefaultTaskDate(selectedTaskDate)
 			syncTaskUi()
-			if (taskAutoclearToggle) {
-				taskAutoclearToggle.checked = autoClearEnabled
-				taskAutoclearToggle.disabled = !isAuthenticated()
-				taskAutoclearToggle.title = isAuthenticated()
-					? 'Automatycznie usuwaj przeterminowane zadania'
-					: 'Zaloguj sie, aby zmieniac ustawienia planera'
-			}
 
 			clockWidgetTrigger.addEventListener('click', handleTaskPlannerOpen)
 
@@ -523,17 +477,6 @@
 			taskMinuteInput?.addEventListener('change', () => {
 				syncTaskTimeValue()
 				taskMinuteInput.blur()
-			})
-
-			taskAutoclearToggle?.addEventListener('change', () => {
-				if (!requireAuthenticatedAction()) {
-					taskAutoclearToggle.checked = autoClearEnabled
-					return
-				}
-
-				autoClearEnabled = Boolean(taskAutoclearToggle.checked)
-				saveAutoclearPreference()
-				removeExpiredTasks()
 			})
 
 			taskForm.addEventListener('submit', event => {
@@ -587,12 +530,6 @@
 
 			startReminderLoop()
 			document.addEventListener('app-auth-changed', () => {
-				if (taskAutoclearToggle) {
-					taskAutoclearToggle.disabled = !isAuthenticated()
-					taskAutoclearToggle.title = isAuthenticated()
-						? 'Automatycznie usuwaj przeterminowane zadania'
-						: 'Zaloguj sie, aby zmieniac ustawienia planera'
-				}
 				syncTaskUi()
 				if (taskModal && !isAuthenticated() && !taskModal.hidden) {
 					closeTaskModal()

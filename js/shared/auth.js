@@ -8,6 +8,7 @@ const AUTH_CONFIG = {
 	coverOutputHeight: 360,
 	coverOutputQuality: 0.86,
 	defaultProfileAccentColor: '#c8102e',
+	defaultBookmarkColor: '#94a3b8',
 	permissionOptions: [
 		{ id: 'it_support', label: 'Informatyk' },
 		{ id: 'network', label: 'Sieciowiec' },
@@ -163,6 +164,11 @@ const normalizeProfileAccentColor = value => {
 	return /^#[0-9a-f]{6}$/.test(normalizedValue) ? normalizedValue : AUTH_CONFIG.defaultProfileAccentColor
 }
 
+const normalizeBookmarkDefaultColor = value => {
+	const normalizedValue = String(value || '').trim().toLowerCase()
+	return /^#[0-9a-f]{6}$/.test(normalizedValue) ? normalizedValue : AUTH_CONFIG.defaultBookmarkColor
+}
+
 const normalizeProfileTitle = value => String(value || '').trim().slice(0, 80)
 
 const normalizeProfileBio = value => String(value || '').trim().slice(0, 240)
@@ -309,6 +315,7 @@ const mapStoredUser = user => ({
 	profileTitle: normalizeProfileTitle(user.profileTitle),
 	profileBio: normalizeProfileBio(user.profileBio),
 	profileAccentColor: normalizeProfileAccentColor(user.profileAccentColor),
+	bookmarkDefaultColor: normalizeBookmarkDefaultColor(user.bookmarkDefaultColor),
 	profileCoverImage: normalizeProfileCoverImage(user.profileCoverImage),
 	createdAt: user.createdAt || new Date().toISOString(),
 	updatedAt: user.updatedAt || user.createdAt || new Date().toISOString(),
@@ -328,6 +335,7 @@ const sanitizeUser = user => {
 		profileTitle: normalizeProfileTitle(user.profileTitle),
 		profileBio: normalizeProfileBio(user.profileBio),
 		profileAccentColor: normalizeProfileAccentColor(user.profileAccentColor),
+		bookmarkDefaultColor: normalizeBookmarkDefaultColor(user.bookmarkDefaultColor),
 		profileCoverImage: normalizeProfileCoverImage(user.profileCoverImage),
 		createdAt: user.createdAt,
 		updatedAt: user.updatedAt,
@@ -545,6 +553,7 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 				avatarId: getAvatarPreset(avatarId).id,
 				avatarImage: normalizeAvatarImage(avatarImage),
 				profileAccentColor: AUTH_CONFIG.defaultProfileAccentColor,
+				bookmarkDefaultColor: AUTH_CONFIG.defaultBookmarkColor,
 			},
 		})
 
@@ -571,6 +580,7 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 		profileTitle: '',
 		profileBio: '',
 		profileAccentColor: AUTH_CONFIG.defaultProfileAccentColor,
+		bookmarkDefaultColor: AUTH_CONFIG.defaultBookmarkColor,
 		profileCoverImage: '',
 		createdAt: now,
 		updatedAt: now,
@@ -666,7 +676,7 @@ const logoutUser = ({ silent = false } = {}) => {
 	}
 }
 
-const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage, profileTitle, profileBio, profileAccentColor, profileCoverImage }) => {
+const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage, profileTitle, profileBio, profileAccentColor, bookmarkDefaultColor, profileCoverImage }) => {
 	if (!authState.currentUser) {
 		throw new Error('Brak zalogowanego użytkownika.')
 	}
@@ -676,6 +686,9 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage, prof
 	const normalizedProfileTitle = normalizeProfileTitle(profileTitle)
 	const normalizedProfileBio = normalizeProfileBio(profileBio)
 	const normalizedProfileAccentColor = normalizeProfileAccentColor(profileAccentColor)
+	const normalizedBookmarkDefaultColor = normalizeBookmarkDefaultColor(
+		bookmarkDefaultColor || authState.currentUser?.bookmarkDefaultColor || AUTH_CONFIG.defaultBookmarkColor
+	)
 	const normalizedProfileCoverImage = normalizeProfileCoverImage(profileCoverImage)
 
 	if (!normalizedName) {
@@ -698,6 +711,7 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage, prof
 				profileTitle: normalizedProfileTitle,
 				profileBio: normalizedProfileBio,
 				profileAccentColor: normalizedProfileAccentColor,
+				bookmarkDefaultColor: normalizedBookmarkDefaultColor,
 				profileCoverImage: normalizedProfileCoverImage,
 			},
 		})
@@ -729,6 +743,7 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage, prof
 					profileTitle: normalizedProfileTitle,
 					profileBio: normalizedProfileBio,
 					profileAccentColor: normalizedProfileAccentColor,
+					bookmarkDefaultColor: normalizedBookmarkDefaultColor,
 					profileCoverImage: normalizedProfileCoverImage,
 					updatedAt: now,
 				}

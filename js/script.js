@@ -32,7 +32,7 @@
 			'./js/pages/dashboard/tasks/reminders.js',
 			'./js/pages/dashboard/tasks/planner.js',
 			'./js/pages/dashboard/index.js',
-			'./js/pages/dashboard/bookmarks.js',
+			'./js/pages/dashboard/bookmarks-enhanced.js',
 		],
 		'monitor_laptopow.html': ['./js/pages/monitor/index.js'],
 		'notatnik.html': ['./js/core/domain-services.js', './js/pages/notes/index.js'],

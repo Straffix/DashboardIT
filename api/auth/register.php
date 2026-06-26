@@ -11,6 +11,7 @@ try {
 	$avatarId = trim((string) ($payload['avatarId'] ?? 'violet')) ?: 'violet';
 	$avatarImage = dashboard_normalize_avatar_image((string) ($payload['avatarImage'] ?? ''));
 	$profileAccentColor = dashboard_normalize_profile_accent_color((string) ($payload['profileAccentColor'] ?? '#0f766e'));
+	$bookmarkDefaultColor = dashboard_normalize_bookmark_default_color((string) ($payload['bookmarkDefaultColor'] ?? DASHBOARD_DEFAULT_BOOKMARK_COLOR));
 
 	if ($fullName === '') {
 		dashboard_json_response(['ok' => false, 'message' => 'Wpisz imie i nazwisko.'], 422);
@@ -25,7 +26,7 @@ try {
 	}
 
 	$createdUser = null;
-	$users = dashboard_update_json_file(dashboard_users_path(), [], function ($users) use (&$createdUser, $fullName, $login, $password, $avatarId, $avatarImage, $profileAccentColor) {
+	$users = dashboard_update_json_file(dashboard_users_path(), [], function ($users) use (&$createdUser, $fullName, $login, $password, $avatarId, $avatarImage, $profileAccentColor, $bookmarkDefaultColor) {
 		$users = dashboard_normalize_users_array($users);
 
 		if (dashboard_find_user_by_login($users, $login)) {
@@ -45,6 +46,7 @@ try {
 			'profileTitle' => '',
 			'profileBio' => '',
 			'profileAccentColor' => $profileAccentColor,
+			'bookmarkDefaultColor' => $bookmarkDefaultColor,
 			'profileCoverImage' => '',
 			'createdAt' => $now,
 			'updatedAt' => $now,

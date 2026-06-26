@@ -96,7 +96,6 @@ const APP_CONFIG = {
 		DASHBOARD_MENU_ORDER: 'dashboard-menu-order',
 		DASHBOARD_TASKS: 'dashboard-tasks',
 		DASHBOARD_TASK_REMINDERS: 'dashboard-task-reminders',
-		DASHBOARD_TASK_AUTOCLEAR: 'dashboard-task-autoclear',
 	},
 }
 /* === Shared Config: End === */

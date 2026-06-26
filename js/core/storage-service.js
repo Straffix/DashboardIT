@@ -53,7 +53,6 @@
 		PREFERENCE_KEYS.DASHBOARD_MENU_ORDER,
 		PREFERENCE_KEYS.DASHBOARD_TASKS,
 		PREFERENCE_KEYS.DASHBOARD_TASK_REMINDERS,
-		PREFERENCE_KEYS.DASHBOARD_TASK_AUTOCLEAR,
 	])
 	const PROTECTED_WRITE_KEY_PREFIXES = [DASHBOARD_MENU_ORDER_USER_KEY_PREFIX]
 	const PUBLIC_WRITE_KEYS = new Set([
@@ -683,12 +682,6 @@
 		},
 		saveDashboardTaskReminders(reminders) {
 			storageService.writeJson(PREFERENCE_KEYS.DASHBOARD_TASK_REMINDERS, Array.isArray(reminders) ? reminders : [])
-		},
-		getDashboardTaskAutoclear() {
-			return storageService.getBoolean(PREFERENCE_KEYS.DASHBOARD_TASK_AUTOCLEAR, false)
-		},
-		setDashboardTaskAutoclear(isEnabled) {
-			storageService.setBoolean(PREFERENCE_KEYS.DASHBOARD_TASK_AUTOCLEAR, isEnabled)
 		},
 	}
 

@@ -96,11 +96,12 @@ body.dashboard-page .wrapper {
 	margin: 0 auto 48px;
 
 	h1 {
-		font-family: 'Jura', 'M_PLUS_U', sans-serif;
+		font-family: var(--font-ui-panels);
+		font-weight: 700;
 		font-size: clamp(3.1rem, 5vw, 5rem);
 		color: $light-text-main;
 		text-transform: uppercase;
-		letter-spacing: 4px;
+		letter-spacing: 0.08em;
 		line-height: 1.08;
 		text-shadow: none;
 	}
@@ -849,7 +850,7 @@ body.weather-editor-open .weather-widget {
 .clock-widget:hover .clock-face {
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.92),
-		0 14px 28px rgba(15, 23, 42, 0.12);
+		0 3px 12px rgba(15, 23, 42, 0.12);
 }
 
 .clock-face {
@@ -859,9 +860,6 @@ body.weather-editor-open .weather-widget {
 	border-radius: 50%;
 	border: 1px solid rgba(148, 163, 184, 0.28);
 	background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(242, 245, 249, 0.98) 100%);
-	box-shadow:
-		inset 0 1px 0 rgba(255, 255, 255, 0.95),
-		0 10px 22px rgba(15, 23, 42, 0.09);
 	transition:
 		border-color 0.2s ease,
 		box-shadow 0.2s ease,
@@ -1061,83 +1059,6 @@ body.weather-editor-open .weather-widget {
 	background: rgba(255, 255, 255, 0.7);
 	color: #334155;
 	cursor: pointer;
-}
-
-.task-autoclear-toggle {
-	position: absolute;
-	top: 24px;
-	right: 78px;
-	display: inline-flex;
-	align-items: center;
-	gap: 12px;
-	padding: 10px 12px;
-	border-radius: 16px;
-	background: rgba(255, 255, 255, 0.56);
-	border: 1px solid rgba(255, 255, 255, 0.72);
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-	cursor: pointer;
-}
-
-.task-autoclear-copy {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	text-align: left;
-
-	strong {
-		font-size: 0.84rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: #0f172a;
-	}
-
-	small {
-		font-size: 0.8rem;
-		color: #64748b;
-	}
-}
-
-.task-autoclear-switch {
-	position: relative;
-	display: inline-flex;
-	align-items: center;
-
-	input {
-		position: absolute;
-		opacity: 0;
-		pointer-events: none;
-	}
-}
-
-.task-autoclear-slider {
-	position: relative;
-	display: inline-flex;
-	width: 50px;
-	height: 28px;
-	border-radius: 999px;
-	background: rgba(148, 163, 184, 0.32);
-	transition: background-color 0.2s ease;
-
-	&::after {
-		content: '';
-		position: absolute;
-		top: 3px;
-		left: 3px;
-		width: 22px;
-		height: 22px;
-		border-radius: 50%;
-		background: #ffffff;
-		box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
-		transition: transform 0.2s ease;
-	}
-}
-
-.task-autoclear-switch input:checked + .task-autoclear-slider {
-	background: rgba(34, 197, 94, 0.48);
-}
-
-.task-autoclear-switch input:checked + .task-autoclear-slider::after {
-	transform: translateX(22px);
 }
 
 .task-modal-copy {
@@ -1603,13 +1524,78 @@ body.task-modal-open {
 	margin-bottom: 18px;
 }
 
+.dashboard-menu-edit-stack {
+	position: relative;
+	display: grid;
+	justify-items: end;
+	align-items: center;
+	min-height: 40px;
+
+	> * {
+		grid-area: 1 / 1;
+	}
+}
+
+.dashboard-menu-edit-actions,
+.dashboard-menu-toolbar .dashboard-menu-edit-btn {
+	white-space: nowrap;
+	transition:
+		opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+		transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+		visibility 0.28s ease,
+		box-shadow 0.22s ease,
+		background 0.22s ease;
+	will-change: transform, opacity;
+}
+
 .dashboard-menu-edit-actions {
 	display: flex;
 	align-items: center;
 	gap: 10px;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transform: translateY(-10px) scale(0.96);
+}
 
-	&[hidden] {
-		display: none;
+.dashboard-menu-toolbar #dashboard-menu-edit-btn {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transform: translateY(0) scale(1);
+}
+
+.dashboard-menu-stage.is-editing #dashboard-menu-edit-btn {
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transform: translateY(10px) scale(0.94);
+}
+
+.dashboard-menu-stage.is-editing .dashboard-menu-edit-actions {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transform: translateY(0) scale(1);
+}
+
+.dashboard-menu-stage.is-editing .dashboard-menu-edit-actions .dashboard-toolbar-btn {
+	animation: dashboardMenuEditActionReveal 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboard-menu-stage.is-editing .dashboard-menu-edit-actions .dashboard-toolbar-btn:nth-child(2) {
+	animation-delay: 0.06s;
+}
+
+@keyframes dashboardMenuEditActionReveal {
+	from {
+		opacity: 0;
+		transform: translateY(12px) scale(0.94);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
 	}
 }
 
@@ -1996,7 +1982,7 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 	}
 }
 
-.dashboard-bookmarks-add-btn,
+.dashboard-toolbar-btn,
 .dashboard-bookmark-primary-btn,
 .dashboard-bookmark-secondary-btn,
 .dashboard-bookmark-open-btn,
@@ -2012,7 +1998,7 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 		color 0.2s ease;
 }
 
-.dashboard-bookmarks-add-btn {
+.dashboard-toolbar-btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -2045,12 +2031,6 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 
 .dashboard-bookmarks-panel {
 	padding: 10px 12px;
-	border-radius: 20px;
-	background: rgba(255, 255, 255, 0.5);
-	border: 1px solid rgba(255, 255, 255, 0.42);
-	box-shadow:
-		0 14px 30px rgba(15, 23, 42, 0.06),
-		inset 0 1px 0 rgba(255, 255, 255, 0.72);
 	overflow: hidden;
 }
 
@@ -2063,6 +2043,38 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 	padding: 2px;
 	scrollbar-width: thin;
 	scroll-snap-type: x proximity;
+}
+
+.dashboard-bookmark-add-tile {
+	flex: 0 0 auto;
+	align-self: center;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	min-height: 42px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: #84cc16;
+	cursor: pointer;
+	scroll-snap-align: start;
+	transition:
+		transform 0.18s ease,
+		color 0.18s ease,
+		filter 0.18s ease;
+
+	i {
+		font-size: 1.7rem;
+	}
+
+	&:hover,
+	&:focus-visible {
+		transform: translateY(-1px) scale(1.05);
+		color: #65a30d;
+		filter: drop-shadow(0 10px 18px rgba(132, 204, 22, 0.22));
+		outline: none;
+	}
 }
 
 .dashboard-bookmark-tab {
@@ -2395,6 +2407,152 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 		border-color: rgba(148, 163, 184, 0.9);
 	}
 }
+
+.dashboard-bookmark-tab {
+	--bookmark-accent: #94a3b8;
+	--bookmark-accent-rgb: 148, 163, 184;
+}
+
+.dashboard-bookmark-tab-main {
+	border-color: rgba(var(--bookmark-accent-rgb), 0.34);
+	background: rgba(var(--bookmark-accent-rgb), 0.16);
+	box-shadow: 0 8px 18px rgba(var(--bookmark-accent-rgb), 0.14);
+
+	&:hover {
+		border-color: rgba(var(--bookmark-accent-rgb), 0.48);
+		background: rgba(var(--bookmark-accent-rgb), 0.22);
+		box-shadow: 0 12px 24px rgba(var(--bookmark-accent-rgb), 0.18);
+	}
+}
+
+.dashboard-bookmark-icon {
+	background: rgba(255, 255, 255, 0.56);
+	border: 1px solid rgba(var(--bookmark-accent-rgb), 0.18);
+	color: #0f172a;
+
+	&.has-custom-icon i {
+		display: none;
+	}
+}
+
+.dashboard-bookmark-icon-asset,
+.dashboard-bookmark-option-asset {
+	display: block;
+	width: 16px;
+	height: 16px;
+	object-fit: contain;
+}
+
+.dashboard-bookmark-option-asset {
+	width: 18px;
+	height: 18px;
+}
+
+.dashboard-bookmark-color-tools {
+	display: inline-flex;
+	align-items: center;
+
+	input[type='color'] {
+		width: 84px;
+		min-height: 48px;
+		padding: 4px;
+		cursor: pointer;
+	}
+}
+
+.dashboard-bookmark-icon-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.dashboard-bookmark-icon-choice {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 10px 12px;
+	border-radius: 14px;
+	border: 1px solid rgba(203, 213, 225, 0.82);
+	background: rgba(255, 255, 255, 0.86);
+	text-align: left;
+	transition:
+		transform 0.18s ease,
+		border-color 0.18s ease,
+		box-shadow 0.18s ease,
+		background-color 0.18s ease;
+
+	&:hover {
+		transform: translateY(-1px);
+		border-color: rgba(148, 163, 184, 0.92);
+	}
+
+	&.is-active {
+		border-color: rgba(200, 16, 46, 0.38);
+		background: rgba(255, 244, 246, 0.96);
+		box-shadow: 0 12px 24px rgba(200, 16, 46, 0.12);
+	}
+}
+
+.dashboard-bookmark-icon-choice-preview {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 32px;
+	height: 32px;
+	border-radius: 10px;
+	background: rgba(148, 163, 184, 0.14);
+	color: #475569;
+
+	i {
+		font-size: 0.88rem;
+	}
+
+	.dashboard-bookmark-option-asset {
+		width: 16px;
+		height: 16px;
+	}
+}
+
+.dashboard-bookmark-icon-choice-copy {
+	min-width: 0;
+
+	strong,
+	small {
+		display: block;
+	}
+
+	strong {
+		font-size: 0.88rem;
+		line-height: 1.2;
+		color: #0f172a;
+	}
+
+	small {
+		margin-top: 2px;
+		font-size: 0.75rem;
+		line-height: 1.25;
+		color: #64748b;
+	}
+}
+
+body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-copy strong,
+body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-copy small {
+	color: #d6def0;
+}
+
+body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice,
+body.dashboard-page.theme-dark .dashboard-bookmark-color-tools input[type='color'] {
+	background: rgba(17, 20, 36, 0.82);
+	border-color: rgba(111, 89, 205, 0.22);
+}
+
+body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
+	background: rgba(111, 89, 205, 0.18);
+	color: #efe7ff;
+}
+
 /* === Dashboard Bookmarks: End === */
 
 /* === Dashboard Footer: Start === */
@@ -2711,7 +2869,6 @@ body.dashboard-page.theme-dark {
 	.task-modal-copy p,
 	.task-agenda-main p,
 	.task-agenda-empty,
-	.task-autoclear-copy small,
 	.dashboard-container .footer-content,
 	.dashboard-container .footer-status {
 		color: #b8afd4;
@@ -2816,7 +2973,6 @@ body.dashboard-page.theme-dark {
 	.task-field textarea,
 	.task-agenda-item,
 	.task-agenda-empty,
-	.task-autoclear-toggle,
 	.task-toast {
 		background: rgba(16, 19, 34, 0.72);
 		border-color: rgba(111, 89, 205, 0.18);
@@ -2831,7 +2987,7 @@ body.dashboard-page.theme-dark {
 		color: #efe7ff;
 	}
 
-	.dashboard-bookmarks-add-btn {
+	.dashboard-toolbar-btn {
 		border-color: rgba(136, 120, 214, 0.24);
 		background: rgba(30, 28, 50, 0.86);
 		box-shadow:
@@ -2845,6 +3001,16 @@ body.dashboard-page.theme-dark {
 			box-shadow:
 				inset 0 1px 0 rgba(255, 255, 255, 0.08),
 				0 14px 28px rgba(0, 0, 0, 0.28);
+		}
+	}
+
+	.dashboard-bookmark-add-tile {
+		color: #a3e635;
+
+		&:hover,
+		&:focus-visible {
+			color: #d9f99d;
+			filter: drop-shadow(0 10px 18px rgba(163, 230, 53, 0.22));
 		}
 	}
 
@@ -3013,7 +3179,6 @@ body.dashboard-page.theme-dark {
 	.task-calendar-weekdays span,
 	.task-field span,
 	.task-time-separator,
-	.task-autoclear-copy strong,
 	.task-toast-copy span {
 		color: #b8afd4;
 	}
@@ -3058,14 +3223,6 @@ body.dashboard-page.theme-dark {
 			background: rgba(41, 34, 73, 0.9);
 			color: #ffffff;
 		}
-	}
-
-	.task-autoclear-slider {
-		background: rgba(143, 134, 171, 0.24);
-	}
-
-	.task-autoclear-switch input:checked + .task-autoclear-slider {
-		background: #7e67d8;
 	}
 
 	.dashboard-card {
@@ -3386,7 +3543,6 @@ body.dashboard-page.theme-dark {
 	.task-modal-copy p,
 	.task-agenda-main p,
 	.task-agenda-empty,
-	.task-autoclear-copy small,
 	.dashboard-container .footer-content,
 	.dashboard-container .footer-status,
 	.dashboard-user-summary,
@@ -3400,7 +3556,6 @@ body.dashboard-page.theme-dark {
 	.task-calendar-weekdays span,
 	.task-field span,
 	.task-time-separator,
-	.task-autoclear-copy strong,
 	.task-toast-copy span,
 	.task-preview-item,
 	.task-preview-empty {
@@ -3464,7 +3619,6 @@ body.dashboard-page.theme-dark {
 	.task-field textarea,
 	.task-agenda-item,
 	.task-agenda-empty,
-	.task-autoclear-toggle,
 	.task-toast,
 	.dashboard-bookmarks-panel,
 	.dashboard-bookmark-tab-main,
@@ -3488,7 +3642,7 @@ body.dashboard-page.theme-dark {
 		color: var(--text-main);
 	}
 
-	.dashboard-bookmarks-add-btn {
+	.dashboard-toolbar-btn {
 		border-color: rgba(148, 163, 184, 0.18);
 		background: rgba(64, 70, 79, 0.9);
 		box-shadow:
@@ -3615,14 +3769,6 @@ body.dashboard-page.theme-dark {
 		}
 	}
 
-	.task-autoclear-slider {
-		background: rgba(148, 163, 184, 0.28);
-	}
-
-	.task-autoclear-switch input:checked + .task-autoclear-slider {
-		background: var(--primary);
-	}
-
 	.dashboard-card,
 	.menu-item.nowe-zatrudnienia .dashboard-card,
 	.menu-item.monitor-laptopow .dashboard-card,
@@ -3674,7 +3820,11 @@ body.dashboard-page.theme-dark {
 			inset 0 18px 30px rgba(var(--primary-rgb), 0.06);
 
 		&::before {
-			background: radial-gradient(circle at 50% 50%, rgba(var(--primary-rgb), 0.08) 0%, rgba(var(--primary-rgb), 0) 62%);
+			background: radial-gradient(
+				circle at 50% 50%,
+				rgba(var(--primary-rgb), 0.08) 0%,
+				rgba(var(--primary-rgb), 0) 62%
+			);
 		}
 	}
 
@@ -3770,7 +3920,6 @@ body.dashboard-page.theme-blush {
 	.task-modal-copy p,
 	.task-agenda-main p,
 	.task-agenda-empty,
-	.task-autoclear-copy small,
 	.dashboard-container .footer-content,
 	.dashboard-container .footer-status {
 		color: $blush-text-muted;
@@ -3859,7 +4008,6 @@ body.dashboard-page.theme-blush {
 	.task-field textarea,
 	.task-agenda-item,
 	.task-agenda-empty,
-	.task-autoclear-toggle,
 	.task-toast,
 	.dashboard-bookmarks-panel,
 	.dashboard-bookmark-tab-main,
@@ -3988,13 +4136,19 @@ body.dashboard-page.theme-blush {
 		margin-bottom: 12px;
 	}
 
+	.dashboard-menu-edit-stack {
+		width: 100%;
+	}
+
 	.dashboard-menu-edit-actions {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 8px;
+		justify-self: stretch;
 	}
 
-	.dashboard-menu-edit-actions .dashboard-bookmarks-add-btn {
+	.dashboard-menu-toolbar #dashboard-menu-edit-btn,
+	.dashboard-menu-edit-actions .dashboard-toolbar-btn {
 		width: 100%;
 	}
 
@@ -4304,12 +4458,6 @@ body.dashboard-page.theme-blush {
 		width: 100%;
 	}
 
-	.task-autoclear-toggle {
-		position: static;
-		margin: 0 44px 18px 0;
-		justify-content: space-between;
-	}
-
 	.task-field-row {
 		grid-template-columns: 1fr;
 	}
@@ -4355,10 +4503,6 @@ body.dashboard-page.theme-blush {
 		align-items: stretch;
 	}
 
-	.dashboard-bookmarks-add-btn {
-		width: 100%;
-	}
-
 	.dashboard-bookmarks-panel {
 		padding: 10px;
 		border-radius: 18px;
@@ -4371,6 +4515,11 @@ body.dashboard-page.theme-blush {
 	.dashboard-bookmark-tab {
 		width: 176px;
 		max-width: calc(100vw - 120px);
+	}
+
+	.dashboard-bookmark-add-tile {
+		width: 42px;
+		min-height: 44px;
 	}
 
 	.dashboard-bookmark-tab-main,
@@ -4387,6 +4536,10 @@ body.dashboard-page.theme-blush {
 	.dashboard-bookmark-primary-btn,
 	.dashboard-bookmark-secondary-btn {
 		width: 100%;
+	}
+
+	.dashboard-bookmark-icon-grid {
+		grid-template-columns: minmax(0, 1fr);
 	}
 
 	.menu-grid {
@@ -4490,5 +4643,3 @@ body.dashboard-page.theme-blush {
 @include meta.load-css('medium');
 @include meta.load-css('large');
 /* === Dashboard Larger Breakpoints: End === */
-
-

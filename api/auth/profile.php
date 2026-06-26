@@ -13,6 +13,9 @@ try {
 	$profileTitle = dashboard_normalize_profile_title((string) ($payload['profileTitle'] ?? ''));
 	$profileBio = dashboard_normalize_profile_bio((string) ($payload['profileBio'] ?? ''));
 	$profileAccentColor = dashboard_normalize_profile_accent_color((string) ($payload['profileAccentColor'] ?? '#0f766e'));
+	$bookmarkDefaultColor = array_key_exists('bookmarkDefaultColor', $payload)
+		? dashboard_normalize_bookmark_default_color((string) ($payload['bookmarkDefaultColor'] ?? DASHBOARD_DEFAULT_BOOKMARK_COLOR))
+		: dashboard_normalize_bookmark_default_color((string) ($currentUser['bookmarkDefaultColor'] ?? DASHBOARD_DEFAULT_BOOKMARK_COLOR));
 	$profileCoverImage = dashboard_normalize_profile_cover_image((string) ($payload['profileCoverImage'] ?? ''));
 
 	if ($fullName === '') {
@@ -24,7 +27,7 @@ try {
 	}
 
 	$updatedUser = null;
-	$updatedUsers = dashboard_update_json_file(dashboard_users_path(), [], function ($users) use (&$updatedUser, $currentUser, $fullName, $login, $avatarId, $avatarImage, $profileTitle, $profileBio, $profileAccentColor, $profileCoverImage) {
+	$updatedUsers = dashboard_update_json_file(dashboard_users_path(), [], function ($users) use (&$updatedUser, $currentUser, $fullName, $login, $avatarId, $avatarImage, $profileTitle, $profileBio, $profileAccentColor, $bookmarkDefaultColor, $profileCoverImage) {
 		$users = dashboard_normalize_users_array($users);
 
 		foreach ($users as $user) {
@@ -47,6 +50,7 @@ try {
 				'profileTitle' => $profileTitle,
 				'profileBio' => $profileBio,
 				'profileAccentColor' => $profileAccentColor,
+				'bookmarkDefaultColor' => $bookmarkDefaultColor,
 				'profileCoverImage' => $profileCoverImage,
 				'updatedAt' => gmdate('c'),
 			];

@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		taskCalendarPrev: document.getElementById('task-calendar-prev'),
 		taskCalendarNext: document.getElementById('task-calendar-next'),
 		taskToastStack: document.getElementById('task-toast-stack'),
-		taskAutoclearToggle: document.getElementById('task-autoclear-toggle'),
 	}
 
 	const activeUsersController = (() => {
@@ -425,9 +424,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const updateEditUi = () => {
 			dashboardMenuStage.classList.toggle('is-editing', isEditing)
-			dashboardMenuEditBtn.hidden = isEditing
-			dashboardMenuEditActions.hidden = !isEditing
+			dashboardMenuEditBtn.disabled = isEditing
 			dashboardMenuEditBtn.setAttribute('aria-pressed', String(isEditing))
+			dashboardMenuEditBtn.setAttribute('aria-hidden', String(isEditing))
+			dashboardMenuEditActions.setAttribute('aria-hidden', String(!isEditing))
+			dashboardMenuCancelBtn.disabled = !isEditing
+			dashboardMenuSaveBtn.disabled = !isEditing
 
 			getMenuItems().forEach(item => {
 				item.draggable = false
