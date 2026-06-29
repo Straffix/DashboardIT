@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const bookmarkModal = document.getElementById('dashboard-bookmark-modal')
 	const bookmarkForm = document.getElementById('dashboard-bookmark-form')
 	const bookmarkPanel = document.querySelector('.dashboard-bookmarks-panel')
+	const bookmarkModalCard = bookmarkModal.querySelector('.dashboard-bookmark-modal-card')
 	const bookmarkLabelInput = document.getElementById('dashboard-bookmark-label')
 	const bookmarkUrlInput = document.getElementById('dashboard-bookmark-url')
 	const bookmarkDescriptionInput = document.getElementById('dashboard-bookmark-description')
@@ -162,6 +163,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		return `--bookmark-accent:${normalizedColor};--bookmark-accent-rgb:${getBookmarkAccentRgb(normalizedColor)};`
 	}
 
+	function setBookmarkColorValue(colorHex, fallbackColor = BOOKMARK_DEFAULT_COLOR) {
+		const normalizedColor = normalizeBookmarkColor(colorHex, fallbackColor)
+		bookmarkColorInput.value = normalizedColor
+		bookmarkModalCard?.style.setProperty('--bookmark-current-color', normalizedColor)
+		return normalizedColor
+	}
+
 	function buildBookmarkAssetIconMarkup(iconName, className = 'dashboard-bookmark-icon-asset') {
 		const iconUrl = getBookmarkIconAssetUrl(iconName)
 		if (!iconUrl) return ''
@@ -293,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const previewMarkup = option.id
 				? buildBookmarkAssetIconMarkup(option.id, 'dashboard-bookmark-option-asset')
 				: '<i class="app-icon bookmark-solid-full" aria-hidden="true"></i>'
+			const optionLabel = [option.label, option.hint].filter(Boolean).join(' - ')
 
 			return `
 				<button
@@ -300,12 +309,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					class="dashboard-bookmark-icon-choice${isActive ? ' is-active' : ''}"
 					data-bookmark-icon-option="${option.id}"
 					aria-pressed="${String(isActive)}"
+					aria-label="${escapeHtml(optionLabel)}"
+					title="${escapeHtml(optionLabel)}"
 				>
 					<span class="dashboard-bookmark-icon-choice-preview">${previewMarkup}</span>
-					<span class="dashboard-bookmark-icon-choice-copy">
-						<strong>${escapeHtml(option.label)}</strong>
-						<small>${escapeHtml(option.hint)}</small>
-					</span>
 				</button>
 			`
 		}).join('')
@@ -323,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			bookmarkSubmitBtn.textContent = 'Zapisz zakladke'
 		}
 
-		bookmarkColorInput.value = getCurrentUserDefaultBookmarkColor()
+		setBookmarkColorValue(getCurrentUserDefaultBookmarkColor())
 		setSelectedBookmarkIcon('')
 	}
 
@@ -336,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			bookmarkLabelInput.value = bookmark.label
 			bookmarkUrlInput.value = bookmark.url
 			bookmarkDescriptionInput.value = bookmark.description
-			bookmarkColorInput.value = bookmarkColor
+			setBookmarkColorValue(bookmarkColor)
 			setSelectedBookmarkIcon(bookmark.iconName)
 
 			if (bookmarkModalTitle) {
@@ -515,6 +522,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	bookmarkCancelBtn?.addEventListener('click', closeBookmarkModal)
 
+	const syncBookmarkColorTrigger = () => {
+		setBookmarkColorValue(bookmarkColorInput.value || getCurrentUserDefaultBookmarkColor(), getCurrentUserDefaultBookmarkColor())
+	}
+
+	bookmarkColorInput.addEventListener('input', syncBookmarkColorTrigger)
+	bookmarkColorInput.addEventListener('change', syncBookmarkColorTrigger)
+
 	bookmarkIconGrid.addEventListener('click', event => {
 		const iconButton = event.target.closest('[data-bookmark-icon-option]')
 		if (!iconButton) return
@@ -623,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.addEventListener('app-auth-changed', () => {
 		bookmarks = loadBookmarks()
 		if (!bookmarkModal.hidden) {
-			bookmarkColorInput.value = normalizeBookmarkColor(
+			setBookmarkColorValue(
 				bookmarkColorInput.value || getCurrentUserDefaultBookmarkColor(),
 				getCurrentUserDefaultBookmarkColor(),
 			)
@@ -635,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	})
 
-	bookmarkColorInput.value = getCurrentUserDefaultBookmarkColor()
+	setBookmarkColorValue(getCurrentUserDefaultBookmarkColor())
 	setSelectedBookmarkIcon('')
 	renderBookmarks()
 })

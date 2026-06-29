@@ -26,7 +26,7 @@
                         aria-haspopup="dialog" aria-controls="weather-search-form" aria-expanded="false">
                         <span class="weather-main">
                             <span class="weather-icon" id="weather-icon">
-                            <i class="app-icon cloud-sun-solid-full"></i>
+                                <i class="app-icon cloud-sun-solid-full"></i>
                             </span>
                             <span class="weather-summary">
                                 <span class="weather-temp" id="weather-temp">--°C</span>
@@ -34,8 +34,8 @@
                             </span>
                         </span>
                         <span class="weather-meta">
-                        <span id="weather-description">Ładowanie danych...</span>
-                        <span id="weather-wind">Wiatr -- km/h</span>
+                            <span id="weather-description">Ładowanie danych...</span>
+                            <span id="weather-wind">Wiatr -- km/h</span>
                         </span>
                     </button>
                     <form class="weather-search" id="weather-search-form">
@@ -96,7 +96,7 @@
             <section class="dashboard-menu-stage">
                 <div class="dashboard-menu-toolbar" aria-label="Ustawienia układu dashboardu">
                     <div class="dashboard-menu-edit-stack">
-                            <button type="button" class="dashboard-toolbar-btn dashboard-menu-edit-btn"
+                        <button type="button" class="dashboard-toolbar-btn dashboard-menu-edit-btn"
                             id="dashboard-menu-edit-btn">
                             <i class="app-icon grip-solid-full"></i>
                             <span>Edytuj</span>
@@ -106,11 +106,11 @@
                                 id="dashboard-menu-cancel-btn">
                                 <span>Anuluj</span>
                             </button>
-                        <button type="button" class="dashboard-toolbar-btn dashboard-menu-edit-btn"
-                            id="dashboard-menu-save-btn">
-                            <i class="app-icon check-solid-full"></i>
-                            <span>Zapisz układ</span>
-                        </button>
+                            <button type="button" class="dashboard-toolbar-btn dashboard-menu-edit-btn"
+                                id="dashboard-menu-save-btn">
+                                <i class="app-icon check-solid-full"></i>
+                                <span>Zapisz układ</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -162,7 +162,7 @@
                             </div>
                             <div class="card-copy">
                                 <span>Rezerwacja Obiadów</span>
-                                <small>Sloty od 11:00 do 15:00, lista zapisów i lokalny limit 4 osób na każdy
+                                <small>Sloty od 11:00 do 15:00, lista zapisów i lokalny limit osób na każdy
                                     termin.</small>
                             </div>
                         </article>
@@ -175,8 +175,7 @@
                             </div>
                             <div class="card-copy">
                                 <span>Chat</span>
-                                <small>Czat operacyjny z przypiętymi wiadomościami i historią zapisywaną na
-                                    serwerze.</small>
+                                <small>Czat operacyjny z przypiętymi wiadomościami.</small>
                             </div>
                         </article>
                     </a>
@@ -213,12 +212,6 @@
                     <p>&copy; <span id="current-year"></span> IT Support Dashboard by <a class="creator-name"
                             target="_blank" rel="noopener noreferrer" href="https://arkadiuszlisiecki.pl">Arkadiusz
                             Lisiecki</a>
-                    </p>
-                    <div class="footer-separator"></div>
-                    <p class="footer-status">
-                        <span class="status-dot"></span>
-                        <a class="footer-link" target="_blank" rel="noopener noreferrer"
-                            href="https://arkadiuszlisiecki.pl">arkadiuszlisiecki.pl</a>
                     </p>
                 </div>
             </footer>
@@ -325,43 +318,46 @@
                     <i class="app-icon xmark-solid-full"></i>
                 </button>
 
+                <label class="dashboard-bookmark-color-trigger" title="Wybierz kolor zakladki">
+                    <span class="dashboard-bookmark-color-trigger-wheel" aria-hidden="true"></span>
+                    <input type="color" id="dashboard-bookmark-color" value="#94a3b8"
+                        aria-label="Wybierz kolor zakladki">
+                </label>
+
                 <div class="dashboard-bookmark-modal-copy">
                     <p class="dashboard-kicker">Zakładki użytkownika</p>
                     <h2 id="dashboard-bookmark-modal-title">Dodaj zakładkę</h2>
                 </div>
 
                 <form class="dashboard-bookmark-form" id="dashboard-bookmark-form" novalidate>
-                    <label class="dashboard-bookmark-field">
-                        <span>Kolor zakladki</span>
-                        <div class="dashboard-bookmark-color-tools">
-                            <input type="color" id="dashboard-bookmark-color" value="#94a3b8">
-                        </div>
-                    </label>
+                    <div class="dashboard-bookmark-form-top">
+                        <label
+                            class="dashboard-bookmark-field dashboard-bookmark-field-tools dashboard-bookmark-field-icons">
+                            <span>Ikonka</span>
+                            <input type="hidden" id="dashboard-bookmark-icon" value="">
+                            <div class="dashboard-bookmark-icon-grid" id="dashboard-bookmark-icon-grid"></div>
+                        </label>
+                    </div>
 
-                    <label class="dashboard-bookmark-field">
-                        <span>Ikonka</span>
-                        <input type="hidden" id="dashboard-bookmark-icon" value="">
-                        <div class="dashboard-bookmark-icon-grid" id="dashboard-bookmark-icon-grid"></div>
-                    </label>
+                    <div class="dashboard-bookmark-form-body">
+                        <label class="dashboard-bookmark-field">
+                            <span>Nazwa</span>
+                            <input type="text" id="dashboard-bookmark-label" maxlength="60"
+                                placeholder="Np. Raport wymian" required>
+                        </label>
 
-                    <label class="dashboard-bookmark-field">
-                        <span>Nazwa</span>
-                        <input type="text" id="dashboard-bookmark-label" maxlength="60" placeholder="Np. Raport wymian"
-                            required>
-                    </label>
+                        <label class="dashboard-bookmark-field">
+                            <span>Adres lub ścieżka</span>
+                            <input type="text" id="dashboard-bookmark-url" placeholder="https://..." required>
+                        </label>
 
-                    <label class="dashboard-bookmark-field">
-                        <span>Adres lub ścieżka</span>
-                        <input type="text" id="dashboard-bookmark-url"
-                            placeholder="https://..." required>
-                    </label>
+                        <label class="dashboard-bookmark-field">
+                            <span>Krótki opis</span>
+                            <textarea id="dashboard-bookmark-description" rows="2"
+                                placeholder="Opcjonalnie: do czego służy ten link"></textarea>
+                        </label>
 
-                    <label class="dashboard-bookmark-field">
-                        <span>Krótki opis</span>
-                        <textarea id="dashboard-bookmark-description" rows="3"
-                            placeholder="Opcjonalnie: do czego służy ten link"></textarea>
-                    </label>
-
+                    </div>
                     <div class="dashboard-bookmark-form-actions">
                         <button type="button" class="dashboard-bookmark-secondary-btn"
                             id="dashboard-bookmark-cancel-btn">Anuluj</button>
