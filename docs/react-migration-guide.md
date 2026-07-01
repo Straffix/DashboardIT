@@ -1,21 +1,21 @@
 # Migracja DashboardIT do React
 
+> Aktualna decyzja: migrujemy tylko frontend do React.
+> Sekcje o backendzie, NestJS, Dockerze i contracts traktuj jako archiwalne tlo, nie jako aktywny plan prac.
+
 ## Cel
 
 Chcemy przepisac aplikacje z:
 
 - statycznych plikow HTML
 - czystego JavaScriptu opartego o `window.AppUtils`, `window.AppServices` i reczne operacje na DOM
-- backendu PHP
 
 na:
 
 - frontend w `React + TypeScript`
-- backend bez PHP
-- development uruchamiany przez `Docker`
-- architekture gotowa pod `Kubernetes`
+- zachowanie i widoki z obecnej aplikacji przeniesione do komponentow React
 
-To nie bedzie "dodanie Reacta do istniejacej strony". To bedzie kontrolowana migracja frontendu i backendu z zachowaniem obecnych funkcji biznesowych.
+To nie bedzie "dodanie Reacta do istniejacej strony". To bedzie kontrolowana migracja frontendu z zachowaniem obecnych funkcji biznesowych. Backend zostaje poza zakresem.
 
 ## Co mamy teraz
 
@@ -96,7 +96,7 @@ Do wymiany jest:
 - runtime frontendu
 - routing HTML -> React Router
 - renderowanie DOM -> komponenty React
-- PHP API -> nowy backend
+- granice integracji danych po stronie frontendu
 
 ## Rekomendowany stack docelowy
 
@@ -130,9 +130,11 @@ Na start nie musimy dorzucac zbyt wielu bibliotek stanowych. W wielu miejscach w
 - query cache
 - 1 lekki store tylko dla shell/app state, jesli bedzie potrzebny
 
-## Backend
+## Backend (archiwalne tlo, poza zakresem tej migracji)
 
-Rekomendacja:
+Ponizsza sekcja jest zachowana tylko jako starsza notatka referencyjna. Nie narzuca finalnej technologii backendu.
+
+Historyczna rekomendacja:
 
 - `NestJS`
 - `TypeScript`
@@ -152,7 +154,7 @@ Dlaczego NestJS:
 - latwiej utrzymac duza aplikacje niz przy "surowym" Express
 - bedzie nam wygodniej pracowac krok po kroku
 
-## Infra
+## Infra (archiwalne tlo)
 
 Do developmentu:
 

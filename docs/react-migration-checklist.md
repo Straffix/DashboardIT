@@ -1,17 +1,19 @@
 # React Migration Checklist
 
+> Aktualna decyzja zakresowa: ta checklista dotyczy migracji frontendu do React.
+> Punkty backendowe, NestJS i infra traktuj jako archiwalne notatki, nie jako aktywny plan prac dla tego repo.
+
 ## Zasady
 
 - Nie migrujemy wszystkiego na raz.
 - Zaczynamy od nowego projektu obok starego.
 - Stary projekt sluzy jako referencja funkcji i UI.
-- Kazdy modul konczymy end-to-end: UI + API + test podstawowy.
+- Kazdy modul konczymy end-to-end: UI + zachowanie + test podstawowy.
 
 ## Faza 0 - Przygotowanie
 
 - [ ] Potwierdzic stack: `React + TypeScript + Vite`
-- [ ] Potwierdzic backend: `NestJS + Prisma + PostgreSQL`
-- [ ] Potwierdzic infra: `Docker Compose + Kubernetes-ready`
+- [ ] Potwierdzic zakres: `frontend only`, backend poza zakresem
 - [ ] Zamrozic liste funkcji obecnej aplikacji
 - [ ] Zrobic screenshoty referencyjne wszystkich widokow
 - [ ] Spisac role i uprawnienia uzytkownikow

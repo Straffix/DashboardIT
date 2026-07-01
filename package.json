@@ -1,0 +1,13 @@
+{
+  "name": "dashboardit-react-migration",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "preview:web": "npm --workspace apps/web run preview",
+    "typecheck:web": "npm --workspace apps/web run typecheck"
+  }
+}

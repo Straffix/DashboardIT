@@ -26,7 +26,6 @@ Recommended target:
 - `Zod`
 - `SCSS`
 - `Vitest + React Testing Library`
-- backend: `NestJS + Prisma + PostgreSQL`
 
 ## 2. Current architecture in this repo
 
@@ -84,20 +83,20 @@ Storage and domain services:
 - [js/core/storage-service.js](</C:/Users/arkadiusz.lisiecki/OneDrive - Rossmann SDP/Pulpit/DashboardIT/js/core/storage-service.js:1>) - `617` lines
 - [js/core/domain-services.js](</C:/Users/arkadiusz.lisiecki/OneDrive - Rossmann SDP/Pulpit/DashboardIT/js/core/domain-services.js:1>) - `668` lines
 
-### Backend/API shape
+### Current data integration shape
 
-The current backend is simple and contract-oriented:
+The current backend integration is simple and contract-oriented:
 
 - [api/storage.php](</C:/Users/arkadiusz.lisiecki/OneDrive - Rossmann SDP/Pulpit/DashboardIT/api/storage.php:1>)
 
-This is useful because React does not care that the backend is PHP. It only cares about:
+This is useful because the React migration does not need to prescribe backend technology. It only needs to preserve:
 
 - auth contract
 - CRUD contract
 - payload shape
 - error shape
 
-That means backend technology can change without changing the product behavior.
+That means backend technology can be changed independently later without changing the product behavior in the UI.
 
 ## 3. What should be reused vs rewritten
 
@@ -378,22 +377,7 @@ Good path:
 - model state
 - render UI from state
 
-## 7. Backend mapping to NestJS
-
-## Suggested modules
-
-```text
-AuthModule
-UsersModule
-MonitorModule
-ExchangesModule
-HiresModule
-LunchModule
-NotesModule
-BookmarksModule
-TasksModule
-ActiveUsersModule
-```
+## 7. Backend isolation rule
 
 ## Data migration principle
 
@@ -405,14 +389,19 @@ Only after that:
 - normalize relations
 - remove legacy compromises
 
+For this migration:
+
+- do not prescribe final backend technology
+- do not block React work on backend redesign
+- treat backend integration as an external boundary owned separately
+
 ## 8. Best migration order
 
 ### Phase 0 - foundation
 
 1. Create `apps/web` with Vite React TS.
-2. Create `apps/api` with NestJS.
-3. Add workspace config, lint, prettier, test setup.
-4. Add Docker Compose with `web`, `api`, `postgres`.
+2. Add workspace config, lint, prettier, test setup.
+3. Preserve legacy JS screens as the parity reference.
 
 ### Phase 1 - shared app shell
 
@@ -423,7 +412,7 @@ Only after that:
 ### Phase 2 - first real module
 
 1. Migrate `monitor_laptopow`.
-2. Finish UI + API + tests end to end.
+2. Finish UI + behavior + tests end to end.
 3. Use it as the template for the next modules.
 
 ### Phase 3 - operational modules
@@ -441,9 +430,9 @@ Only after that:
 5. weather
 6. full dashboard home
 
-## 9. What helps with SonarQube
+## 9. What helps with code quality review
 
-React alone will not "fix Sonar". The main win comes from structure:
+React alone does not solve quality by itself. The main win comes from structure:
 
 - smaller files
 - smaller functions
@@ -453,7 +442,7 @@ React alone will not "fix Sonar". The main win comes from structure:
 - extracted helpers
 - unit-testable business logic
 
-Biggest current Sonar risks in this repo:
+Biggest current code quality risks in this repo:
 
 - very large files, especially auth and hires
 - mixed responsibilities in single files
@@ -466,19 +455,19 @@ Biggest current Sonar risks in this repo:
 For HLD, this migration will look much stronger if you present it as:
 
 - frontend SPA in React
-- backend API in NestJS
-- PostgreSQL as system of record
+- clear frontend state and view boundaries
+- explicit data adapters at the integration boundary
+- backend handled separately by another developer
 - optional websocket for live collaboration
-- Dockerized local development
-- Kubernetes-ready deployment model
+- deployment details described independently from the React rewrite
 
 Use these architecture layers in your HLD:
 
 1. Presentation layer - React web app
-2. Application/API layer - NestJS
-3. Domain/data access layer - Prisma services
-4. Persistence layer - PostgreSQL
-5. Infra layer - Docker, Kubernetes, CI/CD
+2. Frontend application layer - routing, state, forms, feature flows
+3. Integration layer - data adapters, contracts, storage boundaries
+4. External services layer - backend owned separately
+5. Infra layer - hosting, CI/CD, runtime environment
 
 ## 11. Risks
 
@@ -505,4 +494,4 @@ If you want the safest path:
 4. Use that pattern for `wymiana_sprzetu` and `rezerwacja_obiadow`.
 5. Leave dashboard home, weather, and chat for later.
 
-If you want the best story for SonarQube and HLD, this is much better than trying to "reactify" the current HTML files in place.
+If you want the best story for HLD and long-term maintainability, this is much better than trying to "reactify" the current HTML files in place.
