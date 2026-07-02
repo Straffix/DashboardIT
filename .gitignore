@@ -1,6 +1,6 @@
 node_modules/
-dist/
-coverage/
-.vite/
 apps/*/node_modules/
 apps/*/dist/
+*.tsbuildinfo
+styles/css/globals.css
+styles/css/globals.css.map
