@@ -1,10 +1,7 @@
-import { demoUsers } from '../session/demoUsers'
-import type { LunchReservation, LunchTeamMember, LunchUserRole } from './types'
+import type { LunchReservation, LunchUserRole } from './types'
 
 export const LUNCH_TIME_SLOTS = ['11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30']
 export const LUNCH_MAX_CAPACITY_PER_SLOT = 4
-
-export const lunchTeamMembers: LunchTeamMember[] = demoUsers
 
 export function formatDateKey(value: Date | string) {
 	const parsedDate = value instanceof Date ? new Date(value.getTime()) : new Date(value)

@@ -4,14 +4,14 @@ import { PageIntro } from '../../components/PageIntro'
 import { useCancelLunchReservationMutation, useLunchReservationsQuery, useReserveLunchSlotMutation } from '../../features/lunch/hooks'
 import { LunchSlotCard } from '../../features/lunch/LunchSlotCard'
 import { useAppSession } from '../../features/session/AppSessionProvider'
-import { lunchTeamMembers, formatLunchDateLabel, getReservationForUser, getTodayDateKey, LUNCH_MAX_CAPACITY_PER_SLOT, LUNCH_TIME_SLOTS } from '../../features/lunch/utils'
+import { formatLunchDateLabel, getReservationForUser, getTodayDateKey, LUNCH_MAX_CAPACITY_PER_SLOT, LUNCH_TIME_SLOTS } from '../../features/lunch/utils'
 
 export function LunchPage() {
 	const todayDate = getTodayDateKey()
 	const { data: reservations = [], isLoading } = useLunchReservationsQuery(todayDate)
 	const reserveMutation = useReserveLunchSlotMutation(todayDate)
 	const cancelMutation = useCancelLunchReservationMutation(todayDate)
-	const { activeUser, activeUserId, setActiveUserId, clearActiveUser } = useAppSession()
+	const { activeUser, activeUserId, setActiveUserId, clearActiveUser, users } = useAppSession()
 
 	const [feedback, setFeedback] = useState('')
 	const myReservation = activeUser ? getReservationForUser(reservations, activeUser.id) : null
@@ -41,7 +41,7 @@ export function LunchPage() {
 									setFeedback('')
 								}}>
 								<option value="">Tryb podgladu</option>
-								{lunchTeamMembers.map(user => (
+								{users.map(user => (
 									<option key={user.id} value={user.id}>
 										{user.fullName}
 									</option>
@@ -94,7 +94,7 @@ export function LunchPage() {
 							key={timeSlot}
 							timeSlot={timeSlot}
 							reservations={reservations}
-							users={lunchTeamMembers}
+							users={users}
 							currentUser={activeUser}
 							onRequireUser={() => {
 								setFeedback('Wybierz osobe robocza, aby zarezerwowac lub anulowac slot.')

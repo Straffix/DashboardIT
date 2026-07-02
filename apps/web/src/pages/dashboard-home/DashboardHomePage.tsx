@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom'
 
 import { PageIntro } from '../../components/PageIntro'
 import { appModules } from '../../data/modules'
+import { ActiveUsersWidget } from '../../features/active-users/ActiveUsersWidget'
+import { BookmarksWidget } from '../../features/bookmarks/BookmarksWidget'
+import { DashboardModulesStage } from '../../features/dashboard-menu/DashboardModulesStage'
 import { useExchangeRecordsQuery } from '../../features/exchanges/hooks'
 import type { ExchangeRecord } from '../../features/exchanges/types'
 import { useHiresQuery } from '../../features/hires/hooks'
@@ -17,6 +20,8 @@ import { useNotesMessagesQuery } from '../../features/notes/hooks'
 import type { NotesMessage } from '../../features/notes/types'
 import { formatNotesDateTimeLabel, getLatestNotesUpdateLabel, getPinnedNotesMessages, resolveNotesAuthor } from '../../features/notes/utils'
 import { useAppSession } from '../../features/session/AppSessionProvider'
+import { TaskPlannerWidget } from '../../features/tasks/TaskPlannerWidget'
+import { WeatherWidget } from '../../features/weather/WeatherWidget'
 
 type DashboardItemTone = 'active' | 'warning' | 'expired' | 'neutral'
 
@@ -32,24 +37,6 @@ const migrationLabelByState = {
 	'in-progress': 'W trakcie',
 	planned: 'Zaplanowane',
 } as const
-
-const legacyDashboardWidgets = [
-	{
-		description: 'Legacy ma geolokalizacje, wyszukiwanie miasta i 3-dniowa prognoze. W React wraca jako osobny widget po domknieciu rdzenia dashboardu.',
-		kicker: 'Legacy widget',
-		title: 'Pogoda',
-	},
-	{
-		description: 'Na starej stronie sa prywatne skroty, favicony i modal edycji zakladek. To jest kolejny logiczny etap po samym dashboard home.',
-		kicker: 'Legacy widget',
-		title: 'Zakladki',
-	},
-	{
-		description: 'Kalendarz zadan, preview dnia i aktywni uzytkownicy nadal siedza w czystym JS. Po przejeciu strony glownej mozemy je przenosic kawalek po kawalku.',
-		kicker: 'Legacy widget',
-		title: 'Planer i aktywni uzytkownicy',
-	},
-] as const
 
 function getMonthKey(value: string) {
 	return String(value || '').slice(0, 7)
@@ -369,6 +356,8 @@ export function DashboardHomePage() {
 				description="To juz nie jest ekran migracyjny. Dashboard zbiera zywe dane z modulow React i przejmuje role startowej strony pracy dla zespolu IT."
 			/>
 
+			<WeatherWidget />
+
 			<section className="dashboard-home-overview" aria-label="Biezacy kontekst dashboardu">
 				<article className="data-card dashboard-home-spotlight">
 					<p className="month-summary-card__label">{getClockEyebrow(now)}</p>
@@ -469,37 +458,20 @@ export function DashboardHomePage() {
 				/>
 			</section>
 
-			<section className="dashboard-home-grid" aria-label="Moduly dashboardu">
-				{appModules.map(module => (
-					<article key={module.id} className="dashboard-home-card">
-						<div className="dashboard-home-card__top">
-							<p>{module.kicker}</p>
-							<span className={`status-pill status-pill--${module.state}`}>
-								{migrationLabelByState[module.state]}
-							</span>
-						</div>
-						<h3>{module.title}</h3>
-						<p>{module.description}</p>
-						<div className="dashboard-home-card__summary">
-							<strong>{moduleInsights[module.id].summary}</strong>
-							<span>{moduleInsights[module.id].detail}</span>
-						</div>
-						<Link className="dashboard-home-card__link" to={module.path}>
-							Otworz modul
-						</Link>
-					</article>
-				))}
+			<BookmarksWidget />
+
+			<section className="dashboard-home-tail-grid" aria-label="Planer dnia i obecnosc zespolu">
+				<TaskPlannerWidget activeUser={activeUser} />
+				<ActiveUsersWidget activeUser={activeUser} users={users} />
 			</section>
 
-			<section className="dashboard-home-tail-grid" aria-label="Pozostale widgety legacy dashboardu">
-				{legacyDashboardWidgets.map(widget => (
-					<article key={widget.title} className="data-card dashboard-home-legacy-card">
-						<p className="month-summary-card__label">{widget.kicker}</p>
-						<h3>{widget.title}</h3>
-						<span>{widget.description}</span>
-					</article>
-				))}
-			</section>
+			<DashboardModulesStage
+				activeUserId={activeUserId}
+				moduleInsights={moduleInsights}
+				modules={appModules}
+				migrationLabelByState={migrationLabelByState}
+				sectionId="dashboard-modules-stage"
+			/>
 		</div>
 	)
 }

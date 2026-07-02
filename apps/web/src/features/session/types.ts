@@ -5,4 +5,10 @@ export type AppSessionUser = {
 	fullName: string
 	login: string
 	role: AppSessionUserRole
+	bookmarkDefaultColor: string
+	avatarId?: string
+	avatarImage?: string
+	profileAccentColor?: string
+	profileCoverImage?: string
+	profileTitle?: string
 }

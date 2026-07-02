@@ -1,8 +1,14 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { getAppDataSourceMode } from '../config/dataSource'
 import { appModules } from '../data/modules'
+import { useDashboardModuleOrder } from '../features/dashboard-menu/hooks'
 import { useAppSession } from '../features/session/AppSessionProvider'
+import { DashboardTopbar } from '../features/shell/DashboardTopbar'
+import { useDashboardTheme } from '../features/theme/useDashboardTheme'
+
+const DASHBOARD_MODULES_TARGET_ID = 'dashboard-modules-stage'
 
 const getNavClassName = ({ isActive }: { isActive: boolean }) =>
 	isActive ? 'app-shell__nav-link is-active' : 'app-shell__nav-link'
@@ -10,19 +16,59 @@ const getNavClassName = ({ isActive }: { isActive: boolean }) =>
 export function AppShell() {
 	const { activeUser } = useAppSession()
 	const dataSourceMode = getAppDataSourceMode()
+	const { orderedItems: orderedModules } = useDashboardModuleOrder(appModules, activeUser?.id || '')
+	const { theme, setTheme } = useDashboardTheme(activeUser?.id || '')
+	const location = useLocation()
+	const navigate = useNavigate()
+	const isDashboardHomeRoute = location.pathname === '/' || location.pathname === '/dashboard'
+	const currentViewLabel = isDashboardHomeRoute
+		? 'Start dashboardu'
+		: orderedModules.find(module => module.path === location.pathname)?.title || 'Widok dashboardu'
+
+	useEffect(() => {
+		const hashTargetId = String(location.hash || '').replace(/^#/, '').trim()
+		if (!hashTargetId) return
+
+		const animationFrameId = window.requestAnimationFrame(() => {
+			const targetElement = document.getElementById(hashTargetId)
+			targetElement?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+		})
+
+		return () => {
+			window.cancelAnimationFrame(animationFrameId)
+		}
+	}, [location.hash, location.pathname])
+
+	const handleShellAction = () => {
+		if (isDashboardHomeRoute) {
+			document.getElementById(DASHBOARD_MODULES_TARGET_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+			return
+		}
+
+		navigate(`/dashboard#${DASHBOARD_MODULES_TARGET_ID}`)
+	}
 
 	return (
 		<div className="app-shell">
 			<div className="app-shell__backdrop app-shell__backdrop--left" aria-hidden="true" />
 			<div className="app-shell__backdrop app-shell__backdrop--right" aria-hidden="true" />
 
+			<DashboardTopbar
+				activeUser={activeUser}
+				currentViewLabel={currentViewLabel}
+				isHomeRoute={isDashboardHomeRoute}
+				onActionClick={handleShellAction}
+				onThemeChange={setTheme}
+				theme={theme}
+			/>
+
 			<header className="app-shell__header">
 				<div>
 					<p className="app-shell__eyebrow">Dashboard IT</p>
-					<h1 className="app-shell__title">Reactowa warstwa operacyjna</h1>
+					<h1 className="app-shell__title">Dashboard IT w React</h1>
 					<p className="app-shell__subtitle">
-						Moduly operacyjne dzialaja juz w React, a strona glowna zaczyna przejmowac funkcje starego
-						dashboardu. Legacy HTML i czysty JS zostaja tylko jako referencja do pelnej parity.
+						Strona startowa, widzety, kolejnosc modulow i preferencje interfejsu dzialaja juz po stronie
+						React. Legacy HTML i czysty JS zostaja tylko jako punkt odniesienia do dalszych porownan.
 					</p>
 					<div className="app-shell__status-row">
 						<span className={`status-pill status-pill--${dataSourceMode === 'api' ? 'ready' : 'warning'}`}>
@@ -31,6 +77,7 @@ export function AppShell() {
 						<span className={`status-pill status-pill--${activeUser ? 'active' : 'planned'}`}>
 							Sesja: {activeUser ? activeUser.fullName : 'brak'}
 						</span>
+						<span className="status-pill status-pill--neutral">Motyw: {theme}</span>
 					</div>
 				</div>
 			</header>
@@ -39,7 +86,7 @@ export function AppShell() {
 				<NavLink to="/dashboard" end className={getNavClassName}>
 					Start
 				</NavLink>
-				{appModules.map(module => (
+				{orderedModules.map(module => (
 					<NavLink key={module.id} to={module.path} className={getNavClassName}>
 						{module.title}
 					</NavLink>
