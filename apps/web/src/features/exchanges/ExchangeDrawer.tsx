@@ -54,8 +54,8 @@ export function ExchangeDrawer({
 						<h3 id="exchange-drawer-title">{isEditMode ? 'Edytuj plan wymiany' : 'Zaplanuj nowa wymiane'}</h3>
 						<p>
 							{isEditMode
-								? 'Aktualizujesz dane wymiany w Reactowej wersji modulu.'
-								: 'Ten formularz jest juz przepisany na React i wspolgra z modulem monitoringu.'}
+								? 'Aktualizujesz dane zaplanowanej wymiany.'
+								: 'Formularz zapisuje nowa wymiane i wspolgra z modulem monitoringu.'}
 						</p>
 					</div>
 					<button type="button" className="drawer-card__close" onClick={onClose}>

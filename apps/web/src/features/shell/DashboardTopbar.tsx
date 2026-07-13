@@ -68,12 +68,12 @@ export function DashboardTopbar({
 	return (
 		<section className="app-shell__topbar" aria-label="Szybkie sterowanie dashboardem">
 			<div className="app-shell__topbar-copy">
-				<p className="app-shell__topbar-eyebrow">Szybki panel React</p>
+				<p className="app-shell__topbar-eyebrow">Szybki panel pracy</p>
 				<strong>{currentViewLabel}</strong>
 				<span>
 					{activeUser
 						? `${activeUser.fullName} pracuje teraz w motywie ${getThemeSummary(theme)}. Preferencja zapisuje sie osobno dla aktywnej sesji.`
-						: 'Nawigacja startowa, motywy i shell dashboardu dzialaja juz bez podporki z legacy JS.'}
+						: 'Nawigacja startowa, motywy i shell dashboardu sa gotowe do codziennej pracy.'}
 				</span>
 			</div>
 

@@ -6,7 +6,7 @@ import { BOOKMARK_DEFAULT_COLOR } from './constants'
 import { useBookmarksQuery, useCreateBookmarkMutation, useDeleteBookmarkMutation, useUpdateBookmarkMutation } from './hooks'
 import type { BookmarkDraft, BookmarkRecord } from './types'
 import {
-	getBookmarkAccentStyle,
+	applyBookmarkAccentTheme,
 	getBookmarkFaviconSources,
 	getBookmarkIconOption,
 	getBookmarkMetaLabel,
@@ -145,7 +145,7 @@ export function BookmarksWidget() {
 						<strong id="dashboard-bookmarks-title">Prywatne skroty robocze</strong>
 						<span>
 							{activeUser
-								? 'Ten panel przejmuje legacy bookmarki: szybkie linki per-user, kolor akcentu, favicony i reczna ikonke.'
+								? 'Panel zapisuje szybkie linki per-user, kolor akcentu, favicony i recznie wybrane ikonki.'
 								: 'Zakladki sa przypisane do wybranej osoby roboczej. Wybierz sesje, aby zobaczyc albo dopisac swoje skroty.'}
 						</span>
 					</div>
@@ -171,10 +171,12 @@ export function BookmarksWidget() {
 
 							return (
 								<article
-									key={bookmark.id}
-									className="bookmark-card"
-									style={getBookmarkAccentStyle(bookmarkColor)}>
-									<a className="bookmark-card__main" href={href || '#'} rel="noopener noreferrer" title={bookmark.description || bookmark.label}>
+										key={bookmark.id}
+										className="bookmark-card"
+										ref={element => {
+											applyBookmarkAccentTheme(element, bookmarkColor)
+										}}>
+									<a className="bookmark-card__main" href={href || '#'} target="_blank" rel="noopener noreferrer" title={bookmark.description || bookmark.label}>
 										<BookmarkVisual iconName={bookmark.iconName} label={bookmark.label} url={bookmark.url} />
 
 										<div className="bookmark-card__copy">

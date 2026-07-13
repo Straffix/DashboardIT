@@ -7,15 +7,15 @@ type MigrationPlaceholderProps = {
 export function MigrationPlaceholder({ moduleName, sourceFiles, nextFocus }: MigrationPlaceholderProps) {
 	return (
 		<section className="placeholder-card">
-			<div className="placeholder-card__badge">Do przeniesienia</div>
+			<div className="placeholder-card__badge">Szkic widoku</div>
 			<h3>{moduleName}</h3>
 			<p>
-				Ten ekran jest jeszcze placeholderem, ale ma juz swoja trase w React Router. Przy kolejnej iteracji
-				przeniesiemy logike i UI z aktualnych plikow z vanilla JS.
+				Ten ekran zachowuje trase i podstawowy opis, dzieki czemu latwiej zaplanowac dalsze rozszerzenia bez
+				gubienia kontekstu widoku.
 			</p>
 			<div className="placeholder-card__grid">
 				<div>
-					<strong>Zrodla</strong>
+					<strong>Materialy</strong>
 					<ul>
 						{sourceFiles.map(file => (
 							<li key={file}>{file}</li>
@@ -23,7 +23,7 @@ export function MigrationPlaceholder({ moduleName, sourceFiles, nextFocus }: Mig
 					</ul>
 				</div>
 				<div>
-					<strong>Nastepny krok</strong>
+					<strong>Kolejny krok</strong>
 					<p>{nextFocus}</p>
 				</div>
 			</div>

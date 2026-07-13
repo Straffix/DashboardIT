@@ -42,7 +42,7 @@ export function NotesMessageList({
 	if (!currentUser) {
 		return (
 			<div className="notes-empty-state">
-				<strong>Tryb podgladu</strong>
+				<strong>Brak aktywnej osoby</strong>
 				<p>Wybierz osobe robocza, aby zobaczyc historie czatu, pisac wiadomosci i zarzadzac przypieciami.</p>
 			</div>
 		)

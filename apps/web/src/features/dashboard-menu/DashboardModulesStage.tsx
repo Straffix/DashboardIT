@@ -114,7 +114,8 @@ export function DashboardModulesStage({
 					<p className="month-summary-card__label">Moduly pracy</p>
 					<strong id="dashboard-modules-stage-title">Twoj uklad dashboardu</strong>
 					<span>
-						React przejmuje teraz legacy edycje kolejnosci modulow. Uklad zapisuje sie dla wybranej osoby roboczej i odswieza tez gorna nawigacje.
+						Uklad zapisuje sie dla wybranej osoby roboczej i odswieza tez gorna nawigacje, dzieki czemu
+						dashboard mozna ustawic pod swoj rytm pracy.
 					</span>
 				</div>
 

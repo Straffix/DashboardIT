@@ -74,7 +74,7 @@ export function HiresDrawer({ isOpen, record, isSubmitting, errorMessage, onClos
 						<p>
 							{isEditMode
 								? 'Aktualizujesz Reactowy wpis dla nowego pracownika.'
-								: 'Najwiekszy legacy CRUD jest juz rozkladany na komponenty React.'}
+								: 'Dodajesz nowy onboarding do glownej listy pracy zespolu IT.'}
 						</p>
 					</div>
 					<button type="button" className="drawer-card__close" onClick={onClose}>
@@ -250,7 +250,7 @@ export function HiresDrawer({ isOpen, record, isSubmitting, errorMessage, onClos
 					<section className="drawer-form__section">
 						<div className="drawer-form__section-copy">
 							<h4>Akcesoria</h4>
-							<p>Wybrane: {selectedAccessoriesCount}. Zostawiamy to juz jako stan formularza React.</p>
+							<p>Wybrane: {selectedAccessoriesCount}. Akcesoria zapisza sie razem z onboardingiem.</p>
 						</div>
 
 						<div className="accessory-picker">

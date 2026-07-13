@@ -1053,13 +1053,114 @@
 		}
 	}
 
+	function clearAccessoriesCollapseTransitionHandler(collapsePanel) {
+		const activeHandler = collapsePanel?._hireAccessoriesTransitionHandler
+		if (!collapsePanel || typeof activeHandler !== 'function') return
+
+		collapsePanel.removeEventListener('transitionend', activeHandler)
+		delete collapsePanel._hireAccessoriesTransitionHandler
+	}
+
+	function onAccessoriesCollapseHeightTransitionEnd(collapsePanel, callback) {
+		if (!collapsePanel) return
+		clearAccessoriesCollapseTransitionHandler(collapsePanel)
+
+		const nextHandler = event => {
+			if (event.target !== collapsePanel || event.propertyName !== 'height') return
+			clearAccessoriesCollapseTransitionHandler(collapsePanel)
+			callback()
+		}
+
+		collapsePanel._hireAccessoriesTransitionHandler = nextHandler
+		collapsePanel.addEventListener('transitionend', nextHandler)
+	}
+
+	function setAccessoriesCollapseWillChange(collapsePanel, isAnimating) {
+		if (!collapsePanel) return
+		collapsePanel.style.willChange = isAnimating ? 'height' : ''
+	}
+
 	function syncAccessoriesRowDomState(rowKey, isExpanded) {
 		const rowDomBundle = getAccessoriesRowDomBundle(rowKey)
 		if (!rowDomBundle) return false
 
-		rowDomBundle.mainRow.classList.toggle('is-accessories-open', isExpanded)
-		rowDomBundle.detailRow?.classList.toggle('is-open', isExpanded)
-		rowDomBundle.detailRow?.setAttribute('aria-hidden', isExpanded ? 'false' : 'true')
+		if (isExpanded) {
+			rowDomBundle.mainRow.classList.add('is-accessories-open')
+		}
+		const detailRow = rowDomBundle.detailRow
+		const collapsePanel = detailRow?.querySelector('.hire-accessories-collapse')
+
+		if (detailRow) {
+			if (isExpanded) {
+				detailRow.classList.remove('is-collapsed-hidden')
+				detailRow.setAttribute('aria-hidden', 'false')
+
+				if (collapsePanel) {
+					clearAccessoriesCollapseTransitionHandler(collapsePanel)
+					setAccessoriesCollapseWillChange(collapsePanel, true)
+					collapsePanel.style.height = '0px'
+				}
+
+				window.requestAnimationFrame(() => {
+					if (detailRow.getAttribute('aria-hidden') === 'false' && collapsePanel) {
+						detailRow.classList.add('is-open')
+						const targetHeight = collapsePanel.scrollHeight
+						onAccessoriesCollapseHeightTransitionEnd(collapsePanel, () => {
+							if (detailRow.classList.contains('is-open')) {
+								collapsePanel.style.height = 'auto'
+							}
+							setAccessoriesCollapseWillChange(collapsePanel, false)
+						})
+						collapsePanel.style.height = `${targetHeight}px`
+					} else if (detailRow.getAttribute('aria-hidden') === 'false') {
+						detailRow.classList.add('is-open')
+					}
+				})
+			} else {
+				if (collapsePanel) {
+					clearAccessoriesCollapseTransitionHandler(collapsePanel)
+					setAccessoriesCollapseWillChange(collapsePanel, true)
+					const currentHeight = collapsePanel.scrollHeight || collapsePanel.getBoundingClientRect().height
+					collapsePanel.style.height = `${currentHeight}px`
+					void collapsePanel.offsetHeight
+				}
+
+				detailRow.classList.remove('is-open')
+				detailRow.setAttribute('aria-hidden', 'true')
+
+				if (collapsePanel) {
+					onAccessoriesCollapseHeightTransitionEnd(collapsePanel, () => {
+						if (detailRow.getAttribute('aria-hidden') === 'true' && !detailRow.classList.contains('is-open')) {
+							detailRow.classList.add('is-collapsed-hidden')
+							collapsePanel.style.height = ''
+							rowDomBundle.mainRow.classList.remove('is-accessories-open')
+						}
+						setAccessoriesCollapseWillChange(collapsePanel, false)
+					})
+					collapsePanel.style.height = '0px'
+				} else {
+					scheduleTimeout(() => {
+						if (detailRow.getAttribute('aria-hidden') === 'true' && !detailRow.classList.contains('is-open')) {
+							detailRow.classList.add('is-collapsed-hidden')
+							rowDomBundle.mainRow.classList.remove('is-accessories-open')
+						}
+					}, 0)
+				}
+			}
+		}
+
+		if (detailRow && !isExpanded && !collapsePanel) {
+			scheduleTimeout(() => {
+				if (detailRow.getAttribute('aria-hidden') === 'true' && !detailRow.classList.contains('is-open')) {
+					detailRow.classList.add('is-collapsed-hidden')
+					rowDomBundle.mainRow.classList.remove('is-accessories-open')
+				}
+			}, 0)
+		}
+
+		if (!detailRow && !isExpanded) {
+			rowDomBundle.mainRow.classList.remove('is-accessories-open')
+		}
 
 		if (rowDomBundle.toggleButton) {
 			const buttonLabel = isExpanded ? 'Ukryj szczegoly' : 'Pokaz szczegoly'
@@ -1309,13 +1410,15 @@
 
 			if (canExpandAccessories) {
 				const accessoriesRow = document.createElement('tr')
-				accessoriesRow.className = `hire-accessories-row${isAccessoriesExpanded ? ' is-open' : ''}`
+				accessoriesRow.className = `hire-accessories-row${isAccessoriesExpanded ? ' is-open' : ' is-collapsed-hidden'}`
 				accessoriesRow.dataset.rowKey = rowKey
 				accessoriesRow.setAttribute('aria-hidden', isAccessoriesExpanded ? 'false' : 'true')
 				accessoriesRow.innerHTML = `
 					<td colspan="${VISIBLE_TABLE_COLUMN_COUNT}" class="hire-accessories-cell">
 						<div class="hire-accessories-collapse">
-							${renderAccessoriesPanel(hire, originalIndex, guestMode)}
+							<div class="hire-accessories-collapse-inner">
+								${renderAccessoriesPanel(hire, originalIndex, guestMode)}
+							</div>
 						</div>
 					</td>
 				`

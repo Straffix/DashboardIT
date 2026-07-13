@@ -37,7 +37,7 @@ export function ActiveUsersWidget({ activeUser, users }: ActiveUsersWidgetProps)
 					<div className="dashboard-home-section-head">
 						<p className="month-summary-card__label">Obecnosc</p>
 						<strong id="dashboard-active-users-title">Aktywni uzytkownicy</strong>
-						<span>React przejmuje juz licznik obecnosci miedzy kartami i szybki podglad profilu aktywnych osob.</span>
+						<span>Licznik obecnosci miedzy kartami i szybki podglad profilu aktywnych osob dzialaja juz w aplikacji.</span>
 					</div>
 
 					<div className="active-users-widget__stats" aria-label="Statystyki obecnosci">

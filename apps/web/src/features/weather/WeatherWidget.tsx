@@ -135,7 +135,7 @@ export function WeatherWidget() {
 					<p className="month-summary-card__label">Pogoda</p>
 					<strong id="dashboard-weather-title">Pogoda i prognoza 3-dniowa</strong>
 					<span>
-						Widget przejmuje legacy wyszukiwanie miasta, geolokalizacje oraz godzinowy drill-down. Na teraz uproszczony jest tylko sam mechanizm przewijania godzin.
+						Widget obsluguje wyszukiwanie miasta, geolokalizacje oraz godzinowy drill-down prognozy.
 					</span>
 				</div>
 

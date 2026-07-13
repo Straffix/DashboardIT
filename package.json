@@ -8,6 +8,8 @@
     "dev:web": "npm --workspace apps/web run dev",
     "build:web": "npm --workspace apps/web run build",
     "preview:web": "npm --workspace apps/web run preview",
-    "typecheck:web": "npm --workspace apps/web run typecheck"
+    "typecheck:web": "npm --workspace apps/web run typecheck",
+    "sync:web": "powershell.exe -ExecutionPolicy Bypass -File scripts/sync-web-dist.ps1",
+    "publish:web": "npm run build:web && npm run sync:web"
   }
 }

@@ -53,8 +53,8 @@ export function MonitorDrawer({
 						<h3 id="monitor-drawer-title">{isEditMode ? 'Edytuj urzadzenie' : 'Dodaj urzadzenie'}</h3>
 						<p>
 							{isEditMode
-								? 'Aktualizujesz istniejacy wpis w nowym frontendzie React.'
-								: 'To jest juz formularz w React. Kolejne moduly zrobimy tym samym wzorcem.'}
+								? 'Aktualizujesz istniejacy wpis w module urzadzen.'
+								: 'Dodajesz nowe urzadzenie do glownej listy monitoringu domeny.'}
 						</p>
 					</div>
 					<button type="button" className="drawer-card__close" onClick={onClose}>

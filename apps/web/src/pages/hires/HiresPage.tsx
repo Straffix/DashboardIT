@@ -221,9 +221,9 @@ export function HiresPage() {
 	return (
 		<div className="page-stack">
 			<PageIntro
-				eyebrow="Najwiekszy legacy CRUD"
+				eyebrow="Onboarding IT"
 				title="Nowe zatrudnienia"
-				description="Ten modul nie jest juz placeholderem. Najgrubszy ekran z vanilla JS ma teraz Reactowa tabele, wyszukiwarke, filtr miesiaca i drawer do zarzadzania onboardingiem."
+				description="Najwiekszy ekran operacyjny ma teraz Reactowa tabele, wyszukiwarke, filtr miesiaca i drawer do zarzadzania onboardingiem."
 				actions={
 					<div className="page-actions">
 						<label className="search-input">

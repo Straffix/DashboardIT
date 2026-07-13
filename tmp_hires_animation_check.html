@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pending</title>
+</head>
+<body>
+    <pre id="output">pending</pre>
+    <iframe id="test-frame" src="./nowe_zatrudnienia.html" style="width: 1600px; height: 1400px; border: 0;"></iframe>
+
+    <script>
+        const browserNow = new Date()
+        const browserYear = browserNow.getFullYear()
+        const browserMonth = String(browserNow.getMonth() + 1).padStart(2, '0')
+        const startDate = `${browserYear}-${browserMonth}-15`
+        const createdAt = `${browserYear}-${browserMonth}-01T09:00:00.000Z`
+        const updatedAt = `${browserYear}-${browserMonth}-02T10:00:00.000Z`
+
+        const seedHires = [
+            {
+                purchaseRequest: '3832985923',
+                targetUser: 'Norbert Walczak - Pietrzak - Dabrowski',
+                startDate,
+                laptopModel: 'PW920192',
+                laptopRu: '90807021',
+                laptopStatus: 'W trakcie',
+                laptopWarehouse: 'Brak konta',
+                monitorRu: '54621512',
+                monitorStatus: 'W trakcie / czekamy na dostawe',
+                monitorWarehouse: 'Brak konta',
+                preparedBy: 'Jakub Gauze',
+                deliveryLocation: 'Centrala',
+                peripheralNotes: 'Zerknac, czy nie ma poprzedniego laptopa!',
+                monitorDock: true,
+                mouse: true,
+                keyboard: true,
+                yealink: true,
+                logiZoneVibe: true,
+                lenovo: true,
+                bag: true,
+                backpack: true,
+                laptopStand: true,
+                presenter: true,
+                printer: true,
+                preparedAccessories: [],
+                accessories: ['monitor', 'mouse', 'keyboard', 'headset', 'bag', 'backpack', 'laptop-pad', 'pointer', 'printer'],
+                createdBy: 'Arkadiusz Lisiecki',
+                updatedBy: 'Arkadiusz Lisiecki',
+                createdAt,
+                updatedAt,
+            },
+        ]
+
+        const output = document.getElementById('output')
+        const frame = document.getElementById('test-frame')
+        let stage = 'init'
+        let savedRecordsBeforeReload = null
+
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+        async function waitFor(predicate, timeout = 10000) {
+            const startedAt = performance.now()
+            while (performance.now() - startedAt < timeout) {
+                try {
+                    const value = predicate()
+                    if (value) return value
+                } catch (error) {
+                    // Ignore transient iframe access issues during reload.
+                }
+                await wait(50)
+            }
+
+            throw new Error('timeout')
+        }
+
+        function finish(payload) {
+            output.textContent = JSON.stringify(payload, null, 2)
+            document.title = payload?.ok ? 'done' : 'error'
+        }
+
+        async function waitForFrameLoad() {
+            if (frame.contentDocument?.readyState === 'complete') {
+                return
+            }
+
+            await new Promise((resolve, reject) => {
+                const timeoutId = setTimeout(() => reject(new Error('iframe-load-timeout')), 10000)
+                frame.addEventListener(
+                    'load',
+                    () => {
+                        clearTimeout(timeoutId)
+                        resolve()
+                    },
+                    { once: true }
+                )
+            })
+        }
+
+        ;(async () => {
+            try {
+                stage = 'frame-load-initial'
+                await waitForFrameLoad()
+
+                const initialWindow = frame.contentWindow
+                stage = 'wait-services'
+                await waitFor(() => initialWindow.AppServices?.hiresService && initialWindow.document.querySelector('#table-body'))
+                stage = 'seed-data'
+                if (initialWindow.AppUtils?.auth) {
+                    initialWindow.AppUtils.auth.isAuthenticated = () => true
+                }
+                initialWindow.AppServices.hiresService.saveAll(seedHires)
+                savedRecordsBeforeReload = initialWindow.AppServices.hiresService.getAll()
+                stage = 'open-shell-route'
+                frame.src = './dashboard.html#nowe-zatrudnienia'
+
+                stage = 'frame-load-reload'
+                await waitForFrameLoad()
+
+                const pageWindow = frame.contentWindow
+                const pageDocument = frame.contentDocument
+                if (pageWindow.AppUtils?.auth) {
+                    pageWindow.AppUtils.auth.isAuthenticated = () => true
+                }
+
+                stage = 'wait-toggle'
+                await waitFor(() => pageDocument.querySelector('[data-action="toggle-accessories"]'))
+
+                stage = 'open-panel'
+                const button = pageDocument.querySelector('[data-action="toggle-accessories"]')
+                button.click()
+                await wait(500)
+
+                const detailRow = pageDocument.querySelector('.hire-accessories-row:not(.is-collapsed-hidden)')
+                const panel = detailRow?.querySelector('.hire-accessories-collapse')
+                if (!detailRow || !panel) {
+                    throw new Error('panel-did-not-open')
+                }
+
+                stage = 'capture-close'
+                const samples = []
+
+                await new Promise(resolve => {
+                    let startedAt = null
+
+                    const capture = timestamp => {
+                        if (startedAt === null) startedAt = timestamp
+
+                        const liveRow = pageDocument.querySelector('.hire-accessories-row')
+                        samples.push({
+                            t: Math.round((timestamp - startedAt) * 100) / 100,
+                            h: Math.round(panel.getBoundingClientRect().height * 100) / 100,
+                            mainOpen: pageDocument.querySelector('.hire-row-main.is-accessories-open') !== null,
+                            detailOpen: detailRow.classList.contains('is-open'),
+                            detailHidden: liveRow?.classList.contains('is-collapsed-hidden') || false,
+                            ariaHidden: detailRow.getAttribute('aria-hidden'),
+                        })
+
+                        if (timestamp - startedAt < 700) {
+                            pageWindow.requestAnimationFrame(capture)
+                            return
+                        }
+
+                        resolve()
+                    }
+
+                    pageWindow.requestAnimationFrame(() => {
+                        button.click()
+                        pageWindow.requestAnimationFrame(capture)
+                    })
+                })
+
+                finish({
+                    ok: true,
+                    sampleCount: samples.length,
+                    samples,
+                })
+            } catch (error) {
+                finish({
+                    ok: false,
+                    error: error instanceof Error ? error.message : String(error),
+                    stage,
+                    readyState: frame.contentDocument?.readyState || null,
+                    frameHref: frame.contentWindow?.location?.href || null,
+                    hasServices: !!frame.contentWindow?.AppServices?.hiresService,
+                    savedCountBeforeReload: typeof savedRecordsBeforeReload !== 'undefined' ? savedRecordsBeforeReload.length : null,
+                    savedCountAfterReload: frame.contentWindow?.AppServices?.hiresService?.getAll?.()?.length ?? null,
+                    hasTableBody: !!frame.contentDocument?.querySelector('#table-body'),
+                    hasToggle: !!frame.contentDocument?.querySelector('[data-action="toggle-accessories"]'),
+                    tableBodyRowCount: frame.contentDocument?.querySelector('#table-body')?.children?.length || 0,
+                    tableBodyHtml: frame.contentDocument?.querySelector('#table-body')?.innerHTML?.slice(0, 2000) || null,
+                    monthLabel: frame.contentDocument?.querySelector('#current-month-display')?.textContent || null,
+                    bodySnippet: frame.contentDocument?.body?.innerHTML?.slice(0, 1200) || null,
+                })
+            }
+        })()
+    </script>
+</body>
+</html>

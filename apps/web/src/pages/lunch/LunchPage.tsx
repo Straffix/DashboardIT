@@ -22,9 +22,9 @@ export function LunchPage() {
 	return (
 		<div className="page-stack">
 			<PageIntro
-				eyebrow="Trzeci modul w React"
+				eyebrow="Modul operacyjny"
 				title="Rezerwacja obiadow"
-				description="Modul lunch jest juz przeniesiony do Reacta z pelna logika slotow, limitami miejsc i anulowaniem rezerwacji. Do czasu migracji prawdziwego logowania korzysta ze wspolnej sesji roboczej frontendowej."
+				description="Modul lunch obsluguje sloty, limity miejsc i anulowanie rezerwacji. Sesja robocza pozwala pracowac w kontekscie wybranej osoby."
 				actions={
 					<div className="page-actions">
 						<label className="search-input">
@@ -40,7 +40,7 @@ export function LunchPage() {
 									}
 									setFeedback('')
 								}}>
-								<option value="">Tryb podgladu</option>
+								<option value="">Bez aktywnej osoby</option>
 								{users.map(user => (
 									<option key={user.id} value={user.id}>
 										{user.fullName}
@@ -73,11 +73,11 @@ export function LunchPage() {
 
 			<section className="data-card lunch-context-card">
 				<p className="month-summary-card__label">Kontekst modulu</p>
-				<strong>{activeUser ? `Aktywna sesja: ${activeUser.fullName}` : 'Tryb podgladu bez aktywnej sesji'}</strong>
+				<strong>{activeUser ? `Aktywna sesja: ${activeUser.fullName}` : 'Brak aktywnej osoby roboczej'}</strong>
 				<span>
 					{activeUser
-						? 'Mozesz rezerwowac i anulowac sloty dla wybranej osoby. Po migracji auth ta sesja robocza zostanie podpieta pod prawdziwego uzytkownika.'
-						: 'Wybierz osobe robocza, aby testowac logike rezerwacji. Bez tego ekran dziala w trybie podgladu.'}
+						? 'Mozesz rezerwowac i anulowac sloty dla wybranej osoby z poziomu jednego ekranu.'
+						: 'Wybierz osobe robocza, aby zapisac lub anulowac rezerwacje.'}
 				</span>
 				{feedback ? <p className="helper-note is-warning">{feedback}</p> : null}
 			</section>

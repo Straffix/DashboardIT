@@ -147,9 +147,9 @@ export function MonitorPage() {
 	return (
 		<div className="page-stack">
 			<PageIntro
-				eyebrow="Pierwszy modul w React"
+				eyebrow="Modul operacyjny"
 				title="Urzadzenia w domenie"
-				description="Ten ekran jest juz zbudowany jako komponenty React z routingiem, lokalnym storage i rozdzieleniem logiki od widoku. To jest nasz wzorzec na dalsza migracje."
+				description="Ekran laczy routing, oddzielona logike, statusy domeny oraz import i eksport Excel do codziennej pracy z urzadzeniami."
 				actions={
 					<div className="page-actions">
 						<label className="search-input">

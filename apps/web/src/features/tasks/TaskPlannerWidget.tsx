@@ -170,7 +170,7 @@ export function TaskPlannerWidget({ activeUser }: TaskPlannerWidgetProps) {
 					<div className="dashboard-home-section-head">
 						<p className="month-summary-card__label">Planer dnia</p>
 						<strong id="dashboard-planner-title">Zadania i kalendarz</strong>
-						<span>React przejmuje preview dnia, kalendarz miesiaca oraz dodawanie i usuwanie zadan bez otwierania legacy modala.</span>
+						<span>Planer dnia laczy podglad zadan, kalendarz miesiaca oraz szybkie dodawanie i usuwanie wpisow.</span>
 					</div>
 
 					<button type="button" className="button-secondary" onClick={handleOpenPlanner}>

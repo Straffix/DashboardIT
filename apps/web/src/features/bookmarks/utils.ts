@@ -1,5 +1,3 @@
-import type { CSSProperties } from 'react'
-
 import { BOOKMARK_DEFAULT_COLOR, BOOKMARK_ICON_OPTIONS } from './constants'
 import type { BookmarkDraft, BookmarkRecord } from './types'
 
@@ -137,12 +135,11 @@ export function getBookmarkAccentRgb(colorHex: string) {
 	return `${red}, ${green}, ${blue}`
 }
 
-export function getBookmarkAccentStyle(colorHex: string): CSSProperties {
+export function applyBookmarkAccentTheme(element: HTMLElement | null, colorHex: string) {
+	if (!element) return
 	const normalizedColor = normalizeBookmarkColor(colorHex)
-	return {
-		'--bookmark-accent': normalizedColor,
-		'--bookmark-accent-rgb': getBookmarkAccentRgb(normalizedColor),
-	} as CSSProperties
+	element.style.setProperty('--bookmark-accent', normalizedColor)
+	element.style.setProperty('--bookmark-accent-rgb', getBookmarkAccentRgb(normalizedColor))
 }
 
 export function getBookmarkDraftDefaults(defaultColor: string): BookmarkDraft {

@@ -142,7 +142,7 @@ export function NotesPage() {
 			<PageIntro
 				eyebrow="Wspolpraca zespolu"
 				title="Notatnik i chat"
-				description="Placeholder zniknal. Reactowa wersja notatnika ma juz prawdziwy chat, przypiecia, edycje wpisow i aktywne obecnosci miedzy kartami."
+				description="Reactowa wersja notatnika daje prawdziwy chat, przypiecia, edycje wpisow i aktywne obecnosci miedzy kartami."
 				actions={
 					<div className="page-actions">
 						<label className="search-input">
@@ -159,7 +159,7 @@ export function NotesPage() {
 									setFeedback('')
 									resetComposer()
 								}}>
-								<option value="">Tryb podgladu</option>
+								<option value="">Bez aktywnej osoby</option>
 								{users.map(user => (
 									<option key={user.id} value={user.id}>
 										{user.fullName}
@@ -191,8 +191,8 @@ export function NotesPage() {
 			</section>
 
 			<section className="data-card month-summary-card">
-				<p className="month-summary-card__label">Status migracji modulu</p>
-				<strong>{activeUser ? `Aktywna sesja: ${activeUser.fullName}` : 'Tryb podgladu bez aktywnej sesji'}</strong>
+				<p className="month-summary-card__label">Status modulu</p>
+				<strong>{activeUser ? `Aktywna sesja: ${activeUser.fullName}` : 'Brak aktywnej osoby roboczej'}</strong>
 				<span>{summaryText}</span>
 				{feedback ? <p className="helper-note is-warning">{feedback}</p> : null}
 			</section>

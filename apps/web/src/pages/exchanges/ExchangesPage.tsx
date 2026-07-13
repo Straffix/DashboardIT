@@ -186,9 +186,9 @@ export function ExchangesPage() {
 	return (
 		<div className="page-stack">
 			<PageIntro
-				eyebrow="Drugi modul w React"
+				eyebrow="Modul operacyjny"
 				title="Wymiana sprzetu"
-				description="Ten modul jest juz przepisany na React z filtrem miesiaca, wyszukiwarka, drawerem i finalizacja wymiany, ktora aktualizuje tez dane w monitoringu."
+				description="Plan wymian daje filtr miesiaca, wyszukiwarke, drawer i finalizacje, ktora odswieza tez dane w monitoringu."
 				actions={
 					<div className="page-actions">
 						<label className="search-input">

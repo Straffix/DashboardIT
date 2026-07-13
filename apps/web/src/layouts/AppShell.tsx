@@ -65,17 +65,17 @@ export function AppShell() {
 			<header className="app-shell__header">
 				<div>
 					<p className="app-shell__eyebrow">Dashboard IT</p>
-					<h1 className="app-shell__title">Dashboard IT w React</h1>
+					<h1 className="app-shell__title">Dashboard IT</h1>
 					<p className="app-shell__subtitle">
-						Strona startowa, widzety, kolejnosc modulow i preferencje interfejsu dzialaja juz po stronie
-						React. Legacy HTML i czysty JS zostaja tylko jako punkt odniesienia do dalszych porownan.
+						Glowne widoki, widzety, kolejnosc modulow i preferencje interfejsu dzialaja juz w jednej
+						aplikacji React. To jest docelowy panel pracy dla zespolu IT.
 					</p>
 					<div className="app-shell__status-row">
 						<span className={`status-pill status-pill--${dataSourceMode === 'api' ? 'ready' : 'warning'}`}>
-							Dane: {dataSourceMode === 'api' ? 'API' : 'local demo'}
+							Dane: {dataSourceMode === 'api' ? 'API' : 'lokalne dane'}
 						</span>
 						<span className={`status-pill status-pill--${activeUser ? 'active' : 'planned'}`}>
-							Sesja: {activeUser ? activeUser.fullName : 'brak'}
+							Sesja: {activeUser ? activeUser.fullName : 'brak aktywnej osoby'}
 						</span>
 						<span className="status-pill status-pill--neutral">Motyw: {theme}</span>
 					</div>

@@ -158,9 +158,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		return `${red}, ${green}, ${blue}`
 	}
 
-	function buildBookmarkStyle(colorHex) {
+	function applyBookmarkAccentTheme(element, colorHex) {
+		if (!element) return
 		const normalizedColor = normalizeBookmarkColor(colorHex)
-		return `--bookmark-accent:${normalizedColor};--bookmark-accent-rgb:${getBookmarkAccentRgb(normalizedColor)};`
+		element.style.setProperty('--bookmark-accent', normalizedColor)
+		element.style.setProperty('--bookmark-accent-rgb', getBookmarkAccentRgb(normalizedColor))
+	}
+
+	function applyBookmarkAccentThemes(scope = bookmarkList) {
+		if (!scope) return
+
+		scope.querySelectorAll('[data-bookmark-accent-color]').forEach(element => {
+			applyBookmarkAccentTheme(element, element.dataset.bookmarkAccentColor || BOOKMARK_DEFAULT_COLOR)
+		})
 	}
 
 	function setBookmarkColorValue(colorHex, fallbackColor = BOOKMARK_DEFAULT_COLOR) {
@@ -427,8 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					: `dashboard-bookmark-icon${initialFaviconUrl ? '' : ' is-fallback'}`
 
 				return `
-					<article class="dashboard-bookmark-tab" data-bookmark-id="${bookmark.id}">
-						<a class="dashboard-bookmark-tab-main" href="${safeHref}" rel="noopener noreferrer" title="${description}" style="${buildBookmarkStyle(bookmarkColor)}">
+					<article class="dashboard-bookmark-tab" data-bookmark-id="${bookmark.id}" data-bookmark-accent-color="${escapeHtml(bookmarkColor)}">
+						<a class="dashboard-bookmark-tab-main" href="${safeHref}" target="_blank" rel="noopener noreferrer" title="${description}">
 							<span class="${iconClassName}" data-bookmark-icon>
 								${customIconName ? buildBookmarkAssetIconMarkup(customIconName) : initialFaviconUrl ? `<img class="dashboard-bookmark-favicon" src="${initialFaviconUrl}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-bookmark-favicon data-favicon-sources="${fallbackFaviconSources}">` : ''}
 								<i class="app-icon bookmark-solid-full" aria-hidden="true"></i>
@@ -451,6 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			})
 			.join('') + addBookmarkMarkup
 
+		applyBookmarkAccentThemes()
 		enhanceBookmarkFavicons()
 	}
 

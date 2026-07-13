@@ -33,9 +33,9 @@ type DashboardListItem = {
 }
 
 const migrationLabelByState = {
-	ready: 'React dziala',
-	'in-progress': 'W trakcie',
-	planned: 'Zaplanowane',
+	ready: 'Gotowe',
+	'in-progress': 'W przygotowaniu',
+	planned: 'Planowane',
 } as const
 
 function getMonthKey(value: string) {
@@ -176,9 +176,9 @@ function buildCollaborationItems(
 		{
 			badge: activeUserName ? 'Sesja aktywna' : 'Brak sesji',
 			description: activeUserName
-				? `${activeUserName} moze od razu testowac obiady i notatki w kontekscie wybranego konta.`
-				: 'Wybierz osobe robocza, aby testowac flow lunchu i chatu bez logowania backendowego.',
-			title: activeUserName || 'Tryb podgladu',
+				? `${activeUserName} moze od razu pracowac z lunchami i notatkami w kontekscie wybranego konta.`
+				: 'Wybierz osobe robocza, aby pracowac z lunchami, notatkami i prywatnymi widgetami w kontekscie konkretnego konta.',
+			title: activeUserName || 'Bez aktywnej osoby',
 			tone: activeUserName ? 'active' : 'warning',
 		},
 		{
@@ -189,7 +189,7 @@ function buildCollaborationItems(
 		},
 		{
 			badge: lunchSummary,
-			description: 'Rezerwacje na dzis sa juz w React i korzystaja z tej samej sesji roboczej co pozostale moduly.',
+			description: 'Rezerwacje na dzis korzystaja z tej samej sesji roboczej co pozostale moduly dashboardu.',
 			title: 'Lunch dzisiaj',
 			tone: 'neutral',
 		},
@@ -353,7 +353,7 @@ export function DashboardHomePage() {
 			<PageIntro
 				eyebrow="Strona glowna"
 				title="Centrum operacyjne Dashboard IT"
-				description="To juz nie jest ekran migracyjny. Dashboard zbiera zywe dane z modulow React i przejmuje role startowej strony pracy dla zespolu IT."
+				description="Dashboard zbiera zywe dane z modulow, porzadkuje dzien pracy i daje jeden punkt startu dla zespolu IT."
 			/>
 
 			<WeatherWidget />
@@ -371,11 +371,11 @@ export function DashboardHomePage() {
 
 				<article className="data-card dashboard-home-session-card">
 					<p className="month-summary-card__label">Sesja robocza</p>
-					<strong>{activeUser ? activeUser.fullName : 'Tryb podgladu bez aktywnej osoby'}</strong>
+					<strong>{activeUser ? activeUser.fullName : 'Brak aktywnej osoby roboczej'}</strong>
 					<span>
 						{activeUser
 							? `${getRoleLabel(activeUser.role)} | login ${activeUser.login}`
-							: 'Wybierz osobe, aby testowac lunch i notatki w realnym kontekscie roboczym.'}
+							: 'Wybierz osobe, aby pracowac z lunchami, notatkami i zakladkami w kontekscie konkretnego konta.'}
 					</span>
 
 					<label className="search-input dashboard-home-session-picker">
@@ -390,7 +390,7 @@ export function DashboardHomePage() {
 									clearActiveUser()
 								}
 							}}>
-							<option value="">Tryb podgladu</option>
+							<option value="">Bez aktywnej osoby</option>
 							{users.map(user => (
 								<option key={user.id} value={user.id}>
 									{user.fullName}
