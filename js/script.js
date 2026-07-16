@@ -31,6 +31,7 @@
 			'./js/pages/dashboard/weather.js',
 			'./js/pages/dashboard/tasks/reminders.js',
 			'./js/pages/dashboard/tasks/planner.js',
+			'./js/pages/dashboard/top-widgets.js',
 			'./js/pages/dashboard/index.js',
 			'./js/pages/dashboard/bookmarks-enhanced.js',
 		],

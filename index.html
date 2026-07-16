@@ -21,71 +21,97 @@
             <div class="dashboard-orb dashboard-orb-right" aria-hidden="true"></div>
             <div class="dashboard-grid-glow" aria-hidden="true"></div>
             <section class="dashboard-topbar" aria-label="Panel informacji">
-                <section class="dashboard-widget weather-widget" aria-live="polite">
-                    <button type="button" class="weather-widget-trigger" id="weather-widget-trigger"
-                        aria-haspopup="dialog" aria-controls="weather-search-form" aria-expanded="false">
-                        <span class="weather-main">
-                            <span class="weather-icon" id="weather-icon">
-                                <i class="app-icon cloud-sun-solid-full"></i>
-                            </span>
-                            <span class="weather-summary">
-                                <span class="weather-temp" id="weather-temp">--°C</span>
-                                <span class="weather-location" id="weather-location">Warszawa</span>
-                            </span>
-                        </span>
-                        <span class="weather-meta">
-                            <span id="weather-description">Ładowanie danych...</span>
-                            <span id="weather-wind">Wiatr -- km/h</span>
-                        </span>
+                <section class="dashboard-top-widget-shell" id="dashboard-top-widget-shell" aria-label="Gorne widgety">
+                    <button type="button" class="dashboard-top-widget-edit-btn" id="dashboard-top-widget-edit-btn"
+                        aria-label="Edytuj gorne widgety" aria-haspopup="dialog"
+                        aria-controls="dashboard-top-widget-picker" aria-expanded="false">
+                        <i class="app-icon pen-solid-full" aria-hidden="true"></i>
                     </button>
-                    <form class="weather-search" id="weather-search-form">
-                        <label class="weather-search-label" for="weather-location-input">Wybierz miasto</label>
-                        <p class="weather-search-hint">Kliknij dzień, aby zobaczyć prognozę godzinową.</p>
-                        <div class="weather-search-forecast" id="weather-search-forecast" aria-live="polite"></div>
-                        <div class="weather-workday" id="weather-workday-panel"
-                            aria-label="Pogoda godzinowa dla wybranego dnia" hidden>
-                            <div class="weather-workday-head">
-                                <span class="weather-workday-label" id="weather-workday-label">Godzinowo</span>
-                                <span class="weather-workday-range" id="weather-workday-range">00:00-23:00</span>
-                            </div>
-                            <div class="weather-workday-track" id="weather-workday-track" aria-live="polite"></div>
-                        </div>
-                        <div class="weather-search-row">
-                            <input type="text" id="weather-location-input" placeholder="Wpisz miasto" value="Warszawa"
-                                autocomplete="off">
-                            <button type="submit" id="weather-search-btn">Zmień</button>
-                        </div>
-                        <button type="button" class="weather-location-btn" id="weather-current-location-btn">
-                            <i class="app-icon location-crosshairs-solid-full" aria-hidden="true"></i>
-                            <span>Użyj aktualnej lokalizacji</span>
-                        </button>
-                    </form>
-                </section>
 
-                <button type="button" class="dashboard-widget clock-widget" id="clock-widget-trigger"
-                    aria-label="Zegar lokalny" aria-haspopup="dialog" aria-controls="task-modal">
-                    <span class="clock-face" aria-hidden="true">
-                        <span class="clock-face-ring"></span>
-                        <span class="clock-face-glow"></span>
-                        <span class="clock-hand hour-hand" id="clock-hour"></span>
-                        <span class="clock-hand minute-hand" id="clock-minute"></span>
-                        <span class="clock-hand second-hand" id="clock-second"></span>
-                        <span class="clock-center-dot"></span>
-                    </span>
-                    <span class="clock-meta">
-                        <span class="clock-time" id="clock-digital">--:--</span>
-                        <span class="clock-date" id="clock-date">--</span>
-                        <span class="task-preview-list" id="task-preview-list" aria-live="polite"></span>
-                    </span>
-                </button>
+                    <section class="dashboard-top-widget-picker" id="dashboard-top-widget-picker" role="dialog"
+                        aria-modal="false" aria-labelledby="dashboard-top-widget-picker-title" hidden>
+                        <div class="dashboard-top-widget-picker-head">
+                            <p class="dashboard-top-widget-picker-kicker">Uklad</p>
+                            <h2 class="dashboard-top-widget-picker-title" id="dashboard-top-widget-picker-title">Wybierz
+                                widgety</h2>
+                        </div>
+                        <div class="dashboard-top-widget-picker-group">
+                            <p class="dashboard-top-widget-picker-label">Slot 1</p>
+                            <div class="dashboard-top-widget-picker-options" id="dashboard-top-widget-picker-primary"
+                                data-widget-slot="primary"></div>
+                        </div>
+                        <div class="dashboard-top-widget-picker-group">
+                            <p class="dashboard-top-widget-picker-label">Slot 2</p>
+                            <div class="dashboard-top-widget-picker-options" id="dashboard-top-widget-picker-secondary"
+                                data-widget-slot="secondary"></div>
+                        </div>
+                    </section>
+
+                    <div class="dashboard-top-widget-layout" id="dashboard-top-widget-layout">
+                        <div class="dashboard-top-widget-slot is-primary" id="dashboard-top-widget-primary-slot">
+                            <section class="dashboard-widget weather-widget" id="weather-widget" aria-live="polite">
+                                <button type="button" class="weather-widget-trigger" id="weather-widget-trigger"
+                                    aria-haspopup="dialog" aria-controls="weather-search-form" aria-expanded="false">
+                                    <span class="weather-main">
+                                        <span class="weather-icon weather-tone-partly has-weather-asset" id="weather-icon">
+                                            <img class="weather-asset-icon" src="./img/ico/weather%20icons/partly-cloudy-day.svg" alt="">
+                                        </span>
+                                        <span class="weather-summary">
+                                            <span class="weather-temp" id="weather-temp">--°C</span>
+                                            <span class="weather-location" id="weather-location">Warszawa</span>
+                                        </span>
+                                    </span>
+                                    <span class="weather-meta">
+                                        <span id="weather-description">Ładowanie danych...</span>
+                                        <span id="weather-wind">Wiatr -- km/h</span>
+                                    </span>
+                                </button>
+                                <form class="weather-search" id="weather-search-form">
+                                    <label class="weather-search-label" for="weather-location-input">Wybierz
+                                        miasto</label>
+                                    <p class="weather-search-hint">Kliknij dzień, aby zobaczyć prognozę godzinową.</p>
+                                    <div class="weather-search-forecast" id="weather-search-forecast"
+                                        aria-live="polite"></div>
+                                    <div class="weather-workday" id="weather-workday-panel"
+                                        aria-label="Pogoda godzinowa dla wybranego dnia" hidden>
+                                        <div class="weather-workday-head">
+                                            <span class="weather-workday-label"
+                                                id="weather-workday-label">Godzinowo</span>
+                                            <span class="weather-workday-range"
+                                                id="weather-workday-range">00:00-23:00</span>
+                                        </div>
+                                        <div class="weather-workday-track" id="weather-workday-track"
+                                            aria-live="polite"></div>
+                                    </div>
+                                    <div class="weather-search-row">
+                                        <input type="text" id="weather-location-input" placeholder="Wpisz miasto"
+                                            value="Warszawa" autocomplete="off">
+                                        <button type="submit" id="weather-search-btn">Zmień</button>
+                                    </div>
+                                    <button type="button" class="weather-location-btn"
+                                        id="weather-current-location-btn">
+                                        <i class="app-icon location-crosshairs-solid-full" aria-hidden="true"></i>
+                                        <span>Użyj aktualnej lokalizacji</span>
+                                    </button>
+                                </form>
+                            </section>
+                        </div>
+                        <div class="dashboard-top-widget-divider" id="dashboard-top-widget-divider" hidden
+                            aria-hidden="true"></div>
+                        <div class="dashboard-top-widget-slot is-secondary" id="dashboard-top-widget-secondary-slot"
+                            hidden></div>
+                    </div>
+
+                    <div class="dashboard-top-widget-stash" id="dashboard-top-widget-stash" hidden></div>
+                </section>
+                <div class="dashboard-top-profile-slot app-user-panel-slot" id="dashboard-top-profile-slot"
+                    aria-label="Panel użytkownika"></div>
             </section>
 
             <header class="dashboard-header">
                 <div class="dashboard-header-copy">
                     <p class="dashboard-kicker">Centrum operacyjne IT</p>
                     <h1>IT Management Dashboard</h1>
-                    <p class="dashboard-subtitle">Wybierz moduł operacyjny i przejdź do pracy w odpowiednim obszarze.
-                    </p>
                 </div>
                 <button type="button" class="dashboard-scroll-cue" id="dashboard-scroll-cue"
                     aria-label="Przewiń do modułów dashboardu">
@@ -162,7 +188,7 @@
                             </div>
                             <div class="card-copy">
                                 <span>Rezerwacja Obiadów</span>
-                                <small>Sloty od 11:00 do 15:00, lista zapisów i lokalny limit osób na każdy
+                                <small>Lista zapisów na obiady i lokalny limit osób na każdy
                                     termin.</small>
                             </div>
                         </article>
@@ -202,7 +228,8 @@
             </section>
 
             <footer class="main-footer">
-                <div class="dashboard-user-summary" id="dashboard-user-summary">
+                <div class="dashboard-footer-separator" aria-hidden="true"></div>
+                <div class="dashboard-user-summary" id="dashboard-user-summary" aria-live="polite">
                     <span>Zarejestrowanych użytkowników: <strong id="dashboard-registered-users-count">0</strong></span>
                     <span class="dashboard-user-summary-separator" aria-hidden="true">|</span>
                     <span>Aktywni użytkownicy: <span class="dashboard-active-users-list"
@@ -360,6 +387,8 @@
 
                     </div>
                     <div class="dashboard-bookmark-form-actions">
+                        <button type="button" class="dashboard-bookmark-secondary-btn is-danger"
+                            id="dashboard-bookmark-delete-btn" hidden>Usuń zakładkę</button>
                         <button type="button" class="dashboard-bookmark-secondary-btn"
                             id="dashboard-bookmark-cancel-btn">Anuluj</button>
                         <button type="submit" class="dashboard-bookmark-primary-btn"

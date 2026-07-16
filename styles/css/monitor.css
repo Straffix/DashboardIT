@@ -424,7 +424,7 @@ body.theme-dark:not(.dashboard-page) .workspace-backup-dock button.workspace-bac
   border: 1px solid var(--border);
   background: var(--bg-panel);
   color: var(--primary);
-  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-family: var(--font-ui-panels);
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.02em;

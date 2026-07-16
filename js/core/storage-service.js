@@ -25,12 +25,15 @@
 	const THEME_FALLBACK_USER_KEY_PREFIX = `${THEME_FALLBACK_KEY}::user::`
 	const DASHBOARD_MENU_ORDER_GUEST_KEY = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::guest`
 	const DASHBOARD_MENU_ORDER_USER_KEY_PREFIX = `${PREFERENCE_KEYS.DASHBOARD_MENU_ORDER}::user::`
+	const DASHBOARD_TOP_WIDGETS_GUEST_KEY = `${PREFERENCE_KEYS.DASHBOARD_TOP_WIDGETS}::guest`
+	const DASHBOARD_TOP_WIDGETS_USER_KEY_PREFIX = `${PREFERENCE_KEYS.DASHBOARD_TOP_WIDGETS}::user::`
 	// LIVE_SERVER_FALLBACK_START
 	const LIVE_SERVER_BROWSER_RESET_MARKER_PREFIX = 'dashboard_live_server_fallback_reset::'
 	const LIVE_SERVER_BROWSER_RESET_KEY_PREFIXES = [
 		THEME_USER_KEY_PREFIX,
 		THEME_FALLBACK_USER_KEY_PREFIX,
 		DASHBOARD_MENU_ORDER_USER_KEY_PREFIX,
+		DASHBOARD_TOP_WIDGETS_USER_KEY_PREFIX,
 		'dashboard_app_remote_reset::',
 	]
 	// LIVE_SERVER_FALLBACK_END
@@ -50,11 +53,13 @@
 	const PROTECTED_WRITE_KEYS = new Set([
 		...REMOTE_SHARED_KEYS,
 		DASHBOARD_MENU_ORDER_GUEST_KEY,
+		DASHBOARD_TOP_WIDGETS_GUEST_KEY,
 		PREFERENCE_KEYS.DASHBOARD_MENU_ORDER,
+		PREFERENCE_KEYS.DASHBOARD_TOP_WIDGETS,
 		PREFERENCE_KEYS.DASHBOARD_TASKS,
 		PREFERENCE_KEYS.DASHBOARD_TASK_REMINDERS,
 	])
-	const PROTECTED_WRITE_KEY_PREFIXES = [DASHBOARD_MENU_ORDER_USER_KEY_PREFIX]
+	const PROTECTED_WRITE_KEY_PREFIXES = [DASHBOARD_MENU_ORDER_USER_KEY_PREFIX, DASHBOARD_TOP_WIDGETS_USER_KEY_PREFIX]
 	const PUBLIC_WRITE_KEYS = new Set([
 		STORAGE_KEYS.DASHBOARD_ACTIVE_USERS,
 		STORAGE_KEYS.NOTES_ACTIVE_VIEWERS,
@@ -206,6 +211,7 @@
 				THEME_GUEST_KEY,
 				THEME_FALLBACK_GUEST_KEY,
 				DASHBOARD_MENU_ORDER_GUEST_KEY,
+				DASHBOARD_TOP_WIDGETS_GUEST_KEY,
 			])
 			const dynamicKeys = []
 
@@ -615,6 +621,9 @@
 		getDashboardMenuOrderStorageKey() {
 			return this.getScopedPreferenceKey(DASHBOARD_MENU_ORDER_GUEST_KEY, DASHBOARD_MENU_ORDER_USER_KEY_PREFIX)
 		},
+		getDashboardTopWidgetsStorageKey() {
+			return this.getScopedPreferenceKey(DASHBOARD_TOP_WIDGETS_GUEST_KEY, DASHBOARD_TOP_WIDGETS_USER_KEY_PREFIX)
+		},
 		getTheme() {
 			const scopedKey = this.getThemeStorageKey()
 			const scopedTheme = storageService.getText(scopedKey, '')
@@ -668,6 +677,24 @@
 		},
 		saveDashboardMenuOrder(menuOrder) {
 			storageService.writeJson(this.getDashboardMenuOrderStorageKey(), Array.isArray(menuOrder) ? menuOrder : [])
+		},
+		getDashboardTopWidgets() {
+			const scopedKey = this.getDashboardTopWidgetsStorageKey()
+			const scopedWidgets = storageService.readJson(scopedKey, null)
+			if (scopedWidgets && typeof scopedWidgets === 'object' && !Array.isArray(scopedWidgets)) {
+				return scopedWidgets
+			}
+
+			if (scopedKey === DASHBOARD_TOP_WIDGETS_GUEST_KEY) {
+				const legacyWidgets = storageService.readJson(PREFERENCE_KEYS.DASHBOARD_TOP_WIDGETS, null)
+				return legacyWidgets && typeof legacyWidgets === 'object' && !Array.isArray(legacyWidgets) ? legacyWidgets : null
+			}
+
+			return null
+		},
+		saveDashboardTopWidgets(layout) {
+			const normalizedLayout = layout && typeof layout === 'object' && !Array.isArray(layout) ? layout : {}
+			storageService.writeJson(this.getDashboardTopWidgetsStorageKey(), normalizedLayout)
 		},
 		getDashboardTasks() {
 			const tasks = storageService.readJson(PREFERENCE_KEYS.DASHBOARD_TASKS, [])

@@ -116,6 +116,7 @@
 
 		const saveTasks = () => {
 			preferencesService?.saveDashboardTasks?.(tasks) || storageService?.writeJson?.(taskConfig.storageKey, tasks)
+			window.dispatchEvent(new CustomEvent('dashboard:tasks-updated'))
 		}
 
 		const saveRemindedTasks = () => {
@@ -419,7 +420,7 @@
 		}
 
 		const init = () => {
-			if (!clockWidgetTrigger || !taskModal || !taskForm) return false
+			if (!taskModal || !taskForm) return false
 
 			storageService?.remove?.(legacyAutoclearKey)
 			tasks = loadTasks()
@@ -429,7 +430,7 @@
 			setDefaultTaskDate(selectedTaskDate)
 			syncTaskUi()
 
-			clockWidgetTrigger.addEventListener('click', handleTaskPlannerOpen)
+			clockWidgetTrigger?.addEventListener('click', handleTaskPlannerOpen)
 
 			taskModal.addEventListener('click', event => {
 				if (event.target.closest('[data-task-close]')) {

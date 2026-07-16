@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const bookmarkIconInput = document.getElementById('dashboard-bookmark-icon')
 	const bookmarkIconGrid = document.getElementById('dashboard-bookmark-icon-grid')
 	const bookmarkSubmitBtn = document.getElementById('dashboard-bookmark-submit-btn')
+	const bookmarkDeleteBtn = document.getElementById('dashboard-bookmark-delete-btn')
 	const bookmarkModalTitle = document.getElementById('dashboard-bookmark-modal-title')
 	const bookmarkCancelBtn = document.getElementById('dashboard-bookmark-cancel-btn')
 
@@ -340,6 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			bookmarkSubmitBtn.textContent = 'Zapisz zakladke'
 		}
 
+		if (bookmarkDeleteBtn) {
+			bookmarkDeleteBtn.hidden = true
+		}
+
 		setBookmarkColorValue(getCurrentUserDefaultBookmarkColor())
 		setSelectedBookmarkIcon('')
 	}
@@ -362,6 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			if (bookmarkSubmitBtn) {
 				bookmarkSubmitBtn.textContent = 'Zapisz zmiany'
+			}
+
+			if (bookmarkDeleteBtn) {
+				bookmarkDeleteBtn.hidden = false
 			}
 		}
 
@@ -452,9 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
 							<button type="button" class="dashboard-bookmark-icon-btn" data-bookmark-action="edit" data-bookmark-id="${bookmark.id}" aria-label="Edytuj zakladke">
 								<i class="app-icon pen-solid-full"></i>
 							</button>
-							<button type="button" class="dashboard-bookmark-icon-btn is-danger" data-bookmark-action="delete" data-bookmark-id="${bookmark.id}" aria-label="Usun zakladke">
-								<i class="app-icon trash-solid-full"></i>
-							</button>
 						</div>
 					</article>
 				`
@@ -478,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		return bookmarks.find(bookmark => bookmark.id === bookmarkId)
 	}
 
-	async function handleBookmarkDelete(bookmarkId) {
+	async function handleBookmarkDelete(bookmarkId, { closeModalAfterDelete = false } = {}) {
 		const bookmark = getBookmarkById(bookmarkId)
 		if (!bookmark) return
 
@@ -490,6 +496,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 
 		if (!shouldDelete) return
+
+		if (closeModalAfterDelete) {
+			closeBookmarkModal()
+		}
 
 		bookmarks = bookmarks.filter(entry => entry.id !== bookmarkId)
 		saveBookmarks()
@@ -510,6 +520,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			return
 		}
 
+		const bookmarkLink = event.target.closest('.dashboard-bookmark-tab-main')
+		if (bookmarkLink && event.detail > 0) {
+			window.setTimeout(() => bookmarkLink.blur(), 0)
+			return
+		}
+
 		const actionButton = event.target.closest('[data-bookmark-action]')
 		if (!actionButton) return
 
@@ -518,10 +534,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (actionButton.dataset.bookmarkAction === 'edit') {
 			handleBookmarkEdit(bookmarkId)
-		}
-
-		if (actionButton.dataset.bookmarkAction === 'delete') {
-			void handleBookmarkDelete(bookmarkId)
 		}
 	})
 
@@ -532,6 +544,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	})
 
 	bookmarkCancelBtn?.addEventListener('click', closeBookmarkModal)
+	bookmarkDeleteBtn?.addEventListener('click', () => {
+		if (!editingBookmarkId) return
+
+		void handleBookmarkDelete(editingBookmarkId, { closeModalAfterDelete: true })
+	})
 
 	const syncBookmarkColorTrigger = () => {
 		setBookmarkColorValue(bookmarkColorInput.value || getCurrentUserDefaultBookmarkColor(), getCurrentUserDefaultBookmarkColor())
