@@ -605,7 +605,10 @@ ul {
 
 .weather-widget-card__summary {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  justify-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  grid-template-columns: auto fit-content(240px);
   gap: 18px;
   align-items: center;
   padding: 22px;
@@ -3008,6 +3011,8 @@ ul {
   }
 
   .weather-widget-card__summary {
+    justify-self: stretch;
+    width: 100%;
     grid-template-columns: 1fr;
   }
 

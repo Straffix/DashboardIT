@@ -11,7 +11,7 @@
 		{ id: 'clock', label: 'Zegar', icon: 'clock-solid-full' },
 		{ id: 'calendar', label: 'Kalendarz', icon: 'calendar-days-solid-full' },
 		{ id: 'tasks', label: 'Zadania', icon: 'check-solid-full' },
-		{ id: 'devices', label: 'Domena', icon: 'desktop-solid-full' },
+		{ id: 'devices', label: 'Domena', icon: 'laptop-solid-full' },
 		{ id: 'notes', label: 'Notatnik', icon: 'comment-solid-full' },
 	]
 
@@ -331,12 +331,17 @@
 			}
 		}
 
-		const createCustomWidgetMarkup = (widgetId, snapshot, { icon, action, route = '' } = {}) => {
+		const createCustomWidgetMarkup = (widgetId, snapshot, { icon, action, hideLabel = false, route = '' } = {}) => {
 			const tagName = action ? 'button' : 'article'
 			const actionAttributes = action
 				? ` data-top-widget-action="${escapeHtml(action)}"${route ? ` data-top-widget-route="${escapeHtml(route)}"` : ''}`
 				: ''
-			const ariaLabel = action ? ` aria-label="${escapeHtml(snapshot.label)}"` : ''
+			const accessibleLabel = snapshot.ariaLabel || snapshot.label || snapshot.value || 'Widget'
+			const ariaLabel = action ? ` aria-label="${escapeHtml(accessibleLabel)}"` : ''
+			const labelMarkup =
+				hideLabel || !snapshot.label
+					? ''
+					: `<span class="dashboard-top-mini-widget-label">${escapeHtml(snapshot.label)}</span>`
 
 			return `
 				<${tagName}
@@ -347,7 +352,7 @@
 						<i class="app-icon ${escapeHtml(icon)}"></i>
 					</span>
 					<span class="dashboard-top-mini-widget-copy">
-						<span class="dashboard-top-mini-widget-label">${escapeHtml(snapshot.label)}</span>
+						${labelMarkup}
 						<strong class="dashboard-top-mini-widget-value">${escapeHtml(snapshot.value)}</strong>
 						<span class="dashboard-top-mini-widget-meta">${escapeHtml(snapshot.meta)}</span>
 					</span>
@@ -412,7 +417,8 @@
 			createElementFromHtml(
 				createCustomWidgetMarkup('devices', getDevicesWidgetSnapshot(), {
 					action: 'route',
-					icon: 'desktop-solid-full',
+					hideLabel: true,
+					icon: 'laptop-solid-full',
 					route: widgetRoutes.devices,
 				})
 			)
