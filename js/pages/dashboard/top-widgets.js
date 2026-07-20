@@ -38,6 +38,10 @@
 		return template.content.firstElementChild
 	}
 
+	const layoutsMatch = (leftLayout, rightLayout) =>
+		String(leftLayout?.primary || '') === String(rightLayout?.primary || '') &&
+		String(leftLayout?.secondary || '') === String(rightLayout?.secondary || '')
+
 	const normalizeWidgetId = widgetId => {
 		const normalizedWidgetId = String(widgetId || '').trim()
 		return WIDGET_IDS.has(normalizedWidgetId) ? normalizedWidgetId : ''
@@ -157,6 +161,186 @@
 			clock: [],
 		}
 
+		let widgetTransitionToken = 0
+
+		const prefersReducedMotion = () =>
+			typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+		const cancelElementAnimations = element => {
+			if (!(element instanceof Element) || typeof element.getAnimations !== 'function') return
+
+			;[element, ...element.querySelectorAll('*')].forEach(node => {
+				node.getAnimations().forEach(animation => animation.cancel())
+			})
+		}
+
+		const clearLayoutTransitionArtifacts = () => {
+			dashboardTopWidgetShell.classList.remove('is-widget-transitioning')
+			cancelElementAnimations(dashboardTopWidgetLayout)
+			cancelElementAnimations(dashboardTopWidgetPrimarySlot)
+			cancelElementAnimations(dashboardTopWidgetSecondarySlot)
+			cancelElementAnimations(dashboardTopWidgetDivider)
+			dashboardTopWidgetShell
+				.querySelectorAll('.dashboard-top-widget-layout-ghost')
+				.forEach(ghostElement => ghostElement.remove())
+		}
+
+		const animateMountedSlots = () => {
+			;[dashboardTopWidgetPrimarySlot, dashboardTopWidgetSecondarySlot].forEach((slotElement, index) => {
+				if (slotElement.hidden) return
+
+				const widgetElement = slotElement.firstElementChild
+				if (!(widgetElement instanceof Element)) return
+
+				cancelElementAnimations(widgetElement)
+				widgetElement.animate(
+					[
+						{
+							opacity: 0,
+							transform: 'translateY(10px) scale(0.985)',
+							filter: 'blur(4px)',
+						},
+						{
+							opacity: 1,
+							transform: 'translateY(0) scale(1)',
+							filter: 'blur(0)',
+						},
+					],
+					{
+						duration: 280,
+						delay: index * 36,
+						easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+						fill: 'both',
+					},
+				)
+			})
+
+			if (!dashboardTopWidgetDivider.hidden) {
+				cancelElementAnimations(dashboardTopWidgetDivider)
+				dashboardTopWidgetDivider.animate(
+					[
+						{
+							opacity: 0,
+							transform: 'scaleY(0.65)',
+						},
+						{
+							opacity: 1,
+							transform: 'scaleY(1)',
+						},
+					],
+					{
+						duration: 240,
+						delay: 48,
+						easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+						fill: 'both',
+					},
+				)
+			}
+		}
+
+		const sanitizeSnapshotClone = snapshotRoot => {
+			if (!(snapshotRoot instanceof Element)) return snapshotRoot
+
+			;[snapshotRoot, ...snapshotRoot.querySelectorAll('*')].forEach(node => {
+				node.removeAttribute('id')
+				node.removeAttribute('for')
+				node.setAttribute('aria-hidden', 'true')
+			})
+
+			return snapshotRoot
+		}
+
+		const animateLayoutMutation = mutate => {
+			if (prefersReducedMotion()) {
+				clearLayoutTransitionArtifacts()
+				mutate()
+				return
+			}
+
+			const previousRect = dashboardTopWidgetLayout.getBoundingClientRect()
+			if (previousRect.width < 1 || previousRect.height < 1) {
+				clearLayoutTransitionArtifacts()
+				mutate()
+				return
+			}
+
+			const shellRect = dashboardTopWidgetShell.getBoundingClientRect()
+			const snapshotElement = document.createElement('div')
+			snapshotElement.className = 'dashboard-top-widget-layout-ghost'
+			snapshotElement.setAttribute('aria-hidden', 'true')
+			snapshotElement.style.left = `${Math.round(previousRect.left - shellRect.left)}px`
+			snapshotElement.style.top = `${Math.round(previousRect.top - shellRect.top)}px`
+			snapshotElement.style.width = `${Math.round(previousRect.width)}px`
+			snapshotElement.style.height = `${Math.round(previousRect.height)}px`
+			snapshotElement.appendChild(sanitizeSnapshotClone(dashboardTopWidgetLayout.cloneNode(true)))
+
+			const transitionToken = ++widgetTransitionToken
+			clearLayoutTransitionArtifacts()
+			dashboardTopWidgetShell.appendChild(snapshotElement)
+			mutate()
+			dashboardTopWidgetShell.classList.add('is-widget-transitioning')
+
+			const nextRect = dashboardTopWidgetLayout.getBoundingClientRect()
+			const deltaX = previousRect.left - nextRect.left
+			const deltaY = previousRect.top - nextRect.top
+			const scaleX = previousRect.width / Math.max(nextRect.width, 1)
+			const scaleY = previousRect.height / Math.max(nextRect.height, 1)
+
+			cancelElementAnimations(dashboardTopWidgetLayout)
+			dashboardTopWidgetLayout.animate(
+				[
+					{
+						opacity: 0.76,
+						transform: `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`,
+					},
+					{
+						opacity: 1,
+						transform: 'translate(0, 0) scale(1, 1)',
+					},
+				],
+				{
+					duration: 320,
+					easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+					fill: 'both',
+				},
+			)
+
+			cancelElementAnimations(snapshotElement)
+			snapshotElement
+				.animate(
+					[
+						{
+							opacity: 1,
+							transform: 'translate(0, 0) scale(1, 1)',
+							filter: 'blur(0)',
+						},
+						{
+							opacity: 0,
+							transform: 'translateY(-8px) scale(0.985)',
+							filter: 'blur(7px)',
+						},
+					],
+					{
+						duration: 240,
+						easing: 'ease-out',
+						fill: 'both',
+					},
+				)
+				.finished
+				.catch(() => null)
+				.finally(() => {
+					if (snapshotElement.isConnected) {
+						snapshotElement.remove()
+					}
+
+					if (transitionToken === widgetTransitionToken) {
+						dashboardTopWidgetShell.classList.remove('is-widget-transitioning')
+					}
+				})
+
+			animateMountedSlots()
+		}
+
 		const getLayoutStorageKeys = () => {
 			const scopedKey = preferencesService?.getDashboardTopWidgetsStorageKey?.()
 			return new Set([topWidgetsStorageKey, scopedKey].filter(Boolean))
@@ -167,20 +351,24 @@
 			return scopedKey ? `${scopedKey}::quick-note` : topWidgetNoteStorageKey
 		}
 
-		const loadLayout = () => {
-			const savedLayout = preferencesService?.getDashboardTopWidgets?.()
-			if (savedLayout && typeof savedLayout === 'object' && !Array.isArray(savedLayout)) {
-				return normalizeLayout(savedLayout)
+		const readStoredTopWidgetPreferences = () => {
+			const savedPreferences = preferencesService?.getDashboardTopWidgets?.()
+			if (savedPreferences && typeof savedPreferences === 'object' && !Array.isArray(savedPreferences)) {
+				return savedPreferences
 			}
 
 			for (const storageKey of getLayoutStorageKeys()) {
-				const storedLayout = storageService?.readJson?.(storageKey, null)
-				if (storedLayout && typeof storedLayout === 'object' && !Array.isArray(storedLayout)) {
-					return normalizeLayout(storedLayout)
+				const storedPreferences = storageService?.readJson?.(storageKey, null)
+				if (storedPreferences && typeof storedPreferences === 'object' && !Array.isArray(storedPreferences)) {
+					return storedPreferences
 				}
 			}
 
-			return normalizeLayout(DEFAULT_LAYOUT)
+			return null
+		}
+
+		const loadLayout = () => {
+			return normalizeLayout(readStoredTopWidgetPreferences() || DEFAULT_LAYOUT)
 		}
 
 		const saveLayout = (layout = state.layout) => {
@@ -684,40 +872,50 @@
 			}
 		}
 
-		function renderLayout() {
+		function renderLayout({ animate = false } = {}) {
 			dynamicRefs.calendar = []
 			dynamicRefs.clock = []
 
-			const { primary, secondary } = state.layout
-			const hasSecondary = Boolean(secondary)
-			const usesWeather = primary === 'weather' || secondary === 'weather'
+			const applyLayout = () => {
+				const { primary, secondary } = state.layout
+				const hasSecondary = Boolean(secondary)
+				const usesWeather = primary === 'weather' || secondary === 'weather'
 
-			if (!usesWeather) {
-				weatherController?.closeEditor?.()
+				if (!usesWeather) {
+					weatherController?.closeEditor?.()
+				}
+
+				dashboardTopWidgetLayout.classList.toggle('has-secondary', hasSecondary)
+				dashboardTopWidgetLayout.classList.toggle('is-single-clock', !hasSecondary && primary === 'clock')
+				dashboardTopWidgetSecondarySlot.hidden = !hasSecondary
+				dashboardTopWidgetDivider.hidden = !hasSecondary
+				dashboardTopWidgetShell.classList.toggle('has-secondary', hasSecondary)
+				dashboardTopWidgetShell.classList.toggle('is-single-clock', !hasSecondary && primary === 'clock')
+
+				mountWidgetInSlot(dashboardTopWidgetPrimarySlot, primary)
+
+				if (hasSecondary) {
+					mountWidgetInSlot(dashboardTopWidgetSecondarySlot, secondary)
+				} else {
+					dashboardTopWidgetSecondarySlot.innerHTML = ''
+					dashboardTopWidgetSecondarySlot.dataset.widgetId = ''
+				}
+
+				if (!usesWeather) {
+					parkWeatherWidget()
+				}
+
+				renderPickerOptions()
+				refreshDynamicWidgets()
 			}
 
-			dashboardTopWidgetLayout.classList.toggle('has-secondary', hasSecondary)
-			dashboardTopWidgetLayout.classList.toggle('is-single-clock', !hasSecondary && primary === 'clock')
-			dashboardTopWidgetSecondarySlot.hidden = !hasSecondary
-			dashboardTopWidgetDivider.hidden = !hasSecondary
-			dashboardTopWidgetShell.classList.toggle('has-secondary', hasSecondary)
-			dashboardTopWidgetShell.classList.toggle('is-single-clock', !hasSecondary && primary === 'clock')
-
-			mountWidgetInSlot(dashboardTopWidgetPrimarySlot, primary)
-
-			if (hasSecondary) {
-				mountWidgetInSlot(dashboardTopWidgetSecondarySlot, secondary)
-			} else {
-				dashboardTopWidgetSecondarySlot.innerHTML = ''
-				dashboardTopWidgetSecondarySlot.dataset.widgetId = ''
+			if (animate) {
+				animateLayoutMutation(applyLayout)
+				return
 			}
 
-			if (!usesWeather) {
-				parkWeatherWidget()
-			}
-
-			renderPickerOptions()
-			refreshDynamicWidgets()
+			clearLayoutTransitionArtifacts()
+			applyLayout()
 		}
 
 		const renderPickerOptions = () => {
@@ -795,9 +993,14 @@
 				}
 			}
 
-			state.layout = normalizeLayout(nextLayout)
+			const normalizedNextLayout = normalizeLayout(nextLayout)
+			if (layoutsMatch(state.layout, normalizedNextLayout)) {
+				return
+			}
+
+			state.layout = normalizedNextLayout
 			saveLayout(state.layout)
-			renderLayout()
+			renderLayout({ animate: true })
 		}
 
 		const handleWidgetAction = event => {

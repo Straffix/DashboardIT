@@ -30,6 +30,210 @@ document.addEventListener('DOMContentLoaded', () => {
 	const authService = window.AppServices?.authService
 	const escapeHtml = AppUtils.escapeHtml
 	const BOOKMARK_DEFAULT_COLOR = '#94a3b8'
+	const BOOKMARK_PICKER_NEUTRAL_COLOR = '#64748b'
+	const ROOT_BOOKMARK_ICON_FILES = Object.freeze([
+		'arrow-down-solid-full',
+		'arrow-left-solid-full',
+		'arrow-right-from-bracket-solid-full',
+		'backpack-icon',
+		'ban-solid-full',
+		'bookmark-solid-full',
+		'box-solid-full',
+		'briefcase-solid-full',
+		'bug-solid-full',
+		'calendar-check-solid-full',
+		'calendar-day-solid-full',
+		'check-solid-full',
+		'chevron-down-solid-full',
+		'chevron-left-solid-full',
+		'chevron-right-solid-full',
+		'circle-check-solid-full',
+		'circle-info-solid-full',
+		'circle-xmark-solid-full',
+		'clipboard-list-solid-full',
+		'clock-solid-full',
+		'comment-solid-full',
+		'compress-solid-full',
+		'computer-mouse-solid-full',
+		'desktop-solid-full',
+		'expand-solid-full',
+		'facebook-brands-solid-full',
+		'facebook-f-brands-solid-full',
+		'file-excel-solid-full',
+		'file-import-solid-full',
+		'floppy-disk-solid-full',
+		'folder-network-custom',
+		'grip-solid-full',
+		'headset-solid-full',
+		'image-solid-full',
+		'instagram-brands-solid-full',
+		'keyboard-solid-full',
+		'laptop-solid-full',
+		'layer-group-solid-full',
+		'location-crosshairs-solid-full',
+		'lock-solid-full',
+		'magnifying-glass-solid-full',
+		'minus-solid-full',
+		'moon-solid-full',
+		'panorama-solid-full',
+		'paper-plane-solid-full',
+		'pen-clip-solid-full',
+		'pen-solid-full',
+		'pen-to-square-solid-full',
+		'plus-solid-full',
+		'print-solid-full',
+		'report-spark-custom',
+		'right-left-solid-full',
+		'right-to-bracket-solid-full',
+		'rotate-right-solid-full',
+		'shield-halved-solid-full',
+		'square-x-twitter-brands-solid-full',
+		'store-solid-full',
+		'sun-solid-full',
+		'table-cells-solid-full',
+		'team-space-custom',
+		'thumbtack-solid-full',
+		'trash-can-solid-full',
+		'trash-solid-full',
+		'triangle-exclamation-solid-full',
+		'user-gear-solid-full',
+		'user-plus-solid-full',
+		'user-solid-full',
+		'utensils-solid-full',
+		'vertical-mouse-side-icon',
+		'xmark-solid-full',
+	])
+	const NESTED_BOOKMARK_ICON_FILES = Object.freeze([
+		'apple',
+		'astroid',
+		'blocks',
+		'book',
+		'bookmark',
+		'book-open-solid-full',
+		'building',
+		'bullhorn-solid-full',
+		'calendar-days-solid-full',
+		'chart-column-decreasing',
+		'chart-line-solid-full',
+		'chart-pie-solid-full',
+		'circle-plus-solid-full',
+		'circle-user',
+		'cloudscale-brands-solid-full',
+		'cloud-solid-full',
+		'computer',
+		'confluence-brands-solid-full',
+		'database-solid-full',
+		'diagram-project-solid-full',
+		'envelope-solid-full',
+		'file-pdf-solid-full',
+		'file-powerpoint-solid-full',
+		'file-word-solid-full',
+		'folder-open-solid-full',
+		'folder-solid-full',
+		'gear-solid-full',
+		'gratipay-brands-solid-full',
+		'heart',
+		'house-solid-full',
+		'key-round',
+		'key-solid-full',
+		'link',
+		'link-2',
+		'link-solid-full',
+		'lock',
+		'mail',
+		'map-pin-minus-inside',
+		'monitor',
+		'network-wired-solid-full',
+		'openai-brands-solid-full',
+		'paperclip',
+		'presentation',
+		'readme-brands-solid-full',
+		'rss',
+		'screen-share',
+		'server-solid-full',
+		'settings',
+		'settings-2',
+		'share-2',
+		'shield',
+		'shield-half',
+		'square-arrow-out-up-right',
+		'square-web-awesome-brands-solid-full',
+		'star',
+		'substack-brands-solid-full',
+		'table-cells-large-solid-full',
+		'table-solid-full',
+		'threema-brands-solid-full',
+		'ticket-simple-solid-full',
+		'trash-2',
+		'user-group-solid-full',
+		'users-solid-full',
+		'wpforms-brands-solid-full',
+		'wrench',
+		'youtube-brands-solid-full',
+	])
+	const BOOKMARK_ICON_COLOR_PALETTE = Object.freeze([
+		'#0f766e',
+		'#2563eb',
+		'#7c3aed',
+		'#ea580c',
+		'#dc2626',
+		'#0891b2',
+		'#15803d',
+		'#d97706',
+		'#4f46e5',
+		'#0ea5e9',
+		'#ec4899',
+		'#475569',
+	])
+	const BOOKMARK_ICON_METADATA_OVERRIDES = Object.freeze({
+		'bookmark-solid-full': { label: 'Zakladka', hint: 'skrot', colorHex: '#8b5cf6' },
+		'bookmarks__bookmark-solid-full': { label: 'Zakladka Alt', hint: 'bookmarks icons', colorHex: '#a855f7' },
+		'book-open-solid-full': { label: 'Baza Wiedzy', hint: 'instrukcje', colorHex: '#0f766e' },
+		'file-excel-solid-full': { label: 'Excel', hint: 'arkusze', colorHex: '#15803d' },
+		'file-word-solid-full': { label: 'Word', hint: 'dokumenty', colorHex: '#2563eb' },
+		'file-pdf-solid-full': { label: 'PDF', hint: 'instrukcje', colorHex: '#dc2626' },
+		'file-powerpoint-solid-full': { label: 'Prezentacja', hint: 'slajdy', colorHex: '#ea580c' },
+		'cloud-solid-full': { label: 'Cloud', hint: 'chmura', colorHex: '#0ea5e9' },
+		'confluence-brands-solid-full': { label: 'Confluence', hint: 'wiki', colorHex: '#1d4ed8' },
+		'readme-brands-solid-full': { label: 'Readme', hint: 'dokumentacja', colorHex: '#2563eb' },
+		'openai-brands-solid-full': { label: 'OpenAI', hint: 'ai', colorHex: '#0f766e' },
+		'ticket-simple-solid-full': { label: 'Ticket', hint: 'zgloszenie', colorHex: '#ef4444' },
+		'desktop-solid-full': { label: 'Komputer', hint: 'stanowisko', colorHex: '#2563eb' },
+		'monitor': { label: 'Monitor', hint: 'ekran', colorHex: '#0f766e' },
+		'server-solid-full': { label: 'Serwer', hint: 'infrastruktura', colorHex: '#475569' },
+		'database-solid-full': { label: 'Baza Danych', hint: 'system', colorHex: '#0891b2' },
+		'network-wired-solid-full': { label: 'Siec', hint: 'lan vpn', colorHex: '#4f46e5' },
+		'user-gear-solid-full': { label: 'Admin', hint: 'uprawnienia', colorHex: '#7c3aed' },
+		'gear-solid-full': { label: 'Ustawienia', hint: 'konfiguracja', colorHex: '#64748b' },
+		'shield-halved-solid-full': { label: 'Bezpieczenstwo', hint: 'ochrona', colorHex: '#16a34a' },
+		'triangle-exclamation-solid-full': { label: 'Alert', hint: 'uwaga', colorHex: '#dc2626' },
+		'chart-line-solid-full': { label: 'Raport', hint: 'wyniki', colorHex: '#0ea5e9' },
+		'chart-pie-solid-full': { label: 'Dashboard', hint: 'analiza', colorHex: '#a855f7' },
+		'calendar-days-solid-full': { label: 'Kalendarz', hint: 'terminy', colorHex: '#7c3aed' },
+		'calendar-day-solid-full': { label: 'Dzien', hint: 'plan', colorHex: '#ec4899' },
+		'users-solid-full': { label: 'Zespol', hint: 'ludzie', colorHex: '#dc2626' },
+		'user-group-solid-full': { label: 'Grupa', hint: 'pracownicy', colorHex: '#0284c7' },
+		'envelope-solid-full': { label: 'Mail', hint: 'poczta', colorHex: '#2563eb' },
+		'paperclip': { label: 'Zalacznik', hint: 'plik', colorHex: '#64748b' },
+		'folder-open-solid-full': { label: 'Folder', hint: 'zasoby', colorHex: '#d97706' },
+		'folder-solid-full': { label: 'Archiwum', hint: 'pliki', colorHex: '#92400e' },
+		'house-solid-full': { label: 'Start', hint: 'strona glowna', colorHex: '#2563eb' },
+		'building': { label: 'Portal', hint: 'intranet', colorHex: '#475569' },
+		'link-solid-full': { label: 'Link', hint: 'odnosnik', colorHex: '#4f46e5' },
+		'square-arrow-out-up-right': { label: 'Przekierowanie', hint: 'zewnetrzne', colorHex: '#0f766e' },
+	})
+	const ENHANCED_BOOKMARK_ICON_OPTIONS = buildEnhancedBookmarkIconOptions()
+	const ENHANCED_BOOKMARK_ICON_IDS = new Set(ENHANCED_BOOKMARK_ICON_OPTIONS.map(option => option.id).filter(Boolean))
+	const ENHANCED_BOOKMARK_ICON_OPTIONS_BY_ID = new Map(
+		ENHANCED_BOOKMARK_ICON_OPTIONS
+			.filter(option => option.id)
+			.map(option => [option.id, option]),
+	)
+	const ENHANCED_BOOKMARK_ICON_ALIASES = new Map(
+		ENHANCED_BOOKMARK_ICON_OPTIONS.flatMap(option =>
+			(option.aliases || []).map(alias => [alias, option.id]),
+		),
+	)
 	const BOOKMARK_ICON_OPTIONS = [
 		{ id: '', label: 'Domyślna', hint: 'favicon strony' },
 		// Pliki / dokumenty
@@ -109,11 +313,87 @@ document.addEventListener('DOMContentLoaded', () => {
 		return /^#[0-9a-f]{6}$/.test(normalizedValue) ? normalizedValue : ''
 	}
 
+	function buildEnhancedBookmarkIconOptions() {
+		const rootIconNames = new Set(ROOT_BOOKMARK_ICON_FILES)
+		const options = [
+			{ id: '', label: 'Domyslna', hint: 'favicon strony', colorHex: '#64748b', assetPath: '', aliases: [''] },
+			...ROOT_BOOKMARK_ICON_FILES.map(iconName =>
+				createEnhancedBookmarkIconOption({
+					baseName: iconName,
+					assetPath: `img/ico/${iconName}.svg`,
+					source: 'ico',
+				}),
+			),
+			...NESTED_BOOKMARK_ICON_FILES.map(iconName =>
+				createEnhancedBookmarkIconOption({
+					baseName: iconName,
+					assetPath: `img/ico/bookmarks icons/${iconName}.svg`,
+					source: 'bookmarks',
+					isDuplicate: rootIconNames.has(iconName),
+				}),
+			),
+		]
+
+		return options
+	}
+
+	function createEnhancedBookmarkIconOption({ baseName, assetPath, source, isDuplicate = false }) {
+		const id = isDuplicate ? `${source}__${baseName}` : baseName
+		const metadata =
+			BOOKMARK_ICON_METADATA_OVERRIDES[id] ||
+			BOOKMARK_ICON_METADATA_OVERRIDES[baseName] ||
+			{}
+		const aliases = metadata.aliases || []
+
+		return {
+			id,
+			label: metadata.label || humanizeBookmarkIconName(baseName),
+			hint: metadata.hint || (isDuplicate ? `${source} icons` : source === 'ico' ? 'ico' : 'bookmark'),
+			colorHex: normalizeBookmarkColor(metadata.colorHex, pickBookmarkIconColor(id)),
+			assetPath,
+			aliases,
+		}
+	}
+
+	function humanizeBookmarkIconName(iconName) {
+		return String(iconName || '')
+			.replace(/-(solid-full|brands-solid-full)$/g, '')
+			.replace(/-(custom|icon)$/g, '')
+			.replace(/[-_]+/g, ' ')
+			.split(' ')
+			.filter(Boolean)
+			.map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
+			.join(' ')
+	}
+
+	function pickBookmarkIconColor(iconId) {
+		let hash = 0
+		for (const character of String(iconId || '')) {
+			hash = (hash * 31 + character.charCodeAt(0)) >>> 0
+		}
+
+		return BOOKMARK_ICON_COLOR_PALETTE[hash % BOOKMARK_ICON_COLOR_PALETTE.length]
+	}
+
 	function normalizeBookmarkIconName(value) {
 		const normalizedValue = String(value || '')
 			.trim()
 			.toLowerCase()
-		return BOOKMARK_ICON_IDS.has(normalizedValue) ? normalizedValue : ''
+		if (ENHANCED_BOOKMARK_ICON_IDS.has(normalizedValue)) {
+			return normalizedValue
+		}
+
+		return ENHANCED_BOOKMARK_ICON_ALIASES.get(normalizedValue) || ''
+	}
+
+	function getBookmarkIconOption(iconName) {
+		const normalizedIconName = normalizeBookmarkIconName(iconName)
+		return normalizedIconName ? ENHANCED_BOOKMARK_ICON_OPTIONS_BY_ID.get(normalizedIconName) || null : null
+	}
+
+	function getBookmarkIconDefaultColor(iconName, fallback = BOOKMARK_DEFAULT_COLOR) {
+		const iconOption = getBookmarkIconOption(iconName)
+		return normalizeBookmarkColor(iconOption?.colorHex, fallback)
 	}
 
 	function normalizeBookmarkRecord(record) {
@@ -147,8 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function getBookmarkIconAssetUrl(iconName) {
-		const normalizedIconName = normalizeBookmarkIconName(iconName)
-		return normalizedIconName ? BOOKMARK_ICON_ASSET_PATHS[normalizedIconName] || `img/ico/${normalizedIconName}.svg` : ''
+		return getBookmarkIconOption(iconName)?.assetPath || ''
 	}
 
 	function getBookmarkAccentRgb(colorHex) {
@@ -185,7 +464,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		const iconUrl = getBookmarkIconAssetUrl(iconName)
 		if (!iconUrl) return ''
 
-		return `<img class="${className}" src="${escapeHtml(encodeURI(iconUrl))}" alt="" loading="lazy" decoding="async" aria-hidden="true">`
+		const encodedIconUrl = escapeHtml(encodeURI(iconUrl))
+		return `<span class="${escapeHtml(className)}" style="-webkit-mask: url('${encodedIconUrl}') center / contain no-repeat; mask: url('${encodedIconUrl}') center / contain no-repeat;" aria-hidden="true"></span>`
 	}
 
 	function getCurrentUserBookmarks() {
@@ -305,13 +585,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	function setSelectedBookmarkIcon(iconName = '') {
 		const normalizedIconName = normalizeBookmarkIconName(iconName)
+		const activePickerColor = normalizeBookmarkColor(
+			bookmarkColorInput?.value || getCurrentUserDefaultBookmarkColor(),
+			getCurrentUserDefaultBookmarkColor(),
+		)
 		bookmarkIconInput.value = normalizedIconName
 
-		bookmarkIconGrid.innerHTML = BOOKMARK_ICON_OPTIONS.map(option => {
+		bookmarkIconGrid.innerHTML = ENHANCED_BOOKMARK_ICON_OPTIONS.map(option => {
 			const isActive = option.id === normalizedIconName || (!option.id && !normalizedIconName)
+			const optionColor = isActive ? activePickerColor : BOOKMARK_PICKER_NEUTRAL_COLOR
+			const optionColorRgb = getBookmarkAccentRgb(optionColor)
 			const previewMarkup = option.id
 				? buildBookmarkAssetIconMarkup(option.id, 'dashboard-bookmark-option-asset')
-				: '<i class="app-icon bookmark-solid-full" aria-hidden="true"></i>'
+				: buildBookmarkAssetIconMarkup('bookmark-solid-full', 'dashboard-bookmark-option-asset')
 			const optionLabel = [option.label, option.hint].filter(Boolean).join(' - ')
 
 			return `
@@ -322,11 +608,25 @@ document.addEventListener('DOMContentLoaded', () => {
 					aria-pressed="${String(isActive)}"
 					aria-label="${escapeHtml(optionLabel)}"
 					title="${escapeHtml(optionLabel)}"
+					style="--bookmark-option-accent: ${escapeHtml(optionColor)}; --bookmark-option-accent-rgb: ${escapeHtml(optionColorRgb)};"
 				>
 					<span class="dashboard-bookmark-icon-choice-preview">${previewMarkup}</span>
 				</button>
 			`
 		}).join('')
+	}
+
+	function syncSelectedBookmarkIconColor() {
+		const activeIconButton = bookmarkIconGrid.querySelector('.dashboard-bookmark-icon-choice.is-active')
+		if (!activeIconButton) return
+
+		const activePickerColor = normalizeBookmarkColor(
+			bookmarkColorInput?.value || getCurrentUserDefaultBookmarkColor(),
+			getCurrentUserDefaultBookmarkColor(),
+		)
+
+		activeIconButton.style.setProperty('--bookmark-option-accent', activePickerColor)
+		activeIconButton.style.setProperty('--bookmark-option-accent-rgb', getBookmarkAccentRgb(activePickerColor))
 	}
 
 	function resetBookmarkForm() {
@@ -388,7 +688,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function buildAddBookmarkButtonMarkup({ isAuthenticated = false } = {}) {
-		const label = isAuthenticated ? 'Dodaj zakladke' : 'Zaloguj sie, aby dodawac zakladki'
+		const label = isAuthenticated ? 'Dodaj skrot' : 'Zaloguj sie, aby dodawac zakladki'
+		const visibleLabel = isAuthenticated ? 'Dodaj skrot' : 'Zaloguj sie'
 		return `
 			<button
 				type="button"
@@ -397,7 +698,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				aria-label="${label}"
 				title="${label}"
 			>
-				<i class="app-icon plus-solid-full" aria-hidden="true"></i>
+				<span class="dashboard-bookmark-add-icon" aria-hidden="true">
+					<i class="app-icon plus-solid-full"></i>
+				</span>
+				<span class="dashboard-bookmark-add-label">${visibleLabel}</span>
 			</button>
 		`
 	}
@@ -439,8 +743,11 @@ document.addEventListener('DOMContentLoaded', () => {
 				const fallbackFaviconSources = escapeHtml(faviconSources.slice(1).join('||'))
 				const label = escapeHtml(bookmark.label)
 				const safeHref = escapeHtml(href)
-				const bookmarkColor = resolveBookmarkColor(bookmark, userDefaultColor)
 				const customIconName = normalizeBookmarkIconName(bookmark.iconName)
+				const bookmarkColor = resolveBookmarkColor(
+					bookmark,
+					customIconName ? getBookmarkIconDefaultColor(customIconName, userDefaultColor) : userDefaultColor,
+				)
 				const iconClassName = customIconName
 					? 'dashboard-bookmark-icon has-custom-icon'
 					: `dashboard-bookmark-icon${initialFaviconUrl ? '' : ' is-fallback'}`
@@ -459,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						</a>
 						<div class="dashboard-bookmark-actions">
 							<button type="button" class="dashboard-bookmark-icon-btn" data-bookmark-action="edit" data-bookmark-id="${bookmark.id}" aria-label="Edytuj zakladke">
-								<i class="app-icon pen-solid-full"></i>
+								<span class="dashboard-bookmark-kebab" aria-hidden="true"></span>
 							</button>
 						</div>
 					</article>
@@ -552,6 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const syncBookmarkColorTrigger = () => {
 		setBookmarkColorValue(bookmarkColorInput.value || getCurrentUserDefaultBookmarkColor(), getCurrentUserDefaultBookmarkColor())
+		syncSelectedBookmarkIconColor()
 	}
 
 	bookmarkColorInput.addEventListener('input', syncBookmarkColorTrigger)

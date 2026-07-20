@@ -402,9 +402,6 @@ const renderAuthUi = () => {
 			<strong>${identityLabel}</strong>
 			<small>${triggerMetaLabel}</small>
 		</span>
-		<span class="app-user-trigger-chevron" aria-hidden="true">
-			<i class="app-icon chevron-down-solid-full"></i>
-		</span>
 	`
 
 	authState.popoverIdentity.innerHTML = `

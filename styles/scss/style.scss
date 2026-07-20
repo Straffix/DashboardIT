@@ -1193,17 +1193,12 @@ body:not(.dashboard-page) .app-user-trigger {
 
 	&:focus-visible {
 		outline: none;
-		box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.18);
+		box-shadow: none;
 	}
 }
 
 body.dashboard-page .app-user-trigger-copy,
 body:not(.dashboard-page) .app-user-trigger-copy {
-	display: none;
-}
-
-body.dashboard-page .app-user-trigger-chevron,
-body:not(.dashboard-page) .app-user-trigger-chevron {
 	display: none;
 }
 
@@ -1237,33 +1232,6 @@ body:not(.dashboard-page) .app-user-trigger-chevron {
 	> * {
 		pointer-events: none;
 	}
-}
-
-.app-user-trigger-chevron {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	flex: 0 0 auto;
-	width: 28px;
-	height: 28px;
-	margin-left: auto;
-	border-radius: 999px;
-	background: rgba(148, 163, 184, 0.16);
-	color: var(--text-soft);
-	transition:
-		transform 0.2s ease,
-		background-color 0.2s ease,
-		color 0.2s ease;
-
-	i {
-		font-size: 0.92rem;
-	}
-}
-
-.app-user-hub.is-open .app-user-trigger-chevron {
-	transform: rotate(180deg);
-	background: rgba(var(--primary-rgb), 0.16);
-	color: var(--primary);
 }
 
 .app-user-trigger-copy {
@@ -2265,7 +2233,7 @@ body.theme-dark.dashboard-page {
 		}
 
 		&:focus-visible {
-			box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.18);
+			box-shadow: none;
 		}
 	}
 
@@ -2288,7 +2256,7 @@ body:not(.dashboard-page) .app-user-trigger:hover {
 
 body:not(.dashboard-page) .app-user-trigger:focus-visible {
 	outline: none;
-	box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.18);
+	box-shadow: none;
 }
 
 body.theme-dark:not(.dashboard-page) {
@@ -2307,7 +2275,7 @@ body.theme-dark:not(.dashboard-page) {
 		}
 
 		&:focus-visible {
-			box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.18);
+			box-shadow: none;
 		}
 	}
 
@@ -3053,7 +3021,10 @@ body.dashboard-page .app-user-panel-slot .app-user-hub {
 	right: auto;
 	left: auto;
 	display: block;
+	width: max-content;
+	max-width: calc(100vw - 24px);
 	margin: 0;
+	margin-left: auto;
 	padding: 0;
 	z-index: 80;
 	opacity: 1;
@@ -3063,22 +3034,22 @@ body.dashboard-page .app-user-panel-slot .app-user-hub {
 
 body.dashboard-page .app-user-panel-slot .app-user-trigger {
 	position: relative;
-	display: grid;
-	grid-template-columns: 38px minmax(0, 1fr) 24px;
+	display: inline-flex;
 	align-items: center;
-	width: auto;
-	min-width: 192px;
-	max-width: 232px;
+	justify-content: flex-end;
+	width: max-content;
+	min-width: 0;
+	max-width: calc(100vw - 24px);
 	min-height: 56px;
-	padding: 8px 10px 8px 8px;
+	padding: 8px 0 8px 8px;
 	gap: 10px;
 	color: var(--text-main);
-	justify-content: flex-start;
 	backdrop-filter: blur(14px);
 	-webkit-backdrop-filter: blur(14px);
 
 	&:focus-visible {
 		outline: none;
+		box-shadow: none;
 	}
 }
 
@@ -3095,6 +3066,7 @@ body.dashboard-page .app-user-panel-slot .app-user-trigger-copy {
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
+	max-width: min(220px, calc(100vw - 84px));
 	gap: 2px;
 
 	strong {
@@ -3115,28 +3087,6 @@ body.dashboard-page .app-user-panel-slot .app-user-trigger-copy {
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-}
-
-body.dashboard-page .app-user-panel-slot .app-user-trigger-chevron {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	flex: 0 0 auto;
-	width: 24px;
-	height: 24px;
-	margin-left: 0;
-	border-radius: 9px;
-	background: rgba(226, 232, 240, 0.92);
-	color: #94a3b8;
-
-	i {
-		font-size: 0.72rem;
-	}
-}
-
-body.dashboard-page .app-user-panel-slot .app-user-hub.is-open .app-user-trigger-chevron {
-	background: rgba(var(--primary-rgb), 0.12);
-	color: var(--primary);
 }
 
 body.dashboard-page .app-user-panel-slot .app-user-popover {
@@ -3183,9 +3133,7 @@ body.module-page .app-user-panel-slot .app-user-trigger {
 
 	&:focus-visible {
 		outline: none;
-		box-shadow:
-			0 0 0 4px rgba(var(--primary-rgb), 0.14),
-			0 12px 28px rgba(var(--shadow-rgb), 0.1);
+		box-shadow: 0 12px 28px rgba(var(--shadow-rgb), 0.08);
 	}
 }
 
@@ -3223,28 +3171,6 @@ body.module-page .app-user-panel-slot .app-user-trigger-copy {
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-}
-
-body.module-page .app-user-panel-slot .app-user-trigger-chevron {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	flex: 0 0 auto;
-	width: 24px;
-	height: 24px;
-	margin-left: 0;
-	border-radius: 9px;
-	background: rgba(var(--primary-rgb), 0.1);
-	color: var(--text-soft);
-
-	i {
-		font-size: 0.76rem;
-	}
-}
-
-body.module-page .app-user-panel-slot .app-user-hub.is-open .app-user-trigger-chevron {
-	background: rgba(var(--primary-rgb), 0.14);
-	color: var(--primary);
 }
 
 body.module-page .app-user-panel-slot .app-user-popover {
@@ -3312,9 +3238,7 @@ body.theme-dark.module-page .app-user-panel-slot .app-user-trigger {
 	}
 
 	&:focus-visible {
-		box-shadow:
-			0 0 0 4px rgba(200, 16, 46, 0.18),
-			0 12px 28px rgba(2, 8, 23, 0.3);
+		box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
 	}
 }
 
@@ -3328,14 +3252,6 @@ body.theme-dark.module-page .app-user-panel-slot .app-user-trigger-copy {
 	}
 }
 
-body.theme-dark.module-page .app-user-panel-slot .app-user-trigger-chevron {
-	background: rgba(248, 250, 252, 0.12);
-}
-
-body.theme-dark.module-page .app-user-panel-slot .app-user-hub.is-open .app-user-trigger-chevron {
-	background: rgba(248, 250, 252, 0.18);
-	color: #ffffff;
-}
 /* === Shared Header: End === */
 
 /* === Shared Page Layout: Start === */
@@ -4371,14 +4287,6 @@ body.theme-dark .month-fallback-popover {
 		font-size: 1.14rem;
 	}
 
-	body.module-page .app-user-panel-slot .app-user-trigger-chevron {
-		width: 26px;
-		height: 26px;
-		margin-left: auto;
-		border-radius: 10px;
-		background: rgba(var(--primary-rgb), 0.08);
-	}
-
 	.module-nav-link + .module-nav-link {
 		border-left: 0;
 	}
@@ -4567,7 +4475,7 @@ body.theme-dark .month-fallback-popover {
 
 	body.module-page .app-user-panel-slot .app-user-trigger {
 		display: grid;
-		grid-template-columns: 38px minmax(0, 1fr) 22px;
+		grid-template-columns: 38px minmax(0, 1fr);
 		align-items: center;
 		min-height: 54px;
 		padding: 8px 10px;
@@ -4604,18 +4512,6 @@ body.theme-dark .month-fallback-popover {
 
 		small {
 			display: none;
-		}
-	}
-
-	body.module-page .app-user-panel-slot .app-user-trigger-chevron {
-		width: 22px;
-		height: 22px;
-		margin-left: 0;
-		justify-self: end;
-		border-radius: 8px;
-
-		i {
-			font-size: 0.68rem;
 		}
 	}
 
