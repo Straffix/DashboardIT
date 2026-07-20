@@ -25,7 +25,9 @@
 	let drawerInitialState = ''
 	let searchQuery = ''
 	let expandedAccessoriesRowKey = null
+	let editingRowKey = null
 	let inlineEditState = null
+	let inlineEditMetrics = null
 	const hiresService = window.AppServices?.hiresService
 	const escapeHtml = window.AppUtils?.escapeHtml || (value => String(value ?? ''))
 
@@ -115,15 +117,39 @@
 
 	const SELECT_FIELD_IDS = ['laptopStatus', 'laptopWarehouse', 'monitorStatus', 'monitorWarehouse', 'preparedBy']
 	const SEMANTIC_SELECT_FIELD_IDS = ['laptopStatus', 'laptopWarehouse', 'monitorStatus', 'monitorWarehouse']
-	const INLINE_EDITABLE_FIELD_IDS = ['laptopStatus', 'laptopWarehouse', 'monitorStatus', 'monitorWarehouse']
-	const INLINE_EDITABLE_FIELD_LABELS = {
+	const INLINE_SELECT_FIELD_IDS = ['laptopStatus', 'laptopWarehouse', 'monitorStatus', 'monitorWarehouse']
+	const TABLE_EDITABLE_FIELD_IDS = [
+		'purchaseRequest',
+		'targetUser',
+		'startDate',
+		'laptopModel',
+		'laptopRu',
+		'laptopStatus',
+		'laptopWarehouse',
+		'monitorRu',
+		'monitorStatus',
+		'monitorWarehouse',
+		'preparedBy',
+		'deliveryLocation',
+		'peripheralNotes',
+	]
+	const TABLE_EDITABLE_FIELD_LABELS = {
+		purchaseRequest: 'Service Desk',
+		targetUser: 'Uzytkownik',
+		startDate: 'Data rozpoczecia pracy',
+		laptopModel: 'Laptop - SN',
+		laptopRu: 'Laptop - RU',
 		laptopStatus: 'Laptop - status',
 		laptopWarehouse: 'Laptop - eMagazyn',
+		monitorRu: 'Monitor - RU',
 		monitorStatus: 'Monitor - status',
 		monitorWarehouse: 'Monitor - eMagazyn',
+		preparedBy: 'Przygotowal/a',
+		deliveryLocation: 'Lokalizacja',
+		peripheralNotes: 'Uwagi',
 	}
 
-	const VISIBLE_TABLE_COLUMN_COUNT = 11
+	const VISIBLE_TABLE_COLUMN_COUNT = 10
 
 	const hiresForm = document.getElementById('device-form')
 	const tableBody = document.getElementById('table-body')
@@ -273,8 +299,56 @@
 		return String(value ?? '').trim()
 	}
 
+	function normalizeSelectText(value) {
+		return normalizeText(value).replace(/\s+/g, ' ')
+	}
+
 	function normalizeDateValue(value) {
 		return AppUtils.normalizeSpreadsheetDate(value) || ''
+	}
+
+	function normalizeSelectFieldValue(fieldId, value) {
+		const normalizedValue = normalizeSelectText(value)
+		if (!normalizedValue) return ''
+
+		const sourceField = document.getElementById(fieldId)
+		if (!sourceField || sourceField.tagName !== 'SELECT') {
+			return normalizedValue
+		}
+
+		const matchedOption = Array.from(sourceField.options).find(option => {
+			const optionValue = normalizeSelectText(option.value)
+			const optionLabel = normalizeSelectText(option.textContent || option.value)
+			const legacyValue = normalizeSelectText(option.dataset.legacyValue || '')
+			return normalizedValue === optionValue || normalizedValue === optionLabel || (legacyValue && normalizedValue === legacyValue)
+		})
+
+		return matchedOption ? normalizeSelectText(matchedOption.textContent || matchedOption.value) : normalizedValue
+	}
+
+	function harmonizeSelectOptionsWithVisibleLabels() {
+		SELECT_FIELD_IDS.forEach(fieldId => {
+			const field = document.getElementById(fieldId)
+			if (!field || field.tagName !== 'SELECT') return
+
+			Array.from(field.options).forEach(option => {
+				const rawValue = normalizeSelectText(option.value)
+				const visibleLabel = normalizeSelectText(option.textContent || option.value)
+
+				if (!visibleLabel) {
+					option.value = ''
+					option.textContent = ''
+					return
+				}
+
+				if (rawValue && rawValue !== visibleLabel) {
+					option.dataset.legacyValue = rawValue
+				}
+
+				option.textContent = visibleLabel
+				option.value = visibleLabel
+			})
+		})
 	}
 
 	function valueIncludesAny(normalizedValue, patterns) {
@@ -289,6 +363,7 @@
 			if (valueIncludesAny(normalizedValue, ['dystrybuc'])) return 'danger'
 			if (valueIncludesAny(normalizedValue, ['gotowy do wydania'])) return 'info'
 			if (valueIncludesAny(normalizedValue, ['wydany'])) return 'success'
+			if (valueIncludesAny(normalizedValue, ['nie odebrano'])) return 'slate'
 			if (valueIncludesAny(normalizedValue, ['odebrany']) && valueIncludesAny(normalizedValue, ['termin'])) return 'slate'
 			if (fieldId === 'monitorStatus' && valueIncludesAny(normalizedValue, ['zamow', 'zamaw'])) return 'slate'
 			if (valueIncludesAny(normalizedValue, ['w trakcie', 'czekamy'])) return 'warning'
@@ -471,12 +546,12 @@
 			startDate,
 			laptopModel,
 			laptopRu,
-			laptopStatus: normalizeText(mergedRecord.laptopStatus),
-			laptopWarehouse: normalizeText(mergedRecord.laptopWarehouse),
+			laptopStatus: normalizeSelectFieldValue('laptopStatus', mergedRecord.laptopStatus),
+			laptopWarehouse: normalizeSelectFieldValue('laptopWarehouse', mergedRecord.laptopWarehouse),
 			monitorRu: normalizeText(mergedRecord.monitorRu),
-			monitorStatus: normalizeText(mergedRecord.monitorStatus),
-			monitorWarehouse: normalizeText(mergedRecord.monitorWarehouse),
-			preparedBy: normalizeText(mergedRecord.preparedBy),
+			monitorStatus: normalizeSelectFieldValue('monitorStatus', mergedRecord.monitorStatus),
+			monitorWarehouse: normalizeSelectFieldValue('monitorWarehouse', mergedRecord.monitorWarehouse),
+			preparedBy: normalizeSelectFieldValue('preparedBy', mergedRecord.preparedBy),
 			deliveryLocation: normalizeText(mergedRecord.deliveryLocation),
 			peripheralNotes: normalizeText(mergedRecord.peripheralNotes || mergedRecord.notes),
 			...accessoryFlags,
@@ -568,10 +643,10 @@
 	function ensureSelectValue(field, value) {
 		if (!field || field.tagName !== 'SELECT') return
 
-		const normalizedValue = String(value ?? '').trim()
+		const normalizedValue = normalizeSelectText(value)
 		if (!normalizedValue) return
 
-		const hasOption = Array.from(field.options).some(option => String(option.value) === normalizedValue)
+		const hasOption = Array.from(field.options).some(option => normalizeSelectText(option.value) === normalizedValue)
 		if (hasOption) return
 
 		const dynamicOption = document.createElement('option')
@@ -584,12 +659,55 @@
 
 	function getInlineEditStateKey(index, fieldId) {
 		const hire = hires[index]
-		if (!hire || !INLINE_EDITABLE_FIELD_IDS.includes(fieldId)) return ''
+		if (!hire || !TABLE_EDITABLE_FIELD_IDS.includes(fieldId)) return ''
 		return `${getHireRowKey(hire, index)}::${fieldId}`
 	}
 
 	function isInlineEditActive(index, fieldId) {
 		return inlineEditState === getInlineEditStateKey(index, fieldId)
+	}
+
+	function getInlineEditMetrics(index, fieldId) {
+		const inlineEditKey = getInlineEditStateKey(index, fieldId)
+		if (!inlineEditKey || !inlineEditMetrics || inlineEditMetrics.key !== inlineEditKey) return null
+		return inlineEditMetrics
+	}
+
+	function measureInlineTriggerWidth(index, fieldId) {
+		if (!tableBody) return 0
+
+		const trigger = tableBody.querySelector(
+			`[data-action="start-inline-edit"][data-index="${index}"][data-field-id="${fieldId}"]`,
+		)
+		if (!trigger) return 0
+
+		const contentElement = trigger.querySelector(
+			'.hire-chip, .hire-name, .status-pill, .hire-empty, .hire-accessories-meta-placeholder',
+		)
+		const fieldType = getInlineEditableFieldType(fieldId)
+		const computedStyles = window.getComputedStyle?.(trigger)
+		const inlinePadding = (parseFloat(computedStyles?.paddingLeft || '0') || 0)
+			+ (parseFloat(computedStyles?.paddingRight || '0') || 0)
+		const contentWidth = contentElement
+			? Math.ceil(contentElement.getBoundingClientRect().width)
+			: Math.ceil(trigger.getBoundingClientRect().width)
+		const controlChromeAllowance = fieldType === 'select'
+			? 34
+			: fieldType === 'date'
+				? 24
+				: 18
+		const minWidth = fieldType === 'select'
+			? 148
+			: fieldType === 'date'
+				? 132
+				: 110
+
+		return Math.max(minWidth, Math.round(contentWidth + inlinePadding + controlChromeAllowance))
+	}
+
+	function isRowEditModeActive(index) {
+		const hire = hires[index]
+		return Boolean(hire) && editingRowKey === getHireRowKey(hire, index)
 	}
 
 	function getInlineEditableOptions(fieldId, selectedValue = '') {
@@ -600,13 +718,32 @@
 		syncSemanticSelectAppearance(sourceField)
 
 		return Array.from(sourceField.options).map(option => {
-			const optionValue = String(option.value ?? '')
+			const optionValue = normalizeSelectText(option.value)
 			return {
 				value: optionValue,
-				label: normalizeText(option.textContent || optionValue || '---'),
+				label: normalizeSelectText(option.textContent || optionValue || '---'),
 				tone: optionValue ? getSemanticValueTone(fieldId, optionValue) || 'default' : 'placeholder',
 			}
 		})
+	}
+
+	function getInlineEditableFieldType(fieldId) {
+		if (fieldId === 'peripheralNotes') return 'textarea'
+		if (INLINE_SELECT_FIELD_IDS.includes(fieldId)) return 'select'
+		if (fieldId === 'startDate') return 'date'
+		return 'text'
+	}
+
+	function normalizeInlineEditableValue(fieldId, value) {
+		if (SELECT_FIELD_IDS.includes(fieldId)) {
+			return normalizeSelectFieldValue(fieldId, value)
+		}
+
+		if (fieldId === 'startDate') {
+			return normalizeDateValue(value)
+		}
+
+		return normalizeText(value)
 	}
 	/* === Hires Record Helpers: End === */
 
@@ -869,11 +1006,49 @@
 		return `<span class="hire-chip ${className}">${escapeHtml(normalizedValue)}</span>`
 	}
 
-	function renderInlineEditableValue(index, fieldId, value, { className = '', guestMode = false } = {}) {
-		const normalizedValue = normalizeText(value)
-		const fieldLabel = INLINE_EDITABLE_FIELD_LABELS[fieldId] || fieldId
+	function renderHireFieldDisplayValue(record, fieldId) {
+		switch (fieldId) {
+			case 'purchaseRequest':
+				return renderChip(record.purchaseRequest, 'hire-chip-primary')
+			case 'targetUser': {
+				const normalizedValue = normalizeText(record.targetUser)
+				return normalizedValue
+					? `<span class="hire-name">${escapeHtml(normalizedValue)}</span>`
+					: '<span class="hire-empty">---</span>'
+			}
+			case 'startDate': {
+				const startDateBadge = getStartDateBadge(record)
+				return `<span class="status-pill ${startDateBadge.className}">${escapeHtml(startDateBadge.label)}</span>`
+			}
+			case 'laptopModel':
+				return renderChip(record.laptopModel)
+			case 'laptopRu':
+				return renderChip(record.laptopRu)
+			case 'laptopStatus':
+				return renderChip(record.laptopStatus, `hire-chip-muted ${getSemanticToneClass('laptopStatus', record.laptopStatus)}`)
+			case 'laptopWarehouse':
+				return renderChip(record.laptopWarehouse, getSemanticToneClass('laptopWarehouse', record.laptopWarehouse))
+			case 'monitorRu':
+				return renderChip(record.monitorRu)
+			case 'monitorStatus':
+				return renderChip(record.monitorStatus, `hire-chip-muted ${getSemanticToneClass('monitorStatus', record.monitorStatus)}`)
+			case 'monitorWarehouse':
+				return renderChip(record.monitorWarehouse, getSemanticToneClass('monitorWarehouse', record.monitorWarehouse))
+			default:
+				return renderChip(record[fieldId])
+		}
+	}
 
-		if (isInlineEditActive(index, fieldId)) {
+	function renderInlineEditControl(index, fieldId, value) {
+		const normalizedValue = normalizeInlineEditableValue(fieldId, value)
+		const fieldLabel = TABLE_EDITABLE_FIELD_LABELS[fieldId] || fieldId
+		const fieldType = getInlineEditableFieldType(fieldId)
+		const inlineMetrics = getInlineEditMetrics(index, fieldId)
+		const shouldPreserveWidth = fieldType !== 'textarea' && Number(inlineMetrics?.width) > 0
+		const widthClassName = shouldPreserveWidth ? ' is-preserved-width' : ''
+		const widthStyle = shouldPreserveWidth ? ` style="--hire-inline-width: ${inlineMetrics.width}px;"` : ''
+
+		if (fieldType === 'select') {
 			const selectedTone = normalizedValue ? getSemanticValueTone(fieldId, normalizedValue) || 'default' : 'placeholder'
 			const optionsMarkup = getInlineEditableOptions(fieldId, normalizedValue)
 				.map(
@@ -886,16 +1061,52 @@
 				.join('')
 
 			return `
-				<select class="hire-inline-select semantic-select" data-index="${index}" data-field-id="${fieldId}" data-semantic-tone="${escapeHtml(selectedTone)}" aria-label="Zmien ${escapeHtml(fieldLabel)}">
+				<select class="hire-inline-select hire-inline-control semantic-select${widthClassName}" data-index="${index}" data-field-id="${fieldId}" data-semantic-tone="${escapeHtml(selectedTone)}" aria-label="Zmien ${escapeHtml(fieldLabel)}"${widthStyle}>
 					${optionsMarkup}
 				</select>
 			`
 		}
 
-		const actionCopy = guestMode ? `Zaloguj sie, aby zmienic ${fieldLabel}` : `Kliknij, aby zmienic ${fieldLabel}`
+		if (fieldType === 'textarea') {
+			return `
+				<textarea
+					class="hire-inline-textarea hire-inline-control"
+					data-index="${index}"
+					data-field-id="${fieldId}"
+					rows="4"
+					aria-label="Edytuj ${escapeHtml(fieldLabel)}"
+				>${escapeHtml(normalizedValue)}</textarea>
+			`
+		}
+
 		return `
-			<button class="hire-inline-chip-btn ${normalizedValue ? '' : 'is-empty'}" type="button" data-action="start-inline-edit" data-index="${index}" data-field-id="${fieldId}" aria-label="${escapeHtml(actionCopy)}" title="${escapeHtml(actionCopy)}">
-				${renderChip(value, className)}
+			<input
+				class="hire-inline-input hire-inline-control${widthClassName}"
+				type="${fieldType}"
+				data-index="${index}"
+				data-field-id="${fieldId}"
+				value="${escapeHtml(normalizedValue)}"
+				aria-label="Edytuj ${escapeHtml(fieldLabel)}"
+				${widthStyle}
+			>
+		`
+	}
+
+	function renderRowEditableValue(index, record, fieldId, { guestMode = false } = {}) {
+		if (!isRowEditModeActive(index)) {
+			return renderHireFieldDisplayValue(record, fieldId)
+		}
+
+		if (isInlineEditActive(index, fieldId)) {
+			return renderInlineEditControl(index, fieldId, record[fieldId])
+		}
+
+		const fieldValue = normalizeInlineEditableValue(fieldId, record[fieldId])
+		const fieldLabel = TABLE_EDITABLE_FIELD_LABELS[fieldId] || fieldId
+		const actionCopy = guestMode ? `Zaloguj sie, aby zmienic ${fieldLabel}` : `Kliknij, aby edytowac ${fieldLabel}`
+		return `
+			<button class="hire-inline-chip-btn is-edit-enabled ${fieldValue ? '' : 'is-empty'}" type="button" data-action="start-inline-edit" data-index="${index}" data-field-id="${fieldId}" aria-label="${escapeHtml(actionCopy)}" title="${escapeHtml(actionCopy)}">
+				${renderHireFieldDisplayValue(record, fieldId)}
 			</button>
 		`
 	}
@@ -920,23 +1131,6 @@
 		}
 
 		return { className: 'ok', label: AppUtils.formatDate(parsedDate) }
-	}
-
-	function renderAccessoryToggleButton(index, record, isExpanded) {
-		const activeCount = getActiveAccessoryCount(record)
-		const canExpand = hasExpandedPanelContent(record)
-		const hasAccessories = activeCount > 0
-		const buttonLabel = !canExpand
-			? 'Brak dodatkowych danych'
-			: isExpanded
-				? 'Ukryj szczegoly'
-				: 'Pokaz szczegoly'
-
-		return `
-			<button class="icon-button hire-action-btn hire-action-btn-toggle ${hasAccessories ? 'has-accessories' : 'is-empty'} ${isExpanded ? 'is-active' : ''}" type="button" data-action="toggle-accessories" data-index="${index}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${buttonLabel}" title="${buttonLabel}" ${canExpand ? '' : 'disabled'}>
-				<i class="app-icon layer-group-solid-full"></i>
-			</button>
-		`
 	}
 
 	function renderAccessoryPreviewIcon(field, { index = -1, guestMode = false, isPrepared = false } = {}) {
@@ -973,18 +1167,61 @@
 			: '<span class="hire-accessories-meta-placeholder">---</span>'
 	}
 
-	function renderExpandedPanelDetail(label, value, { multiline = false, wide = false, className = '', scrollable = false } = {}) {
-		const content = renderExpandedPanelValue(value, { multiline })
+	function buildExpandedPanelItemClasses({ multiline = false, wide = false, className = '', scrollable = false } = {}) {
 		const itemClasses = ['hire-accessories-meta-item']
 		if (multiline) itemClasses.push('is-notes')
 		if (wide) itemClasses.push('is-wide')
 		if (scrollable) itemClasses.push('is-scrollable')
 		if (className) itemClasses.push(className)
+		return itemClasses
+	}
+
+	function renderExpandedPanelDetail(label, value, { multiline = false, wide = false, className = '', scrollable = false } = {}) {
+		if (String(label || '').includes('Przygot')) {
+			return ''
+		}
+
+		const content = renderExpandedPanelValue(value, { multiline })
+		const itemClasses = buildExpandedPanelItemClasses({ multiline, wide, className, scrollable })
 
 		return `
 			<div class="${itemClasses.join(' ')}">
 				<span class="hire-accessories-meta-label">${escapeHtml(label)}</span>
 				<div class="hire-accessories-meta-value">${content}</div>
+			</div>
+		`
+	}
+
+	function renderExpandedPanelEditableDetail(index, record, fieldId, label, { multiline = false, wide = false, className = '', scrollable = false, guestMode = false } = {}) {
+		const isRowEditing = isRowEditModeActive(index)
+		const isFieldEditing = isInlineEditActive(index, fieldId)
+		const itemClasses = buildExpandedPanelItemClasses({
+			multiline,
+			wide,
+			className,
+			scrollable: scrollable && !isFieldEditing,
+		})
+		let content = renderExpandedPanelValue(record[fieldId], { multiline })
+
+		if (isRowEditing) {
+			if (isFieldEditing) {
+				content = renderInlineEditControl(index, fieldId, record[fieldId])
+			} else {
+				const fieldValue = normalizeInlineEditableValue(fieldId, record[fieldId])
+				const fieldLabel = TABLE_EDITABLE_FIELD_LABELS[fieldId] || label || fieldId
+				const actionCopy = guestMode ? `Zaloguj sie, aby zmienic ${fieldLabel}` : `Kliknij, aby edytowac ${fieldLabel}`
+				content = `
+					<button class="hire-inline-chip-btn hire-accessories-detail-trigger is-edit-enabled ${fieldValue ? '' : 'is-empty'}" type="button" data-action="start-inline-edit" data-index="${index}" data-field-id="${fieldId}" aria-label="${escapeHtml(actionCopy)}" title="${escapeHtml(actionCopy)}">
+						${renderExpandedPanelValue(record[fieldId], { multiline })}
+					</button>
+				`
+			}
+		}
+
+		return `
+			<div class="${itemClasses.join(' ')}">
+				<span class="hire-accessories-meta-label">${escapeHtml(label)}</span>
+				<div class="hire-accessories-meta-value ${isFieldEditing ? 'is-editing-control' : ''}">${content}</div>
 			</div>
 		`
 	}
@@ -1001,33 +1238,103 @@
 		`
 	}
 
-	function renderAccessoriesPanel(record, index, guestMode = false) {
+	function renderAccessoryEditIcon(field, { index = -1, guestMode = false, isActive = false, isPrepared = false } = {}) {
+		if (!field) return ''
+
+		const statusLabel = isPrepared ? 'Gotowe' : isActive ? 'Dodane' : 'Dodaj'
+		const buttonLabel = guestMode
+			? `${field.label}: zaloguj sie, aby edytowac akcesoria.`
+			: isActive
+				? `${field.label}: kliknij, aby usunac z listy akcesoriow.`
+				: `${field.label}: kliknij, aby dodac do listy akcesoriow.`
+
+		return `
+			<button
+				class="hire-accessory-preview-icon is-manageable ${isActive ? 'is-active' : 'is-inactive'} ${isPrepared ? 'is-prepared' : ''}"
+				type="button"
+				data-action="toggle-accessory-field"
+				data-index="${index}"
+				data-accessory-key="${escapeHtml(field.key)}"
+				aria-pressed="${isActive ? 'true' : 'false'}"
+				aria-label="${escapeHtml(buttonLabel)}"
+				title="${escapeHtml(buttonLabel)}"
+				${guestMode ? 'disabled' : ''}
+			>
+				<i class="app-icon ${field.icon}"></i>
+				<small>${escapeHtml(field.previewLabel || field.label)}</small>
+				<span class="hire-accessory-preview-state">${escapeHtml(statusLabel)}</span>
+			</button>
+		`
+	}
+
+	function renderAccessoriesGroup(record, index, guestMode = false) {
+		const isRowEditing = isRowEditModeActive(index)
 		const activeAccessories = getActiveAccessoryFields(record)
 		const preparedAccessories = new Set(normalizePreparedAccessories(record.preparedAccessories, record))
+		const accessoryFields = isRowEditing ? ACCESSORY_FIELDS : activeAccessories
+		const accessoriesMarkup = accessoryFields
+			.map(field => {
+				if (isRowEditing) {
+					return renderAccessoryEditIcon(field, {
+						index,
+						guestMode,
+						isActive: normalizeFlagValue(record[field.key]),
+						isPrepared: preparedAccessories.has(field.key),
+					})
+				}
+
+				return renderAccessoryPreviewIcon(field, {
+					index,
+					guestMode,
+					isPrepared: preparedAccessories.has(field.key),
+				})
+			})
+			.join('')
+
+		return `
+			<div class="hire-accessories-group ${accessoriesMarkup ? 'has-icons' : 'is-empty'} ${isRowEditing ? 'is-editing' : ''}">
+				<span class="hire-accessories-meta-label">Akcesoria</span>
+				<div class="hire-accessories-icons ${accessoriesMarkup ? '' : 'is-empty'}" style="--icon-count: ${Math.max(accessoryFields.length, 1)};">
+					${accessoriesMarkup || '<span class="hire-accessories-meta-placeholder">---</span>'}
+				</div>
+			</div>
+		`
+	}
+
+	function renderAccessoriesPanel(record, index, guestMode = false) {
+		const isRowEditing = isRowEditModeActive(index)
+		const editButtonLabel = guestMode
+			? 'Zaloguj sie, aby edytowac wpisy'
+			: isRowEditing
+				? 'Wylacz edycje wiersza'
+				: 'Wlacz edycje danych w wierszu'
+		const deleteButtonLabel = guestMode ? 'Zaloguj sie, aby usuwac wpisy' : 'Usun wpis'
 		const detailMarkup = [
 			renderExpandedPanelDetail('Przygotował/a', record.preparedBy),
+			renderExpandedPanelEditableDetail(index, record, 'preparedBy', 'Przygotowal/a', { guestMode }),
 			renderExpandedPanelAudit(record),
-			renderExpandedPanelDetail('Uwagi', record.peripheralNotes, {
+			renderExpandedPanelEditableDetail(index, record, 'peripheralNotes', 'Uwagi', {
 				multiline: true,
 				className: 'is-notes-panel',
 				scrollable: true,
+				guestMode,
 			}),
-			renderExpandedPanelDetail('Lokalizacja', record.deliveryLocation, {
+			renderExpandedPanelEditableDetail(index, record, 'deliveryLocation', 'Lokalizacja', {
 				className: 'is-location-panel',
+				guestMode,
 			}),
 		].join('')
-		const accessoriesMarkup = activeAccessories
-			.map(field => renderAccessoryPreviewIcon(field, {
-				index,
-				guestMode,
-				isPrepared: preparedAccessories.has(field.key),
-			}))
-			.join('')
-		const accessoriesGroupMarkup = `
-			<div class="hire-accessories-group ${accessoriesMarkup ? 'has-icons' : 'is-empty'}">
-				<span class="hire-accessories-meta-label">Akcesoria</span>
-				<div class="hire-accessories-icons ${accessoriesMarkup ? '' : 'is-empty'}" style="--icon-count: ${Math.max(activeAccessories.length, 1)};">
-					${accessoriesMarkup || '<span class="hire-accessories-meta-placeholder">---</span>'}
+		const accessoriesGroupMarkup = renderAccessoriesGroup(record, index, guestMode)
+		const actionsMarkup = `
+			<div class="hire-record-actions-panel">
+				<span class="hire-accessories-meta-label">Akcje</span>
+				<div class="hire-record-actions-stack">
+					<button class="icon-button hire-action-btn ${isRowEditing ? 'is-active' : ''}" type="button" data-action="edit" data-index="${index}" aria-pressed="${isRowEditing ? 'true' : 'false'}" aria-label="${editButtonLabel}" title="${editButtonLabel}" ${guestMode ? 'disabled' : ''}>
+						<i class="app-icon ${isRowEditing ? 'floppy-disk-solid-full' : 'pen-solid-full'}"></i>
+					</button>
+					<button class="icon-button hire-action-btn hire-action-btn-danger" type="button" data-action="delete" data-index="${index}" aria-label="Usun wpis" title="${deleteButtonLabel}" ${guestMode ? 'disabled' : ''}>
+						<i class="app-icon trash-solid-full"></i>
+					</button>
 				</div>
 			</div>
 		`
@@ -1036,6 +1343,7 @@
 			<div class="hire-accessories-panel">
 				${detailMarkup ? `<div class="hire-accessories-meta">${detailMarkup}</div>` : ''}
 				${accessoriesGroupMarkup}
+				${actionsMarkup}
 			</div>
 		`
 	}
@@ -1049,7 +1357,6 @@
 		return {
 			mainRow,
 			detailRow: Array.from(tableBody.querySelectorAll('.hire-accessories-row')).find(row => row.dataset.rowKey === rowKey) || null,
-			toggleButton: mainRow.querySelector('[data-action="toggle-accessories"]'),
 		}
 	}
 
@@ -1083,6 +1390,8 @@
 	function syncAccessoriesRowDomState(rowKey, isExpanded) {
 		const rowDomBundle = getAccessoriesRowDomBundle(rowKey)
 		if (!rowDomBundle) return false
+
+		rowDomBundle.mainRow.setAttribute('aria-expanded', isExpanded ? 'true' : 'false')
 
 		if (isExpanded) {
 			rowDomBundle.mainRow.classList.add('is-accessories-open')
@@ -1160,14 +1469,6 @@
 
 		if (!detailRow && !isExpanded) {
 			rowDomBundle.mainRow.classList.remove('is-accessories-open')
-		}
-
-		if (rowDomBundle.toggleButton) {
-			const buttonLabel = isExpanded ? 'Ukryj szczegoly' : 'Pokaz szczegoly'
-			rowDomBundle.toggleButton.classList.toggle('is-active', isExpanded)
-			rowDomBundle.toggleButton.setAttribute('aria-expanded', isExpanded ? 'true' : 'false')
-			rowDomBundle.toggleButton.setAttribute('aria-label', buttonLabel)
-			rowDomBundle.toggleButton.setAttribute('title', buttonLabel)
 		}
 
 		return true
@@ -1369,66 +1670,66 @@
 
 		filteredHires.forEach(hire => {
 			const originalIndex = hires.findIndex(original => original === hire)
-			const startDateBadge = getStartDateBadge(hire)
 			const rowKey = getHireRowKey(hire, originalIndex)
 			const isAccessoriesExpanded = expandedAccessoriesRowKey === rowKey
-			const canExpandAccessories = hasExpandedPanelContent(hire)
+			const isRowEditing = editingRowKey === rowKey
+			const canExpandAccessories = true
+			const detailRowId = `hire-accessories-${originalIndex}`
 
 			const row = document.createElement('tr')
-			row.className = `hire-row-main${isAccessoriesExpanded ? ' is-accessories-open' : ''}`
+			row.className = `hire-row-main${isAccessoriesExpanded ? ' is-accessories-open' : ''}${isRowEditing ? ' is-row-editing' : ''}${canExpandAccessories ? ' is-expandable' : ''}`
 			row.dataset.rowKey = rowKey
+			row.dataset.index = String(originalIndex)
+			row.dataset.expandable = canExpandAccessories ? 'true' : 'false'
+			if (canExpandAccessories) {
+				row.tabIndex = 0
+				row.setAttribute('aria-controls', detailRowId)
+				row.setAttribute('aria-expanded', isAccessoriesExpanded ? 'true' : 'false')
+			}
 			row.innerHTML = `
 				<td class="is-sticky-left-1">
-					${renderChip(hire.purchaseRequest, 'hire-chip-primary')}
+					${renderRowEditableValue(originalIndex, hire, 'purchaseRequest', { guestMode })}
 				</td>
 				<td class="is-sticky-left-2">
-					<span class="hire-name">${escapeHtml(hire.targetUser || '---')}</span>
+					${renderRowEditableValue(originalIndex, hire, 'targetUser', { guestMode })}
 				</td>
 				<td>
-					<span class="status-pill ${startDateBadge.className}">${escapeHtml(startDateBadge.label)}</span>
+					${renderRowEditableValue(originalIndex, hire, 'startDate', { guestMode })}
 				</td>
-				<td>${renderChip(hire.laptopModel)}</td>
-				<td>${renderChip(hire.laptopRu)}</td>
-				<td>${renderInlineEditableValue(originalIndex, 'laptopStatus', hire.laptopStatus, { className: `hire-chip-muted ${getSemanticToneClass('laptopStatus', hire.laptopStatus)}`, guestMode })}</td>
-				<td>${renderInlineEditableValue(originalIndex, 'laptopWarehouse', hire.laptopWarehouse, { className: getSemanticToneClass('laptopWarehouse', hire.laptopWarehouse), guestMode })}</td>
-				<td>${renderChip(hire.monitorRu)}</td>
-				<td>${renderInlineEditableValue(originalIndex, 'monitorStatus', hire.monitorStatus, { className: `hire-chip-muted ${getSemanticToneClass('monitorStatus', hire.monitorStatus)}`, guestMode })}</td>
-				<td>${renderInlineEditableValue(originalIndex, 'monitorWarehouse', hire.monitorWarehouse, { className: getSemanticToneClass('monitorWarehouse', hire.monitorWarehouse), guestMode })}</td>
-				<td class="cell-center is-sticky-right">
-					<div class="hire-actions">
-						${renderAccessoryToggleButton(originalIndex, hire, isAccessoriesExpanded)}
-						<button class="icon-button hire-action-btn" type="button" data-action="edit" data-index="${originalIndex}" aria-label="Edytuj wpis" title="${guestMode ? 'Zaloguj sie, aby edytowac wpisy' : 'Edytuj wpis'}" ${guestMode ? 'disabled' : ''}>
-							<i class="app-icon pen-solid-full"></i>
-						</button>
-						<button class="icon-button hire-action-btn hire-action-btn-danger" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usun wpis" title="${guestMode ? 'Zaloguj sie, aby usuwac wpisy' : 'Usun wpis'}" ${guestMode ? 'disabled' : ''}>
-							<i class="app-icon trash-solid-full"></i>
-						</button>
-					</div>
-				</td>
+				<td>${renderRowEditableValue(originalIndex, hire, 'laptopModel', { guestMode })}</td>
+				<td>${renderRowEditableValue(originalIndex, hire, 'laptopRu', { guestMode })}</td>
+				<td>${renderRowEditableValue(originalIndex, hire, 'laptopStatus', { guestMode })}</td>
+				<td>${renderRowEditableValue(originalIndex, hire, 'laptopWarehouse', { guestMode })}</td>
+				<td>${renderRowEditableValue(originalIndex, hire, 'monitorRu', { guestMode })}</td>
+				<td>${renderRowEditableValue(originalIndex, hire, 'monitorStatus', { guestMode })}</td>
+				<td>${renderRowEditableValue(originalIndex, hire, 'monitorWarehouse', { guestMode })}</td>
 			`
 			tableBody.appendChild(row)
 
-			if (canExpandAccessories) {
-				const accessoriesRow = document.createElement('tr')
-				accessoriesRow.className = `hire-accessories-row${isAccessoriesExpanded ? ' is-open' : ' is-collapsed-hidden'}`
-				accessoriesRow.dataset.rowKey = rowKey
-				accessoriesRow.setAttribute('aria-hidden', isAccessoriesExpanded ? 'false' : 'true')
-				accessoriesRow.innerHTML = `
-					<td colspan="${VISIBLE_TABLE_COLUMN_COUNT}" class="hire-accessories-cell">
-						<div class="hire-accessories-collapse">
-							<div class="hire-accessories-collapse-inner">
-								${renderAccessoriesPanel(hire, originalIndex, guestMode)}
-							</div>
+			const accessoriesRow = document.createElement('tr')
+			accessoriesRow.className = `hire-accessories-row${isAccessoriesExpanded ? ' is-open' : ' is-collapsed-hidden'}`
+			accessoriesRow.id = detailRowId
+			accessoriesRow.dataset.rowKey = rowKey
+			accessoriesRow.setAttribute('aria-hidden', isAccessoriesExpanded ? 'false' : 'true')
+			accessoriesRow.innerHTML = `
+				<td colspan="${VISIBLE_TABLE_COLUMN_COUNT}" class="hire-accessories-cell">
+					<div class="hire-accessories-collapse">
+						<div class="hire-accessories-collapse-inner">
+							${renderAccessoriesPanel(hire, originalIndex, guestMode)}
 						</div>
-					</td>
-				`
-				tableBody.appendChild(accessoriesRow)
-			}
+					</div>
+				</td>
+			`
+			tableBody.appendChild(accessoriesRow)
 		})
 
 		if (inlineEditState) {
 			window.requestAnimationFrame(() => {
-				tableBody.querySelector('.hire-inline-select')?.focus({ preventScroll: true })
+				const inlineControl = tableBody.querySelector('.hire-inline-control')
+				inlineControl?.focus({ preventScroll: true })
+				if (inlineControl?.tagName === 'INPUT' && inlineControl.type === 'text') {
+					inlineControl.select?.()
+				}
 			})
 		}
 	}
@@ -1438,38 +1739,48 @@
 	function closeInlineEdit({ render = true } = {}) {
 		if (!inlineEditState) return
 		inlineEditState = null
+		inlineEditMetrics = null
 		if (render) renderTable()
 	}
 
 	function startInlineEdit(index, fieldId) {
-		if (!INLINE_EDITABLE_FIELD_IDS.includes(fieldId)) return
-		if (!requireAuthenticatedAction('Musisz byc zalogowany, aby szybko zmieniac statusy bezposrednio w tabeli.')) return
-		if (!hires[index]) return
+		if (!TABLE_EDITABLE_FIELD_IDS.includes(fieldId)) return
+		if (!requireAuthenticatedAction('Musisz byc zalogowany, aby edytowac dane bezposrednio w tabeli.')) return
+		if (!hires[index] || !isRowEditModeActive(index)) return
 
 		inlineEditState = getInlineEditStateKey(index, fieldId)
+		const triggerWidth = measureInlineTriggerWidth(index, fieldId)
+		inlineEditMetrics = triggerWidth > 0 ? { key: inlineEditState, width: triggerWidth } : null
 		renderTable()
 	}
 
-	function updateInlineEditableField(index, fieldId, value) {
-		if (!INLINE_EDITABLE_FIELD_IDS.includes(fieldId)) return
-		if (!requireAuthenticatedAction('Musisz byc zalogowany, aby szybko zmieniac statusy bezposrednio w tabeli.')) return
+	function updateInlineEditableField(index, fieldId, value, { nextAction = null } = {}) {
+		if (!TABLE_EDITABLE_FIELD_IDS.includes(fieldId)) return
+		if (!requireAuthenticatedAction('Musisz byc zalogowany, aby edytowac dane bezposrednio w tabeli.')) return
 
 		const hire = hires[index]
 		if (!hire) {
 			closeInlineEdit()
+			applyDeferredTableAction(nextAction)
 			return
 		}
 
-		const normalizedValue = normalizeText(value)
-		const currentValue = normalizeText(hire[fieldId])
+		const normalizedValue = normalizeInlineEditableValue(fieldId, value)
+		const currentValue = normalizeInlineEditableValue(fieldId, hire[fieldId])
 		if (normalizedValue === currentValue) {
-			closeInlineEdit()
+			inlineEditState = null
+			inlineEditMetrics = null
+			renderTable()
+			applyDeferredTableAction(nextAction)
 			return
 		}
 
-		const sourceField = document.getElementById(fieldId)
-		ensureSelectValue(sourceField, normalizedValue)
+		if (SELECT_FIELD_IDS.includes(fieldId)) {
+			const sourceField = document.getElementById(fieldId)
+			ensureSelectValue(sourceField, normalizedValue)
+		}
 
+		const previousRowKey = getHireRowKey(hire, index)
 		const actor = AppUtils.auth.getAuditActorSnapshot()
 		const now = new Date().toISOString()
 		hires[index] = normalizeHireRecord({
@@ -1478,6 +1789,15 @@
 			updatedBy: actor,
 			updatedAt: now,
 		})
+		const nextRowKey = getHireRowKey(hires[index], index)
+
+		if (editingRowKey === previousRowKey) {
+			editingRowKey = nextRowKey
+		}
+
+		if (expandedAccessoriesRowKey === previousRowKey) {
+			expandedAccessoriesRowKey = nextRowKey
+		}
 
 		if (editIndex === index) {
 			fillFormFromHire(hires[index])
@@ -1486,7 +1806,101 @@
 		}
 
 		inlineEditState = null
+		inlineEditMetrics = null
 		saveData()
+		applyDeferredTableAction(nextAction)
+	}
+
+	function commitInlineEditFromElement(controlElement, nextAction = null) {
+		if (!controlElement) return
+
+		const index = Number(controlElement.dataset.index)
+		const fieldId = controlElement.dataset.fieldId || ''
+		if (Number.isNaN(index) || !fieldId) return
+
+		updateInlineEditableField(index, fieldId, controlElement.value, { nextAction })
+	}
+
+	function toggleRowEditMode(index) {
+		if (!requireAuthenticatedAction('Musisz byc zalogowany, aby edytowac dane bezposrednio w tabeli.')) return
+
+		const hire = hires[index]
+		if (!hire) return
+
+		const rowKey = getHireRowKey(hire, index)
+		const isClosingCurrentRow = editingRowKey === rowKey
+
+		editingRowKey = isClosingCurrentRow ? null : rowKey
+		inlineEditState = null
+		inlineEditMetrics = null
+		renderTable()
+	}
+
+	function getTableActionDescriptor(target) {
+		const actionButton = target?.closest?.('[data-action]')
+		if (actionButton) {
+			if (actionButton.disabled) return null
+
+			const index = Number(actionButton.dataset.index)
+			if (Number.isNaN(index)) return null
+
+			return {
+				action: actionButton.dataset.action || '',
+				index,
+				fieldId: actionButton.dataset.fieldId || '',
+				accessoryKey: actionButton.dataset.accessoryKey || '',
+			}
+		}
+
+		const mainRow = target?.closest?.('.hire-row-main')
+		if (!mainRow || mainRow.dataset.expandable !== 'true' || target?.closest?.('.hire-inline-control')) {
+			return null
+		}
+
+		const index = Number(mainRow.dataset.index)
+		if (Number.isNaN(index)) return null
+
+		return {
+			action: 'toggle-row-accessories',
+			index,
+			fieldId: '',
+			accessoryKey: '',
+		}
+	}
+
+	function applyDeferredTableAction(actionDescriptor) {
+		if (!actionDescriptor) return
+
+		const { action, index, fieldId, accessoryKey } = actionDescriptor
+
+		if (action === 'start-inline-edit') {
+			startInlineEdit(index, fieldId)
+			return
+		}
+
+		if (action === 'toggle-row-accessories') {
+			toggleAccessoriesRow(index)
+			return
+		}
+
+		if (action === 'toggle-accessory-prepared') {
+			togglePreparedAccessory(index, accessoryKey)
+			return
+		}
+
+		if (action === 'toggle-accessory-field') {
+			toggleAccessoryField(index, accessoryKey)
+			return
+		}
+
+		if (action === 'edit') {
+			toggleRowEditMode(index)
+			return
+		}
+
+		if (action === 'delete') {
+			void removeItem(index)
+		}
 	}
 
 	function togglePreparedAccessory(index, accessoryKey) {
@@ -1514,6 +1928,38 @@
 
 		if (editIndex === index) {
 			setDrawerAudit(hires[index])
+		}
+
+		saveData()
+	}
+
+	function toggleAccessoryField(index, accessoryKey) {
+		if (!ACCESSORY_FIELD_KEYS.includes(accessoryKey)) return
+		if (!requireAuthenticatedAction('Musisz byc zalogowany, aby edytowac akcesoria w tabeli.')) return
+
+		const hire = hires[index]
+		if (!hire) return
+
+		const isCurrentlyActive = normalizeFlagValue(hire[accessoryKey])
+		const preparedAccessories = new Set(normalizePreparedAccessories(hire.preparedAccessories, hire))
+		if (isCurrentlyActive) {
+			preparedAccessories.delete(accessoryKey)
+		}
+
+		const actor = AppUtils.auth.getAuditActorSnapshot()
+		const now = new Date().toISOString()
+		hires[index] = normalizeHireRecord({
+			...hire,
+			[accessoryKey]: !isCurrentlyActive,
+			preparedAccessories: ACCESSORY_FIELD_KEYS.filter(key => preparedAccessories.has(key)),
+			updatedBy: actor,
+			updatedAt: now,
+		})
+
+		if (editIndex === index) {
+			fillFormFromHire(hires[index])
+			setDrawerAudit(hires[index])
+			captureDrawerSnapshot()
 		}
 
 		saveData()
@@ -1551,8 +1997,18 @@
 			return
 
 		const hireToRemove = hires[index]
-		if (hireToRemove && expandedAccessoriesRowKey === getHireRowKey(hireToRemove, index)) {
-			expandedAccessoriesRowKey = null
+		if (hireToRemove) {
+			const rowKey = getHireRowKey(hireToRemove, index)
+			if (expandedAccessoriesRowKey === rowKey) {
+				expandedAccessoriesRowKey = null
+			}
+			if (editingRowKey === rowKey) {
+				editingRowKey = null
+			}
+			if (inlineEditState?.startsWith(`${rowKey}::`)) {
+				inlineEditState = null
+				inlineEditMetrics = null
+			}
 		}
 
 		if (editIndex === index) {
@@ -1736,6 +2192,7 @@
 
 	/* === Hires Init: Start === */
 	runWhenReady(() => {
+		harmonizeSelectOptionsWithVisibleLabels()
 		monthPicker.init()
 		resetFormState()
 		syncSemanticSelects()
@@ -1765,81 +2222,75 @@
 
 		if (tableBody) {
 			listen(tableBody, 'pointerdown', event => {
-				const inlineTrigger = event.target.closest('[data-action="start-inline-edit"]')
-				if (!inlineTrigger || !inlineEditState) return
+				const activeInlineControl = tableBody.querySelector('.hire-inline-control')
+				if (!activeInlineControl || event.target.closest('.hire-inline-control') === activeInlineControl) return
 
-				const index = Number(inlineTrigger.dataset.index)
-				const fieldId = inlineTrigger.dataset.fieldId
-				const nextInlineKey = getInlineEditStateKey(index, fieldId)
-				if (!nextInlineKey || nextInlineKey === inlineEditState) return
+				const nextAction = getTableActionDescriptor(event.target)
+				if (!nextAction) return
+
+				const activeIndex = Number(activeInlineControl.dataset.index)
+				const activeFieldId = activeInlineControl.dataset.fieldId || ''
+				const activeInlineKey = getInlineEditStateKey(activeIndex, activeFieldId)
+				if (!activeInlineKey || inlineEditState !== activeInlineKey) return
 
 				event.preventDefault()
-				startInlineEdit(index, fieldId)
+				commitInlineEditFromElement(activeInlineControl, nextAction)
 			})
 
 			listen(tableBody, 'change', event => {
-				const inlineSelect = event.target.closest('.hire-inline-select')
-				if (!inlineSelect) return
+				const inlineControl = event.target.closest('.hire-inline-control')
+				if (!inlineControl) return
 
-				updateInlineEditableField(
-					Number(inlineSelect.dataset.index),
-					inlineSelect.dataset.fieldId,
-					inlineSelect.value,
-				)
+				commitInlineEditFromElement(inlineControl)
 			})
 
 			listen(tableBody, 'focusout', event => {
-				const inlineSelect = event.target.closest('.hire-inline-select')
-				if (!inlineSelect) return
-				const nextInlineTrigger = event.relatedTarget?.closest?.('[data-action="start-inline-edit"]')
-				if (nextInlineTrigger) return
-				const blurredInlineKey = getInlineEditStateKey(
-					Number(inlineSelect.dataset.index),
-					inlineSelect.dataset.fieldId,
-				)
+				const inlineControl = event.target.closest('.hire-inline-control')
+				if (!inlineControl) return
 
-				window.requestAnimationFrame(() => {
-					if (document.activeElement === inlineSelect) return
-					if (inlineEditState === blurredInlineKey) closeInlineEdit()
-				})
+				const blurredInlineKey = getInlineEditStateKey(
+					Number(inlineControl.dataset.index),
+					inlineControl.dataset.fieldId,
+				)
+				if (inlineEditState !== blurredInlineKey) return
+
+				const nextAction = getTableActionDescriptor(event.relatedTarget)
+				if (nextAction?.action === 'start-inline-edit') return
+
+				commitInlineEditFromElement(inlineControl)
 			})
 
 			listen(tableBody, 'keydown', event => {
-				const inlineSelect = event.target.closest('.hire-inline-select')
-				if (!inlineSelect) return
+				const inlineControl = event.target.closest('.hire-inline-control')
+				if (inlineControl) {
+					if (event.key === 'Escape') {
+						event.preventDefault()
+						closeInlineEdit()
+						return
+					}
 
-				if (event.key === 'Escape') {
+					if (event.key === 'Enter' && inlineControl.tagName === 'INPUT') {
+						event.preventDefault()
+						commitInlineEditFromElement(inlineControl)
+					}
+
+					return
+				}
+
+				const mainRow = event.target.closest('.hire-row-main')
+				if (!mainRow || event.target !== mainRow || mainRow.dataset.expandable !== 'true') return
+
+				if (event.key === 'Enter' || event.key === ' ') {
 					event.preventDefault()
-					closeInlineEdit()
+					toggleAccessoriesRow(Number(mainRow.dataset.index))
 				}
 			})
 
 			listen(tableBody, 'click', event => {
-				const actionButton = event.target.closest('[data-action]')
-				if (!actionButton) return
+				const actionDescriptor = getTableActionDescriptor(event.target)
+				if (!actionDescriptor) return
 
-				const index = Number(actionButton.dataset.index)
-				const { action } = actionButton.dataset
-
-				if (action === 'start-inline-edit') {
-					startInlineEdit(index, actionButton.dataset.fieldId)
-					return
-				}
-
-				if (action === 'toggle-accessories') {
-					toggleAccessoriesRow(index)
-					return
-				}
-
-				if (action === 'toggle-accessory-prepared') {
-					togglePreparedAccessory(index, actionButton.dataset.accessoryKey || '')
-					return
-				}
-
-				if (!requireAuthenticatedAction()) return
-
-				if (action === 'edit') startEditFlow(index)
-				if (action === 'delete') void removeItem(index)
+				applyDeferredTableAction(actionDescriptor)
 			})
 		}
 

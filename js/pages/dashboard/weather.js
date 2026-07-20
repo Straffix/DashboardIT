@@ -21,36 +21,162 @@
 		hourlyMaxReleaseVelocity: 34,
 	}
 
-	const weatherCodeMap = {
-		0: { label: 'Bezchmurnie', icon: 'sun-solid-full', tone: 'sun' },
-		1: { label: 'Glownie slonecznie', icon: 'cloud-sun-solid-full', tone: 'partly' },
-		2: { label: 'Czesciowe zachmurzenie', icon: 'cloud-sun-solid-full', tone: 'partly' },
-		3: { label: 'Pochmurno', icon: 'cloud-solid-full', tone: 'cloudy' },
-		45: { label: 'Mgla', icon: 'smog-solid-full', tone: 'fog' },
-		48: { label: 'Osadzajaca sie mgla', icon: 'smog-solid-full', tone: 'fog' },
-		51: { label: 'Lekka mzawka', icon: 'cloud-rain-solid-full', tone: 'rain' },
-		53: { label: 'Mzawka', icon: 'cloud-rain-solid-full', tone: 'rain' },
-		55: { label: 'Intensywna mzawka', icon: 'cloud-rain-solid-full', tone: 'rain' },
-		61: { label: 'Lekki deszcz', icon: 'cloud-rain-solid-full', tone: 'rain' },
-		63: { label: 'Deszcz', icon: 'cloud-showers-heavy-solid-full', tone: 'rain' },
-		65: { label: 'Ulewa', icon: 'cloud-showers-heavy-solid-full', tone: 'rain' },
-		71: { label: 'Lekki snieg', icon: 'snowflake-solid-full', tone: 'snow' },
-		73: { label: 'Snieg', icon: 'snowflake-solid-full', tone: 'snow' },
-		75: { label: 'Intensywny snieg', icon: 'snowflake-solid-full', tone: 'snow' },
-		80: { label: 'Przelotny deszcz', icon: 'cloud-sun-rain-solid-full', tone: 'showers' },
-		81: { label: 'Przelotny deszcz', icon: 'cloud-sun-rain-solid-full', tone: 'showers' },
-		82: { label: 'Silny przelotny deszcz', icon: 'cloud-showers-heavy-solid-full', tone: 'rain' },
-		95: { label: 'Burza', icon: 'cloud-bolt-solid-full', tone: 'storm' },
-		96: { label: 'Burza z gradem', icon: 'cloud-bolt-solid-full', tone: 'storm' },
-		99: { label: 'Silna burza z gradem', icon: 'cloud-bolt-solid-full', tone: 'storm' },
+	const WEATHER_ICON_ASSET_DIR = './img/ico/weather%20icons'
+	const escapeHtml = value => window.AppUtils?.escapeHtml?.(String(value ?? '')) || String(value ?? '')
+	const normalizeWeatherAssetName = value =>
+		String(value || '')
+			.trim()
+			.replace(/\.svg$/i, '')
+
+	const getWeatherAssetUrl = assetName => {
+		const normalizedAssetName = normalizeWeatherAssetName(assetName)
+		return normalizedAssetName ? `${WEATHER_ICON_ASSET_DIR}/${encodeURIComponent(normalizedAssetName)}.svg` : ''
 	}
 
-	const getWeatherDetails = (weatherCode, fallbackLabel = 'Warunki lokalne', fallbackTone = 'cloudy') =>
-		weatherCodeMap[weatherCode] || {
-			label: fallbackLabel,
+	const renderWeatherAsset = (assetName, options = {}) => {
+		const assetUrl = getWeatherAssetUrl(assetName)
+		if (!assetUrl) return ''
+
+		const className = String(options.className || 'weather-asset-icon')
+			.trim()
+			.split(/\s+/)
+			.filter(Boolean)
+		const alt = options.alt ? escapeHtml(options.alt) : ''
+
+		return `<img class="${className.join(' ')}" src="${assetUrl}" alt="${alt}" loading="lazy" decoding="async">`
+	}
+
+	const renderWeatherVisual = (details, options = {}) =>
+		renderWeatherAsset(details?.asset, options) || renderIcon(details?.icon || 'cloud-solid-full')
+
+	const isNightHour = hour => Number.isFinite(hour) && (hour < 6 || hour >= 18)
+
+	const weatherCodeMap = {
+		0: { label: 'Bezchmurnie', icon: 'sun-solid-full', tone: 'sun', assetDay: 'clear-day', assetNight: 'clear-night' },
+		1: {
+			label: 'Glownie slonecznie',
 			icon: 'cloud-sun-solid-full',
-			tone: fallbackTone,
+			tone: 'partly',
+			assetDay: 'mostly-clear-day',
+			assetNight: 'partly-cloudy-night',
+		},
+		2: {
+			label: 'Czesciowe zachmurzenie',
+			icon: 'cloud-sun-solid-full',
+			tone: 'partly',
+			assetDay: 'partly-cloudy-day',
+			assetNight: 'partly-cloudy-night',
+		},
+		3: { label: 'Pochmurno', icon: 'cloud-solid-full', tone: 'cloudy', assetDay: 'overcast', assetNight: 'overcast' },
+		45: { label: 'Mgla', icon: 'smog-solid-full', tone: 'fog', assetDay: 'fog', assetNight: 'fog' },
+		48: { label: 'Osadzajaca sie mgla', icon: 'smog-solid-full', tone: 'fog', assetDay: 'mist', assetNight: 'mist' },
+		51: { label: 'Lekka mzawka', icon: 'cloud-rain-solid-full', tone: 'rain', assetDay: 'drizzle', assetNight: 'drizzle' },
+		53: { label: 'Mzawka', icon: 'cloud-rain-solid-full', tone: 'rain', assetDay: 'drizzle', assetNight: 'drizzle' },
+		55: {
+			label: 'Intensywna mzawka',
+			icon: 'cloud-rain-solid-full',
+			tone: 'rain',
+			assetDay: 'extreme-drizzle',
+			assetNight: 'extreme-drizzle',
+		},
+		61: { label: 'Lekki deszcz', icon: 'cloud-rain-solid-full', tone: 'rain', assetDay: 'rain', assetNight: 'rain' },
+		63: { label: 'Deszcz', icon: 'cloud-showers-heavy-solid-full', tone: 'rain', assetDay: 'rain', assetNight: 'rain' },
+		65: {
+			label: 'Ulewa',
+			icon: 'cloud-showers-heavy-solid-full',
+			tone: 'rain',
+			assetDay: 'extreme-rain',
+			assetNight: 'extreme-rain',
+		},
+		71: { label: 'Lekki snieg', icon: 'snowflake-solid-full', tone: 'snow', assetDay: 'snow', assetNight: 'snow' },
+		73: { label: 'Snieg', icon: 'snowflake-solid-full', tone: 'snow', assetDay: 'snow', assetNight: 'snow' },
+		75: {
+			label: 'Intensywny snieg',
+			icon: 'snowflake-solid-full',
+			tone: 'snow',
+			assetDay: 'extreme-snow',
+			assetNight: 'extreme-snow',
+		},
+		80: {
+			label: 'Przelotny deszcz',
+			icon: 'cloud-sun-rain-solid-full',
+			tone: 'showers',
+			assetDay: 'mostly-clear-day-rain',
+			assetNight: 'mostly-clear-night-rain',
+		},
+		81: {
+			label: 'Przelotny deszcz',
+			icon: 'cloud-sun-rain-solid-full',
+			tone: 'showers',
+			assetDay: 'mostly-clear-day-rain',
+			assetNight: 'mostly-clear-night-rain',
+		},
+		82: {
+			label: 'Silny przelotny deszcz',
+			icon: 'cloud-showers-heavy-solid-full',
+			tone: 'rain',
+			assetDay: 'extreme-rain',
+			assetNight: 'extreme-rain',
+		},
+		95: {
+			label: 'Burza',
+			icon: 'cloud-bolt-solid-full',
+			tone: 'storm',
+			assetDay: 'thunderstorms',
+			assetNight: 'thunderstorms',
+		},
+		96: {
+			label: 'Burza z gradem',
+			icon: 'cloud-bolt-solid-full',
+			tone: 'storm',
+			assetDay: 'hail',
+			assetNight: 'hail',
+		},
+		99: {
+			label: 'Silna burza z gradem',
+			icon: 'cloud-bolt-solid-full',
+			tone: 'storm',
+			assetDay: 'hail',
+			assetNight: 'hail',
+		},
+	}
+
+	const getStatusWeatherDetails = ({
+		label = 'Warunki lokalne',
+		icon = 'cloud-solid-full',
+		tone = 'cloudy',
+		asset = 'cloudy',
+	} = {}) => ({
+		label,
+		icon,
+		tone,
+		asset,
+	})
+
+	const getWeatherDetails = (
+		weatherCode,
+		fallbackLabel = 'Warunki lokalne',
+		fallbackTone = 'cloudy',
+		options = {}
+	) => {
+		const matchedWeather = weatherCodeMap[weatherCode]
+		if (!matchedWeather) {
+			return getStatusWeatherDetails({
+				label: fallbackLabel,
+				icon: 'cloud-sun-solid-full',
+				tone: fallbackTone,
+				asset: options.fallbackAsset || 'cloudy',
+			})
 		}
+
+		const useNight = Boolean(options.useNight)
+		return {
+			...matchedWeather,
+			asset: useNight
+				? matchedWeather.assetNight || matchedWeather.assetDay || ''
+				: matchedWeather.assetDay || matchedWeather.assetNight || '',
+		}
+	}
 
 	const normalizeSearchValue = value =>
 		String(value || '')
@@ -350,7 +476,7 @@
 			weatherSearchForecast.innerHTML = days
 				.map(day => {
 					const details = day.isUnavailable
-						? { label: 'Brak danych', icon: 'minus-solid-full', tone: 'cloudy' }
+						? getStatusWeatherDetails({ label: 'Brak danych', icon: 'minus-solid-full', tone: 'cloudy', asset: 'code-red' })
 						: getWeatherDetails(day.weatherCode)
 					const classes = ['weather-forecast-card']
 					if (day.isUnavailable) classes.push('is-unavailable')
@@ -362,7 +488,7 @@
 					return `
 						<button type="button" class="${classes.join(' ')}" data-weather-day="${day.date || ''}" data-weather-day-label="${day.label}" ${day.isUnavailable ? 'disabled' : ''} title="${titleParts.join(' | ')}">
 							<span class="weather-forecast-day">${day.label}</span>
-							<span class="weather-forecast-icon weather-tone-${details.tone}">${renderIcon(details.icon)}</span>
+							<span class="weather-forecast-icon weather-tone-${details.tone}${details.asset ? ' has-weather-asset' : ''}">${renderWeatherVisual(details)}</span>
 							<span class="weather-forecast-temps">
 								<strong>${day.maxTempLabel || '--'}</strong>
 								<small>${day.minTempLabel || '--'}</small>
@@ -406,8 +532,8 @@
 			weatherWorkdayTrack.innerHTML = slots
 				.map(slot => {
 					const details = slot.isUnavailable
-						? { label: 'Brak danych', icon: 'minus-solid-full', tone: 'cloudy' }
-						: getWeatherDetails(slot.weatherCode)
+						? getStatusWeatherDetails({ label: 'Brak danych', icon: 'minus-solid-full', tone: 'cloudy', asset: 'code-red' })
+						: getWeatherDetails(slot.weatherCode, 'Warunki lokalne', 'cloudy', { useNight: isNightHour(slot.hour) })
 					const classes = ['weather-workday-slot']
 					if (slot.isCurrent) classes.push('is-current')
 					if (slot.isUnavailable) classes.push('is-unavailable')
@@ -417,7 +543,7 @@
 					return `
 						<div class="${classes.join(' ')}" data-weather-hour="${slot.hour}" title="${titleParts.join(' | ')}">
 							<span class="weather-workday-time">${formatHourLabel(slot.hour).slice(0, 5)}</span>
-							<span class="weather-workday-icon weather-tone-${details.tone}">${renderIcon(details.icon)}</span>
+							<span class="weather-workday-icon weather-tone-${details.tone}${details.asset ? ' has-weather-asset' : ''}">${renderWeatherVisual(details)}</span>
 							<span class="weather-workday-temp">${slot.temperatureLabel}</span>
 						</div>
 					`
@@ -638,7 +764,7 @@
 					return {
 						hour,
 						weatherCode: slot?.weatherCode,
-						temperatureLabel: Number.isFinite(slot?.temperature) ? `${Math.round(slot.temperature)} C` : '--',
+						temperatureLabel: Number.isFinite(slot?.temperature) ? `${Math.round(slot.temperature)}°C` : '--',
 						precipitationLabel: Number.isFinite(slot?.precipitationProbability)
 							? `Opad ${Math.round(slot.precipitationProbability)}%`
 							: '',
@@ -669,8 +795,8 @@
 					date: time,
 					label: formatForecastDateLabel(time, index),
 					weatherCode: weatherCodes[index],
-					maxTempLabel: Number.isFinite(maxTemps[index]) ? `${Math.round(maxTemps[index])} C` : '--',
-					minTempLabel: Number.isFinite(minTemps[index]) ? `${Math.round(minTemps[index])} C` : '--',
+					maxTempLabel: Number.isFinite(maxTemps[index]) ? `${Math.round(maxTemps[index])}°C` : '--',
+					minTempLabel: Number.isFinite(minTemps[index]) ? `${Math.round(minTemps[index])}°C` : '--',
 					precipitationLabel: Number.isFinite(precipitationMax[index]) ? `Opad ${Math.round(precipitationMax[index])}%` : '',
 					isUnavailable: false,
 				})),
@@ -707,27 +833,28 @@
 			showSelectedForecastDay(date, label)
 		}
 
-		const setWeatherState = ({ temperature, location, description, wind, icon, tone = 'cloudy' }) => {
+		const setWeatherState = ({ temperature, location, description, wind, icon, asset = '', tone = 'cloudy' }) => {
 			if (weatherTemp) weatherTemp.textContent = temperature
 			if (weatherLocation) {
-				const compactLocation = window.innerWidth <= 640 ? location.split(',')[0].trim() : location
+				const compactLocation = location.split(',')[0].trim()
 				weatherLocation.textContent = compactLocation
 			}
 			if (weatherDescription) weatherDescription.textContent = description
 			if (weatherWind) weatherWind.textContent = wind
 			if (weatherIcon) {
-				weatherIcon.className = `weather-icon weather-tone-${tone}`
-				weatherIcon.innerHTML = renderIcon(icon)
+				weatherIcon.className = `weather-icon weather-tone-${tone}${asset ? ' has-weather-asset' : ''}`
+				weatherIcon.innerHTML = renderWeatherVisual({ icon, asset }, { alt: '' })
 			}
 		}
 
 		const setOfflineWeatherState = (locationName, reason = 'Brak danych pogodowych') => {
 			setWeatherState({
-				temperature: '-- C',
+				temperature: '--°C',
 				location: locationName || weatherConfig.fallbackName,
 				description: reason,
 				wind: 'Tryb offline',
 				icon: 'cloud-solid-full',
+				asset: 'code-red',
 			})
 			latestForecastData = null
 			setThreeDayFallbackState()
@@ -737,20 +864,23 @@
 		const fetchWeather = async (latitude, longitude, locationName) => {
 			try {
 				const data = await fetchJsonWithTimeout(
-					`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`,
+					`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m,is_day&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`,
 					{ cache: 'no-store' }
 				)
 				const current = data.current || {}
-				const weatherDetails = getWeatherDetails(current.weather_code)
+				const weatherDetails = getWeatherDetails(current.weather_code, 'Warunki lokalne', 'cloudy', {
+					useNight: Number(current.is_day) === 0,
+				})
 				latestForecastData = data
 				resetSelectedForecast()
 
 				setWeatherState({
-					temperature: `${Math.round(current.temperature_2m ?? 0)} C`,
+					temperature: `${Math.round(current.temperature_2m ?? 0)}°C`,
 					location: locationName,
 					description: weatherDetails.label,
 					wind: `Wiatr ${Math.round(current.wind_speed_10m ?? 0)} km/h`,
 					icon: weatherDetails.icon,
+					asset: weatherDetails.asset,
 					tone: weatherDetails.tone,
 				})
 				renderDailyForecast(data)
@@ -769,11 +899,12 @@
 			}
 
 			setWeatherState({
-				temperature: '-- C',
+				temperature: '--°C',
 				location: trimmedLocation,
 				description: 'Szukanie lokalizacji...',
 				wind: 'Proszę czekać',
 				icon: 'cloud-sun-solid-full',
+				asset: 'partly-cloudy-day',
 			})
 			latestForecastData = null
 			setThreeDayFallbackState()
@@ -954,11 +1085,12 @@
 
 			if (!navigator.geolocation) {
 				setWeatherState({
-					temperature: '-- C',
+					temperature: '--°C',
 					location: 'Aktualna lokalizacja',
 					description: 'Geolokalizacja niedostępna',
 					wind: 'Twoja przeglądarka jej nie wspiera',
 					icon: 'location-crosshairs-solid-full',
+					asset: 'code-red',
 				})
 				setThreeDayFallbackState()
 				resetSelectedForecast()
@@ -967,11 +1099,12 @@
 
 			if (!window.isSecureContext) {
 				setWeatherState({
-					temperature: '-- C',
+					temperature: '--°C',
 					location: 'Aktualna lokalizacja',
 					description: 'Lokalizacja wymaga bezpiecznego adresu',
 					wind: 'Uruchom przez HTTPS albo localhost',
 					icon: 'location-crosshairs-solid-full',
+					asset: 'code-red',
 				})
 				setThreeDayFallbackState()
 				resetSelectedForecast()
@@ -979,11 +1112,12 @@
 			}
 
 			setWeatherState({
-				temperature: '-- C',
+				temperature: '--°C',
 				location: 'Aktualna lokalizacja',
 				description: 'Pobieram pozycję...',
 				wind: 'Proszę czekać',
 				icon: 'location-crosshairs-solid-full',
+				asset: 'umbrella-wind',
 			})
 			latestForecastData = null
 			setThreeDayFallbackState()
@@ -1046,11 +1180,12 @@
 				const message = locationErrorOverrides[error?.code] || fallbackLocationError
 
 				setWeatherState({
-					temperature: '-- C',
+					temperature: '--°C',
 					location: 'Aktualna lokalizacja',
 					description: message.description,
 					wind: message.wind,
 					icon: 'location-crosshairs-solid-full',
+					asset: 'code-red',
 				})
 				setThreeDayFallbackState()
 				resetSelectedForecast()
@@ -1195,8 +1330,11 @@
 		}
 
 		return {
+			closeEditor: closeWeatherEditor,
 			init,
+			openEditor: openWeatherEditor,
 			refresh: fetchWeatherForLocation,
+			toggleEditor: toggleWeatherEditor,
 		}
 	}
 })()

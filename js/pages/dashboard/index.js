@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	dashboardContainer.classList.add('is-ready')
 
 	const services = {
+		monitorService: window.AppServices?.monitorService,
 		storageService: window.AppServices?.storageService,
 		preferencesService: window.AppServices?.preferencesService,
 		usersService: window.AppServices?.usersService,
@@ -21,6 +22,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		clockDigital: document.getElementById('clock-digital'),
 		clockDate: document.getElementById('clock-date'),
 		clockWidgetTrigger: document.getElementById('clock-widget-trigger'),
+		dashboardTopWidgetShell: document.getElementById('dashboard-top-widget-shell'),
+		dashboardTopWidgetLayout: document.getElementById('dashboard-top-widget-layout'),
+		dashboardTopWidgetEditBtn: document.getElementById('dashboard-top-widget-edit-btn'),
+		dashboardTopWidgetPicker: document.getElementById('dashboard-top-widget-picker'),
+		dashboardTopWidgetPickerPrimary: document.getElementById('dashboard-top-widget-picker-primary'),
+		dashboardTopWidgetPickerSecondary: document.getElementById('dashboard-top-widget-picker-secondary'),
+		dashboardTopWidgetPrimarySlot: document.getElementById('dashboard-top-widget-primary-slot'),
+		dashboardTopWidgetSecondarySlot: document.getElementById('dashboard-top-widget-secondary-slot'),
+		dashboardTopWidgetDivider: document.getElementById('dashboard-top-widget-divider'),
+		dashboardTopWidgetStash: document.getElementById('dashboard-top-widget-stash'),
 		dashboardScrollCue: document.getElementById('dashboard-scroll-cue'),
 		dashboardMenuStage: document.querySelector('.dashboard-menu-stage'),
 		dashboardMenu: document.getElementById('dashboard-menu'),
@@ -28,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		dashboardMenuEditActions: document.getElementById('dashboard-menu-edit-actions'),
 		dashboardMenuSaveBtn: document.getElementById('dashboard-menu-save-btn'),
 		dashboardMenuCancelBtn: document.getElementById('dashboard-menu-cancel-btn'),
+		registeredUsersCount: document.getElementById('dashboard-registered-users-count'),
+		activeUsersList: document.getElementById('dashboard-active-users-list'),
 		taskPreviewList: document.getElementById('task-preview-list'),
 		weatherTemp: document.getElementById('weather-temp'),
 		weatherLocation: document.getElementById('weather-location'),
@@ -44,8 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		weatherCurrentLocationBtn: document.getElementById('weather-current-location-btn'),
 		weatherWidgetTrigger: document.getElementById('weather-widget-trigger'),
 		weatherWidget: document.querySelector('.weather-widget'),
-		registeredUsersCount: document.getElementById('dashboard-registered-users-count'),
-		activeUsersList: document.getElementById('dashboard-active-users-list'),
 		taskModal: document.getElementById('task-modal'),
 		taskForm: document.getElementById('task-form'),
 		taskTitleInput: document.getElementById('task-title'),
@@ -65,227 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		taskCalendarNext: document.getElementById('task-calendar-next'),
 		taskToastStack: document.getElementById('task-toast-stack'),
 	}
-
-	const activeUsersController = (() => {
-		const { registeredUsersCount, activeUsersList } = elements
-		const { storageService, usersService } = services
-		const activeUsersStorageKey = AppUtils.config.STORAGE_KEYS.DASHBOARD_ACTIVE_USERS || 'dashboard_active_users'
-		const usersStorageKey = AppUtils.config.STORAGE_KEYS.USERS
-		const sessionStorageKey = AppUtils.config.STORAGE_KEYS.SESSION
-		const activeUserTtlMs = 45000
-		const visibleUsersLimit = 3
-		let activeUsers = []
-		let rotationIndex = 0
-		let refreshTimerId = 0
-		let rotationTimerId = 0
-		let profileShell = null
-
-		if (!registeredUsersCount || !activeUsersList || !storageService || !usersService) {
-			return null
-		}
-
-		const escapeHtml = value => AppUtils.escapeHtml(String(value ?? ''))
-		const getUsers = () => (usersService.getAll?.() || []).filter(user => user?.id)
-		const getActiveUserRecords = () => {
-			const now = Date.now()
-			const records = storageService.readJson?.(activeUsersStorageKey, []) || []
-			return Array.isArray(records)
-				? records.filter(record => record?.userId && record?.tabId && now - (Date.parse(record.lastSeenAt) || 0) <= activeUserTtlMs)
-				: []
-		}
-		const getUserDisplayName = user => String(user?.fullName || '').trim() || 'Użytkownik'
-		const normalizeProfileImage = value => {
-			const normalizedValue = String(value || '').trim()
-			return /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(normalizedValue) ? normalizedValue : ''
-		}
-		const normalizeProfileAccentColor = value => {
-			const normalizedValue = String(value || '').trim().toLowerCase()
-			return /^#[0-9a-f]{6}$/.test(normalizedValue) ? normalizedValue : '#c8102e'
-		}
-		const mergeRecordWithUser = (record, user) => ({
-			id: String(record.userId || user?.id || ''),
-			fullName: String(user?.fullName || record.fullName || '').trim(),
-			login: String(user?.login || record.login || '').trim(),
-			role: user?.role || record.role || 'user',
-			avatarId: user?.avatarId || record.avatarId || 'blue',
-			avatarImage: user?.avatarImage || record.avatarImage || '',
-			profileAccentColor: user?.profileAccentColor || record.profileAccentColor || '',
-			profileCoverImage: user?.profileCoverImage || record.profileCoverImage || '',
-			lastSeenAt: record.lastSeenAt || '',
-		})
-		const getActiveUsers = registeredUsers => {
-			const usersById = new Map(registeredUsers.map(user => [String(user.id), user]))
-			const recordsByUserId = new Map()
-
-			getActiveUserRecords().forEach(record => {
-				const userId = String(record.userId || '')
-				const existingRecord = recordsByUserId.get(userId)
-				if (!existingRecord || (Date.parse(record.lastSeenAt) || 0) > (Date.parse(existingRecord.lastSeenAt) || 0)) {
-					recordsByUserId.set(userId, record)
-				}
-			})
-
-			return [...recordsByUserId.values()]
-				.map(record => mergeRecordWithUser(record, usersById.get(String(record.userId || ''))))
-				.filter(user => user.id)
-				.sort((leftUser, rightUser) => getUserDisplayName(leftUser).localeCompare(getUserDisplayName(rightUser), 'pl'))
-		}
-		const getVisibleUsers = () => {
-			if (activeUsers.length <= visibleUsersLimit) return activeUsers
-
-			return Array.from(
-				{ length: visibleUsersLimit },
-				(_, index) => activeUsers[(rotationIndex + index) % activeUsers.length]
-			)
-		}
-		const renderActiveUsersList = () => {
-			if (activeUsers.length === 0) {
-				activeUsersList.textContent = 'brak'
-				return
-			}
-
-			activeUsersList.innerHTML = getVisibleUsers()
-				.map((user, index) => {
-					const separator = index > 0 ? '<span class="dashboard-active-users-comma">, </span>' : ''
-					const label = getUserDisplayName(user)
-
-					return `${separator}<button type="button" class="dashboard-active-user-link" data-active-user-id="${escapeHtml(user.id)}" title="Pokaż profil: ${escapeHtml(label)}">${escapeHtml(label)}</button>`
-				})
-				.join('')
-
-			if (activeUsers.length > visibleUsersLimit) {
-				activeUsersList.insertAdjacentHTML('beforeend', '<span class="dashboard-active-users-more">...</span>')
-			}
-		}
-		const refreshSummary = () => {
-			const users = getUsers()
-			activeUsers = getActiveUsers(users)
-			if (rotationIndex >= activeUsers.length) {
-				rotationIndex = 0
-			}
-
-			registeredUsersCount.textContent = String(users.length)
-			renderActiveUsersList()
-		}
-		const rotateVisibleUsers = () => {
-			if (activeUsers.length <= visibleUsersLimit) return
-
-			rotationIndex = (rotationIndex + visibleUsersLimit) % activeUsers.length
-			renderActiveUsersList()
-		}
-		const closeUserProfilePreview = () => {
-			if (!profileShell) return
-
-			profileShell.hidden = true
-			profileShell.setAttribute('aria-hidden', 'true')
-		}
-		const ensureUserProfilePreview = () => {
-			if (profileShell) return profileShell
-
-			profileShell = document.createElement('div')
-			profileShell.className = 'dashboard-user-profile-shell'
-			profileShell.hidden = true
-			profileShell.setAttribute('aria-hidden', 'true')
-			profileShell.innerHTML = `
-				<div class="dashboard-user-profile-backdrop" data-dashboard-user-profile-close></div>
-				<section class="dashboard-user-profile-card" role="dialog" aria-modal="true" aria-labelledby="dashboard-user-profile-title"></section>
-			`
-			document.body.appendChild(profileShell)
-
-			profileShell.addEventListener('click', event => {
-				if (!event.target.closest('[data-dashboard-user-profile-close]')) return
-
-				closeUserProfilePreview()
-			})
-
-			return profileShell
-		}
-		const openUserProfilePreview = user => {
-			if (!user) return
-
-			const shell = ensureUserProfilePreview()
-			const card = shell.querySelector('.dashboard-user-profile-card')
-			const roleLabel = AppUtils.auth?.getRoleLabel?.(user.role) || (user.role === 'admin' ? 'Lider' : 'Pracownik')
-			const subtitle = String(user?.profileTitle || '').trim() || roleLabel
-			const name = getUserDisplayName(user)
-			const coverImage = normalizeProfileImage(user.profileCoverImage)
-			const accentColor = normalizeProfileAccentColor(user.profileAccentColor)
-			const avatarMarkup = AppUtils.createAvatarMarkup({
-				fullName: name,
-				avatarId: user.avatarId || 'blue',
-				avatarImage: user.avatarImage || '',
-				extraClass: 'dashboard-user-profile-avatar',
-			})
-
-			shell.style.setProperty('--dashboard-user-profile-accent', accentColor)
-			shell.style.setProperty('--dashboard-user-profile-cover-image', coverImage ? `url("${coverImage}")` : 'none')
-			shell.classList.toggle('has-profile-cover-image', Boolean(coverImage))
-			card.classList.toggle('has-profile-cover-image', Boolean(coverImage))
-			card.innerHTML = `
-				<div class="dashboard-user-profile-cover" aria-hidden="true"></div>
-				<button type="button" class="dashboard-user-profile-close" data-dashboard-user-profile-close aria-label="Zamknij profil">
-					<i class="app-icon xmark-solid-full"></i>
-				</button>
-				<div class="dashboard-user-profile-body">
-					<div class="dashboard-user-profile-head">
-						${avatarMarkup}
-						<div>
-							<p class="dashboard-kicker">Profil użytkownika</p>
-							<h2 id="dashboard-user-profile-title">${escapeHtml(name)}</h2>
-							<p>${escapeHtml(subtitle)}</p>
-						</div>
-					</div>
-					<div class="dashboard-user-profile-grid">
-						<span>Rola</span>
-						<strong>${escapeHtml(roleLabel)}</strong>
-						<span>Status</span>
-						<strong>Aktywny teraz</strong>
-					</div>
-				</div>
-			`
-
-			shell.hidden = false
-			shell.setAttribute('aria-hidden', 'false')
-			card.querySelector('.dashboard-user-profile-close')?.focus()
-		}
-		const handleStorageChange = key => {
-			if (key === activeUsersStorageKey || key === usersStorageKey || key === sessionStorageKey) {
-				refreshSummary()
-			}
-		}
-		const init = () => {
-			refreshSummary()
-			refreshTimerId = window.setInterval(refreshSummary, 10000)
-			rotationTimerId = window.setInterval(rotateVisibleUsers, 3000)
-
-			activeUsersList.addEventListener('click', event => {
-				const userButton = event.target.closest('[data-active-user-id]')
-				if (!userButton) return
-
-				const userId = String(userButton.dataset.activeUserId || '')
-				const clickedUser =
-					activeUsers.find(user => String(user.id) === userId) ||
-					getUsers().find(user => String(user.id) === userId)
-				openUserProfilePreview(clickedUser)
-			})
-
-			document.addEventListener('app-auth-changed', refreshSummary)
-			document.addEventListener('keydown', event => {
-				if (event.key === 'Escape') {
-					closeUserProfilePreview()
-				}
-			})
-			window.addEventListener('beforeunload', () => {
-				window.clearInterval(refreshTimerId)
-				window.clearInterval(rotationTimerId)
-			})
-		}
-
-		return {
-			handleStorageChange,
-			init,
-		}
-	})()
 
 	const menuEditorController = (() => {
 		const {
@@ -702,24 +492,105 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	})()
 
+	const activeUsersController = (() => {
+		const { registeredUsersCount, activeUsersList } = elements
+		const { storageService, usersService } = services
+		const activeUsersStorageKey = AppUtils.config.STORAGE_KEYS.DASHBOARD_ACTIVE_USERS || 'dashboard_active_users'
+		const usersStorageKey = AppUtils.config.STORAGE_KEYS.USERS
+		const sessionStorageKey = AppUtils.config.STORAGE_KEYS.SESSION
+		const activeUserTtlMs = 45000
+		let refreshTimerId = 0
+
+		if (!registeredUsersCount || !activeUsersList || !storageService || !usersService) {
+			return null
+		}
+
+		const getRegisteredUsers = () => (usersService.getAll?.() || []).filter(user => user?.id)
+
+		const getActiveUsers = registeredUsers => {
+			const records = storageService.readJson?.(activeUsersStorageKey, []) || []
+			if (!Array.isArray(records)) return []
+
+			const now = Date.now()
+			const usersById = new Map(registeredUsers.map(user => [String(user.id || ''), user]))
+			const recordsByUserId = new Map()
+
+			records
+				.filter(record => record?.userId && record?.tabId && now - (Date.parse(record.lastSeenAt) || 0) <= activeUserTtlMs)
+				.forEach(record => {
+					const userId = String(record.userId || '')
+					const previousRecord = recordsByUserId.get(userId)
+					if (!previousRecord || (Date.parse(record.lastSeenAt) || 0) > (Date.parse(previousRecord.lastSeenAt) || 0)) {
+						recordsByUserId.set(userId, record)
+					}
+				})
+
+			return [...recordsByUserId.values()]
+				.map(record => usersById.get(String(record.userId || '')) || record)
+				.filter(user => String(user?.id || user?.userId || '').trim())
+				.sort((leftUser, rightUser) =>
+					String(leftUser?.fullName || leftUser?.login || '')
+						.localeCompare(String(rightUser?.fullName || rightUser?.login || ''), 'pl')
+				)
+		}
+
+		const renderSummary = () => {
+			const registeredUsers = getRegisteredUsers()
+			const activeUsers = getActiveUsers(registeredUsers)
+			const activeUsersLabel = activeUsers
+				.map(user => String(user?.fullName || user?.login || '').trim())
+				.filter(Boolean)
+				.join(', ')
+
+			registeredUsersCount.textContent = String(registeredUsers.length)
+			activeUsersList.textContent = activeUsersLabel || 'brak'
+		}
+
+		const handleStorageChange = changedKey => {
+			if (!changedKey || changedKey === activeUsersStorageKey || changedKey === usersStorageKey || changedKey === sessionStorageKey) {
+				renderSummary()
+			}
+		}
+
+		const init = () => {
+			renderSummary()
+			refreshTimerId = window.setInterval(renderSummary, 10000)
+			document.addEventListener('app-auth-changed', renderSummary)
+			window.addEventListener('beforeunload', () => {
+				if (refreshTimerId) {
+					window.clearInterval(refreshTimerId)
+				}
+			})
+		}
+
+		return {
+			handleStorageChange,
+			init,
+		}
+	})()
+
 	const plannerController = window.DashboardModules?.createTaskPlannerController?.({
 		elements,
 		services,
-	})
-	const clockController = window.DashboardModules?.createClockController?.({
-		elements,
-		onDayChange: () => plannerController?.refreshPreview?.(),
 	})
 	const weatherController = window.DashboardModules?.createWeatherController?.({
 		elements,
 		services,
 	})
+	const topWidgetsController = window.DashboardModules?.createTopWidgetsController?.({
+		elements,
+		services,
+		controllers: {
+			plannerController,
+			weatherController,
+		},
+	})
 
 	plannerController?.init?.()
-	clockController?.start?.()
 	weatherController?.init?.()
-	menuEditorController?.init?.()
+	topWidgetsController?.init?.()
 	activeUsersController?.init?.()
+	menuEditorController?.init?.()
 	window.DashboardModules?.initDashboardTopbar?.({
 		dashboardScrollCue: elements.dashboardScrollCue,
 		dashboardMenu: elements.dashboardMenu,
@@ -728,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener('storage', event => {
 		menuEditorController?.handleStorageChange?.(event.key)
 		plannerController?.handleStorageChange?.(event.key)
+		topWidgetsController?.handleStorageChange?.(event.key)
 		activeUsersController?.handleStorageChange?.(event.key)
 	})
 })

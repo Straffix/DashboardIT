@@ -31,6 +31,13 @@
 		`${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())}`
 	const getTaskDateTime = task => new Date(`${task.date}T${task.time || '00:00'}`)
 	const compareTasks = (left, right) => getTaskDateTime(left) - getTaskDateTime(right)
+	const normalizeTaskStatus = status => (status === 'done' ? 'done' : 'todo')
+	const isTaskCompleted = task => normalizeTaskStatus(task?.status) === 'done'
+	const compareTasksByDisplay = (left, right) => {
+		const statusDiff = Number(isTaskCompleted(left)) - Number(isTaskCompleted(right))
+		if (statusDiff !== 0) return statusDiff
+		return compareTasks(left, right)
+	}
 
 	const normalizeStoredTask = task => {
 		const title = String(task?.title || '').trim()
@@ -48,6 +55,7 @@
 			time,
 			priority: priorityMap[task?.priority] ? task.priority : 'medium',
 			description: String(task?.description || '').trim(),
+			status: normalizeTaskStatus(task?.status),
 		}
 	}
 
@@ -116,6 +124,7 @@
 
 		const saveTasks = () => {
 			preferencesService?.saveDashboardTasks?.(tasks) || storageService?.writeJson?.(taskConfig.storageKey, tasks)
+			window.dispatchEvent(new CustomEvent('dashboard:tasks-updated'))
 		}
 
 		const saveRemindedTasks = () => {
@@ -123,8 +132,12 @@
 		}
 
 		const createTaskId = () => `task-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
+		const getTaskReminderId = task => reminderController?.getReminderId(task) || `${task.id}-${task.date}-${task.time}`
 
-		const getTasksForDate = dateKey => tasks.filter(task => task.date === dateKey).sort(compareTasks)
+		const getTasksForDate = (dateKey, { completedLast = false } = {}) =>
+			tasks
+				.filter(task => task.date === dateKey)
+				.sort(completedLast ? compareTasksByDisplay : compareTasks)
 
 		const setDefaultTaskDate = dateKey => {
 			if (taskDateInput) {
@@ -180,7 +193,7 @@
 			if (!taskPreviewList) return
 
 			const todayKey = formatTaskDateKey(new Date())
-			const todayTasks = getTasksForDate(todayKey).slice(0, 3)
+			const todayTasks = getTasksForDate(todayKey, { completedLast: true }).slice(0, 3)
 			taskPreviewList.innerHTML = ''
 
 			if (todayTasks.length === 0) {
@@ -194,7 +207,7 @@
 			todayTasks.forEach(task => {
 				const priority = priorityMap[task.priority] || priorityMap.medium
 				const item = document.createElement('span')
-				item.className = 'task-preview-item'
+				item.className = `task-preview-item${isTaskCompleted(task) ? ' is-completed' : ''}`
 				item.innerHTML = `
 					<span class="task-preview-dot ${priority.className}"></span>
 					<span class="task-preview-copy">${escapeHtml(task.time)} • ${escapeHtml(task.title)}</span>
@@ -207,7 +220,7 @@
 			if (!taskAgendaList || !taskAgendaTitle || !taskAgendaCount) return
 
 			const selectedDate = new Date(`${selectedTaskDate}T00:00`)
-			const selectedTasks = getTasksForDate(selectedTaskDate)
+			const selectedTasks = getTasksForDate(selectedTaskDate, { completedLast: true })
 			const guestMode = !isAuthenticated()
 
 			taskAgendaTitle.textContent = selectedDate.toLocaleDateString('pl-PL', {
@@ -228,9 +241,23 @@
 
 			selectedTasks.forEach(task => {
 				const priority = priorityMap[task.priority] || priorityMap.medium
+				const isCompleted = isTaskCompleted(task)
+				const toggleLabel = isCompleted ? 'Oznacz zadanie jako niezakończone' : 'Oznacz zadanie jako zakończone'
 				const item = document.createElement('article')
-				item.className = `task-agenda-item ${priority.className}`
+				item.className = `task-agenda-item ${priority.className}${isCompleted ? ' is-completed' : ''}`
 				item.innerHTML = `
+					<label class="task-check-control" title="${escapeHtml(guestMode ? 'Zaloguj sie, aby oznaczac zadania' : toggleLabel)}">
+						<input
+							type="checkbox"
+							class="task-check-input"
+							data-task-toggle="${escapeHtml(task.id)}"
+							aria-label="${escapeHtml(toggleLabel)}"
+							${isCompleted ? 'checked' : ''}
+							${guestMode ? 'disabled' : ''}>
+						<span class="task-check-box" aria-hidden="true">
+							<i class="app-icon check-solid-full"></i>
+						</span>
+					</label>
 					<div class="task-agenda-main">
 						<div class="task-agenda-topline">
 							<span class="task-priority-pill ${priority.className}">${priority.label}</span>
@@ -318,7 +345,7 @@
 		}
 
 		const cleanupReminderCache = () => {
-			const activeReminderIds = new Set(tasks.map(task => reminderController?.getReminderId(task) || `${task.id}-${task.date}-${task.time}`))
+			const activeReminderIds = new Set(tasks.filter(task => !isTaskCompleted(task)).map(getTaskReminderId))
 			let hasChanges = false
 
 			remindedTaskIds.forEach(reminderId => {
@@ -337,7 +364,9 @@
 			const now = new Date()
 
 			tasks.forEach(task => {
-				const reminderId = reminderController?.getReminderId(task) || `${task.id}-${task.date}-${task.time}`
+				if (isTaskCompleted(task)) return
+
+				const reminderId = getTaskReminderId(task)
 				if (remindedTaskIds.has(reminderId)) return
 
 				const minutesUntilTask = (getTaskDateTime(task) - now) / 60000
@@ -395,6 +424,34 @@
 			syncTaskUi()
 		}
 
+		const toggleTaskCompletion = (taskId, shouldComplete) => {
+			if (!requireAuthenticatedAction('Musisz byc zalogowany, aby oznaczac zadania jako zakonczone.')) {
+				return false
+			}
+
+			const normalizedTaskId = String(taskId || '')
+			const taskIndex = tasks.findIndex(task => task.id === normalizedTaskId)
+			if (taskIndex === -1) return false
+
+			const nextStatus = shouldComplete ? 'done' : 'todo'
+			if (tasks[taskIndex].status === nextStatus) return true
+
+			const reminderId = getTaskReminderId(tasks[taskIndex])
+			remindedTaskIds.delete(reminderId)
+			saveRemindedTasks()
+
+			tasks[taskIndex] = {
+				...tasks[taskIndex],
+				status: nextStatus,
+			}
+			tasks.sort(compareTasks)
+			saveTasks()
+			syncTaskUi()
+			cleanupReminderCache()
+			checkTaskReminders()
+			return true
+		}
+
 		const openTaskModal = () => {
 			if (!requireAuthenticatedAction()) return
 			if (!taskModal) return
@@ -419,7 +476,7 @@
 		}
 
 		const init = () => {
-			if (!clockWidgetTrigger || !taskModal || !taskForm) return false
+			if (!taskModal || !taskForm) return false
 
 			storageService?.remove?.(legacyAutoclearKey)
 			tasks = loadTasks()
@@ -429,7 +486,7 @@
 			setDefaultTaskDate(selectedTaskDate)
 			syncTaskUi()
 
-			clockWidgetTrigger.addEventListener('click', handleTaskPlannerOpen)
+			clockWidgetTrigger?.addEventListener('click', handleTaskPlannerOpen)
 
 			taskModal.addEventListener('click', event => {
 				if (event.target.closest('[data-task-close]')) {
@@ -500,6 +557,7 @@
 					time,
 					priority,
 					description,
+					status: 'todo',
 				})
 				tasks.sort(compareTasks)
 				saveTasks()
@@ -514,6 +572,17 @@
 				syncTaskUi()
 				cleanupReminderCache()
 				checkTaskReminders()
+			})
+
+			taskAgendaList?.addEventListener('change', event => {
+				const actionTarget = event.target instanceof Element ? event.target : null
+				const toggleInput = actionTarget?.closest('[data-task-toggle]')
+				const taskId = toggleInput?.getAttribute('data-task-toggle')
+				if (!(toggleInput instanceof HTMLInputElement) || !taskId) return
+
+				if (!toggleTaskCompletion(taskId, toggleInput.checked)) {
+					syncTaskUi()
+				}
 			})
 
 			taskAgendaList?.addEventListener('click', event => {
@@ -554,6 +623,7 @@
 			init,
 			open: openTaskModal,
 			refreshPreview: renderTaskPreview,
+			toggleTaskCompletion,
 		}
 	}
 })()

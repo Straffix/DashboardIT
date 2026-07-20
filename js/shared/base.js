@@ -94,6 +94,7 @@ const APP_CONFIG = {
 		THEME: 'dashboard-theme',
 		WEATHER_LOCATION: 'dashboard-weather-location',
 		DASHBOARD_MENU_ORDER: 'dashboard-menu-order',
+		DASHBOARD_TOP_WIDGETS: 'dashboard-top-widgets',
 		DASHBOARD_TASKS: 'dashboard-tasks',
 		DASHBOARD_TASK_REMINDERS: 'dashboard-task-reminders',
 	},
@@ -110,7 +111,11 @@ const createDateFromParts = (year, month, day) => {
 
 	const parsedDate = new Date(parsedYear, parsedMonth - 1, parsedDay)
 	if (Number.isNaN(parsedDate.getTime())) return null
-	if (parsedDate.getFullYear() !== parsedYear || parsedDate.getMonth() !== parsedMonth - 1 || parsedDate.getDate() !== parsedDay) {
+	if (
+		parsedDate.getFullYear() !== parsedYear ||
+		parsedDate.getMonth() !== parsedMonth - 1 ||
+		parsedDate.getDate() !== parsedDay
+	) {
 		return null
 	}
 
@@ -220,7 +225,10 @@ const formatDateTimeLabel = value => {
 /* === Shared Icon Rendering: Start === */
 const APP_ICON_ASSET_DIR = './img/ico'
 
-const normalizeIconAssetName = value => String(value || '').trim().replace(/\.svg$/i, '')
+const normalizeIconAssetName = value =>
+	String(value || '')
+		.trim()
+		.replace(/\.svg$/i, '')
 
 const getIconAssetUrl = iconName => {
 	const normalizedName = normalizeIconAssetName(iconName)
@@ -334,7 +342,11 @@ const renderAccessoryIcons = (accessories, options = {}) => {
 
 	const visibleItems = normalized.slice(0, config.maxVisible)
 	const hiddenItems = normalized.slice(config.maxVisible)
-	const wrapperClasses = [config.wrapperClass, getAccessorySizeClass(config.size), getAccessoryColumnsClass(config.columns)].filter(Boolean)
+	const wrapperClasses = [
+		config.wrapperClass,
+		getAccessorySizeClass(config.size),
+		getAccessoryColumnsClass(config.columns),
+	].filter(Boolean)
 
 	const items = visibleItems
 		.map(acc => {
@@ -455,8 +467,7 @@ const createMonthPicker = ({
 		const getMonthCountsForYear = year =>
 			typeof getCounts === 'function' ? getCounts(year) : Array.from({ length: 12 }, () => 0)
 
-		const getYearRecordTotal = year =>
-			getMonthCountsForYear(year).reduce((sum, count) => sum + (Number(count) || 0), 0)
+		const getYearRecordTotal = year => getMonthCountsForYear(year).reduce((sum, count) => sum + (Number(count) || 0), 0)
 
 		const popover = document.createElement('div')
 		popover.className = 'month-fallback-popover'
@@ -500,9 +511,7 @@ const createMonthPicker = ({
 			const topLimit = Math.max(viewportPadding, window.innerHeight - popoverRect.height - viewportPadding)
 			const preferredAboveTop = triggerRect.top - popoverRect.height - 8
 			const shouldOpenAbove = preferredTop > topLimit && preferredAboveTop >= viewportPadding
-			const top = shouldOpenAbove
-				? preferredAboveTop
-				: Math.max(viewportPadding, Math.min(preferredTop, topLimit))
+			const top = shouldOpenAbove ? preferredAboveTop : Math.max(viewportPadding, Math.min(preferredTop, topLimit))
 			const preferredLeft = triggerRect.left + triggerRect.width / 2 - popoverRect.width / 2
 			const leftLimit = Math.max(viewportPadding, window.innerWidth - popoverRect.width - viewportPadding)
 			const left = Math.max(viewportPadding, Math.min(preferredLeft, leftLimit))
@@ -617,8 +626,7 @@ const createMonthPicker = ({
 				input.showPicker()
 				return
 			}
-		} catch (error) {
-		}
+		} catch (error) {}
 
 		input.focus()
 		input.click()
@@ -713,7 +721,7 @@ const normalizeAuditFields = record => ({
 	updatedAt: record?.updatedAt || '',
 })
 
-const buildAuditMarkup = record => {
+let buildAuditMarkup = record => {
 	const authUtils = window.AppUtils?.auth
 	const normalizedAudit = normalizeAuditFields(record)
 	const createdByLabel = authUtils?.getAuditActorLabel?.(normalizedAudit.createdBy) || 'Nieznany'
@@ -722,12 +730,30 @@ const buildAuditMarkup = record => {
 	const updatedAtLabel = formatDate(normalizedAudit.updatedAt)
 	const createdLine = createdAtLabel ? `${createdByLabel} · ${createdAtLabel}` : createdByLabel
 	const updatedLine = updatedAtLabel ? `${updatedByLabel} · ${updatedAtLabel}` : updatedByLabel
-	const shouldShowUpdate = Boolean(normalizedAudit.updatedBy || normalizedAudit.updatedAt) && updatedLine !== createdLine
+	const shouldShowUpdate =
+		Boolean(normalizedAudit.updatedBy || normalizedAudit.updatedAt) && updatedLine !== createdLine
 
 	return `
 		<div class="record-audit">
-			<span class="record-audit-line"><strong>Dodal:</strong> ${createdLine}</span>
-			${shouldShowUpdate ? `<span class="record-audit-line"><strong>Edytowal:</strong> ${updatedLine}</span>` : ''}
+			<span class="record-audit-line"><strong>Dodał:</strong> ${createdLine}</span>
+			${shouldShowUpdate ? `<span class="record-audit-line"><strong>Edytował:</strong> ${updatedLine}</span>` : ''}
+		</div>
+	`
+}
+// Module tables show only the latest audit touch: actor plus date.
+buildAuditMarkup = record => {
+	const authUtils = window.AppUtils?.auth
+	const normalizedAudit = normalizeAuditFields(record)
+	const latestActor = normalizedAudit.updatedBy || normalizedAudit.createdBy || null
+	const latestAt = normalizedAudit.updatedAt || normalizedAudit.createdAt || ''
+	const latestActorLabel = latestActor ? authUtils?.getAuditActorLabel?.(latestActor) || 'Uzytkownik zespolu' : ''
+	const latestAtLabel = formatDate(latestAt)
+	const hasHistory = Boolean(latestActor || latestAtLabel)
+	const latestLine = hasHistory ? [latestActorLabel, latestAtLabel].filter(Boolean).join(' | ') : 'Brak danych historycznych'
+
+	return `
+		<div class="record-audit">
+			<span class="record-audit-line">${latestLine}</span>
 		</div>
 	`
 }
@@ -872,7 +898,14 @@ const ensureConfirmDialog = () => {
 			return
 		}
 
-		if (event.key === 'Enter' && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing) {
+		if (
+			event.key === 'Enter' &&
+			!event.shiftKey &&
+			!event.altKey &&
+			!event.ctrlKey &&
+			!event.metaKey &&
+			!event.isComposing
+		) {
 			event.preventDefault()
 			closeConfirmDialog(true)
 		}
