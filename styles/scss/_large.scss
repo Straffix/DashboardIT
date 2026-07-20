@@ -3,10 +3,6 @@
 		font-size: 66%;
 	}
 
-	.wrapper {
-		width: min(1500px, 100% - 72px);
-	}
-
 	body:not(.dashboard-page) .wrapper {
 		padding: 40px 36px 30px;
 	}
@@ -16,23 +12,28 @@
 		gap: 40px;
 	}
 
+	body.dashboard-page .wrapper {
+		width: min(calc(100% - 56px), 1560px);
+		padding: 18px 0;
+	}
+
 	body.dashboard-page .dashboard-container {
-		max-width: 1500px;
-		padding: 32px 40px 36px;
+		max-width: none;
+		padding: 22px 30px 16px;
 	}
 
 	body.dashboard-page .dashboard-header {
-		max-width: 860px;
-		margin-bottom: 56px;
+		max-width: 980px;
+		margin: 0 auto;
 	}
 
 	body.dashboard-page .menu-grid {
-		grid-template-columns: repeat(3, minmax(280px, 1fr));
-		gap: 28px;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 20px;
 	}
 
 	body.dashboard-page .dashboard-card {
-		min-height: 148px;
+		min-height: clamp(134px, 15vh, 162px);
 	}
 
 	body.dashboard-page .task-modal-card {
@@ -45,25 +46,21 @@
 		font-size: 70%;
 	}
 
-	.wrapper {
-		width: min(1760px, 100% - 96px);
-	}
-
 	body.dashboard-page .wrapper {
-		width: min(1800px, 100% - 96px);
+		width: min(calc(100% - 72px), 1760px);
 	}
 
 	body.dashboard-page .dashboard-container {
-		max-width: 1760px;
-		min-height: calc(100vh - 120px);
+		max-width: none;
+		min-height: 0;
 	}
 
 	body.dashboard-page .menu-grid {
-		grid-template-columns: repeat(4, minmax(260px, 1fr));
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 
 	body.dashboard-page .dashboard-header h1 {
-		font-size: clamp(4rem, 4.2vw, 6rem);
+		font-size: clamp(3rem, 3.6vw, 4.8rem);
 	}
 
 	body.dashboard-page .dashboard-subtitle {

@@ -613,7 +613,6 @@ button.dashboard-top-mini-widget:focus-visible {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
-
 .dashboard-top-tasks-check-box .app-icon {
   font-size: 0.7rem;
   opacity: 0;
@@ -2002,7 +2001,6 @@ body.weather-editor-open .weather-widget {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
-
 .task-check-box .app-icon {
   font-size: 0.76rem;
   opacity: 0;
@@ -3492,6 +3490,160 @@ body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
 }
 
 /* === Dashboard Footer: End === */
+@media (min-width: 1024px) {
+  body.dashboard-page {
+    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden;
+    padding: 0;
+  }
+  body.dashboard-page .wrapper {
+    display: flex;
+    align-items: stretch;
+    width: min(100% - 48px, 1440px);
+    height: 100dvh;
+    min-height: 100dvh;
+    margin-inline: auto;
+    padding: 18px 0;
+  }
+  .dashboard-container {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    gap: 14px;
+    height: 100%;
+    min-height: 0;
+    max-width: none;
+    padding: 20px 28px 14px;
+    overflow: hidden;
+  }
+  .dashboard-container::before {
+    inset: 12px;
+  }
+  .dashboard-topbar {
+    align-items: center;
+    min-height: 0;
+    margin-bottom: 0;
+  }
+  .dashboard-top-widget-layout {
+    min-height: 86px;
+    padding: 10px 16px;
+  }
+  .dashboard-top-widget-shell.has-secondary .dashboard-top-widget-layout {
+    min-width: 344px;
+  }
+  .dashboard-header {
+    max-width: 920px;
+    margin: 0 auto;
+  }
+  .dashboard-header h1 {
+    font-size: clamp(2.8rem, 3.8vw, 4.4rem);
+    line-height: 1.04;
+  }
+  .dashboard-header-copy {
+    gap: 10px;
+  }
+  .dashboard-kicker {
+    margin-bottom: 0;
+    font-size: 0.92rem;
+    letter-spacing: 0.3em;
+  }
+  .dashboard-menu-stage {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 14px;
+    min-height: 0;
+  }
+  body.weather-editor-open .dashboard-menu-stage {
+    margin-top: 20px;
+  }
+  .dashboard-menu-toolbar {
+    margin-bottom: 0;
+  }
+  .menu-grid {
+    margin-top: 0;
+    gap: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(0, 1fr);
+  }
+  .dashboard-card {
+    display: grid;
+    grid-template-columns: clamp(58px, 4vw, 68px) minmax(0, 1fr);
+    align-items: center;
+    align-content: center;
+    justify-content: flex-start;
+    gap: 18px;
+    min-height: clamp(132px, 16vh, 160px);
+    padding: 20px 22px;
+  }
+  .dashboard-card-drop-slot {
+    min-height: clamp(132px, 16vh, 160px);
+  }
+  .card-icon-shell {
+    width: clamp(58px, 4vw, 68px);
+    height: clamp(58px, 4vw, 68px);
+    font-size: clamp(1.5rem, 1.7vw, 1.9rem);
+  }
+  .card-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 0;
+    min-width: 0;
+  }
+  .card-copy span {
+    font-size: clamp(1.5rem, 1.55vw, 1.9rem);
+    line-height: 1.18;
+  }
+  .card-copy small {
+    margin-top: 0;
+    font-size: clamp(0.82rem, 1vw, 1.02rem);
+    line-height: 1.45;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .menu-item-placeholder .dashboard-card {
+    grid-template-columns: 1fr;
+  }
+  .card-placeholder-plus {
+    font-size: clamp(4.8rem, 6vw, 6.4rem);
+  }
+  .card-placeholder-badge {
+    left: 18px;
+    bottom: 18px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+  .dashboard-bookmarks-stage {
+    margin-top: 0;
+  }
+  .dashboard-bookmarks-head {
+    margin-bottom: 0;
+  }
+  .dashboard-bookmarks-panel {
+    padding-top: 0;
+  }
+  .dashboard-bookmarks-list {
+    gap: 8px;
+  }
+  .dashboard-bookmark-tab {
+    width: 152px;
+  }
+  .dashboard-bookmark-tab-main {
+    min-height: 32px;
+    padding: 0 10px;
+  }
+  .dashboard-container .main-footer {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    margin-top: 0;
+    padding-top: 4px;
+  }
+}
 @keyframes dashboard-scroll-bounce {
   0%, 18%, 100% {
     transform: translateY(0);
@@ -5052,7 +5204,7 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
     padding: 26px 18px 18px;
   }
 }
-@media (min-width: 641px) and (max-width: 1100px) {
+@media (min-width: 641px) and (max-width: 1023px) {
   .dashboard-topbar {
     flex-direction: column;
     align-items: stretch;
@@ -5068,7 +5220,7 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
     grid-template-columns: 1fr;
   }
 }
-@media (min-width: 641px) and (max-width: 1024px) {
+@media (min-width: 641px) and (max-width: 1023px) {
   .main-content {
     grid-template-columns: 1fr;
   }
@@ -5153,11 +5305,10 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
     align-items: flex-start;
   }
   .task-agenda-item {
-    grid-template-columns: auto minmax(0, 1fr);
+    flex-direction: column;
   }
   .task-delete-btn {
-    grid-column: 2;
-    justify-self: flex-end;
+    align-self: flex-end;
   }
   .task-toast-stack {
     right: 10px;
@@ -5193,9 +5344,6 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
   html {
     font-size: 66%;
   }
-  .wrapper {
-    width: min(1500px, 100% - 72px);
-  }
   body:not(.dashboard-page) .wrapper {
     padding: 40px 36px 30px;
   }
@@ -5203,20 +5351,24 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
     grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
     gap: 40px;
   }
+  body.dashboard-page .wrapper {
+    width: min(100% - 56px, 1560px);
+    padding: 18px 0;
+  }
   body.dashboard-page .dashboard-container {
-    max-width: 1500px;
-    padding: 32px 40px 36px;
+    max-width: none;
+    padding: 22px 30px 16px;
   }
   body.dashboard-page .dashboard-header {
-    max-width: 860px;
-    margin-bottom: 56px;
+    max-width: 980px;
+    margin: 0 auto;
   }
   body.dashboard-page .menu-grid {
-    grid-template-columns: repeat(3, minmax(280px, 1fr));
-    gap: 28px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
   }
   body.dashboard-page .dashboard-card {
-    min-height: 148px;
+    min-height: clamp(134px, 15vh, 162px);
   }
   body.dashboard-page .task-modal-card {
     width: min(1180px, 100% - 48px);
@@ -5226,21 +5378,18 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
   html {
     font-size: 70%;
   }
-  .wrapper {
-    width: min(1760px, 100% - 96px);
-  }
   body.dashboard-page .wrapper {
-    width: min(1800px, 100% - 96px);
+    width: min(100% - 72px, 1760px);
   }
   body.dashboard-page .dashboard-container {
-    max-width: 1760px;
-    min-height: calc(100vh - 120px);
+    max-width: none;
+    min-height: 0;
   }
   body.dashboard-page .menu-grid {
-    grid-template-columns: repeat(4, minmax(260px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   body.dashboard-page .dashboard-header h1 {
-    font-size: clamp(4rem, 4.2vw, 6rem);
+    font-size: clamp(3rem, 3.6vw, 4.8rem);
   }
   body.dashboard-page .dashboard-subtitle {
     font-size: 1.8rem;
