@@ -2803,6 +2803,7 @@ body.dashboard-page .app-user-panel-slot .app-user-hub {
   right: auto;
   left: auto;
   display: block;
+  width: -moz-max-content;
   width: max-content;
   max-width: calc(100vw - 24px);
   margin: 0;
@@ -2819,6 +2820,7 @@ body.dashboard-page .app-user-panel-slot .app-user-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
+  width: -moz-max-content;
   width: max-content;
   min-width: 0;
   max-width: calc(100vw - 24px);
@@ -2847,7 +2849,7 @@ body.dashboard-page .app-user-panel-slot .app-user-trigger-copy {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  max-width: min(220px, calc(100vw - 84px));
+  max-width: min(220px, 100vw - 84px);
   gap: 2px;
 }
 body.dashboard-page .app-user-panel-slot .app-user-trigger-copy strong {
