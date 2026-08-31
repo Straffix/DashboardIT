@@ -1,7 +1,4 @@
-/* Main frontend entrypoint.
- * We keep one HTML include while preserving the original script boundaries and load order.
- */
-(function loadDashboardRuntime() {
+;(function loadDashboardRuntime() {
 	if (window.__dashboardRuntimeLoaderRan) {
 		return
 	}

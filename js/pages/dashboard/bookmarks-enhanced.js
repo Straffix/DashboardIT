@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const bookmarkModalCard = bookmarkModal.querySelector('.dashboard-bookmark-modal-card')
 	const bookmarkLabelInput = document.getElementById('dashboard-bookmark-label')
 	const bookmarkUrlInput = document.getElementById('dashboard-bookmark-url')
-	const bookmarkDescriptionInput = document.getElementById('dashboard-bookmark-description')
 	const bookmarkColorInput = document.getElementById('dashboard-bookmark-color')
 	const bookmarkIconInput = document.getElementById('dashboard-bookmark-icon')
 	const bookmarkIconGrid = document.getElementById('dashboard-bookmark-icon-grid')
@@ -199,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		'openai-brands-solid-full': { label: 'OpenAI', hint: 'ai', colorHex: '#0f766e' },
 		'ticket-simple-solid-full': { label: 'Ticket', hint: 'zgloszenie', colorHex: '#ef4444' },
 		'desktop-solid-full': { label: 'Komputer', hint: 'stanowisko', colorHex: '#2563eb' },
-		'monitor': { label: 'Monitor', hint: 'ekran', colorHex: '#0f766e' },
+		monitor: { label: 'Monitor', hint: 'ekran', colorHex: '#0f766e' },
 		'server-solid-full': { label: 'Serwer', hint: 'infrastruktura', colorHex: '#475569' },
 		'database-solid-full': { label: 'Baza Danych', hint: 'system', colorHex: '#0891b2' },
 		'network-wired-solid-full': { label: 'Siec', hint: 'lan vpn', colorHex: '#4f46e5' },
@@ -214,25 +213,21 @@ document.addEventListener('DOMContentLoaded', () => {
 		'users-solid-full': { label: 'Zespol', hint: 'ludzie', colorHex: '#dc2626' },
 		'user-group-solid-full': { label: 'Grupa', hint: 'pracownicy', colorHex: '#0284c7' },
 		'envelope-solid-full': { label: 'Mail', hint: 'poczta', colorHex: '#2563eb' },
-		'paperclip': { label: 'Zalacznik', hint: 'plik', colorHex: '#64748b' },
+		paperclip: { label: 'Zalacznik', hint: 'plik', colorHex: '#64748b' },
 		'folder-open-solid-full': { label: 'Folder', hint: 'zasoby', colorHex: '#d97706' },
 		'folder-solid-full': { label: 'Archiwum', hint: 'pliki', colorHex: '#92400e' },
 		'house-solid-full': { label: 'Start', hint: 'strona glowna', colorHex: '#2563eb' },
-		'building': { label: 'Portal', hint: 'intranet', colorHex: '#475569' },
+		building: { label: 'Portal', hint: 'intranet', colorHex: '#475569' },
 		'link-solid-full': { label: 'Link', hint: 'odnosnik', colorHex: '#4f46e5' },
 		'square-arrow-out-up-right': { label: 'Przekierowanie', hint: 'zewnetrzne', colorHex: '#0f766e' },
 	})
 	const ENHANCED_BOOKMARK_ICON_OPTIONS = buildEnhancedBookmarkIconOptions()
 	const ENHANCED_BOOKMARK_ICON_IDS = new Set(ENHANCED_BOOKMARK_ICON_OPTIONS.map(option => option.id).filter(Boolean))
 	const ENHANCED_BOOKMARK_ICON_OPTIONS_BY_ID = new Map(
-		ENHANCED_BOOKMARK_ICON_OPTIONS
-			.filter(option => option.id)
-			.map(option => [option.id, option]),
+		ENHANCED_BOOKMARK_ICON_OPTIONS.filter(option => option.id).map(option => [option.id, option]),
 	)
 	const ENHANCED_BOOKMARK_ICON_ALIASES = new Map(
-		ENHANCED_BOOKMARK_ICON_OPTIONS.flatMap(option =>
-			(option.aliases || []).map(alias => [alias, option.id]),
-		),
+		ENHANCED_BOOKMARK_ICON_OPTIONS.flatMap(option => (option.aliases || []).map(alias => [alias, option.id])),
 	)
 	const BOOKMARK_ICON_OPTIONS = [
 		{ id: '', label: 'Domyślna', hint: 'favicon strony' },
@@ -339,10 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	function createEnhancedBookmarkIconOption({ baseName, assetPath, source, isDuplicate = false }) {
 		const id = isDuplicate ? `${source}__${baseName}` : baseName
-		const metadata =
-			BOOKMARK_ICON_METADATA_OVERRIDES[id] ||
-			BOOKMARK_ICON_METADATA_OVERRIDES[baseName] ||
-			{}
+		const metadata = BOOKMARK_ICON_METADATA_OVERRIDES[id] || BOOKMARK_ICON_METADATA_OVERRIDES[baseName] || {}
 		const aliases = metadata.aliases || []
 
 		return {
@@ -504,21 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		return `https://${trimmedValue.replace(/^\/+/, '')}`
 	}
 
-	function getBookmarkMetaLabel(bookmark) {
-		const normalizedTarget = normalizeLinkTarget(bookmark.url)
-
-		try {
-			const parsedUrl = new URL(normalizedTarget)
-			if (parsedUrl.protocol === 'file:') {
-				return bookmark.url
-			}
-
-			return parsedUrl.hostname.replace(/^www\./i, '')
-		} catch (error) {
-			return bookmark.url
-		}
-	}
-
 	function getBookmarkFaviconSources(bookmark) {
 		const normalizedTarget = normalizeLinkTarget(bookmark.url)
 
@@ -657,7 +634,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			editingBookmarkId = bookmark.id
 			bookmarkLabelInput.value = bookmark.label
 			bookmarkUrlInput.value = bookmark.url
-			bookmarkDescriptionInput.value = bookmark.description
 			setBookmarkColorValue(bookmarkColor)
 			setSelectedBookmarkIcon(bookmark.iconName)
 
@@ -689,7 +665,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	function buildAddBookmarkButtonMarkup({ isAuthenticated = false } = {}) {
 		const label = isAuthenticated ? 'Dodaj skrot' : 'Zaloguj sie, aby dodawac zakladki'
-		const visibleLabel = isAuthenticated ? 'Dodaj skrot' : 'Zaloguj sie'
 		return `
 			<button
 				type="button"
@@ -699,11 +674,23 @@ document.addEventListener('DOMContentLoaded', () => {
 				title="${label}"
 			>
 				<span class="dashboard-bookmark-add-icon" aria-hidden="true">
-					<i class="app-icon plus-solid-full"></i>
+					<i class="app-icon ${isAuthenticated ? 'plus-solid-full' : 'right-to-bracket-solid-full'}"></i>
 				</span>
-				<span class="dashboard-bookmark-add-label">${visibleLabel}</span>
 			</button>
 		`
+	}
+
+	function updateBookmarkTabDensity() {
+		const bookmarkTabs = Array.from(bookmarkList.querySelectorAll('.dashboard-bookmark-tab'))
+		bookmarkTabs.forEach(tab => tab.classList.remove('is-compact'))
+
+		for (let index = bookmarkTabs.length - 1; index >= 0 && bookmarkList.scrollWidth > bookmarkList.clientWidth; index -= 1) {
+			bookmarkTabs[index].classList.add('is-compact')
+		}
+	}
+
+	function scheduleBookmarkTabDensityUpdate() {
+		window.requestAnimationFrame(updateBookmarkTabDensity)
 	}
 
 	function setBookmarkPanelVisibility(isVisible) {
@@ -717,51 +704,49 @@ document.addEventListener('DOMContentLoaded', () => {
 		const userBookmarks = getCurrentUserBookmarks()
 		const userDefaultColor = getCurrentUserDefaultBookmarkColor(currentUser)
 		const addBookmarkMarkup = buildAddBookmarkButtonMarkup({ isAuthenticated: Boolean(currentUser) })
-
 		if (!currentUser) {
 			bookmarkList.innerHTML = addBookmarkMarkup
 			setBookmarkPanelVisibility(true)
+			scheduleBookmarkTabDensityUpdate()
 			return
 		}
 
 		if (userBookmarks.length === 0) {
 			bookmarkList.innerHTML = addBookmarkMarkup
 			setBookmarkPanelVisibility(true)
+			scheduleBookmarkTabDensityUpdate()
 			return
 		}
 
 		setBookmarkPanelVisibility(true)
 
-		bookmarkList.innerHTML =
-			userBookmarks
-			.map(bookmark => {
-				const href = normalizeLinkTarget(bookmark.url)
-				const description = escapeHtml(bookmark.description || 'Prywatny skrot zapisany dla Twojego konta.')
-				const metaLabel = escapeHtml(getBookmarkMetaLabel(bookmark))
-				const faviconSources = getBookmarkFaviconSources(bookmark)
-				const initialFaviconUrl = escapeHtml(faviconSources[0] || '')
-				const fallbackFaviconSources = escapeHtml(faviconSources.slice(1).join('||'))
-				const label = escapeHtml(bookmark.label)
-				const safeHref = escapeHtml(href)
-				const customIconName = normalizeBookmarkIconName(bookmark.iconName)
-				const bookmarkColor = resolveBookmarkColor(
-					bookmark,
-					customIconName ? getBookmarkIconDefaultColor(customIconName, userDefaultColor) : userDefaultColor,
-				)
-				const iconClassName = customIconName
-					? 'dashboard-bookmark-icon has-custom-icon'
-					: `dashboard-bookmark-icon${initialFaviconUrl ? '' : ' is-fallback'}`
+		bookmarkList.innerHTML = userBookmarks
+				.map(bookmark => {
+					const href = normalizeLinkTarget(bookmark.url)
+					const description = escapeHtml(bookmark.description || 'Prywatny skrot zapisany dla Twojego konta.')
+					const faviconSources = getBookmarkFaviconSources(bookmark)
+					const initialFaviconUrl = escapeHtml(faviconSources[0] || '')
+					const fallbackFaviconSources = escapeHtml(faviconSources.slice(1).join('||'))
+					const label = escapeHtml(bookmark.label)
+					const safeHref = escapeHtml(href)
+					const customIconName = normalizeBookmarkIconName(bookmark.iconName)
+					const bookmarkColor = resolveBookmarkColor(
+						bookmark,
+						customIconName ? getBookmarkIconDefaultColor(customIconName, userDefaultColor) : userDefaultColor,
+					)
+					const iconClassName = customIconName
+						? 'dashboard-bookmark-icon has-custom-icon'
+						: `dashboard-bookmark-icon${initialFaviconUrl ? '' : ' is-fallback'}`
 
-				return `
+					return `
 					<article class="dashboard-bookmark-tab" data-bookmark-id="${bookmark.id}" data-bookmark-accent-color="${escapeHtml(bookmarkColor)}">
-						<a class="dashboard-bookmark-tab-main" href="${safeHref}" target="_blank" rel="noopener noreferrer" title="${description}">
+						<a class="dashboard-bookmark-tab-main" href="${safeHref}" target="_blank" rel="noopener noreferrer" title="${description}" aria-label="${label}">
 							<span class="${iconClassName}" data-bookmark-icon>
 								${customIconName ? buildBookmarkAssetIconMarkup(customIconName) : initialFaviconUrl ? `<img class="dashboard-bookmark-favicon" src="${initialFaviconUrl}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-bookmark-favicon data-favicon-sources="${fallbackFaviconSources}">` : ''}
 								<i class="app-icon bookmark-solid-full" aria-hidden="true"></i>
 							</span>
 							<span class="dashboard-bookmark-tab-copy">
 								<strong>${label}</strong>
-								<span class="dashboard-bookmark-meta">${metaLabel}</span>
 							</span>
 						</a>
 						<div class="dashboard-bookmark-actions">
@@ -771,11 +756,12 @@ document.addEventListener('DOMContentLoaded', () => {
 						</div>
 					</article>
 				`
-			})
-			.join('') + addBookmarkMarkup
+				})
+				.join('') + addBookmarkMarkup
 
 		applyBookmarkAccentThemes()
 		enhanceBookmarkFavicons()
+		scheduleBookmarkTabDensityUpdate()
 	}
 
 	async function handleAddBookmarkClick() {
@@ -844,6 +830,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	})
 
+	if ('ResizeObserver' in window) {
+		new ResizeObserver(scheduleBookmarkTabDensityUpdate).observe(bookmarkList)
+	} else {
+		window.addEventListener('resize', scheduleBookmarkTabDensityUpdate)
+	}
+
 	bookmarkModal.addEventListener('click', event => {
 		if (event.target.matches('[data-bookmark-close]')) {
 			closeBookmarkModal()
@@ -858,7 +850,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	})
 
 	const syncBookmarkColorTrigger = () => {
-		setBookmarkColorValue(bookmarkColorInput.value || getCurrentUserDefaultBookmarkColor(), getCurrentUserDefaultBookmarkColor())
+		setBookmarkColorValue(
+			bookmarkColorInput.value || getCurrentUserDefaultBookmarkColor(),
+			getCurrentUserDefaultBookmarkColor(),
+		)
 		syncSelectedBookmarkIconColor()
 	}
 
@@ -890,7 +885,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const label = String(bookmarkLabelInput?.value || '').trim()
 		const url = String(bookmarkUrlInput?.value || '').trim()
-		const description = String(bookmarkDescriptionInput?.value || '').trim()
 		const colorHex = normalizeBookmarkColor(
 			bookmarkColorInput?.value || getCurrentUserDefaultBookmarkColor(currentUser),
 			getCurrentUserDefaultBookmarkColor(currentUser),
@@ -925,7 +919,6 @@ document.addEventListener('DOMContentLoaded', () => {
 							...bookmark,
 							label,
 							url,
-							description,
 							colorHex,
 							iconName,
 							updatedAt: now,
@@ -938,7 +931,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				userId: currentUser.id,
 				label,
 				url,
-				description,
 				colorHex,
 				iconName,
 				createdAt: now,

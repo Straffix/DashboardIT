@@ -44,12 +44,14 @@ body.dashboard-page .wrapper {
 	--dashboard-shell-pad-inline: 32px;
 	position: relative;
 	z-index: 2;
+	flex: 1 1 auto;
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-start;
 	text-align: center;
 	width: 100%;
 	min-height: calc(100vh - 80px);
+	min-width: 0;
 	max-width: 1260px;
 	padding: var(--dashboard-shell-pad-top) var(--dashboard-shell-pad-inline) 28px;
 	border-radius: var(--radius-shell);
@@ -118,6 +120,7 @@ body.dashboard-page .wrapper {
 .dashboard-menu-stage {
 	position: relative;
 	z-index: 2;
+	min-width: 0;
 	transition: margin-top 0.22s ease;
 }
 
@@ -955,7 +958,7 @@ button.dashboard-top-mini-widget {
 .dashboard-top-widget-layout #weather-wind {
 	display: block;
 	font-size: 0.92rem;
-	line-height: 0.7;
+	line-height: 1.15;
 	color: #64748b;
 	justify-self: start;
 }
@@ -963,13 +966,11 @@ button.dashboard-top-mini-widget {
 .dashboard-top-widget-layout #weather-description {
 	grid-area: desc;
 	align-self: start;
-	margin-top: -10px;
 }
 
 .dashboard-top-widget-layout #weather-wind {
 	grid-area: wind;
 	align-self: start;
-	margin-top: -13px;
 }
 
 .dashboard-top-widget-layout .weather-search {
@@ -2895,19 +2896,23 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 	position: relative;
 	z-index: 2;
 	margin-top: 26px;
+	min-width: 0;
 }
 
 .dashboard-bookmarks-head {
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	justify-content: flex-start;
-	gap: 6px;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
 	margin-bottom: 6px;
 }
 
 .dashboard-bookmarks-copy {
+	flex: 1 1 320px;
+	min-width: 0;
 	max-width: 720px;
+	text-align: left;
 
 	h2 {
 		margin: 0;
@@ -2917,6 +2922,10 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 		text-transform: uppercase;
 		color: #64748b;
 	}
+}
+
+.dashboard-bookmarks-add-btn {
+	flex: 0 0 auto;
 }
 
 .dashboard-toolbar-btn,
@@ -2967,6 +2976,7 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 }
 
 .dashboard-bookmarks-panel {
+	min-width: 0;
 	padding: 14px 16px;
 	border-radius: 24px;
 	border: 1px solid rgba(226, 232, 240, 0.9);
@@ -2983,7 +2993,10 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 	display: flex;
 	gap: 12px;
 	align-items: stretch;
-	overflow-x: auto;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	overflow-x: hidden;
 	overflow-y: hidden;
 	padding: 2px;
 	scrollbar-width: thin;
@@ -2992,14 +3005,14 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 
 .dashboard-bookmark-add-tile {
 	flex: 0 0 auto;
-	align-self: stretch;
-	display: grid;
-	grid-template-columns: 18px minmax(0, 1fr);
+	align-self: center;
+	display: inline-flex;
 	align-items: center;
-	gap: 10px;
-	min-width: 178px;
+	justify-content: center;
+	width: 52px;
+	min-width: 52px;
 	min-height: 52px;
-	padding: 0 16px;
+	padding: 0;
 	border: 1px dashed rgba(195, 0, 45, 0.28);
 	border-radius: 18px;
 	background: rgba(255, 255, 255, 0.82);
@@ -3015,7 +3028,7 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 		box-shadow 0.18s ease;
 
 	i {
-		font-size: 0.95rem;
+		font-size: 1.2rem;
 	}
 
 	&:hover,
@@ -3035,19 +3048,12 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 18px;
-	height: 18px;
+	width: 22px;
+	height: 22px;
 }
 
 .dashboard-bookmark-add-label {
-	display: block;
-	overflow: hidden;
-	font-size: 0.92rem;
-	font-weight: 700;
-	line-height: 1.2;
-	text-align: left;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	display: none;
 }
 
 .dashboard-bookmark-tab {
@@ -3056,6 +3062,35 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 	width: 208px;
 	max-width: calc(100vw - 150px);
 	scroll-snap-align: start;
+}
+
+.dashboard-bookmark-tab.is-compact {
+	width: 56px;
+
+	.dashboard-bookmark-tab-main {
+		display: flex;
+		justify-content: center;
+		padding: 6px;
+	}
+
+	.dashboard-bookmark-tab-copy {
+		display: none;
+	}
+
+	.dashboard-bookmark-actions {
+		top: 5px;
+		right: 3px;
+		transform: none;
+	}
+
+	.dashboard-bookmark-icon-btn {
+		width: 18px;
+		height: 18px;
+	}
+
+	.dashboard-bookmark-kebab {
+		transform: scale(0.72);
+	}
 }
 
 .dashboard-bookmark-tab-main {
@@ -3099,7 +3134,7 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 	strong {
 		display: block;
 		overflow: hidden;
-		font-size: 0.88rem;
+		font-size: 1.2rem;
 		font-weight: 700;
 		line-height: 1.2;
 		color: #1e293b;
@@ -3551,6 +3586,18 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 	}
 }
 
+.dashboard-bookmark-save-btn {
+	background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+	border-color: transparent;
+	color: #ffffff;
+	box-shadow: 0 16px 28px rgba(37, 99, 235, 0.18);
+
+	&:hover {
+		border-color: transparent;
+		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+	}
+}
+
 .dashboard-bookmark-tab {
 	--bookmark-accent: #94a3b8;
 	--bookmark-accent-rgb: 148, 163, 184;
@@ -3987,7 +4034,7 @@ body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
 	body.dashboard-page .wrapper {
 		display: flex;
 		align-items: stretch;
-		width: min(calc(100% - 48px), 1440px);
+		width: min(calc(100% - 96px), 1440px);
 		height: 100dvh;
 		min-height: 100dvh;
 		margin-inline: auto;
@@ -3998,6 +4045,8 @@ body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
 		--dashboard-shell-pad-top: 20px;
 		--dashboard-shell-pad-inline: 28px;
 		display: grid;
+		width: 100%;
+		grid-template-columns: minmax(0, 1fr);
 		grid-template-rows: auto auto minmax(0, 1fr) auto auto;
 		gap: 14px;
 		height: 100%;
@@ -4052,6 +4101,7 @@ body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
 		justify-content: center;
 		gap: 14px;
 		min-height: 0;
+		width: 100%;
 		padding-block: clamp(10px, 1.8vh, 18px);
 	}
 
@@ -4109,6 +4159,7 @@ body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
 		small {
 			margin-top: 0;
 			font-size: clamp(0.82rem, 1vw, 1.02rem);
+			font-size: 17px;
 			line-height: 1.45;
 			display: -webkit-box;
 			overflow: hidden;
@@ -4134,10 +4185,14 @@ body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
 
 	.dashboard-bookmarks-stage {
 		margin-top: 0;
+		width: 100%;
+		max-width: 100%;
+		justify-self: stretch;
 	}
 
 	.dashboard-bookmarks-head {
 		margin-bottom: 0;
+		transform: translateY(-6px);
 	}
 
 	.dashboard-bookmarks-panel {
@@ -4153,9 +4208,10 @@ body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
 	}
 
 	.dashboard-bookmark-add-tile {
-		min-width: 164px;
+		width: 48px;
+		min-width: 48px;
 		min-height: 48px;
-		padding: 0 14px;
+		padding: 0;
 	}
 
 	.dashboard-bookmark-tab-main {
@@ -5934,9 +5990,10 @@ body.dashboard-page.theme-blush {
 	}
 
 	.dashboard-bookmark-add-tile {
-		min-width: 156px;
+		width: 48px;
+		min-width: 48px;
 		min-height: 48px;
-		padding: 0 14px;
+		padding: 0;
 	}
 
 	.dashboard-bookmark-tab-main,
