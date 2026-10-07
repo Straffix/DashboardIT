@@ -24,6 +24,7 @@ let exchanges = []
 let editIndex = null
 let drawerInitialState = ''
 let searchQuery = ''
+const expandedExchangeKeys = new Set()
 const exchangesService = window.AppServices?.exchangesService
 const monitorService = window.AppServices?.monitorService
 
@@ -196,6 +197,20 @@ function getExchangeDuplicateKey(exchange) {
 	const newSn = AppUtils.normalizeSN(exchange?.newSn || '')
 	if (!name || !plannedDate) return ''
 	return `${name}::${plannedDate}::${oldSn}::${newSn}`
+}
+
+function getExchangeRowKey(exchange) {
+	return String(exchange?.id || getExchangeDuplicateKey(exchange))
+}
+
+function toggleExchangeAccessories(index) {
+	const exchange = exchanges[index]
+	if (!exchange || !exchange.accessories?.length) return
+	const key = getExchangeRowKey(exchange)
+	if (expandedExchangeKeys.has(key)) expandedExchangeKeys.delete(key)
+	else expandedExchangeKeys.add(key)
+	renderTable()
+	tableBody.querySelector(`.exchange-accessories-toggle[data-index="${index}"]`)?.focus({ preventScroll: true })
 }
 
 function dedupeExchanges(records) {
@@ -464,6 +479,22 @@ function startEditFlow(index) {
 /* === Exchanges Drawer: End === */
 
 /* === Exchanges Table Rendering: Start === */
+function renderExchangeAccessories(accessories) {
+	const normalized = AppUtils.normalizeAccessories(accessories)
+	if (!normalized.length) return '<small class="acc-empty">brak</small>'
+
+	const items = normalized.map(accessory => {
+		const icon = AppUtils.config.ICON_MAP[accessory] || 'box-solid-full'
+		const label = AppUtils.config.ACCESSORY_LABELS[accessory] || accessory
+		return `<span class="exchange-accessory-preview" title="${AppUtils.escapeHtml(label)}">
+			${AppUtils.renderIcon(icon)}
+			<small>${AppUtils.escapeHtml(label)}</small>
+		</span>`
+	}).join('')
+
+	return `<span class="exchange-accessories">${items}</span>`
+}
+
 function renderTable({ animateContainer = false, skipAnimationReset = false } = {}) {
 	if (!tableBody) return
 	const guestMode = !isAuthenticated()
@@ -507,10 +538,21 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 		}
 	}
 
-	filteredExchanges.forEach(exchange => {
+	filteredExchanges.forEach((exchange, visibleIndex) => {
 		const originalIndex = exchanges.findIndex(original => original === exchange)
 		const isDone = exchange.status === 'done'
+		const accessoryCount = exchange.accessories.length
+		const isExpanded = accessoryCount > 0 && expandedExchangeKeys.has(getExchangeRowKey(exchange))
+		const panelId = `exchange-accessories-${originalIndex}`
 		const row = document.createElement('tr')
+		row.className = `exchange-row-main${accessoryCount ? ' is-expandable' : ''}${isExpanded ? ' is-accessories-open' : ''}`
+		row.dataset.index = String(originalIndex)
+		if (accessoryCount) {
+			row.tabIndex = 0
+			row.setAttribute('aria-expanded', String(isExpanded))
+			row.setAttribute('aria-controls', panelId)
+			row.setAttribute('aria-label', `${exchange.name}: pokaż lub ukryj akcesoria`)
+		}
 
 		if (isDone) {
 			row.classList.add('is-done')
@@ -524,12 +566,12 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 					</div>`
 				: '<span class="exchange-info-placeholder">-</span>'
 
-		const accessoriesHtml = AppUtils.renderAccessoryIcons(exchange.accessories, {
-			size: '1rem',
-			maxVisible: 9,
-			columns: 3,
-			wrapperClass: 'inline-accessories accessories-table',
-		})
+		const accessoriesHtml = accessoryCount
+			? `<button class="exchange-accessories-toggle" type="button" data-action="toggle-accessories" data-index="${originalIndex}" aria-expanded="${isExpanded}" aria-controls="${panelId}" aria-label="${AppUtils.escapeHtml(`${exchange.name}: pokaż lub ukryj akcesoria (${accessoryCount})`)}">
+				<span>Akcesoria: ${accessoryCount}</span>
+				${AppUtils.renderIcon('chevron-down-solid-full')}
+			</button>`
+			: '<small class="acc-empty">brak</small>'
 
 		row.innerHTML = `
 			<td class="col-info-narrow">
@@ -572,6 +614,25 @@ function renderTable({ animateContainer = false, skipAnimationReset = false } = 
 		`
 
 		tableBody.appendChild(row)
+		if (accessoryCount) {
+			const detailRow = document.createElement('tr')
+			detailRow.id = panelId
+			detailRow.className = 'exchange-accessories-row'
+			detailRow.hidden = !isExpanded
+			detailRow.innerHTML = `<td colspan="7"><div class="exchange-accessories-panel">
+				<span class="exchange-accessories-label">Akcesoria</span>
+				${renderExchangeAccessories(exchange.accessories)}
+			</div></td>`
+			tableBody.appendChild(detailRow)
+			if (visibleIndex < filteredExchanges.length - 1) {
+				const spacer = document.createElement('tr')
+				spacer.className = 'exchange-record-spacer'
+				spacer.hidden = !isExpanded
+				spacer.setAttribute('aria-hidden', 'true')
+				spacer.innerHTML = '<td colspan="7"></td>'
+				tableBody.appendChild(spacer)
+			}
+		}
 	})
 }
 /* === Exchanges Table Rendering: End === */
@@ -643,6 +704,7 @@ async function removeItem(index) {
 		editIndex -= 1
 	}
 
+	expandedExchangeKeys.delete(getExchangeRowKey(exchanges[index]))
 	exchanges.splice(index, 1)
 	saveData()
 }
@@ -807,7 +869,16 @@ runWhenReady(() => {
 	if (tableBody) {
 		listen(tableBody, 'click', event => {
 			const actionButton = event.target.closest('[data-action]')
-			if (!actionButton) return
+			if (!actionButton) {
+				if (event.target.closest('button, a, input, select, textarea, .notes-tooltip-container')) return
+				const row = event.target.closest('.exchange-row-main.is-expandable')
+				if (row) toggleExchangeAccessories(Number(row.dataset.index))
+				return
+			}
+			if (actionButton.dataset.action === 'toggle-accessories') {
+				toggleExchangeAccessories(Number(actionButton.dataset.index))
+				return
+			}
 			if (!requireAuthenticatedAction()) return
 
 			const index = Number(actionButton.dataset.index)
@@ -816,6 +887,12 @@ runWhenReady(() => {
 			if (action === 'complete') void completeExchange(index)
 			if (action === 'edit') startEditFlow(index)
 			if (action === 'delete') void removeItem(index)
+		})
+		listen(tableBody, 'keydown', event => {
+			if (event.key !== 'Enter' && event.key !== ' ') return
+			if (!event.target.matches('.exchange-row-main.is-expandable')) return
+			event.preventDefault()
+			toggleExchangeAccessories(Number(event.target.dataset.index))
 		})
 	}
 
@@ -881,9 +958,13 @@ runWhenReady(() => {
 			}
 
 			if (editIndex !== null) {
+				const previousKey = getExchangeRowKey(exchanges[editIndex])
 				exchanges[editIndex] = {
 					...exchanges[editIndex],
 					...exchangeData,
+				}
+				if (expandedExchangeKeys.delete(previousKey)) {
+					expandedExchangeKeys.add(getExchangeRowKey(exchanges[editIndex]))
 				}
 			} else {
 				exchanges.push(exchangeData)

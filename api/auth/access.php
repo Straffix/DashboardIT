@@ -27,7 +27,7 @@ try {
 	}
 
 	if ($userId === (string) ($currentAdmin['id'] ?? '')) {
-		dashboard_json_response(['ok' => false, 'message' => 'Nie zmienisz tutaj wlasnych uprawnien lidera.'], 422);
+		dashboard_json_response(['ok' => false, 'message' => 'Nie zmienisz tutaj wlasnych uprawnien DEV.'], 422);
 	}
 
 	$updatedUser = null;

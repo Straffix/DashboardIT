@@ -311,20 +311,20 @@ body.exchange-month-transitioning {
   width: 46px;
 }
 .exchange-table .col-worker {
-  width: 25%;
+  width: 22%;
 }
 .exchange-table .col-date {
-  width: 14%;
+  width: 12%;
 }
 .exchange-table .col-laptop {
-  width: 17%;
+  width: 16%;
 }
 .exchange-table .col-acc {
-  width: 14%;
+  width: 22%;
   text-align: center;
 }
 .exchange-table .col-actions {
-  width: 13%;
+  width: 12%;
   text-align: center;
 }
 .exchange-table tr.is-done td {
@@ -345,8 +345,6 @@ body.exchange-month-transitioning {
   border-color: rgba(148, 163, 184, 0.22);
   color: #94a3b8;
 }
-.exchange-table tr.is-done .acc-inline-icon,
-.exchange-table tr.is-done .acc-more-badge,
 .exchange-table tr.is-done .exchange-action-btn,
 .exchange-table tr.is-done .notes-tooltip-container {
   opacity: 0.68;
@@ -427,16 +425,41 @@ body.exchange-month-transitioning {
   border-color: var(--border-strong);
 }
 
-.col-acc .accessories-table {
-  gap: 6px;
+.exchange-accessories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+  gap: 6px 8px;
+  align-items: start;
   width: 100%;
-  max-width: 124px;
+  max-width: 232px;
+  min-width: 0;
+  margin: 0 auto;
 }
-.col-acc .acc-inline-icon,
-.col-acc .acc-more-badge {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
+
+.exchange-accessory-preview {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  min-width: 0;
+  min-height: 76px;
+  color: var(--primary-strong);
+  text-align: center;
+}
+.exchange-accessory-preview i {
+  font-size: 3rem;
+  line-height: 1;
+}
+.exchange-accessory-preview small {
+  display: block;
+  max-width: 100%;
+  color: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
 }
 
 .action-wrapper {
@@ -673,6 +696,9 @@ body:not(.dashboard-page) .wrapper > .exchange-drawer-shell {
   margin-top: 0;
 }
 
+body.theme-dark:not(.dashboard-page) .exchange-accessory-preview {
+  color: var(--primary);
+}
 body.theme-dark:not(.dashboard-page) .exchange-drawer {
   background: rgba(10, 18, 34, 0.96);
   border-color: rgba(124, 140, 255, 0.22);

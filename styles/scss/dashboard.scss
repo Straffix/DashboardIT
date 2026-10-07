@@ -2715,7 +2715,7 @@ body.task-modal-open {
 	small {
 		display: block;
 		margin-top: 12px;
-		font-size: 1.35rem;
+		font-size: calc(1.35rem - 2px);
 		line-height: 1.65;
 		color: #475569;
 	}
@@ -2840,7 +2840,7 @@ body.task-modal-open {
 }
 
 .dashboard-menu-stage.is-editing .menu-item:not(.is-dragging):not(.menu-item-drop-slot) .dashboard-card {
-	animation: dashboardTileJiggle 0.26s ease-in-out infinite alternate;
+	animation: none;
 }
 
 .dashboard-menu-stage.is-editing .menu-item.is-reorderable {
@@ -3642,7 +3642,7 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 		rgba(var(--bookmark-accent-rgb), 0.2) 100%
 	);
 	border: 1px solid rgba(var(--bookmark-accent-rgb), 0.18);
-	color: var(--bookmark-accent);
+	color: #000000;
 
 	&.has-custom-icon i {
 		display: none;
@@ -4179,7 +4179,7 @@ body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
 
 		small {
 			margin-top: 0;
-			font-size: clamp(14px, 1.1vw, 17px);
+			font-size: calc(clamp(14px, 1.1vw, 17px) - 2px);
 			line-height: 1.45;
 			display: -webkit-box;
 			overflow: hidden;
@@ -6117,7 +6117,7 @@ body.dashboard-page.theme-blush {
 
 		small {
 			margin-top: 3px;
-			font-size: 0.64rem;
+			font-size: calc(0.64rem - 2px);
 			line-height: 1.08;
 			display: block;
 			overflow: hidden;

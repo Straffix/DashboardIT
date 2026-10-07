@@ -517,7 +517,7 @@ function dashboard_require_admin_user(): array
 	if (dashboard_normalize_role((string) ($currentUser['role'] ?? 'user')) !== 'admin') {
 		dashboard_json_response([
 			'ok' => false,
-			'message' => 'Ta akcja wymaga uprawnien lidera.',
+			'message' => 'Ta akcja wymaga uprawnien DEV.',
 		], 403);
 	}
 

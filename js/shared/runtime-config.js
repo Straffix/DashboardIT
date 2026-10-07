@@ -5,6 +5,10 @@ const defaultDashboardOneTimeResetConfig = {
 	apiPath: 'reset-app-data.php',
 	clearRemoteData: false,
 }
+const defaultDashboardOneTimeAccountCleanupConfig = {
+	version: '2026-10-07-dev-account-cleanup',
+	ownerFullName: 'Arkadiusz Lisiecki',
+}
 // LIVE_SERVER_FALLBACK_START
 const defaultLiveServerBrowserFallbackConfig = {
 	enabled: true,
@@ -29,6 +33,10 @@ window.DashboardRuntimeConfig = {
 	oneTimeReset: {
 		...defaultDashboardOneTimeResetConfig,
 		...(existingDashboardRuntimeConfig.oneTimeReset || {}),
+	},
+	oneTimeAccountCleanup: {
+		...defaultDashboardOneTimeAccountCleanupConfig,
+		...(existingDashboardRuntimeConfig.oneTimeAccountCleanup || {}),
 	},
 }
 

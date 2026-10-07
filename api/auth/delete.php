@@ -13,7 +13,7 @@ try {
 	}
 
 	if ($userId === (string) ($currentAdmin['id'] ?? '')) {
-		dashboard_json_response(['ok' => false, 'message' => 'Nie usuniesz tutaj wlasnego konta lidera.'], 422);
+		dashboard_json_response(['ok' => false, 'message' => 'Nie usuniesz tutaj wlasnego konta DEV.'], 422);
 	}
 
 	$deletedUser = null;

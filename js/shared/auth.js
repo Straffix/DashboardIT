@@ -268,7 +268,7 @@ const formatProfileDateTime = value => {
 
 const normalizeUserRole = role => (role === 'admin' ? 'admin' : 'user')
 
-const getRoleLabel = role => (normalizeUserRole(role) === 'admin' ? 'Lider' : 'Pracownik')
+const getRoleLabel = role => (normalizeUserRole(role) === 'admin' ? 'DEV' : 'Pracownik')
 
 const getAllPermissionIds = () => AUTH_CONFIG.permissionOptions.map(option => option.id)
 
@@ -420,15 +420,15 @@ const renderAuthUi = () => {
 		? ''
 		: authState.users.length === 0
 			? isRemoteAuthMode()
-				? 'Załóż pierwsze konto zespołowe. Otrzyma rolę lidera.'
-				: 'Załóż pierwsze konto w tej przeglądarce. Otrzyma rolę lidera.'
+				? 'Załóż pierwsze konto zespołowe. Otrzyma rolę DEV.'
+				: 'Załóż pierwsze konto w tej przeglądarce. Otrzyma rolę DEV.'
 			: isRemoteAuthMode()
 				? 'Zaloguj sie lub zaloz nowe konto wspoldzielone na serwerze.'
 				: 'Zaloguj się lub załóż nowe konto lokalne.'
 	// LIVE_SERVER_FALLBACK_START
 	if (!currentUser && !isRemoteAuthMode()) {
 		popoverMetaText = authState.users.length === 0
-			? 'Zaloz pierwsze konto tymczasowo w tej przegladarce. Otrzyma role lidera.'
+			? 'Zaloz pierwsze konto tymczasowo w tej przegladarce. Otrzyma role DEV.'
 			: 'Zaloguj sie lub zaloz konto tymczasowo zapisane w tej przegladarce.'
 	}
 	// LIVE_SERVER_FALLBACK_END
@@ -484,11 +484,15 @@ const renderAuthUi = () => {
 
 	syncPopoverThemeEditor()
 
+	updateAuthMode(authState.mode)
 	renderPageStatusStrip()
 }
 
 const setCurrentUser = user => {
 	authState.currentUser = user ? sanitizeUser(user) : null
+	if (user) {
+		authState.currentUser = sanitizeUser(runOneTimeLocalAccountCleanup(user))
+	}
 	document.body.classList.toggle('app-user-logged-in', Boolean(authState.currentUser))
 	applyCurrentUserAppearance(authState.currentUser)
 	renderAuthUi()
@@ -586,7 +590,7 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 	saveUsers([...authState.users, nextUser])
 	saveSession({ userId: nextUser.id, loginAt: now })
 	setCurrentUser(nextUser)
-	return sanitizeUser(nextUser)
+	return sanitizeUser(authState.currentUser)
 }
 
 const loginUser = ({ login, password }) => {
@@ -613,7 +617,7 @@ const loginUser = ({ login, password }) => {
 	const now = new Date().toISOString()
 	saveSession({ userId: matchedUser.id, loginAt: now })
 	setCurrentUser(matchedUser)
-	return sanitizeUser(matchedUser)
+	return sanitizeUser(authState.currentUser)
 }
 
 const resetUserPassword = ({ login, password }) => {
@@ -621,11 +625,12 @@ const resetUserPassword = ({ login, password }) => {
 		throw new Error('Reset hasla jest w trybie serwerowym wylaczony. Skontaktuj sie z administratorem.')
 	}
 
+	authState.users = loadUsers()
 	const matchedUser = findUserByLogin(login)
 	const normalizedPassword = String(password || '')
 
 	if (!matchedUser) {
-		throw new Error('Nie znaleziono konta o podanym loginie.')
+		throw new Error('Nie znaleziono tego konta w tej przeglądarce. Otwórz dashboard pod tym samym adresem, pod którym konto zostało utworzone.')
 	}
 
 	if (normalizedPassword.length < AUTH_CONFIG.minPasswordLength) {
@@ -648,9 +653,14 @@ const resetUserPassword = ({ login, password }) => {
 	})
 
 	saveUsers(updatedUsers)
+	authState.users = loadUsers()
+	const savedUser = authState.users.find(user => user.id === matchedUser.id)
+	if (!savedUser || !isLocalPasswordMatch(savedUser, normalizedPassword)) {
+		throw new Error('Nie udało się zapisać nowego hasła w przeglądarce. Spróbuj ponownie.')
+	}
 	saveSession({ userId: matchedUser.id, loginAt: now })
-	setCurrentUser(updatedUser)
-	return sanitizeUser(updatedUser)
+	setCurrentUser(savedUser)
+	return sanitizeUser(authState.currentUser)
 }
 
 const logoutUser = ({ silent = false } = {}) => {
@@ -809,7 +819,7 @@ const changeCurrentUserPassword = ({ currentPassword, newPassword }) => {
 
 const updateUserAccess = ({ userId, fullName, login, role, permissions } = {}) => {
 	if (!authState.currentUser || authState.currentUser.role !== 'admin') {
-		throw new Error('Tylko lider może nadawać uprawnienia.')
+		throw new Error('Tylko DEV może nadawać uprawnienia.')
 	}
 
 	const normalizedUserId = String(userId || '').trim()
@@ -828,7 +838,7 @@ const updateUserAccess = ({ userId, fullName, login, role, permissions } = {}) =
 	}
 
 	if (normalizedUserId === String(authState.currentUser.id || '')) {
-		throw new Error('W tej wersji nie zmienisz tutaj własnych uprawnień lidera.')
+		throw new Error('W tej wersji nie zmienisz tutaj własnych uprawnień DEV.')
 	}
 
 	if (authState.users.some(user => String(user.id || '') !== normalizedUserId && normalizeUserLogin(user.login) === normalizedLogin)) {
@@ -959,9 +969,74 @@ const purgeDeletedUserLocalData = userId => {
 	)
 }
 
+// Apply the requested account cleanup once, only in the owner's local browser session.
+// Keep the stored owner record intact apart from the displayed profile title.
+const runOneTimeLocalAccountCleanup = user => {
+	if (isRemoteAuthMode() || !isBrowserFallbackAuthMode() || user.role !== 'admin') return user
+
+	const cleanupConfig = window.DashboardRuntimeConfig?.oneTimeAccountCleanup || {}
+	const version = String(cleanupConfig.version || '').trim()
+	const normalizeName = name => String(name || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('pl-PL')
+	const ownerName = normalizeName(cleanupConfig.ownerFullName)
+	if (!version || !ownerName || normalizeName(user.fullName) !== ownerName) return user
+
+	const markerKey = `dashboard_account_cleanup::${version}`
+	const usersKey = APP_CONFIG.STORAGE_KEYS.USERS
+	const reactUsersKey = 'dashboardit.react.session.users'
+	const reactActiveUserKey = 'dashboardit.react.session.active-user'
+	const originalValues = new Map()
+	let storedUsers
+	let nextOwner
+
+	try {
+		if (localStorage.getItem(markerKey)) return user
+		for (const key of [usersKey, reactUsersKey, reactActiveUserKey]) {
+			originalValues.set(key, localStorage.getItem(key))
+		}
+		storedUsers = JSON.parse(originalValues.get(usersKey) || '[]')
+		if (!Array.isArray(storedUsers)) return user
+		const owners = storedUsers.filter(record => record && normalizeName(record.fullName) === ownerName)
+		if (owners.length !== 1 || owners[0].id !== user.id || !user.id) return user
+
+		nextOwner = { ...owners[0], profileTitle: 'DEV', updatedAt: new Date().toISOString() }
+		localStorage.setItem(usersKey, JSON.stringify([nextOwner]))
+
+		if (originalValues.get(reactUsersKey) !== null) {
+			localStorage.setItem(reactUsersKey, JSON.stringify([sanitizeUser(mapStoredUser(nextOwner))]))
+		}
+		if (originalValues.get(reactActiveUserKey) && originalValues.get(reactActiveUserKey) !== user.id) {
+			localStorage.removeItem(reactActiveUserKey)
+		}
+
+		// Mark only a completed write; subsequent visits must preserve newly created accounts.
+		localStorage.setItem(markerKey, new Date().toISOString())
+	} catch (error) {
+		for (const [key, value] of originalValues) {
+			try {
+				if (value === null) localStorage.removeItem(key)
+				else localStorage.setItem(key, value)
+			} catch (rollbackError) {
+				// A blocked browser store may also reject restoration. Keep the session usable.
+			}
+		}
+		notify({
+			type: 'error',
+			title: 'Konta nie zostały usunięte',
+			message: 'Nie udało się zapisać zmian kont w przeglądarce. Odśwież stronę, aby spróbować ponownie.',
+		})
+		return user
+	}
+
+	authState.users = loadUsers()
+	for (const removedUser of storedUsers) {
+		if (removedUser?.id && removedUser.id !== user.id) purgeDeletedUserLocalData(removedUser.id)
+	}
+	return mapStoredUser(nextOwner)
+}
+
 const deleteUserAccount = userId => {
 	if (!authState.currentUser || authState.currentUser.role !== 'admin') {
-		throw new Error('Tylko lider może usuwać konta.')
+		throw new Error('Tylko DEV może usuwać konta.')
 	}
 
 	const normalizedUserId = String(userId || '').trim()
@@ -970,7 +1045,7 @@ const deleteUserAccount = userId => {
 	}
 
 	if (normalizedUserId === String(authState.currentUser.id || '')) {
-		throw new Error('Nie usuniesz tutaj własnego konta lidera.')
+		throw new Error('Nie usuniesz tutaj własnego konta DEV.')
 	}
 
 	const matchedUser = authState.users.find(user => String(user.id || '') === normalizedUserId)
@@ -1562,7 +1637,7 @@ const createManagedUserCardMarkup = user => {
 					<span>Poziom dostępu</span>
 					<select data-team-role>
 						<option value="user" ${user.role === 'user' ? 'selected' : ''}>Pracownik</option>
-						<option value="admin" ${isLeaderRole ? 'selected' : ''}>Lider</option>
+						<option value="admin" ${isLeaderRole ? 'selected' : ''}>DEV</option>
 					</select>
 				</label>
 			</div>
@@ -2013,7 +2088,7 @@ const updateAuthMode = mode => {
 				? 'Zaloz konto zespolowe'
 				: 'Załóż konto lokalne'
 			: isReset
-				? 'Reset lokalnego hasła'
+				? 'Ustaw nowe hasło'
 				: 'Zaloguj się do systemu'
 	}
 
@@ -2021,11 +2096,11 @@ const updateAuthMode = mode => {
 		authState.authCopy.textContent = isRegister
 			? authState.users.length === 0
 				? isRemoteAuthMode()
-					? 'Pierwsze konto zostanie zapisane na serwerze i otrzyma rolę lidera.'
-					: 'Pierwsze konto zostanie zapisane lokalnie w tej przeglądarce i otrzyma rolę lidera.'
+					? 'Pierwsze konto zostanie zapisane na serwerze i otrzyma rolę DEV.'
+					: 'Pierwsze konto zostanie zapisane lokalnie w tej przeglądarce i otrzyma rolę DEV.'
 				: isRemoteAuthMode()
-					? 'Konto zostanie zapisane na serwerze i będzie widoczne dla użytkowników tej aplikacji. Role nadaje lider.'
-					: 'Konto zostanie zapisane lokalnie w tej przeglądarce. Role nadaje lider.'
+					? 'Konto zostanie zapisane na serwerze i będzie widoczne dla użytkowników tej aplikacji. Role nadaje DEV.'
+					: 'Konto zostanie zapisane lokalnie w tej przeglądarce. Role nadaje DEV.'
 			: isReset
 				? 'Podaj login i ustaw nowe hasło dla lokalnego konta w tej przeglądarce.'
 				: isRemoteAuthMode()
@@ -2038,7 +2113,7 @@ const updateAuthMode = mode => {
 	}
 
 	if (authState.authResetBtn) {
-		authState.authResetBtn.hidden = isRemoteAuthMode() || isRegister || isReset || authState.users.length === 0
+		authState.authResetBtn.hidden = isRemoteAuthMode() || isRegister || isReset
 	}
 
 	if (authState.authSubmitBtn) {
@@ -2060,6 +2135,9 @@ const updateAuthMode = mode => {
 }
 
 const openAuthModal = mode => {
+	if (!isRemoteAuthMode()) {
+		authState.users = loadUsers()
+	}
 	updateAuthMode(mode)
 	openModal(authState.authModal)
 
@@ -2136,7 +2214,7 @@ const openAdminUsersModal = () => {
 		notify({
 			type: 'warning',
 			title: 'Brak dostępu',
-			message: 'Tylko lider może edytować konta użytkowników.',
+			message: 'Tylko DEV może edytować konta użytkowników.',
 		})
 		return
 	}
@@ -2215,7 +2293,7 @@ const ensureAuthUi = () => {
 						</div>
 					</div>
 				</div>
-				<p class="app-auth-role-hint is-hidden" id="app-auth-role-hint">Pierwsze utworzone konto otrzyma rolę lidera i będzie mogło nadawać klasy użytkownikom.</p>
+				<p class="app-auth-role-hint is-hidden" id="app-auth-role-hint">Pierwsze utworzone konto otrzyma rolę DEV i będzie mogło nadawać klasy użytkownikom.</p>
 				<div class="app-auth-actions">
 					<button type="submit" class="app-auth-submit">Zaloguj się</button>
 					<button type="button" class="app-auth-switch">Nie masz konta? Zarejestruj się</button>
@@ -2505,6 +2583,8 @@ const ensureAuthUi = () => {
 
 	authState.authResetBtn?.addEventListener('click', () => {
 		updateAuthMode('reset')
+		if (authState.authPasswordInput) authState.authPasswordInput.value = ''
+		if (authState.authPasswordRepeatInput) authState.authPasswordRepeatInput.value = ''
 		window.setTimeout(() => authState.authLoginInput?.focus(), 40)
 	})
 

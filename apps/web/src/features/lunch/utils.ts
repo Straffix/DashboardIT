@@ -53,7 +53,7 @@ export function getUserInitials(fullName: string) {
 }
 
 export function getRoleLabel(role: LunchUserRole) {
-	return role === 'admin' ? 'Lider' : 'Pracownik'
+	return role === 'admin' ? 'DEV' : 'Pracownik'
 }
 
 export function getReservationsForSlot(reservations: LunchReservation[], timeSlot: string) {

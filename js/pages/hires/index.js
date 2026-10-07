@@ -24,7 +24,7 @@
 	let editIndex = null
 	let drawerInitialState = ''
 	let searchQuery = ''
-	let expandedAccessoriesRowKey = null
+	const expandedAccessoriesRowKeys = new Set()
 	let editingRowKey = null
 	let inlineEditState = null
 	let inlineEditMetrics = null
@@ -202,6 +202,9 @@
 		}
 
 		accessoryPicker?.classList.toggle('is-readonly', guestMode)
+		accessoryPicker?.querySelectorAll('button').forEach(button => {
+			button.disabled = guestMode
+		})
 
 		hiresForm
 			?.querySelectorAll('input, textarea, select, button[type="submit"]')
@@ -1505,6 +1508,7 @@
 
 		document.querySelectorAll('.accessory-item').forEach(item => {
 			item.classList.remove('active', 'is-tapped')
+			item.setAttribute('aria-pressed', 'false')
 		})
 
 		if (drawerTitle) {
@@ -1533,7 +1537,7 @@
 		drawerShell.setAttribute('aria-hidden', 'false')
 		document.body.classList.add('hire-drawer-open')
 
-		const firstField = document.getElementById('purchaseRequest') || document.getElementById('targetUser')
+		const firstField = document.getElementById('targetUser') || document.getElementById('purchaseRequest')
 		scheduleTimeout(() => firstField?.focus(), 80)
 	}
 
@@ -1588,7 +1592,9 @@
 
 		document.querySelectorAll('.accessory-item').forEach(item => {
 			const itemKey = item.dataset.item
-			item.classList.toggle('active', Boolean(itemKey && hire[itemKey]))
+			const selected = Boolean(itemKey && hire[itemKey])
+			item.classList.toggle('active', selected)
+			item.setAttribute('aria-pressed', String(selected))
 		})
 	}
 
@@ -1669,10 +1675,10 @@
 			}
 		}
 
-		filteredHires.forEach(hire => {
+		filteredHires.forEach((hire, visibleIndex) => {
 			const originalIndex = hires.findIndex(original => original === hire)
 			const rowKey = getHireRowKey(hire, originalIndex)
-			const isAccessoriesExpanded = expandedAccessoriesRowKey === rowKey
+			const isAccessoriesExpanded = expandedAccessoriesRowKeys.has(rowKey)
 			const isRowEditing = editingRowKey === rowKey
 			const canExpandAccessories = true
 			const detailRowId = `hire-accessories-${originalIndex}`
@@ -1722,6 +1728,14 @@
 				</td>
 			`
 			tableBody.appendChild(accessoriesRow)
+
+			if (visibleIndex < filteredHires.length - 1) {
+				const spacerRow = document.createElement('tr')
+				spacerRow.className = 'hire-record-spacer'
+				spacerRow.setAttribute('aria-hidden', 'true')
+				spacerRow.innerHTML = `<td colspan="${VISIBLE_TABLE_COLUMN_COUNT}"><div class="hire-record-spacer-gap"></div></td>`
+				tableBody.appendChild(spacerRow)
+			}
 		})
 
 		if (inlineEditState) {
@@ -1796,8 +1810,8 @@
 			editingRowKey = nextRowKey
 		}
 
-		if (expandedAccessoriesRowKey === previousRowKey) {
-			expandedAccessoriesRowKey = nextRowKey
+		if (expandedAccessoriesRowKeys.delete(previousRowKey)) {
+			expandedAccessoriesRowKeys.add(nextRowKey)
 		}
 
 		if (editIndex === index) {
@@ -1971,14 +1985,13 @@
 		if (!hire) return
 
 		const rowKey = getHireRowKey(hire, index)
-		const isClosingCurrentRow = expandedAccessoriesRowKey === rowKey
-		const previouslyExpandedRowKey = expandedAccessoriesRowKey
+		const isClosingCurrentRow = expandedAccessoriesRowKeys.has(rowKey)
 
-		if (previouslyExpandedRowKey && previouslyExpandedRowKey !== rowKey) {
-			syncAccessoriesRowDomState(previouslyExpandedRowKey, false)
+		if (isClosingCurrentRow) {
+			expandedAccessoriesRowKeys.delete(rowKey)
+		} else {
+			expandedAccessoriesRowKeys.add(rowKey)
 		}
-
-		expandedAccessoriesRowKey = isClosingCurrentRow ? null : rowKey
 
 		if (!syncAccessoriesRowDomState(rowKey, !isClosingCurrentRow)) {
 			renderTable()
@@ -2000,9 +2013,7 @@
 		const hireToRemove = hires[index]
 		if (hireToRemove) {
 			const rowKey = getHireRowKey(hireToRemove, index)
-			if (expandedAccessoriesRowKey === rowKey) {
-				expandedAccessoriesRowKey = null
-			}
+			expandedAccessoriesRowKeys.delete(rowKey)
 			if (editingRowKey === rowKey) {
 				editingRowKey = null
 			}
@@ -2210,7 +2221,8 @@
 				if (!item) return
 				if (!requireAuthenticatedAction()) return
 
-				item.classList.toggle('active')
+				const selected = item.classList.toggle('active')
+				item.setAttribute('aria-pressed', String(selected))
 			})
 		}
 

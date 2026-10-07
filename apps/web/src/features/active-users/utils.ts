@@ -83,7 +83,7 @@ export function getOrCreateDashboardActiveUsersTabId() {
 }
 
 export function getRoleLabel(role: 'admin' | 'user') {
-	return role === 'admin' ? 'Lider' : 'Pracownik'
+	return role === 'admin' ? 'DEV' : 'Pracownik'
 }
 
 export function getUserInitials(fullName: string) {

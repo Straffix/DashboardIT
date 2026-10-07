@@ -109,7 +109,7 @@ function getExchangeBadge(record: ExchangeRecord) {
 }
 
 function getRoleLabel(role: 'admin' | 'user') {
-	return role === 'admin' ? 'Lider' : 'Pracownik'
+	return role === 'admin' ? 'DEV' : 'Pracownik'
 }
 
 function truncateText(value: string, maxLength: number) {

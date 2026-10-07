@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		let isEditing = false
 		let draftOrder = []
 		let activeDrag = null
+		const reflowAnimations = new Map()
 		const requireAuthenticatedAction = () => {
 			if (window.AppUtils?.auth?.isAuthenticated?.()) return true
 
@@ -150,9 +151,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const animateMenuReflow = mutate => {
 			const animatedItems = getAnimatedMenuItems()
+			if (activeDrag?.placeholder && !animatedItems.includes(activeDrag.item)) {
+				animatedItems.push(activeDrag.item)
+			}
 			const firstRects = new Map(animatedItems.map(item => [item, item.getBoundingClientRect()]))
 
+			reflowAnimations.forEach(animation => animation.cancel())
+			reflowAnimations.clear()
 			mutate()
+			if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
 			getAnimatedMenuItems().forEach(item => {
 				const firstRect = firstRects.get(item)
@@ -164,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 				if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return
 
-				item.animate(
+				const animation = item.animate(
 					[
 						{ transform: `translate(${deltaX}px, ${deltaY}px)` },
 						{ transform: 'translate(0, 0)' },
@@ -174,6 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
 						easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
 					}
 				)
+				reflowAnimations.set(item, animation)
+				animation.finished.then(() => {
+					if (reflowAnimations.get(item) === animation) reflowAnimations.delete(item)
+				}).catch(() => {})
 			})
 		}
 
@@ -185,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			placeholder.innerHTML = '<article class="dashboard-card dashboard-card-drop-slot"></article>'
 			placeholder.style.height = `${Math.round(sourceRect.height)}px`
 			placeholder.style.minHeight = `${Math.round(sourceRect.height)}px`
-			placeholder.style.minWidth = `${Math.round(sourceRect.width)}px`
+			placeholder.style.minWidth = '0'
 			return placeholder
 		}
 
@@ -228,113 +239,71 @@ document.addEventListener('DOMContentLoaded', () => {
 			})
 		}
 
-		const finishActiveDrag = () => {
+		const finishActiveDrag = ({ cancelled = false } = {}) => {
 			if (!activeDrag) return
 
-			const { item, placeholder, pointerMoveHandler, pointerUpHandler, pointerCancelHandler } = activeDrag
+			const { item, placeholder, originalOrder, animationFrameId, pointerMoveHandler, pointerUpHandler, pointerCancelHandler, blurHandler } = activeDrag
 
 			document.removeEventListener('pointermove', pointerMoveHandler)
 			document.removeEventListener('pointerup', pointerUpHandler)
 			document.removeEventListener('pointercancel', pointerCancelHandler)
+			window.removeEventListener('blur', blurHandler)
+			if (animationFrameId) window.cancelAnimationFrame(animationFrameId)
 
-			animateMenuReflow(() => {
-				dashboardMenu.insertBefore(item, placeholder)
-				placeholder.remove()
-			})
+			if (placeholder) {
+				animateMenuReflow(() => {
+					dashboardMenu.insertBefore(item, placeholder)
+					placeholder.remove()
+					item.classList.remove('is-dragging', 'is-floating-drag')
+					item.setAttribute('aria-grabbed', 'false')
+					cleanupFloatingItemStyles(item)
+					if (cancelled) applyMenuOrder(originalOrder)
+				})
+			}
 
-			item.classList.remove('is-dragging', 'is-floating-drag')
-			item.setAttribute('aria-grabbed', 'false')
-			cleanupFloatingItemStyles(item)
 			activeDrag = null
 		}
 
-		const movePlaceholderToTarget = (placeholder, targetItem, shouldInsertBefore) => {
-			if (!placeholder || !targetItem || targetItem === placeholder) return
-
-			const nextSibling = shouldInsertBefore ? targetItem : targetItem.nextElementSibling
-
-			if (nextSibling === placeholder) return
+		const movePlaceholderToIndex = (placeholder, targetIndex) => {
+			const items = getAnimatedMenuItems()
+			const currentIndex = items.indexOf(placeholder)
+			if (currentIndex === -1 || targetIndex === currentIndex || !items[targetIndex]) return
+			const nextSibling = targetIndex > currentIndex ? items[targetIndex].nextElementSibling : items[targetIndex]
 
 			animateMenuReflow(() => {
 				dashboardMenu.insertBefore(placeholder, nextSibling)
 			})
 		}
 
-		const placePlaceholderFromPoint = (event, placeholder) => {
+		const placePlaceholderFromPoint = placeholder => {
 			if (!placeholder) return
 
 			const menuBounds = dashboardMenu.getBoundingClientRect()
-			const isInsideMenu =
-				event.clientX >= menuBounds.left &&
-				event.clientX <= menuBounds.right &&
-				event.clientY >= menuBounds.top &&
-				event.clientY <= menuBounds.bottom
-
-			if (!isInsideMenu) return
-
-			const candidateItems = getMenuItems().filter(item => item !== activeDrag?.item)
-			if (candidateItems.length === 0) return
-
 			const floatingRect = activeDrag?.item?.getBoundingClientRect?.()
 			if (!floatingRect) return
 
 			const floatingCenterX = floatingRect.left + floatingRect.width / 2
 			const floatingCenterY = floatingRect.top + floatingRect.height / 2
-			let bestOverlapMatch = null
-			let bestDistanceMatch = null
-
-			candidateItems.forEach(item => {
-				const rect = item.getBoundingClientRect()
-				const centerX = rect.left + rect.width / 2
-				const centerY = rect.top + rect.height / 2
-				const deltaX = floatingCenterX - centerX
-				const deltaY = floatingCenterY - centerY
-				const distance = deltaX * deltaX + deltaY * deltaY
-				const overlapArea = getRectOverlapArea(floatingRect, rect)
-				const overlapRatio = overlapArea / Math.max(Math.min(floatingRect.width * floatingRect.height, rect.width * rect.height), 1)
-
-				if (overlapRatio > 0 && (!bestOverlapMatch || overlapRatio > bestOverlapMatch.overlapRatio)) {
-					bestOverlapMatch = {
-						item,
-						rect,
-						overlapRatio,
-					}
-				}
-
-				if (!bestDistanceMatch || distance < bestDistanceMatch.distance) {
-					bestDistanceMatch = {
-						item,
-						rect,
-						distance,
-					}
-				}
+			// Grid offsets exclude the transforms used by the reflow animations.
+			// Include the placeholder so its current slot remains a stable target.
+			const targetIndex = getAnimatedMenuItems().findIndex(item => {
+				const left = menuBounds.left + dashboardMenu.clientLeft + item.offsetLeft - dashboardMenu.scrollLeft
+				const top = menuBounds.top + dashboardMenu.clientTop + item.offsetTop - dashboardMenu.scrollTop
+				const width = item.offsetWidth
+				const height = item.offsetHeight
+				const rect = { left, top, right: left + width, bottom: top + height, width, height }
+				const insetX = Math.min(width * 0.18, 48)
+				const insetY = Math.min(height * 0.18, 28)
+				const isInsideTarget =
+					floatingCenterX >= rect.left + insetX && floatingCenterX <= rect.right - insetX &&
+					floatingCenterY >= rect.top + insetY && floatingCenterY <= rect.bottom - insetY
+				if (!isInsideTarget) return false
+				const overlapRatio = getRectOverlapArea(floatingRect, rect) /
+					Math.max(Math.min(floatingRect.width * floatingRect.height, width * height), 1)
+				return overlapRatio >= 0.35
 			})
 
-			const bestMatch = bestOverlapMatch?.overlapRatio >= 0.14 ? bestOverlapMatch : bestDistanceMatch
-			if (!bestMatch) return
-
-			const targetRect = bestMatch.rect
-			const horizontalDistance = Math.abs(floatingCenterX - (targetRect.left + targetRect.width / 2))
-			const verticalDistance = Math.abs(floatingCenterY - (targetRect.top + targetRect.height / 2))
-			const isHorizontalDecision = horizontalDistance > verticalDistance
-			const axisStart = isHorizontalDecision ? targetRect.left : targetRect.top
-			const axisSize = isHorizontalDecision ? targetRect.width : targetRect.height
-			const axisPointer = isHorizontalDecision ? floatingCenterX : floatingCenterY
-			const axisRatio = axisSize > 0 ? (axisPointer - axisStart) / axisSize : 0.5
-			const deadZoneStart = 0.36
-			const deadZoneEnd = 0.64
-
-			if (axisRatio > deadZoneStart && axisRatio < deadZoneEnd) return
-
-			const shouldInsertBefore = axisRatio <= 0.5
-
-			const placementKey = `${bestMatch.item.dataset.menuItemId || ''}:${shouldInsertBefore ? 'before' : 'after'}`
-			if (activeDrag?.lastPlacementKey === placementKey) return
-			if (performance.now() - (activeDrag?.lastReflowAt || 0) < 95) return
-
-			activeDrag.lastPlacementKey = placementKey
-			activeDrag.lastReflowAt = performance.now()
-			movePlaceholderToTarget(placeholder, bestMatch.item, shouldInsertBefore)
+			if (targetIndex !== -1) movePlaceholderToIndex(placeholder, targetIndex)
 		}
 
 		const startPointerDrag = (menuItem, event) => {
@@ -345,65 +314,86 @@ document.addEventListener('DOMContentLoaded', () => {
 			event.preventDefault()
 
 			const itemRect = menuItem.getBoundingClientRect()
-			const placeholder = createDropPlaceholder(menuItem)
-
-			animateMenuReflow(() => {
-				menuItem.replaceWith(placeholder)
-			})
-
-			document.body.appendChild(menuItem)
-			menuItem.classList.add('is-dragging', 'is-floating-drag')
-			menuItem.setAttribute('aria-grabbed', 'true')
-			menuItem.style.position = 'fixed'
-			menuItem.style.left = `${Math.round(itemRect.left)}px`
-			menuItem.style.top = `${Math.round(itemRect.top)}px`
-			menuItem.style.width = `${Math.round(itemRect.width)}px`
-			menuItem.style.height = `${Math.round(itemRect.height)}px`
-			menuItem.style.zIndex = '1300'
-			menuItem.style.pointerEvents = 'none'
-			menuItem.style.margin = '0'
-			menuItem.style.display = 'block'
-
 			const dragOffset = {
 				x: event.clientX - itemRect.left,
 				y: event.clientY - itemRect.top,
 			}
 
-			updateFloatingItemPosition(menuItem, event, dragOffset)
+			const beginFloatingDrag = () => {
+				const placeholder = createDropPlaceholder(menuItem)
+				activeDrag.placeholder = placeholder
+				animateMenuReflow(() => {
+					menuItem.replaceWith(placeholder)
+				})
+
+				document.body.appendChild(menuItem)
+				menuItem.classList.add('is-dragging', 'is-floating-drag')
+				menuItem.setAttribute('aria-grabbed', 'true')
+				menuItem.style.position = 'fixed'
+				menuItem.style.left = `${Math.round(itemRect.left)}px`
+				menuItem.style.top = `${Math.round(itemRect.top)}px`
+				menuItem.style.width = `${Math.round(itemRect.width)}px`
+				menuItem.style.height = `${Math.round(itemRect.height)}px`
+				menuItem.style.zIndex = '1300'
+				menuItem.style.pointerEvents = 'none'
+				menuItem.style.margin = '0'
+				menuItem.style.display = 'block'
+			}
+
+			const flushPointerMove = () => {
+				activeDrag.animationFrameId = 0
+				updateFloatingItemPosition(menuItem, activeDrag.lastPointerEvent, dragOffset)
+				placePlaceholderFromPoint(activeDrag.placeholder)
+			}
 
 			const pointerMoveHandler = moveEvent => {
 				if (moveEvent.pointerId !== event.pointerId) return
 
-				updateFloatingItemPosition(menuItem, moveEvent, dragOffset)
-				placePlaceholderFromPoint(moveEvent, placeholder)
 				moveEvent.preventDefault()
+				if (!activeDrag.placeholder) {
+					if (Math.hypot(moveEvent.clientX - event.clientX, moveEvent.clientY - event.clientY) < 6) return
+					beginFloatingDrag()
+				}
+				activeDrag.lastPointerEvent = moveEvent
+				if (!activeDrag.animationFrameId) {
+					activeDrag.animationFrameId = window.requestAnimationFrame(flushPointerMove)
+				}
 			}
 
 			const pointerUpHandler = upEvent => {
 				if (upEvent.pointerId !== event.pointerId) return
 
 				upEvent.preventDefault()
+				if (activeDrag.placeholder) {
+					if (activeDrag.animationFrameId) window.cancelAnimationFrame(activeDrag.animationFrameId)
+					activeDrag.lastPointerEvent = upEvent
+					flushPointerMove()
+				}
 				finishActiveDrag()
 			}
 
 			const pointerCancelHandler = cancelEvent => {
 				if (cancelEvent.pointerId !== event.pointerId) return
-				finishActiveDrag()
+				finishActiveDrag({ cancelled: true })
 			}
+			const blurHandler = () => finishActiveDrag({ cancelled: true })
 
 			activeDrag = {
 				item: menuItem,
-				placeholder,
+				placeholder: null,
+				originalOrder: getCurrentOrder(),
+				animationFrameId: 0,
+				lastPointerEvent: event,
 				pointerMoveHandler,
 				pointerUpHandler,
 				pointerCancelHandler,
-				lastPlacementKey: '',
-				lastReflowAt: 0,
+				blurHandler,
 			}
 
 			document.addEventListener('pointermove', pointerMoveHandler)
 			document.addEventListener('pointerup', pointerUpHandler)
 			document.addEventListener('pointercancel', pointerCancelHandler)
+			window.addEventListener('blur', blurHandler)
 		}
 
 		const enterEditMode = () => {
@@ -423,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const cancelEditMode = () => {
 			finishActiveDrag()
-			applyMenuOrder(draftOrder)
+			animateMenuReflow(() => applyMenuOrder(draftOrder))
 			isEditing = false
 			updateEditUi()
 		}

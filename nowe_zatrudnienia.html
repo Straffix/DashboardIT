@@ -150,7 +150,7 @@
         <div id="hire-drawer-shell" class="hire-drawer-shell" aria-hidden="true">
             <div id="hire-drawer-backdrop" class="hire-drawer-backdrop"></div>
 
-            <aside id="hire-drawer" class="hire-drawer" aria-labelledby="hire-drawer-title">
+            <aside id="hire-drawer" class="hire-drawer" role="dialog" aria-modal="true" aria-labelledby="hire-drawer-title">
                 <div class="hire-drawer-header">
                     <div>
                         <p class="hire-drawer-kicker">Nowe zatrudnienia</p>
@@ -164,25 +164,26 @@
                 </div>
 
                 <form id="device-form" class="hire-drawer-form">
-
-                    <section class="hire-form-section">
+                    <div class="hire-form-body">
+                    <section class="hire-form-section hire-form-section--employee">
                         <div class="hire-form-section-heading">
-                            <h3>Dane główne</h3>
+                            <h3>Dane pracownika</h3>
+                            <p>Pola oznaczone * są wymagane.</p>
                         </div>
 
                         <div class="hire-form-grid">
+                            <div class="input-group">
+                                <label for="targetUser">Imię i nazwisko *</label>
+                                <input type="text" id="targetUser" required placeholder="np. Jan Kowalski">
+                            </div>
+
                             <div class="input-group">
                                 <label for="purchaseRequest">Service Desk</label>
                                 <input type="number" id="purchaseRequest" placeholder="np. 102123">
                             </div>
 
                             <div class="input-group">
-                                <label for="targetUser">Użytkownik</label>
-                                <input type="text" id="targetUser" required placeholder="np. Jan Kowalski">
-                            </div>
-
-                            <div class="input-group">
-                                <label for="startDate">Data rozpoczęcia pracy</label>
+                                <label for="startDate">Data rozpoczęcia pracy *</label>
                                 <input type="date" id="startDate" required>
                             </div>
 
@@ -204,7 +205,7 @@
                                     <option value="L. DZIKIEWICZ">Leszek Dzikiewicz</option>
                                     <option value="Ł. MAJDA">Łukasz Majda</option>
                                     <option value="M. BAZAN">Monika Bazan</option>
-                                    <option value="M. PAWSKI">Marcin Pawski PAWSKI</option>
+                                    <option value="M. PAWSKI">Marcin Pawski</option>
                                     <option value="M. PĘDZIWIATR">Mariusz Pędziwiatr</option>
                                     <option value="M. WOJTAL">Michał Wojtal</option>
                                     <option value="O. ADAMSKA">Oliwia Adamska</option>
@@ -217,33 +218,32 @@
                                 </select>
                             </div>
 
-                            <div class="input-group input-group-full">
+                            <div class="input-group hire-form-field-wide">
                                 <label for="deliveryLocation">Lokalizacja</label>
                                 <input type="text" id="deliveryLocation"
-                                    placeholder="np. Warszawa / Centrala / pok. 204">
+                                    placeholder="np. Centrala, Traktorowa, Wersalska itd.">
                             </div>
                         </div>
                     </section>
 
                     <section class="hire-form-section">
                         <div class="hire-form-section-heading">
-                            <h3>Laptop i monitor</h3>
-                            <p>Pola do statusow, RU i eMagazynu.</p>
+                            <h3>Laptop</h3>
                         </div>
 
                         <div class="hire-form-grid">
                             <div class="input-group">
-                                <label for="laptopModel">Laptop - SN</label>
-                                <input type="text" id="laptopModel" placeholder="np. ThinkPad T14 Gen 5">
+                                <label for="laptopModel">Numer seryjny (SN)</label>
+                                <input type="text" id="laptopModel" placeholder="np. PF4ABC12">
                             </div>
 
                             <div class="input-group">
-                                <label for="laptopRu">Laptop - RU</label>
+                                <label for="laptopRu">Numer RU</label>
                                 <input type="text" id="laptopRu" placeholder="np. RU123456">
                             </div>
 
                             <div class="input-group">
-                                <label for="laptopStatus">Laptop - Status</label>
+                                <label for="laptopStatus">Status wydania</label>
                                 <select id="laptopStatus">
                                     <option value="">Wybierz status</option>
                                     <option value="W trakcie">W trakcie</option>
@@ -255,7 +255,7 @@
                             </div>
 
                             <div class="input-group">
-                                <label for="laptopWarehouse">Laptop - eMagazyn</label>
+                                <label for="laptopWarehouse">eMagazyn</label>
                                 <select id="laptopWarehouse">
                                     <option value="">Wybierz status</option>
                                     <option value="Brak konta">Brak konta</option>
@@ -264,13 +264,22 @@
                                 </select>
                             </div>
 
+                        </div>
+                    </section>
+
+                    <section class="hire-form-section">
+                        <div class="hire-form-section-heading">
+                            <h3>Monitor</h3>
+                        </div>
+
+                        <div class="hire-form-grid">
                             <div class="input-group">
-                                <label for="monitorRu">Monitor - RU</label>
-                                <input type="text" id="monitorRu">
+                                <label for="monitorRu">Numer RU</label>
+                                <input type="text" id="monitorRu" placeholder="np. RU123456">
                             </div>
 
                             <div class="input-group">
-                                <label for="monitorStatus">Monitor - Status</label>
+                                <label for="monitorStatus">Status wydania</label>
                                 <select id="monitorStatus">
                                     <option value="">Wybierz status</option>
                                     <option value="W trakcie / czekamy na dostawe">W trakcie
@@ -284,7 +293,7 @@
                             </div>
 
                             <div class="input-group input-group-full">
-                                <label for="monitorWarehouse">Monitor - eMagazyn</label>
+                                <label for="monitorWarehouse">eMagazyn</label>
                                 <select id="monitorWarehouse">
                                     <option value="">Wybierz status</option>
                                     <option value="Brak konta">Brak konta</option>
@@ -296,76 +305,78 @@
                         </div>
                     </section>
 
-                    <section class="hire-form-section">
+                    <section class="hire-form-section hire-form-section--wide">
                         <div class="hire-form-section-heading">
-                            <h3>Peryferia</h3>
-                            <p>Ikonki zostaja. Kliknij te, ktore maja wejsc do wydania.</p>
+                            <h3>Akcesoria do wydania</h3>
+                            <p>Zaznacz elementy, które otrzyma pracownik.</p>
                         </div>
 
                         <div class="accessory-picker accessory-picker-expanded" id="accessory-picker">
-                            <div class="accessory-item" data-item="monitorDock" title="Monitor">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="monitorDock" title="Monitor">
                                 <i class="app-icon desktop-solid-full"></i>
                                 <span class="accessory-item-tag">Monitor</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="mouse" title="Mysz">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="mouse" title="Mysz">
                                 <i class="app-icon computer-mouse-solid-full"></i>
                                 <span class="accessory-item-tag">Mysz</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="keyboard" title="Klawiatura">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="keyboard" title="Klawiatura">
                                 <i class="app-icon keyboard-solid-full"></i>
                                 <span class="accessory-item-tag">Klawiatura</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="yealink" title="Yealink">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="yealink" title="Yealink">
                                 <i class="app-icon headset-solid-full"></i>
                                 <span class="accessory-item-tag">Yealink</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="logiZoneVibe" title="Logi Zone Vibe">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="logiZoneVibe" title="Logi Zone Vibe">
                                 <i class="app-icon headset-solid-full"></i>
                                 <span class="accessory-item-tag">Logi Zone</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="lenovo" title="Lenovo">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="lenovo" title="Lenovo">
                                 <i class="app-icon box-solid-full"></i>
                                 <span class="accessory-item-tag">Lenovo</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="bag" title="Torba">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="bag" title="Torba">
                                 <i class="app-icon briefcase-solid-full"></i>
                                 <span class="accessory-item-tag">Torba</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="backpack" title="Plecak">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="backpack" title="Plecak">
                                 <i class="app-icon backpack-icon"></i>
                                 <span class="accessory-item-tag">Plecak</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="laptopStand" title="Podstawka pod laptop">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="laptopStand" title="Podstawka pod laptop">
                                 <i class="app-icon table-cells-solid-full"></i>
                                 <span class="accessory-item-tag">Podstawka</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="presenter" title="Prezenter">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="presenter" title="Prezenter">
                                 <i class="app-icon pen-clip-solid-full"></i>
                                 <span class="accessory-item-tag">Prezenter</span>
-                            </div>
+                            </button>
 
-                            <div class="accessory-item" data-item="printer" title="Drukarka">
+                            <button type="button" class="accessory-item" aria-pressed="false" data-item="printer" title="Drukarka">
                                 <i class="app-icon print-solid-full"></i>
                                 <span class="accessory-item-tag">Drukarka</span>
-                            </div>
-                        </div>
-
-                        <div class="input-group input-group-full">
-                            <label for="peripheralNotes">Uwagi</label>
-                            <textarea id="peripheralNotes" rows="4"
-                                placeholder="Komentarz, niestandardowe wyposazenie, dodatkowe ustalenia."></textarea>
+                            </button>
                         </div>
                     </section>
 
+                    <section class="hire-form-section hire-form-section--wide">
+                        <div class="input-group input-group-full">
+                            <label for="peripheralNotes">Uwagi (opcjonalnie)</label>
+                            <textarea id="peripheralNotes" rows="3"
+                                placeholder="Dodatkowe wyposażenie, ustalenia lub komentarz…"></textarea>
+                        </div>
+                    </section>
+                    </div>
                     <div class="hire-form-actions">
                         <button type="button" id="cancel-hire-drawer"
                             class="btn-submit btn-submit-muted btn-submit-tight">

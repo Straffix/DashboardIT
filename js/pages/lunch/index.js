@@ -98,7 +98,7 @@
 		const user = getUserById(reservation.userId)
 		const displayName = String(user?.fullName || '').trim() || 'Użytkownik'
 		const secondaryLabel = user
-			? AppUtils.auth.getRoleLabel?.(user.role) || (user.role === 'admin' ? 'Lider' : 'Pracownik')
+			? AppUtils.auth.getRoleLabel?.(user.role) || (user.role === 'admin' ? 'DEV' : 'Pracownik')
 			: 'Konto zespołowe'
 		const isCurrentUser = currentUser?.id === reservation.userId
 

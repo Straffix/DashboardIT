@@ -1,7 +1,6 @@
 import type { PropsWithChildren } from 'react'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
-import { demoUsers } from './demoUsers'
 import type { AppSessionUser } from './types'
 
 const ACTIVE_USER_STORAGE_KEY = 'dashboardit.react.session.active-user'
@@ -95,7 +94,7 @@ function readStoredUsers() {
 		return normalizedLegacyUsers
 	}
 
-	return demoUsers
+	return []
 }
 
 function readStoredActiveUserId() {

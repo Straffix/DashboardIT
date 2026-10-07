@@ -462,7 +462,8 @@ body.weather-editor-open .dashboard-topbar {
 }
 
 .dashboard-top-mini-widget--devices {
-  column-gap: 16px;
+  -moz-column-gap: 16px;
+       column-gap: 16px;
 }
 
 button.dashboard-top-mini-widget {
@@ -2499,7 +2500,7 @@ body.task-modal-open {
 .card-copy small {
   display: block;
   margin-top: 12px;
-  font-size: 1.35rem;
+  font-size: calc(1.35rem - 2px);
   line-height: 1.65;
   color: #475569;
 }
@@ -2597,7 +2598,7 @@ body.task-modal-open {
 }
 
 .dashboard-menu-stage.is-editing .menu-item:not(.is-dragging):not(.menu-item-drop-slot) .dashboard-card {
-  animation: dashboardTileJiggle 0.26s ease-in-out infinite alternate;
+  animation: none;
 }
 
 .dashboard-menu-stage.is-editing .menu-item.is-reorderable {
@@ -3294,7 +3295,7 @@ body.dashboard-page.dashboard-bookmark-modal-open {
 .dashboard-bookmark-icon {
   background: linear-gradient(180deg, rgba(var(--bookmark-accent-rgb), 0.12) 0%, rgba(var(--bookmark-accent-rgb), 0.2) 100%);
   border: 1px solid rgba(var(--bookmark-accent-rgb), 0.18);
-  color: var(--bookmark-accent);
+  color: #000000;
 }
 .dashboard-bookmark-icon.has-custom-icon i {
   display: none;
@@ -3774,7 +3775,7 @@ body.dashboard-page.theme-dark .dashboard-bookmark-icon-choice-preview {
   }
   .card-copy small {
     margin-top: 0;
-    font-size: clamp(14px, 1.1vw, 17px);
+    font-size: calc(clamp(14px, 1.1vw, 17px) - 2px);
     line-height: 1.45;
     display: -webkit-box;
     overflow: hidden;
@@ -5294,7 +5295,7 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
   }
   .card-copy small {
     margin-top: 3px;
-    font-size: 0.64rem;
+    font-size: calc(0.64rem - 2px);
     line-height: 1.08;
     display: block;
     overflow: hidden;
@@ -5522,7 +5523,7 @@ body.dashboard-page.theme-blush .weather-workday-slot.is-current {
     font-size: 1.4rem;
   }
   .card-copy small {
-    font-size: 1.06rem;
+    font-size: calc(1.06rem - 2px);
   }
   .exchange-laptop-grid {
     grid-template-columns: 1fr;
