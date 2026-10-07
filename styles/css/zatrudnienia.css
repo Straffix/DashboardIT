@@ -717,6 +717,19 @@ body.hires-month-transitioning {
   cursor: pointer;
 }
 
+#purchaseRequest,
+.hire-inline-input[data-field-id=purchaseRequest] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+#purchaseRequest::-webkit-inner-spin-button,
+#purchaseRequest::-webkit-outer-spin-button,
+.hire-inline-input[data-field-id=purchaseRequest]::-webkit-inner-spin-button,
+.hire-inline-input[data-field-id=purchaseRequest]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .hire-inline-textarea {
   width: 100%;
   min-width: 0;

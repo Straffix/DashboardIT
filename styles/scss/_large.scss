@@ -52,7 +52,6 @@
 
 	body.dashboard-page .dashboard-container {
 		max-width: none;
-		min-height: 0;
 	}
 
 	body.dashboard-page .menu-grid {
@@ -60,7 +59,7 @@
 	}
 
 	body.dashboard-page .dashboard-header h1 {
-		font-size: clamp(3rem, 3.6vw, 4.8rem);
+		font-size: clamp(5.6rem, 4vw, 7.2rem);
 	}
 
 	body.dashboard-page .dashboard-subtitle {

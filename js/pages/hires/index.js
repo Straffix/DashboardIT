@@ -728,6 +728,7 @@
 	}
 
 	function getInlineEditableFieldType(fieldId) {
+		if (fieldId === 'purchaseRequest') return 'number'
 		if (fieldId === 'peripheralNotes') return 'textarea'
 		if (INLINE_SELECT_FIELD_IDS.includes(fieldId)) return 'select'
 		if (fieldId === 'startDate') return 'date'

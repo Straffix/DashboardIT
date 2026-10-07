@@ -493,6 +493,18 @@ body.hires-month-transitioning {
 	}
 }
 
+#purchaseRequest,
+.hire-inline-input[data-field-id='purchaseRequest'] {
+	-moz-appearance: textfield;
+	appearance: textfield;
+
+	&::-webkit-inner-spin-button,
+	&::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+}
+
 .hire-inline-textarea {
 	width: 100%;
 	min-width: 0;

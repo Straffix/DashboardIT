@@ -26,9 +26,12 @@ body.notes-page {
 
 .notes-chat-shell {
   display: grid;
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
   gap: 24px;
-  align-items: stretch;
+  align-items: center;
   min-height: clamp(620px, 100vh - 190px, 860px);
 }
 
@@ -768,6 +771,7 @@ body.notes-page.theme-dark .notes-pin-chip {
 @media (max-width: 1180px) {
   .notes-chat-shell {
     grid-template-columns: 1fr;
+    align-items: stretch;
     min-height: 0;
   }
   .notes-chat-panel,
