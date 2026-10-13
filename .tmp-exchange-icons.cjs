@@ -14,12 +14,12 @@ const records = [
   { name: 'DONE FIXTURE', plannedDate: '2026-07-17', oldSn: 'PF010142', newSn: 'PW2291925', status: 'done', accessories },
   { name: 'EMPTY FIXTURE', plannedDate: '2026-07-18', oldSn: '', newSn: '', status: 'pending', accessories: [] },
 ].map(record => ({ ...record, createdAt: '2026-07-06T10:00:00Z', updatedAt: '2026-07-06T10:00:00Z', createdBy: user, updatedBy: user }))
-const seed = `window.DashboardRuntimeConfig = { storageMode: 'local', liveServerBrowserFallback: { resetVersion: '' }, oneTimeAccountCleanup: { version: '' } };
+const seed = `window.DashboardRuntimeConfig = { oneTimeAccountCleanup: { version: '' } };
 localStorage.clear();
 localStorage.setItem('dashboard_users', ${JSON.stringify(JSON.stringify([user]))});
 localStorage.setItem('dashboard_user_session', ${JSON.stringify(JSON.stringify({ userId: user.id }))});
 localStorage.setItem('wymiana_sprzetu_dane', ${JSON.stringify(JSON.stringify(records))});`
-const scripts = ['js/shared/base.js', 'js/shared/runtime-config.js', 'js/core/storage-service.js', 'js/shared/auth.js', 'js/shared/public-api.js', 'js/shared/global-ui.js', 'js/pages/exchanges/index.js']
+const scripts = ['js/shared/base.js', 'js/shared/runtime-config.js', 'js/shared/test-account.js', 'js/core/storage-service.js', 'js/shared/auth.js', 'js/shared/public-api.js', 'js/shared/global-ui.js', 'js/pages/exchanges/index.js']
 let html = fs.readFileSync(path.join(root, 'wymiana_sprzetu.html'), 'utf8')
 html = html.replace('<head>', `<head><base href="${pathToFileURL(root + path.sep).href}">`)
 html = html.replace('<script src="./js/script.js" charset="utf-8"></script>', `<script>${seed}</script>${scripts.map(src => `<script src="${src}"></script>`).join('')}`)

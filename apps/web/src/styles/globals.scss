@@ -116,6 +116,30 @@ body {
   transition: background 0.25s ease, color 0.25s ease;
 }
 
+.test-account-login {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  form {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+    min-width: min(260px, 65vw);
+  }
+
+  p[role='alert'] {
+    color: var(--danger);
+    max-width: 260px;
+  }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

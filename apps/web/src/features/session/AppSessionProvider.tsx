@@ -2,6 +2,7 @@ import type { PropsWithChildren } from 'react'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 import type { AppSessionUser } from './types'
+import { validateTestAccountLogin, withTestAccount } from './testAccount'
 
 const ACTIVE_USER_STORAGE_KEY = 'dashboardit.react.session.active-user'
 const USERS_STORAGE_KEY = 'dashboardit.react.session.users'
@@ -84,17 +85,17 @@ function readStoredUsers() {
 	const storedUsers = readBrowserJsonValue<unknown[]>(USERS_STORAGE_KEY, [])
 	const normalizedStoredUsers = storedUsers.map(record => normalizeSessionUser(record)).filter(Boolean) as AppSessionUser[]
 	if (normalizedStoredUsers.length > 0) {
-		return normalizedStoredUsers
+		return withTestAccount(normalizedStoredUsers)
 	}
 
 	const legacyUsers = readBrowserJsonValue<unknown[]>(LEGACY_USERS_STORAGE_KEY, [])
 	const normalizedLegacyUsers = legacyUsers.map(record => normalizeSessionUser(record)).filter(Boolean) as AppSessionUser[]
 	if (normalizedLegacyUsers.length > 0) {
 		writeBrowserJsonValue(USERS_STORAGE_KEY, normalizedLegacyUsers)
-		return normalizedLegacyUsers
+		return withTestAccount(normalizedLegacyUsers)
 	}
 
-	return []
+	return withTestAccount([])
 }
 
 function readStoredActiveUserId() {
@@ -115,6 +116,7 @@ type AppSessionContextValue = {
 	users: AppSessionUser[]
 	setActiveUserId: (userId: string) => void
 	clearActiveUser: () => void
+	loginTestAccount: (login: string, password: string) => void
 	setUserBookmarkDefaultColor: (userId: string, colorHex: string) => void
 }
 
@@ -164,6 +166,11 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
 		if (!ensureWindow()) return
 
 		window.localStorage.removeItem(ACTIVE_USER_STORAGE_KEY)
+		window.localStorage.removeItem(LEGACY_SESSION_STORAGE_KEY)
+	}
+
+	const loginTestAccount = (login: string, password: string) => {
+		setActiveUserId(validateTestAccountLogin(login, password))
 	}
 
 	const setUserBookmarkDefaultColor = (userId: string, colorHex: string) => {
@@ -195,6 +202,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
 				users,
 				setActiveUserId,
 				clearActiveUser,
+				loginTestAccount,
 				setUserBookmarkDefaultColor,
 			}}>
 			{children}

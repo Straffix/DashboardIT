@@ -1,4 +1,5 @@
 node_modules/
+_site/
 apps/*/node_modules/
 apps/*/dist/
 *.tsbuildinfo

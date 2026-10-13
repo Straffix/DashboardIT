@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
-import { getAppDataSourceMode } from '../config/dataSource'
 import { appModules } from '../data/modules'
 import { useDashboardModuleOrder } from '../features/dashboard-menu/hooks'
 import { useAppSession } from '../features/session/AppSessionProvider'
+import { TestAccountLogin } from '../features/session/TestAccountLogin'
 import { DashboardTopbar } from '../features/shell/DashboardTopbar'
 import { useDashboardTheme } from '../features/theme/useDashboardTheme'
 
@@ -15,7 +15,6 @@ const getNavClassName = ({ isActive }: { isActive: boolean }) =>
 
 export function AppShell() {
 	const { activeUser } = useAppSession()
-	const dataSourceMode = getAppDataSourceMode()
 	const { orderedItems: orderedModules } = useDashboardModuleOrder(appModules, activeUser?.id || '')
 	const { theme, setTheme } = useDashboardTheme(activeUser?.id || '')
 	const location = useLocation()
@@ -71,13 +70,11 @@ export function AppShell() {
 						aplikacji React. To jest docelowy panel pracy dla zespolu IT.
 					</p>
 					<div className="app-shell__status-row">
-						<span className={`status-pill status-pill--${dataSourceMode === 'api' ? 'ready' : 'warning'}`}>
-							Dane: {dataSourceMode === 'api' ? 'API' : 'lokalne dane'}
-						</span>
 						<span className={`status-pill status-pill--${activeUser ? 'active' : 'planned'}`}>
 							Sesja: {activeUser ? activeUser.fullName : 'brak aktywnej osoby'}
 						</span>
 						<span className="status-pill status-pill--neutral">Motyw: {theme}</span>
+						<TestAccountLogin />
 					</div>
 				</div>
 			</header>

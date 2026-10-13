@@ -268,7 +268,7 @@
 		authCallout.hidden = false
 		authCallout.classList.remove('is-active-user')
 		authTitle.textContent = 'Zaloguj się, aby korzystać z czatu'
-		authText.textContent = 'Czat jest dostępny dla zalogowanych użytkowników. Po zalogowaniu zobaczysz historię wiadomości z serwera.'
+		authText.textContent = 'Czat jest dostępny dla zalogowanych użytkowników. Po zalogowaniu zobaczysz historię wiadomości.'
 		authBtn.innerHTML = '<i class="app-icon right-to-bracket-solid-full"></i><span>Zaloguj się</span>'
 		userStatusBox.innerHTML = `
 			<strong>Gość</strong>
@@ -359,7 +359,7 @@
 		if (!currentUser) {
 			chatList.innerHTML = createEmptyStateMarkup({
 				title: 'Chat czeka na logowanie',
-				copy: 'Po zalogowaniu zobaczysz wiadomości zapisane na serwerze.',
+				copy: 'Po zalogowaniu zobaczysz zapisane wiadomości.',
 				icon: 'lock-solid-full',
 			})
 			return

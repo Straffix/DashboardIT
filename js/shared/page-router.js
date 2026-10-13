@@ -380,7 +380,7 @@
 			})
 
 			if (!response.ok) {
-				throw new Error(`Serwer zwrocil HTTP ${response.status}.`)
+				throw new Error(`Nie udało się wczytać strony (HTTP ${response.status}).`)
 			}
 
 			const responseHtml = await response.text()

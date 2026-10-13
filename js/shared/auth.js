@@ -116,31 +116,8 @@ const storageService = appServices.storageService
 const usersService = appServices.usersService
 const sessionService = appServices.sessionService
 const preferencesService = appServices.preferencesService
-const remoteApi = appServices.remoteApi
 
-const isRemoteAuthMode = () => Boolean(storageService?.isRemoteEnabled?.())
-
-// LIVE_SERVER_FALLBACK_START
-const isBrowserFallbackAuthMode = () => Boolean(storageService?.isBrowserFallbackMode?.())
-// LIVE_SERVER_FALLBACK_END
-
-const getAccountStorageLabel = () => (isRemoteAuthMode() ? 'na serwerze' : 'tymczasowo w tej przegladarce')
-
-const getStorageModeTagLabel = () => (isRemoteAuthMode() ? 'Tryb serwerowy' : 'Tryb przegladarkowy')
-
-const requestRemoteAuth = ({ path = '', method = 'GET', payload = null } = {}) => {
-	const response = remoteApi?.requestAuth?.({
-		method,
-		path,
-		body: payload,
-	})
-
-	if (!response?.ok) {
-		throw new Error(response?.message || 'Nie udalo sie polaczyc z serwerem aplikacji.')
-	}
-
-	return response
-}
+const getAccountStorageLabel = () => 'w tej przeglądarce'
 
 const getEventTargetElement = eventTarget => (eventTarget instanceof Element ? eventTarget : eventTarget?.parentElement || null)
 
@@ -366,14 +343,6 @@ const saveSession = session => {
 	sessionService?.save?.(authState.session)
 }
 
-const broadcastSessionChange = () => {
-	storageService?.touch?.(APP_CONFIG.STORAGE_KEYS.SESSION)
-}
-
-const broadcastUserDirectoryChange = () => {
-	storageService?.touch?.(APP_CONFIG.STORAGE_KEYS.USERS)
-}
-
 const findUserByLogin = login => authState.users.find(user => user.login === normalizeUserLogin(login))
 
 const isLocalPasswordMatch = (user, password) => String(user?.passwordHash || '') === encodeLocalPassword(password)
@@ -416,22 +385,11 @@ const renderAuthUi = () => {
 		</div>
 	`
 
-	let popoverMetaText = currentUser
+	const popoverMetaText = currentUser
 		? ''
 		: authState.users.length === 0
-			? isRemoteAuthMode()
-				? 'Załóż pierwsze konto zespołowe. Otrzyma rolę DEV.'
-				: 'Załóż pierwsze konto w tej przeglądarce. Otrzyma rolę DEV.'
-			: isRemoteAuthMode()
-				? 'Zaloguj sie lub zaloz nowe konto wspoldzielone na serwerze.'
-				: 'Zaloguj się lub załóż nowe konto lokalne.'
-	// LIVE_SERVER_FALLBACK_START
-	if (!currentUser && !isRemoteAuthMode()) {
-		popoverMetaText = authState.users.length === 0
-			? 'Zaloz pierwsze konto tymczasowo w tej przegladarce. Otrzyma role DEV.'
-			: 'Zaloguj sie lub zaloz konto tymczasowo zapisane w tej przegladarce.'
-	}
-	// LIVE_SERVER_FALLBACK_END
+			? 'Załóż pierwsze konto w tej przeglądarce. Otrzyma rolę DEV.'
+			: 'Zaloguj się lub załóż nowe konto lokalne.'
 	authState.popoverMeta.textContent = popoverMetaText
 	authState.popoverMeta.hidden = !popoverMetaText
 	if (authState.popoverTheme) {
@@ -543,27 +501,6 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 		throw new Error(`Hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaków.`)
 	}
 
-	if (isRemoteAuthMode()) {
-		requestRemoteAuth({
-			path: 'register.php',
-			method: 'POST',
-			payload: {
-				fullName: normalizedName,
-				login: normalizedLogin,
-				password: normalizedPassword,
-				avatarId: getAvatarPreset(avatarId).id,
-				avatarImage: normalizeAvatarImage(avatarImage),
-				profileAccentColor: AUTH_CONFIG.defaultProfileAccentColor,
-				bookmarkDefaultColor: AUTH_CONFIG.defaultBookmarkColor,
-			},
-		})
-
-		syncCurrentUserFromSession()
-		broadcastUserDirectoryChange()
-		broadcastSessionChange()
-		return sanitizeUser(authState.currentUser)
-	}
-
 	if (findUserByLogin(normalizedLogin)) {
 		throw new Error('Taki login już istnieje.')
 	}
@@ -594,20 +531,6 @@ const registerUser = ({ fullName, login, password, avatarId, avatarImage }) => {
 }
 
 const loginUser = ({ login, password }) => {
-	if (isRemoteAuthMode()) {
-		requestRemoteAuth({
-			path: 'login.php',
-			method: 'POST',
-			payload: {
-				login: normalizeUserLogin(login),
-				password: String(password || ''),
-			},
-		})
-
-		syncCurrentUserFromSession()
-		broadcastSessionChange()
-		return sanitizeUser(authState.currentUser)
-	}
 
 	const matchedUser = findUserByLogin(login)
 	if (!matchedUser || !isLocalPasswordMatch(matchedUser, password)) {
@@ -621,13 +544,13 @@ const loginUser = ({ login, password }) => {
 }
 
 const resetUserPassword = ({ login, password }) => {
-	if (isRemoteAuthMode()) {
-		throw new Error('Reset hasla jest w trybie serwerowym wylaczony. Skontaktuj sie z administratorem.')
-	}
 
 	authState.users = loadUsers()
 	const matchedUser = findUserByLogin(login)
 	const normalizedPassword = String(password || '')
+	if (window.DashboardTestAccount && matchedUser?.id === window.DashboardTestAccount.id) {
+		throw new Error('Hasło konta testowego jest stałe. Użyj hasła podanego w instrukcji projektu.')
+	}
 
 	if (!matchedUser) {
 		throw new Error('Nie znaleziono tego konta w tej przeglądarce. Otwórz dashboard pod tym samym adresem, pod którym konto zostało utworzone.')
@@ -664,21 +587,14 @@ const resetUserPassword = ({ login, password }) => {
 }
 
 const logoutUser = ({ silent = false } = {}) => {
-	if (isRemoteAuthMode()) {
-		sessionService?.clear?.()
-		syncCurrentUserFromSession()
-	} else {
-		saveSession(null)
-		setCurrentUser(null)
-	}
+	saveSession(null)
+	setCurrentUser(null)
 
 	if (!silent) {
 		notify({
 			type: 'info',
 			title: 'Wylogowano',
-			message: isRemoteAuthMode()
-				? 'Sesja serwerowa zostala zamknieta dla tego urzadzenia.'
-				: 'Sesja lokalna została zamknięta dla tej przeglądarki.',
+			message: 'Sesja lokalna została zamknięta dla tej przeglądarki.',
 		})
 	}
 }
@@ -705,28 +621,8 @@ const updateCurrentUserProfile = ({ fullName, login, avatarId, avatarImage, prof
 	if (!normalizedLogin) {
 		throw new Error('Login nie może być pusty.')
 	}
-
-	if (isRemoteAuthMode()) {
-		requestRemoteAuth({
-			path: 'profile.php',
-			method: 'POST',
-			payload: {
-				fullName: normalizedName,
-				login: normalizedLogin,
-				avatarId: getAvatarPreset(avatarId).id,
-				avatarImage: normalizeAvatarImage(avatarImage),
-				profileTitle: normalizedProfileTitle,
-				profileBio: normalizedProfileBio,
-				profileAccentColor: normalizedProfileAccentColor,
-				bookmarkDefaultColor: normalizedBookmarkDefaultColor,
-				profileCoverImage: normalizedProfileCoverImage,
-			},
-		})
-
-		syncCurrentUserFromSession()
-		broadcastUserDirectoryChange()
-		broadcastSessionChange()
-		return sanitizeUser(authState.currentUser)
+	if (authState.currentUser.id === window.DashboardTestAccount?.id && normalizedLogin !== window.DashboardTestAccount.login) {
+		throw new Error('Login konta testowego jest stały.')
 	}
 
 	const duplicatedUser = authState.users.find(
@@ -767,6 +663,9 @@ const changeCurrentUserPassword = ({ currentPassword, newPassword }) => {
 	if (!authState.currentUser) {
 		throw new Error('Brak zalogowanego użytkownika.')
 	}
+	if (authState.currentUser.id === window.DashboardTestAccount?.id) {
+		throw new Error('Hasło konta testowego jest stałe. Użyj hasła podanego w instrukcji projektu.')
+	}
 
 	const normalizedCurrentPassword = String(currentPassword || '')
 	const normalizedNewPassword = String(newPassword || '')
@@ -777,21 +676,6 @@ const changeCurrentUserPassword = ({ currentPassword, newPassword }) => {
 
 	if (normalizedNewPassword.length < AUTH_CONFIG.minPasswordLength) {
 		throw new Error(`Nowe hasło musi mieć co najmniej ${AUTH_CONFIG.minPasswordLength} znaków.`)
-	}
-
-	if (isRemoteAuthMode()) {
-		requestRemoteAuth({
-			path: 'password.php',
-			method: 'POST',
-			payload: {
-				currentPassword: normalizedCurrentPassword,
-				newPassword: normalizedNewPassword,
-			},
-		})
-
-		syncCurrentUserFromSession()
-		broadcastSessionChange()
-		return true
 	}
 
 	const matchedUser = authState.users.find(user => String(user.id || '') === String(authState.currentUser.id || ''))
@@ -823,6 +707,9 @@ const updateUserAccess = ({ userId, fullName, login, role, permissions } = {}) =
 	}
 
 	const normalizedUserId = String(userId || '').trim()
+	if (normalizedUserId === window.DashboardTestAccount?.id) {
+		throw new Error('Uprawnienia konta testowego są stałe.')
+	}
 	const normalizedName = String(fullName || '').trim()
 	const normalizedLogin = normalizeUserLogin(login)
 	if (!normalizedUserId) {
@@ -843,24 +730,6 @@ const updateUserAccess = ({ userId, fullName, login, role, permissions } = {}) =
 
 	if (authState.users.some(user => String(user.id || '') !== normalizedUserId && normalizeUserLogin(user.login) === normalizedLogin)) {
 		throw new Error('Ten login jest już zajęty.')
-	}
-
-	if (isRemoteAuthMode()) {
-		const response = requestRemoteAuth({
-			path: 'access.php',
-			method: 'POST',
-			payload: {
-				userId: normalizedUserId,
-				fullName: normalizedName,
-				login: normalizedLogin,
-				role: normalizeUserRole(role),
-				permissions: normalizeUserPermissions(permissions),
-			},
-		})
-
-		authState.users = loadUsers()
-		broadcastUserDirectoryChange()
-		return sanitizeUser(response.user || authState.users.find(user => String(user.id || '') === normalizedUserId) || null)
 	}
 
 	const normalizedRole = normalizeUserRole(role)
@@ -927,7 +796,7 @@ const mapStoredCollection = (storageKey, mapRecord) => {
 
 const purgeDeletedUserLocalData = userId => {
 	const normalizedUserId = String(userId || '').trim()
-	if (!normalizedUserId || isRemoteAuthMode()) return
+	if (!normalizedUserId) return
 
 	const storageKeys = APP_CONFIG?.STORAGE_KEYS || {}
 
@@ -972,7 +841,7 @@ const purgeDeletedUserLocalData = userId => {
 // Apply the requested account cleanup once, only in the owner's local browser session.
 // Keep the stored owner record intact apart from the displayed profile title.
 const runOneTimeLocalAccountCleanup = user => {
-	if (isRemoteAuthMode() || !isBrowserFallbackAuthMode() || user.role !== 'admin') return user
+	if (user.role !== 'admin') return user
 
 	const cleanupConfig = window.DashboardRuntimeConfig?.oneTimeAccountCleanup || {}
 	const version = String(cleanupConfig.version || '').trim()
@@ -1040,6 +909,9 @@ const deleteUserAccount = userId => {
 	}
 
 	const normalizedUserId = String(userId || '').trim()
+	if (normalizedUserId === window.DashboardTestAccount?.id) {
+		throw new Error('Konto testowe jest stałe i nie można go usunąć z panelu.')
+	}
 	if (!normalizedUserId) {
 		throw new Error('Brak wskazanego użytkownika.')
 	}
@@ -1051,20 +923,6 @@ const deleteUserAccount = userId => {
 	const matchedUser = authState.users.find(user => String(user.id || '') === normalizedUserId)
 	if (!matchedUser) {
 		throw new Error('Nie znaleziono wskazanego użytkownika.')
-	}
-
-	if (isRemoteAuthMode()) {
-		const response = requestRemoteAuth({
-			path: 'delete.php',
-			method: 'POST',
-			payload: {
-				userId: normalizedUserId,
-			},
-		})
-
-		authState.users = loadUsers()
-		broadcastUserDirectoryChange()
-		return sanitizeUser(response.user || matchedUser)
 	}
 
 	saveUsers(authState.users.filter(user => String(user.id || '') !== normalizedUserId))
@@ -1184,17 +1042,9 @@ const renderPageStatusStrip = () => {
 	const currentUser = authState.currentUser
 	const moduleLabel = getCurrentModuleLabel()
 	const identityLabel = currentUser ? getVisibleUserName(currentUser) : 'Gość systemu'
-	let metaLabel = currentUser
+	const metaLabel = currentUser
 		? getRoleLabel(currentUser.role)
-		: isRemoteAuthMode()
-			? 'Tryb podgladu bez aktywnej sesji serwerowej'
-			: 'Tryb podgladu bez lokalnej sesji'
-
-	// LIVE_SERVER_FALLBACK_START
-	if (!currentUser && isBrowserFallbackAuthMode()) {
-		metaLabel = 'Tryb przegladarkowy bez aktywnej sesji'
-	}
-	// LIVE_SERVER_FALLBACK_END
+		: 'Tryb podgladu bez lokalnej sesji'
 
 	systemUiState.pageStatusIdentity.innerHTML = `
 		${createAvatarMarkup({
@@ -1210,39 +1060,15 @@ const renderPageStatusStrip = () => {
 	`
 
 	systemUiState.pageStatusText.textContent = currentUser
-		? isRemoteAuthMode()
-			? `Pracujesz w module ${moduleLabel}. Konto i dane sa wspoldzielone na serwerze i gotowe do pracy zespolowej.`
-			: `Pracujesz w module ${moduleLabel}. Konto lokalne jest aktywne w tej przeglądarce i gotowe do dalszej pracy.`
-		: isRemoteAuthMode()
-			? `Przegladasz modul ${moduleLabel} jako gosc. Zaloguj sie, aby pracowac na wspolnych danych serwerowych.`
-			: `Przeglądasz moduł ${moduleLabel} jako gość. Zaloguj się, aby korzystać z funkcji zapisujących dane i historii zmian.`
+		? `Pracujesz w module ${moduleLabel}. Konto lokalne jest aktywne w tej przeglądarce i gotowe do dalszej pracy.`
+		: `Przeglądasz moduł ${moduleLabel} jako gość. Zaloguj się, aby korzystać z funkcji zapisujących dane i historii zmian.`
 
-	// LIVE_SERVER_FALLBACK_START
-	if (isBrowserFallbackAuthMode()) {
-		systemUiState.pageStatusText.textContent = currentUser
-			? `Pracujesz w module ${moduleLabel} w trybie przegladarkowym. Dane zapisuja sie tymczasowo tylko w tej przegladarce.`
-			: `Przegladasz modul ${moduleLabel} w trybie przegladarkowym. Zaloguj sie lub zaloz konto, aby testowac zapis danych.`
-	}
-	// LIVE_SERVER_FALLBACK_END
 	systemUiState.pageStatusTags.innerHTML = `
 		<span class="app-page-status-tag ${currentUser?.role === 'admin' ? 'is-admin' : 'is-neutral'}">
 			${currentUser ? getRoleLabel(currentUser.role) : 'Gość'}
 		</span>
-		<span class="app-page-status-tag is-storage">${getStorageModeTagLabel()}</span>
-		<span class="app-page-status-tag is-neutral">${isRemoteAuthMode() ? 'Wspolne dane zespolowe' : 'Frontend ready for API'}</span>
 	`
 
-	// LIVE_SERVER_FALLBACK_START
-	if (isBrowserFallbackAuthMode()) {
-		systemUiState.pageStatusTags.innerHTML = `
-			<span class="app-page-status-tag ${currentUser?.role === 'admin' ? 'is-admin' : 'is-neutral'}">
-				${currentUser ? getRoleLabel(currentUser.role) : 'Gosc'}
-			</span>
-			<span class="app-page-status-tag is-storage">${getStorageModeTagLabel()}</span>
-			<span class="app-page-status-tag is-neutral">Dane tymczasowe w przegladarce</span>
-		`
-	}
-	// LIVE_SERVER_FALLBACK_END
 	systemUiState.pageStatusActions.innerHTML = currentUser
 		? `
 			${
@@ -1702,18 +1528,14 @@ const renderAdminUsersPanel = () => {
 	}
 
 	if (authState.adminUsersStorageValue) {
-		authState.adminUsersStorageValue.textContent = isRemoteAuthMode() ? 'Serwer' : 'Lokalnie'
+		authState.adminUsersStorageValue.textContent = 'Lokalnie'
 	}
 
 	if (manageableUsers.length === 0) {
 		authState.adminUsersList.innerHTML = `
 			<div class="app-team-empty">
 				<strong>Brak innych kont do konfiguracji</strong>
-				<p>${
-					isRemoteAuthMode()
-						? 'Gdy kolejne osoby zaloza konto na serwerze, pojawia sie tutaj i bedziesz mogl poprawic ich dane, role oraz klasy.'
-						: 'Gdy kolejne osoby zaloza konto lokalne, pojawia sie tutaj i bedziesz mogl poprawic ich dane, role oraz klasy.'
-				}</p>
+				<p>Gdy kolejne osoby zaloza konto lokalne, pojawia sie tutaj i bedziesz mogl poprawic ich dane, role oraz klasy.</p>
 			</div>
 		`
 		return
@@ -2074,8 +1896,7 @@ const startProfileCoverCropDrag = event => {
 }
 
 const updateAuthMode = mode => {
-	const allowPasswordReset = !isRemoteAuthMode()
-	authState.mode = mode === 'register' ? 'register' : allowPasswordReset && mode === 'reset' ? 'reset' : 'login'
+	authState.mode = mode === 'register' ? 'register' : mode === 'reset' ? 'reset' : 'login'
 	if (!authState.authModal || !authState.authForm) return
 
 	const isRegister = authState.mode === 'register'
@@ -2084,9 +1905,7 @@ const updateAuthMode = mode => {
 
 	if (authState.authTitle) {
 		authState.authTitle.textContent = isRegister
-			? isRemoteAuthMode()
-				? 'Zaloz konto zespolowe'
-				: 'Załóż konto lokalne'
+			? 'Załóż konto lokalne'
 			: isReset
 				? 'Ustaw nowe hasło'
 				: 'Zaloguj się do systemu'
@@ -2095,17 +1914,11 @@ const updateAuthMode = mode => {
 	if (authState.authCopy) {
 		authState.authCopy.textContent = isRegister
 			? authState.users.length === 0
-				? isRemoteAuthMode()
-					? 'Pierwsze konto zostanie zapisane na serwerze i otrzyma rolę DEV.'
-					: 'Pierwsze konto zostanie zapisane lokalnie w tej przeglądarce i otrzyma rolę DEV.'
-				: isRemoteAuthMode()
-					? 'Konto zostanie zapisane na serwerze i będzie widoczne dla użytkowników tej aplikacji. Role nadaje DEV.'
-					: 'Konto zostanie zapisane lokalnie w tej przeglądarce. Role nadaje DEV.'
+				? 'Pierwsze konto zostanie zapisane lokalnie w tej przeglądarce i otrzyma rolę DEV.'
+				: 'Konto zostanie zapisane lokalnie w tej przeglądarce. Role nadaje DEV.'
 			: isReset
 				? 'Podaj login i ustaw nowe hasło dla lokalnego konta w tej przeglądarce.'
-				: isRemoteAuthMode()
-					? 'Konta i dane sa wspoldzielone na serwerze. Zalogowanie odblokowuje prace na wspolnej bazie rekordow.'
-					: 'Konta są lokalne dla tej przeglądarki. Później warstwa danych może zostać podłączona do backendu.'
+				: 'Konta i dane są zapisywane w tej przeglądarce.'
 	}
 
 	if (authState.authSwitchBtn) {
@@ -2113,7 +1926,7 @@ const updateAuthMode = mode => {
 	}
 
 	if (authState.authResetBtn) {
-		authState.authResetBtn.hidden = isRemoteAuthMode() || isRegister || isReset
+		authState.authResetBtn.hidden = isRegister || isReset
 	}
 
 	if (authState.authSubmitBtn) {
@@ -2135,9 +1948,7 @@ const updateAuthMode = mode => {
 }
 
 const openAuthModal = mode => {
-	if (!isRemoteAuthMode()) {
-		authState.users = loadUsers()
-	}
+	authState.users = loadUsers()
 	updateAuthMode(mode)
 	openModal(authState.authModal)
 
@@ -2255,7 +2066,7 @@ const ensureAuthUi = () => {
 			</button>
 			<p class="app-auth-kicker">Panel użytkownika</p>
 			<h2 id="app-auth-title">Zaloguj się do systemu</h2>
-			<p class="app-auth-copy" id="app-auth-copy">Konta są lokalne dla tej przeglądarki. Później warstwa danych może zostać podłączona do backendu.</p>
+			<p class="app-auth-copy" id="app-auth-copy">Konta i dane są zapisywane w tej przeglądarce.</p>
 			<form class="app-auth-form" novalidate>
 				<label class="app-auth-field is-hidden">
 					<span>Imię i nazwisko</span>
@@ -2788,9 +2599,7 @@ const ensureAuthUi = () => {
 					notify({
 						type: 'success',
 						title: 'Konto utworzone',
-						message: isRemoteAuthMode()
-							? 'Nowe konto zostalo zalozone na serwerze i od razu aktywowane.'
-							: 'Nowe konto lokalne zostało założone i od razu aktywowane w tej przeglądarce.',
+						message: 'Nowe konto lokalne zostało założone i od razu aktywowane w tej przeglądarce.',
 					})
 				} else {
 					resetUserPassword({
@@ -2811,9 +2620,7 @@ const ensureAuthUi = () => {
 				notify({
 					type: 'success',
 					title: 'Zalogowano',
-					message: isRemoteAuthMode()
-						? 'Sesja uzytkownika jest aktywna, a dane sa wspoldzielone we wszystkich modulach.'
-						: 'Sesja użytkownika jest aktywna i gotowa do pracy we wszystkich modułach.',
+					message: 'Sesja użytkownika jest aktywna i gotowa do pracy we wszystkich modułach.',
 				})
 			}
 

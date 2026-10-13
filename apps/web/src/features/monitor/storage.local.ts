@@ -1,4 +1,3 @@
-import type { DeleteMonitorDeviceResponseDto } from './api-contract'
 import type { MonitorDevice, MonitorDeviceDraft } from './types'
 import { createDefaultDomainDate, normalizeMonitorDraft } from './utils'
 
@@ -157,7 +156,7 @@ export async function extendMonitorDevice(deviceId: string): Promise<MonitorDevi
 	return extendedDevice
 }
 
-export async function deleteMonitorDevice(deviceId: string): Promise<DeleteMonitorDeviceResponseDto> {
+export async function deleteMonitorDevice(deviceId: string): Promise<{ id: string; success: boolean }> {
 	const devices = await readMonitorDevices()
 	const nextDevices = devices.filter(device => device.id !== deviceId)
 	await writeMonitorDevices(nextDevices)

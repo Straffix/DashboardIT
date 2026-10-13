@@ -8,6 +8,7 @@
 	const sharedScripts = [
 		'./js/shared/base.js',
 		'./js/shared/runtime-config.js',
+		'./js/shared/test-account.js',
 		'./js/shared/page-router.js',
 		'./js/core/storage-service.js',
 		'./js/shared/auth.js',

@@ -16,7 +16,7 @@ const colleague = { ...owner, id: 'other', fullName: 'Other User', login: 'other
 const otherAdmin = { ...colleague, id: 'other-admin', login: 'other.admin', role: 'admin' }
 const marker = 'dashboard_account_cleanup::2026-10-07-dev-account-cleanup'
 
-function createApp({ users = [owner, colleague, otherAdmin], session = owner.id, remote = false, fallback = true, failKey = '' } = {}) {
+function createApp({ users = [owner, colleague, otherAdmin], session = owner.id, failKey = '' } = {}) {
 	const values = new Map([
 		['dashboard_users', JSON.stringify(users)],
 		['dashboard_user_session', JSON.stringify(session ? { userId: session, loginAt: '2026-10-07T08:00:00Z' } : null)],
@@ -46,7 +46,6 @@ function createApp({ users = [owner, colleague, otherAdmin], session = owner.id,
 		setTimeout() {}, location: { protocol: 'http:', hostname: '127.0.0.1' },
 		AppServices: {
 			storageService: {
-				isRemoteEnabled: () => remote, isBrowserFallbackMode: () => fallback,
 				readJson: read, writeJson: (key, value) => values.set(key, JSON.stringify(value)),
 			},
 			usersService: { getAll: () => read('dashboard_users', []), saveAll: users => values.set('dashboard_users', JSON.stringify(users)) },
@@ -114,8 +113,6 @@ test('a signed-out owner can still log in with the existing password and trigger
 for (const [name, options] of [
 	['another employee', { session: colleague.id }],
 	['another administrator', { session: otherAdmin.id }],
-	['a remote backend', { remote: true }],
-	['a disabled browser fallback', { fallback: false }],
 	['ambiguous owner names', { users: [owner, { ...owner, id: 'duplicate', login: 'duplicate' }, colleague] }],
 ]) {
 	test(`does not delete accounts for ${name}`, () => {
@@ -179,19 +176,6 @@ test('local password reset remains available when no accounts are cached', () =>
 		authState.authResetBtn.hidden;
 	`, app.context)
 	assert.equal(hidden, false)
-})
-
-test('remote login keeps the local reset button hidden', () => {
-	const app = createApp({ remote: true, session: null })
-	const hidden = vm.runInContext(`
-		authState.authModal = { dataset: {} };
-		authState.authForm = {};
-		authState.authResetBtn = { hidden: false };
-		updateAuthMode('login');
-		authState.authResetBtn.hidden;
-	`, app.context)
-	assert.equal(hidden, true)
-	assert.throws(() => app.auth.resetPassword({ login: owner.login, password: 'new-fixture-password' }), /trybie serwerowym/)
 })
 
 test('reset reads current accounts without prior login and preserves the profile and other accounts', () => {

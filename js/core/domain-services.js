@@ -2,7 +2,6 @@
 	const appServices = (window.AppServices = window.AppServices || {})
 	const storageService = appServices.storageService
 	const usersService = appServices.usersService
-	const remoteApi = appServices.remoteApi
 
 	if (!storageService) {
 		return
@@ -95,7 +94,6 @@
 	}
 
 	const lunchService = {
-		// Shared lunch records are synchronized through the storage service and backend API.
 		loadReservations() {
 			return readArray(STORAGE_KEYS.LUNCH).map(normalizeReservationRecord)
 		},
@@ -237,7 +235,6 @@
 	})
 
 	const notesService = {
-		// storageService writes shared notes to the remote backend when the server mode is active.
 		loadNotes() {
 			return readArray(STORAGE_KEYS.NOTES).map(normalizeNoteRecord)
 		},
@@ -284,30 +281,6 @@
 		getAnnouncementById(announcementId) {
 			return this.getAnnouncements().find(announcement => announcement.id === String(announcementId || '')) || null
 		},
-		canUseRemoteChatApi() {
-			return Boolean(remoteApi?.isRemoteEnabled?.()) && !Boolean(storageService?.isBrowserFallbackMode?.())
-		},
-		requestRemoteChatApi({ method = 'GET', messageId = '', body = null } = {}) {
-			if (!this.canUseRemoteChatApi() || typeof remoteApi?.request !== 'function') {
-				return {
-					ok: false,
-					message: 'Zdalne API czatu nie jest obecnie dostepne.',
-				}
-			}
-
-			const query = new URLSearchParams()
-			if (messageId) {
-				query.set('messageId', String(messageId))
-			}
-
-			const queryString = query.toString()
-			const path = `chat-messages.php${queryString ? `?${queryString}` : ''}`
-			return remoteApi.request({
-				method,
-				path,
-				body,
-			})
-		},
 		createNote({ content, authorId }) {
 			const normalizedContent = String(content || '').trim()
 			const normalizedAuthorId = String(authorId || '')
@@ -343,20 +316,6 @@
 
 			if (!normalizedContent) {
 				throw new Error('Wpisz tresc wiadomosci przed wyslaniem.')
-			}
-
-			if (this.canUseRemoteChatApi()) {
-				const response = this.requestRemoteChatApi({
-					method: 'POST',
-					body: {
-						content: normalizedContent,
-					},
-				})
-				if (!response.ok) {
-					throw new Error(response.message || 'Nie udalo sie zapisac wiadomosci na serwerze.')
-				}
-
-				return normalizeNoteRecord(response.chatMessage || {})
 			}
 
 			const notes = this.loadNotes()
@@ -407,21 +366,6 @@
 			const normalizedMessageId = String(messageId || '')
 			const normalizedContent = String(content || '').trim()
 
-			if (this.canUseRemoteChatApi()) {
-				const response = this.requestRemoteChatApi({
-					method: 'PATCH',
-					body: {
-						messageId: normalizedMessageId,
-						content: normalizedContent,
-					},
-				})
-				if (!response.ok) {
-					throw new Error(response.message || 'Nie udalo sie zaktualizowac wiadomosci.')
-				}
-
-				return normalizeNoteRecord(response.chatMessage || {})
-			}
-
 			const notes = this.loadNotes()
 			const messageIndex = notes.findIndex(note => note.id === normalizedMessageId)
 
@@ -465,18 +409,6 @@
 		deleteChatMessage({ messageId, actor }) {
 			const normalizedMessageId = String(messageId || '')
 
-			if (this.canUseRemoteChatApi()) {
-				const response = this.requestRemoteChatApi({
-					method: 'DELETE',
-					messageId: normalizedMessageId,
-				})
-				if (!response.ok) {
-					throw new Error(response.message || 'Nie udalo sie usunac wiadomosci.')
-				}
-
-				return normalizeNoteRecord(response.chatMessage || {})
-			}
-
 			const notes = this.loadNotes()
 			const messageToDelete = notes.find(note => note.id === normalizedMessageId)
 
@@ -493,21 +425,6 @@
 		},
 		setChatMessagePinned({ messageId, isPinned, actor }) {
 			const normalizedMessageId = String(messageId || '')
-
-			if (this.canUseRemoteChatApi()) {
-				const response = this.requestRemoteChatApi({
-					method: 'PATCH',
-					body: {
-						messageId: normalizedMessageId,
-						isPinned: Boolean(isPinned),
-					},
-				})
-				if (!response.ok) {
-					throw new Error(response.message || 'Nie udalo sie zmienic przypiecia wiadomosci.')
-				}
-
-				return normalizeNoteRecord(response.chatMessage || {})
-			}
 
 			const notes = this.loadNotes()
 			const messageIndex = notes.findIndex(note => note.id === normalizedMessageId)
@@ -617,7 +534,6 @@
 	}
 
 	const tasksService = {
-		// Shared task records are synchronized through the storage service and backend API.
 		loadTasks() {
 			return readArray(STORAGE_KEYS.TASKS).map(normalizeTaskRecord)
 		},
