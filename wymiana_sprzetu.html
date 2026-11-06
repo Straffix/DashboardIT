@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wymiana Sprzętu - IT Support</title>
+
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script><!-- del -->
+
+    <link rel="stylesheet" href="./styles/css/style.css">
+    <link rel="stylesheet" href="./styles/css/dashboard.css">
+</head>
+
+<body>
+    <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pełnoekranowy">
+        <i class="fa-solid fa-expand"></i>
+    </button>
+
+    <div class="wrapper">
+        <header class="header">
+            <a href="index.html" class="menu-btn">
+                <i class="fa-solid fa-chevron-left"></i> Powrót do Dashboardu
+            </a>
+
+            <div class="logo-section">
+                <div class="icon-box">
+                    <i class="fa-solid fa-right-left"></i>
+                </div>
+
+                <div>
+                    <h1>Wymiana Sprzętu</h1>
+                    <p>Zarządzanie cyklem życia urządzeń w firmie <span>Rossmann S.D.P.</span></p>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section>
+                <div class="table-header">
+                    <button class="month-nav-btn" type="button" data-month-delta="-1" aria-label="Poprzedni miesiąc">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+
+                    <div class="month-picker-container" id="month-trigger" role="button" tabindex="0"
+                        aria-label="Wybierz miesiąc">
+                        <h2 id="current-month-display">MARZEC 2026</h2>
+                        <input type="month" id="hidden-month-input" class="hidden-month-input" aria-hidden="true" />
+                    </div>
+
+                    <button class="month-nav-btn" type="button" data-month-delta="1" aria-label="Następny miesiąc">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="col-info-narrow"></th>
+                                <th class="col-worker">PRACOWNIK</th>
+                                <th class="col-date">DATA WYMIANY</th>
+                                <th class="col-laptop">OLD LAPTOP (RU)</th>
+                                <th class="col-laptop">NEW LAPTOP (RU)</th>
+                                <th class="col-acc">AKCESORIA</th>
+                                <th class="col-actions">AKCJE</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <aside>
+                <h2>Zaplanuj nową wymianę</h2>
+
+                <form id="exchange-form">
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-user"></i> Pracownik</label>
+                        <input type="text" id="emp-name" required placeholder="Imię i Nazwisko" />
+                    </div>
+
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-calendar-day"></i> Data planowanej wymiany</label>
+                        <input type="date" id="exchange-date" required />
+                    </div>
+
+                    <hr class="form-separator" />
+
+                    <div class="exchange-laptop-grid">
+                        <div class="input-group">
+                            <label class="label-danger">Stary Laptop (SN)</label>
+                            <input type="text" id="old-sn" placeholder="SN do zwrotu" />
+                        </div>
+
+                        <div class="input-group">
+                            <label class="label-success">Nowy Laptop (SN)</label>
+                            <input type="text" id="new-sn" placeholder="SN do wydania" />
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Dodatkowe wydania przy wymianie</label>
+
+                        <div class="accessory-picker" id="accessory-picker">
+                            <div class="accessory-item" data-item="mouse" title="Myszka">
+                                <i class="fas fa-mouse"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="keyboard" title="Klawiatura">
+                                <i class="fas fa-keyboard"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="headset" title="Słuchawki">
+                                <i class="fas fa-headset"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="monitor" title="Nowy Monitor">
+                                <i class="fas fa-desktop"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="bag" title="Torba / Etui">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Uwagi (np. uszkodzenia starego)</label>
+                        <input type="text" id="notes" placeholder="Opcjonalne notatki..." />
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="btn-submit btn-submit-warning btn-submit-spaced">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        Zatwierdź i zaplanuj
+                    </button>
+
+                    <button type="button" id="cancel-edit-btn"
+                        class="btn-submit btn-submit-muted btn-submit-tight is-hidden">
+                        <i class="fa-solid fa-times"></i>
+                        Anuluj edycję
+                    </button>
+                </form>
+
+                <section class="backup_section">
+                    <h3>Kopia zapasowa</h3>
+
+                    <div class="backup-container">
+                        <div class="backup-row">
+                            <button id="export-excel-btn" class="btn-backup-item btn-excel-green" type="button">
+                                <i class="fa-solid fa-file-excel"></i>
+                            </button>
+
+                            <input type="file" id="importExcelFile" class="visually-hidden-file-input"
+                                accept=".xlsx, .xls" />
+
+                            <button id="import-excel-trigger" class="btn-backup-item" type="button">
+                                Import Excel
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+
+        <footer class="main-footer">
+            <div class="footer-content">
+                <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
+                <div class="footer-separator"></div>
+                <p class="footer-status">
+                    <span class="status-dot"></span>
+                    arkadiusz-lisiecki.pl
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="./js/script.js"></script>
+    <script src="./js/wymiany.js"></script>
+</body>
+
+</html>

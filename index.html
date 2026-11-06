@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Management Dashboard</title>
+
+    <link rel="stylesheet" href="./styles/css/style.css">
+    <link rel="stylesheet" href="./styles/css/dashboard.css">
+</head>
+
+<body class="dashboard-page">
+    <div class="wrapper">
+        <div class="dashboard-container">
+            <div class="dashboard-orb dashboard-orb-left" aria-hidden="true"></div>
+            <div class="dashboard-orb dashboard-orb-right" aria-hidden="true"></div>
+            <div class="dashboard-grid-glow" aria-hidden="true"></div>
+
+            <header class="dashboard-header">
+                <p class="dashboard-kicker">Centrum operacyjne IT</p>
+                <h1>IT Management Dashboard</h1>
+                <p class="dashboard-subtitle">Wybierz moduł operacyjny i przejdź do pracy w odpowiednim obszarze.</p>
+            </header>
+
+            <nav class="menu-grid" aria-label="Moduły dashboardu">
+                <a href="nowe_zatrudnienia.html" target="_blank" class="menu-item nowe-zatrudnienia">
+                    <article class="dashboard-card">
+                        <div class="card-icon-shell">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <div class="card-copy">
+                            <span>Nowe Zatrudnienia</span>
+                            <small>Onboarding IT i przygotowanie sprzętu dla nowych pracowników.</small>
+                        </div>
+                        <div class="card-meta">
+                            <strong>Onboarding</strong>
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </article>
+                </a>
+
+                <a href="monitor_laptopow.html" target="_blank" class="menu-item monitor-laptopow">
+                    <article class="dashboard-card">
+                        <div class="card-icon-shell">
+                            <i class="fa-solid fa-laptop"></i>
+                        </div>
+                        <div class="card-copy">
+                            <span>Monitor Laptopów</span>
+                            <small>Status urządzeń w domenie i kontrola terminów aktywności.</small>
+                        </div>
+                        <div class="card-meta">
+                            <strong>Domena</strong>
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </article>
+                </a>
+
+                <a href="wymiana_sprzetu.html" target="_blank" class="menu-item wymiana-sprzetu">
+                    <article class="dashboard-card">
+                        <div class="card-icon-shell">
+                            <i class="fa-solid fa-right-left"></i>
+                        </div>
+                        <div class="card-copy">
+                            <span>Wymiana Sprzętu</span>
+                            <small>Planowanie cyklu wymian i obsługa rotacji urządzeń w firmie.</small>
+                        </div>
+                        <div class="card-meta">
+                            <strong>Cykl 3-letni</strong>
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </article>
+                </a>
+            </nav>
+
+            <footer class="main-footer">
+                <div class="footer-content">
+                    <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
+                    <div class="footer-separator"></div>
+                    <p class="footer-status">
+                        <span class="status-dot"></span>
+                        arkadiusz-lisiecki.pl
+                    </p>
+                </div>
+            </footer>
+        </div>
+
+    </div>
+
+    <script src="./js/script.js"></script>
+    <script src="./js/dashboard.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nowe zatrudnienia - Zarządzanie</title>
+
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script><!-- del -->
+
+    <link rel="stylesheet" href="./styles/css/style.css">
+    <link rel="stylesheet" href="./styles/css/dashboard.css">
+</head>
+
+<body>
+
+    <button id="fullscreen-btn" class="fullscreen-btn" title="Tryb pełnoekranowy">
+        <i class="fa-solid fa-expand"></i>
+    </button>
+
+    <div class="wrapper">
+
+        <header class="header">
+
+            <a href="index.html" class="menu-btn">
+                <i class="fas fa-arrow-left"></i> Powrót do menu
+            </a>
+
+            <div class="logo-section">
+
+                <div class="icon-box">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+
+                <div>
+                    <h1>Nowe Zatrudnienia</h1>
+                    <p>Lista przygotowania sprzętu dla nowego pracownika - <span>Onboarding</span></p>
+                </div>
+
+            </div>
+
+        </header>
+
+        <div class="main-content">
+
+            <section>
+
+                <div class="table-header">
+                    <button class="month-nav-btn" type="button" data-month-delta="-1" aria-label="Poprzedni miesiąc">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+
+                    <div class="month-picker-container" id="month-trigger" role="button" tabindex="0"
+                        aria-label="Wybierz miesiąc">
+                        <h2 id="current-month-display">MARZEC 2026</h2>
+                        <input type="month" id="hidden-month-input" class="hidden-month-input" aria-hidden="true">
+                    </div>
+
+
+                    <button class="month-nav-btn" type="button" data-month-delta="1" aria-label="Następny miesiąc">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <table class="hires-table">
+
+                    <thead>
+                        <tr>
+                            <th>IMIĘ I NAZWISKO</th>
+                            <th>SEKCJA</th>
+                            <th>SPRZĘT (SN)</th>
+                            <th>DATA STARTU</th>
+                            <th class="table-head-cell-center">AKCESORIA</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="table-body"></tbody>
+
+                </table>
+
+            </section>
+
+            <aside>
+
+                <h2>Dodaj pracownika</h2>
+
+                <form id="device-form">
+
+                    <div class="input-group">
+                        <label>Imię i Nazwisko</label>
+                        <input type="text" id="name" required placeholder="np. Jan Kowalski">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Dział / Sekcja</label>
+                        <input type="text" id="ru" required placeholder="np. Administracja">
+                    </div>
+
+                    <div class="input-group">
+                        <label>SN Laptopa</label>
+                        <input type="text" id="sn" required placeholder="np. PF928402">
+                    </div>
+
+                    <div class="input-group">
+
+                        <label>Akcesoria do wydania</label>
+
+                        <div class="accessory-picker" id="accessory-picker">
+
+                            <div class="accessory-item" data-item="mouse" title="Myszka">
+                                <i class="fas fa-mouse"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="keyboard" title="Klawiatura">
+                                <i class="fas fa-keyboard"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="headset" title="Słuchawki">
+                                <i class="fas fa-headset"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="monitor" title="Monitor">
+                                <i class="fas fa-desktop"></i>
+                            </div>
+
+                            <div class="accessory-item" data-item="bag" title="Torba">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="input-group" id="date-group">
+                        <label>Data rozpoczęcia pracy</label>
+                        <input type="date" id="date" required>
+                    </div>
+
+                    <button type="submit" class="btn-submit btn-submit-soft-danger">
+                        Dodaj do listy
+                    </button>
+
+                </form>
+
+                <section class="backup_section">
+
+                    <h3>Kopia zapasowa</h3>
+
+                    <div class="backup-container">
+
+                        <div class="backup-row">
+
+                            <button id="export-excel-btn" class="btn-backup-item btn-excel-green" type="button">
+                                <i class="fa-solid fa-file-excel"></i>
+                            </button>
+
+                            <input type="file" id="importExcelFile" class="visually-hidden-file-input"
+                                accept=".xlsx, .xls">
+
+                            <button id="import-excel-trigger" class="btn-backup-item" type="button">
+                                Import Excel
+                            </button>
+
+                        </div>
+                    </div>
+                </section>
+
+            </aside>
+
+        </div>
+
+        <footer class="main-footer">
+            <div class="footer-content">
+                <p>&copy; <span id="current-year"></span> IT Support Dashboard by Arkadiusz Lisiecki</p>
+                <div class="footer-separator"></div>
+                <p class="footer-status">
+                    <span class="status-dot"></span>
+                    arkadiusz-lisiecki.pl
+                </p>
+            </div>
+        </footer>
+
+    </div>
+
+    <script src="./js/script.js"></script>
+    <script src="./js/zatrudnienia.js"></script>
+
+</body>
+
+</html>

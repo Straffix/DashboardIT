@@ -1,0 +1,5 @@
+Zablokować możliwość podwójnego kliknięcia na przycisk odbijania w domenie o +60 dni. Ewentualnie dodać informację "Czy na pewno chcesz PONOWNIE przedłużyć okres urządzenia w domenie"
+Dodać możliwość wyszukiwania rekordów w całym systemie - nie tylko w danym miesiacu ( więc cmd + f odpada)
+Dodać możliwość edytowania dodatnych rekordów, a nie tylko usuwania
+Dodać rezerwację obiadów - klikamy na godzinę i rezerwujemy. Limit kliknięć 4 osoby! 
+Podręczny notatnik z notatkami dla każdego. Można tak wpisać zwroty używane do zamykania SD. Fajnie, gdyby dostęp do notatnika był na każdej stronie w postaci małej ikonki w lewym dolnym rogu ekranu.
