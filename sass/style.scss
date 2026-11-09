@@ -451,29 +451,10 @@ table {
 	}
 }
 
-.btn-submit-warning {
-	background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
-}
-
-.btn-submit-primary {
-	background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
-}
-
-.btn-submit-muted {
-	background: linear-gradient(135deg, #64748b 0%, #475569 100%);
-}
-
 .btn-submit-soft-danger {
 	background: linear-gradient(135deg, rgba(241, 99, 99, 0.8) 0%, rgba(220, 38, 38, 0.9) 100%);
 }
 
-.btn-submit-spaced {
-	margin-top: 20px;
-}
-
-.btn-submit-tight {
-	margin-top: 10px;
-}
 /* === Shared Interactive Elements: End === */
 
 /* === Shared Backup Panel: Start === */
@@ -574,10 +555,6 @@ table {
 			color: white;
 			border-color: transparent;
 			box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
-		}
-
-		&.is-tapped {
-			transform: scale(0.9);
 		}
 	}
 }
@@ -864,11 +841,6 @@ body.wide-mode {
 	.acc-more-badge {
 		padding: 0 10px;
 		font-size: 0.95rem;
-	}
-
-	.col-acc {
-		width: 220px;
-		min-width: 220px;
 	}
 
 	.table-header .month-picker-container {

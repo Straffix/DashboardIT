@@ -66,6 +66,28 @@ Wnioski:
 - „Replace All”: zawsze ustawiać _files to include_ i sprawdzać podgląd; uważać, gdy szukany tekst jest częścią innej nazwy
   (`fa-times` ⊂ `fa-times-circle`, `fa-calendar-day` ⊂ `fa-calendar-days`).
 
+## 🗑️ ▶ NASTĘPNE: usunięcie modułu „Wymiana sprzętu”
+
+Decyzja (2026-11-09): moduł zastępuje inne, osobne narzędzie. Przy okazji znikają problemy z audytu A3, B5, B10 i większość B6.
+
+- [x] Krok 0: commit obecnych zmian (ikony, kolory, CSV): `667666f`.
+- [x] Krok 1: `index.html:59-73`: usunąć kafelek `<a href="wymiana_sprzetu.html" ...>…</a>` (siatka sama dopasuje się do 2 kafelków).
+- [x] Krok 2: usunąć pliki: `wymiana_sprzetu.html`, `js/wymiany.js`, `sass/wymiany.scss`,
+  `styles/css/wymiany.css`, `styles/css/wymiany.css.map` (`.css` i `.map` ręcznie, SASS ich nie skasuje).
+- [x] Krok 3: pozostałości w kodzie wspólnym:
+  - `js/script.js:34`: `EXCHANGES: 'wymiana_sprzetu_dane',`
+  - `sass/dashboard.scss:324-330` i `342-345`: style kafelka `.menu-item.wymiana-sprzetu`
+  - `sass/style.scss`: `.btn-submit-warning/-primary/-muted` (454-464), `.btn-submit-spaced/-tight` (470-476),
+    `&.is-tapped` (579-581), `.col-acc` (869-872). **Zostawić** `.btn-submit-soft-danger` (używają zatrudnienia).
+  - `sass/_icons.scss`: `fa-calendar-check`, `fa-calendar-days`, `fa-circle-info`, `fa-floppy-disk`,
+    `fa-pen-to-square`, `fa-right-left`, `fa-user`, `fa-xmark` (SVG w `img/icons/` opcjonalnie).
+- [x] Krok 4: kompilacja SASS; `Ctrl+Shift+F` (bez `POSTEP.md` i `trash/`): `wymian`, `exchange`, `EXCHANGES` → 0 trafień;
+  składnia JS OK; tagi SheetJS usunięte z obu stron (= Krok 5 CSV). **Projekt nie łączy się już z żadnym serwerem.**
+- [x] Krok 5 (wyczyszczone w DevTools): dane w przeglądarce: usunąć klucz `wymiana_sprzetu_dane` z Local Storage (DevTools → Aplikacja),
+  ewentualnie wcześniej przenieść dane do nowego narzędzia; w Monitorze przejrzeć urządzenia z RU `WYMIANA`.
+- [x] Decyzja: bez kafelka/linku do nowego narzędzia — menu ma 2 moduły.
+- [ ] Commit usunięcia modułu.
+
 ## 📋 Do zrobienia
 
 - [ ] **Następne: Excel (SheetJS z CDN) → własny CSV.** Cel: kopia zapasowa + edycja pliku w Excelu poza aplikacją.
@@ -94,20 +116,13 @@ Wnioski:
   - [x] Krok 4A: `zatrudnienia.js` (2026-11-09): eksport (`asExcelText` dla SN, `downloadCSV`) i import
     (`readAsText`, nowy `confirm`, akcesoria `split(',')` + `trim()`) gotowe; składnia OK.
     - [x] test w Excelu (eksport → edycja → zapis „CSV UTF-8” → import): działa. **Nowe zatrudnienia: CSV gotowe.**
-  - [ ] **▶ NASTĘPNE — Krok 4B: `wymiany.js`** (eksport `js/wymiany.js:227-246`, import `248-288`):
-    - eksport: `asExcelText` dla `'Stary SN'` i `'Nowy SN'`; **dodać kolumnę `Uwagi: exchange.notes || ''`**;
-      4 linie `XLSX` → `AppUtils.downloadCSV(data, \`wymiany_....csv\`)`,
-    - import: `parseCSV` + `rows.map`, `plannedDate: AppUtils.normalizeDate(row.Data) || new Date().toISOString().split('T')[0]`,
-      `exchanges = imported`, nowy `confirm`, `readAsText(file, 'UTF-8')`, tekst błędu w `catch` → „Błąd importu pliku CSV.”,
-    - do decyzji: usunąć „zapasowe” nazwy kolumn Codexa (`row.Użytkownik`, `'SN do zwrotu'`, `'SN do wydania'`,
-      `'Data planowanej wymiany'`), skoro plik robi tylko nasza aplikacja,
-    - sprawdzenie: `Ctrl+Shift+F` „XLSX” → mają zostać tylko 3 linie `<script>` w HTML (wtedy Krok 5).
-  - [ ] Krok 5: DOPIERO TERAZ usunąć `<script src="https://cdn.sheetjs.com/...">` z 3 plików HTML; przeklikać eksport/import, Konsola bez błędów.
+  - ~~Krok 4B: wymiany na CSV~~ → **niepotrzebne: moduł wymian zostaje usunięty** (decyzja 2026-11-09, patrz niżej).
+  - [x] Krok 5: usunięte `<script src="https://cdn.sheetjs.com/...">` z `monitor_laptopow.html` i `nowe_zatrudnienia.html`.
   - [ ] Krok 6: teksty i ikona przycisków, `accept=".csv"`, podpowiedź „zapisz w Excelu jako CSV UTF-8”.
   - Sprawdzone: w JS nie ma `fetch`/`XMLHttpRequest`/`WebSocket`/adresów http; Blob + `blob:` URL działa tylko lokalnie.
 - [ ] **Bezpieczeństwo: XSS przy wyświetlaniu danych (zaraz po CSV, przed importem prawdziwych danych).**
-  Dane trafiają do `innerHTML` bez zabezpieczenia: `js/monitor.js:132-134`, `js/zatrudnienia.js:77-79`,
-  `js/wymiany.js:100`, `js/wymiany.js:116` (+ sprawdzić `renderAccessoryIcons` i popover w `script.js`).
+  Dane trafiają do `innerHTML` bez zabezpieczenia: `js/monitor.js:128-130`, `js/zatrudnienia.js:77-79`
+  (+ `renderAccessoryIcons` w `script.js:99,104`).
   Komórka z CSV typu `<img src=x onerror=...>` wykonałaby kod. Poprawka: funkcja `escapeHTML` albo `textContent`.
 - [ ] `js/script.js:408`: zamienić `querySelectorAll('#current-year')` na `getElementById('current-year')` (id jest unikalne).
 - [ ] Omówić `js/script.js` (kod wspólny), a potem pozostałe pliki JS. Przy okazji: sprawdzić, czy nie ma starego `var` (zamienić na `let`/`const`).

@@ -276,14 +276,6 @@ body.dashboard-page .wrapper {
   background: linear-gradient(90deg, rgba(59, 130, 246, 0.76) 0%, rgba(96, 165, 250, 0.32) 100%);
 }
 
-.menu-item.wymiana-sprzetu .dashboard-card {
-  background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
-}
-
-.menu-item.wymiana-sprzetu .dashboard-card::before {
-  background: linear-gradient(90deg, rgba(139, 92, 246, 0.78) 0%, rgba(196, 181, 253, 0.34) 100%);
-}
-
 .menu-item.nowe-zatrudnienia .card-icon-shell {
   color: #0f766e;
   background: rgba(240, 253, 250, 0.82);
@@ -292,11 +284,6 @@ body.dashboard-page .wrapper {
 .menu-item.monitor-laptopow .card-icon-shell {
   color: #1d4ed8;
   background: rgba(239, 246, 255, 0.82);
-}
-
-.menu-item.wymiana-sprzetu .card-icon-shell {
-  color: #5b21b6;
-  background: rgba(245, 243, 255, 0.82);
 }
 
 /* === Dashboard Navigation Tiles: End === */

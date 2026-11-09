@@ -31,7 +31,6 @@ const APP_CONFIG = {
 	STORAGE_KEYS: {
 		MONITOR: 'monitor_laptopow_dane',
 		HIRES: 'nowe_zatrudnienia_dane',
-		EXCHANGES: 'wymiana_sprzetu_dane',
 	},
 }
 /* === Shared Config: End === */
