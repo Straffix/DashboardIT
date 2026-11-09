@@ -86,7 +86,7 @@ Decyzja (2026-11-09): moduł zastępuje inne, osobne narzędzie. Przy okazji zni
 - [x] Krok 5 (wyczyszczone w DevTools): dane w przeglądarce: usunąć klucz `wymiana_sprzetu_dane` z Local Storage (DevTools → Aplikacja),
   ewentualnie wcześniej przenieść dane do nowego narzędzia; w Monitorze przejrzeć urządzenia z RU `WYMIANA`.
 - [x] Decyzja: bez kafelka/linku do nowego narzędzia — menu ma 2 moduły.
-- [ ] Commit usunięcia modułu.
+- [x] Commit usunięcia modułu: `950d729`. **Moduł wymian usunięty.**
 
 ## 📋 Do zrobienia
 
@@ -118,7 +118,9 @@ Decyzja (2026-11-09): moduł zastępuje inne, osobne narzędzie. Przy okazji zni
     - [x] test w Excelu (eksport → edycja → zapis „CSV UTF-8” → import): działa. **Nowe zatrudnienia: CSV gotowe.**
   - ~~Krok 4B: wymiany na CSV~~ → **niepotrzebne: moduł wymian zostaje usunięty** (decyzja 2026-11-09, patrz niżej).
   - [x] Krok 5: usunięte `<script src="https://cdn.sheetjs.com/...">` z `monitor_laptopow.html` i `nowe_zatrudnienia.html`.
-  - [ ] Krok 6: teksty i ikona przycisków, `accept=".csv"`, podpowiedź „zapisz w Excelu jako CSV UTF-8”.
+  - [x] Krok 6: ikona `fa-file-csv` (nowy SVG, `file-excel` usunięty), napisy „Eksport CSV” / „Import CSV”,
+    `accept=".csv"`, podpowiedź `.backup-hint` (CSV UTF-8 + apostrof dla zer) w obu modułach. **CSV zakończone.**
+    - Wyjaśnione: zera giną w Excelu w chwili wpisania, kod tego nie odzyska → apostrof albo kolumna w formacie „Tekst”.
   - Sprawdzone: w JS nie ma `fetch`/`XMLHttpRequest`/`WebSocket`/adresów http; Blob + `blob:` URL działa tylko lokalnie.
 - [ ] **Bezpieczeństwo: XSS przy wyświetlaniu danych (zaraz po CSV, przed importem prawdziwych danych).**
   Dane trafiają do `innerHTML` bez zabezpieczenia: `js/monitor.js:128-130`, `js/zatrudnienia.js:77-79`

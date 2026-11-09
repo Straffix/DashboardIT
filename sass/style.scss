@@ -514,6 +514,12 @@ table {
 			}
 		}
 	}
+
+	.backup-hint {
+		margin-top: 10px;
+		font-size: 0.8rem;
+		color: var(--text-muted);
+	}
 }
 /* === Shared Backup Panel: End === */
 

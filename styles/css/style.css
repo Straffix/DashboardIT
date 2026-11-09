@@ -332,6 +332,11 @@
           mask-image: url("../../img/icons/expand-solid-full.svg");
 }
 
+.fa-file-csv::before {
+  -webkit-mask-image: url("../../img/icons/file-csv-solid-full.svg");
+          mask-image: url("../../img/icons/file-csv-solid-full.svg");
+}
+
 .fa-headset::before {
   -webkit-mask-image: url("../../img/icons/headset-solid-full.svg");
           mask-image: url("../../img/icons/headset-solid-full.svg");
@@ -821,6 +826,11 @@ table tr:last-child td {
 .backup_section .backup-row .btn-excel-green:hover {
   background-color: #0e6b38;
   filter: brightness(1.1);
+}
+.backup_section .backup-hint {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 /* === Shared Backup Panel: End === */
