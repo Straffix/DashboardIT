@@ -66,7 +66,74 @@ Wnioski:
 - „Replace All”: zawsze ustawiać _files to include_ i sprawdzać podgląd; uważać, gdy szukany tekst jest częścią innej nazwy
   (`fa-times` ⊂ `fa-times-circle`, `fa-calendar-day` ⊂ `fa-calendar-days`).
 
-## 🗑️ ▶ NASTĘPNE: usunięcie modułu „Wymiana sprzętu”
+## 🎯 Docelowy wygląd (wzór: wersja React z brancha `react`, przepisywana prostym JS)
+
+> **Zasada:** robimy **tylko front-end**, w zwykłym HTML + SASS + JavaScript. **Bez Reacta.** Backend (serwer, API)
+> robi kolega. Najnowsza wersja wzorcowa jest na branchu **`react`** (nie `main`) i służy wyłącznie jako podgląd
+> „co miało być” (zrzuty, znaczenie pól) — nie kopiujemy z niej kodu.
+> Dane trzymamy tak, żeby łatwo było je potem wysyłać do serwera: każdy wpis ma `id`, `createdAt`, `updatedAt`,
+> a zapis/odczyt jest w jednym miejscu w kodzie.
+
+Decyzje (2026-11-09):
+- **NIE BĘDZIE:** chatu, wymian sprzętu, logowania/kont użytkowników (więc też licznika użytkowników w stopce),
+  widgetu pogody, kafelka „W budowie”, przycisku „Edytuj” w menu, pływających przycisków eksportu/importu w lewym dolnym rogu.
+- **BĘDZIE (z ekranów wzorcowych):**
+  - Menu: nagłówek „SEKCJA WSPARCIA UŻYTKOWNIKÓW / DASHBOARD IT”, kafelki: Nowe Zatrudnienia, Urządzenia w domenie,
+    Rezerwacja Obiadów; sekcja **Zakładki** z „+”.
+  - Moduły: wspólny pasek nawigacji z ikonami (dom + moduły), nagłówek modułu z ikoną.
+  - Nowe Zatrudnienia: przyciski 🔍 szukaj i ➕ dodaj (formularz chowany), nowe kolumny: Service Desk, Użytkownik, Start,
+    Laptop SN, Laptop RU, Laptop status, Laptop eMag, Monitor RU, Monitor status, Monitor eMag;
+    wybór roku i miesiąca z liczbą wpisów w każdym miesiącu.
+- Odpowiedzi (2026-11-09):
+  - Zegar z datą w menu: **usuwamy**.
+  - Rezerwacja obiadów: **na później**, dla ok. 12 osób; prawdopodobnie będzie serwer (klaster), ale to niepewne.
+    → robić na końcu; zapis danych oddzielić od reszty kodu, żeby dało się podmienić `localStorage` na serwer.
+  - Eksport/import CSV: przyciski **nad tabelą, obok 🔍 i ➕**.
+  - Statusy w zatrudnieniach (listy rozwijane, każda wartość ma swój kolor):
+    - Laptop status: W trakcie · Gotowy do wydania · Wydany · Nie odebrano · Ponowna dystrybucja
+    - Monitor status: jak laptop + **Nie zamówiono**
+    - Laptop eMag: Brak konta · Do potwierdzenia · Potwierdzony
+    - Monitor eMag: Brak konta · Dokument wystawiony, do potwierdzenia · Dokument potwierdzony
+  - Na zrzutach w formularzu widać akcesoria z nazwami sprzętu (Lenovo, Yealink, Logi Zone, Plecak, Podstawka) — do potwierdzenia
+    przy etapie formularza.
+  - Urządzenia w domenie (zrzut 2026-11-09): nagłówek z ikoną tarczy i podtytułem „Lista nie odbija komputera automatycznie.
+    Ty tylko informacja dla nas!”; 4 karty statystyk z kolorowym dolnym paskiem; tabela w karcie z 🔍 ➕ (+ CSV);
+    kolumny: Nazwa (+ druga linia „Imię Nazwisko | data”), RU, Sprzęt/SN (plakietka), W domenie do (plakietka statusu),
+    Akcje: ↻ +60 dni, ✎ edycja, 🗑 usuń.
+  - Druga linia pod nazwą w monitorze: na branchu `react` (i `main`) to data ostatniej zmiany (`updatedAt`); na zrzucie
+    także imię osoby (pola z imieniem nie ma w kodzie na GitHubie — pewnie wersja lokalna z logowaniem). Bez logowania → **„Aktualizacja: RRRR-MM-DD”** (imię można dodać, gdy backend da konta).
+  - Wpisy dostaną `id`, `createdAt`, `updatedAt` (Etap 3 i 5) zamiast rozpoznawania po pozycji w tablicy (`data-index`).
+
+### Plan etapów (każdy etap = osobny commit)
+
+- [ ] **Etap 1 — wspólne elementy modułów:** nagłówek modułu (ikona + tytuł + podtytuł) i pasek nawigacji
+  (🏠 menu, 👤 zatrudnienia, 💻 urządzenia; 🍴 obiady dopiero w Etapie 8). Aktywny moduł podświetlony.
+  - Decyzje: moduły otwierają się **w tej samej karcie**; kolor przewodni **czerwony** (jak we wzorze);
+    **tryb pełnoekranowy usunięty** — aplikacja zawsze na pełną szerokość.
+  - [x] 1a: podpięte `monitor.css` i `zatrudnienia.css` zamiast `dashboard.css` (audyt B7 — style statystyk i tabeli działają).
+  - [x] 1b: ikona `fa-house` (SVG + reguła w `_icons.scss`).
+  - [ ] 1c: usunąć tryb pełnoekranowy (przycisk w HTML, kod w `script.js`, style `.fullscreen-btn` i `body.wide-mode`),
+    `.wrapper` na pełną szerokość.
+  - [ ] 1d: przejście w tej samej karcie (`target="_blank"` w `index.html`, `window.open` w `dashboard.js`,
+    blok `returnMenuLinks` w `script.js`).
+  - [ ] 1e: HTML nagłówka z paskiem nawigacji (zamiast „Powrót do menu”) w obu modułach.
+  - [ ] 1f: style paska nawigacji i nagłówka.
+  - [ ] 1g: kolor przewodni na czerwony w `_colors.scss` (+ ręcznie wpisane kolory fioletowe w SCSS, ok. 12 miejsc).
+- [ ] **Etap 2 — menu główne:** nowy nagłówek („SEKCJA WSPARCIA UŻYTKOWNIKÓW / DASHBOARD IT”), kafelki modułów,
+  sekcja **Zakładki** (dodawanie nazwa + adres, zapis w `localStorage`).
+- [ ] **Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),
+  formularz w okienku pod ➕ (`<dialog>`), druga linia pod nazwą, akcje ↻ / ✎ edycja / 🗑.
+- [ ] **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN).
+- [ ] **Etap 5 — Nowe zatrudnienia, dane i tabela:** nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,
+  nowe akcesoria), kolorowe statusy, formularz w `<dialog>` pod ➕, eksport/import CSV nad tabelą z nowymi kolumnami,
+  przeniesienie starych wpisów do nowego formatu.
+- [ ] **Etap 6 — Zatrudnienia: wyszukiwarka** we wszystkich miesiącach (pomysł z notatek).
+- [ ] **Etap 7 — wybór roku i miesiąca z liczbą wpisów** (prostsza wersja `createMonthPicker`, bez martwego kodu — audyt C4).
+- [ ] **Etap 8 — Rezerwacja obiadów** (na końcu; zapis danych w osobnym module, gotowym do podmiany na serwer).
+- [ ] **Etap 9 — poprawki z audytu** (bezpieczeństwo A1/A4, B1–B4, B6, B8, porządki C, dostępność).
+- Audyt (sekcja „Bezpieczeństwo” i lista priorytetów) — **na samym końcu**.
+
+## 🗑️ Usunięcie modułu „Wymiana sprzętu” (zrobione)
 
 Decyzja (2026-11-09): moduł zastępuje inne, osobne narzędzie. Przy okazji znikają problemy z audytu A3, B5, B10 i większość B6.
 

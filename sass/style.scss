@@ -29,9 +29,8 @@ body {
 }
 
 .wrapper {
-	width: min(1280px, 100% - 48px);
+	width: calc(100% - 48px);
 	margin-inline: auto;
-	transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body:not(.dashboard-page) {
@@ -766,128 +765,6 @@ table {
 	}
 }
 /* === Shared Footer: End === */
-
-/* === Shared Fullscreen Button: Start === */
-.fullscreen-btn {
-	position: fixed;
-	top: 20px;
-	right: 20px;
-	width: 45px;
-	height: 45px;
-	border-radius: 50%;
-	border: 1px solid var(--border);
-	background: var(--bg-panel);
-	color: var(--text-main);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 1.6rem;
-	cursor: pointer;
-	z-index: 1000;
-	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-	transition: all 0.2s ease;
-	&:hover {
-		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
-		color: white;
-		transform: scale(1.1);
-	}
-}
-/* === Shared Fullscreen Button: End === */
-
-/* === Shared Wide Mode: Start === */
-body.wide-mode {
-	.wrapper {
-		max-width: 96%;
-		width: 96%;
-	}
-
-	.main-content {
-		grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
-		gap: 40px;
-	}
-
-	table td {
-		font-size: 1.4rem;
-		padding: 22px 15px;
-	}
-
-	.logo-section h1 {
-		font-size: 3rem;
-	}
-
-	.hires-table th:nth-child(4) {
-		width: 18%;
-	}
-
-	.hires-table th:nth-child(5) {
-		width: 15%;
-	}
-
-	.inline-accessories,
-	.acc-wrapper,
-	.accessories-table {
-		gap: 8px;
-	}
-
-	.inline-accessories .acc-inline-icon,
-	.acc-wrapper .acc-inline-icon,
-	.acc-wrapper .acc-icon,
-	.acc-more-badge {
-		width: 36px;
-		height: 36px;
-		min-width: 36px;
-	}
-
-	.inline-accessories .acc-inline-icon,
-	.acc-wrapper .acc-inline-icon,
-	.acc-wrapper .acc-icon {
-		font-size: 1.45rem;
-	}
-
-	.acc-more-badge {
-		padding: 0 10px;
-		font-size: 0.95rem;
-	}
-
-	.table-header .month-picker-container {
-		padding: 13px 32px;
-		min-width: 280px;
-	}
-
-	.table-header .month-picker-container h2 {
-		font-size: 2.1rem;
-	}
-
-	.month-fallback-popover {
-		width: 420px;
-		padding: 26px;
-	}
-
-	.month-fallback-title {
-		font-size: 1.95rem;
-	}
-
-	.month-fallback-grid {
-		gap: 17px;
-	}
-
-	.month-fallback-field {
-		span {
-			font-size: 1.28rem;
-		}
-
-		select {
-			padding: 14px 16px;
-			font-size: 1.48rem;
-		}
-	}
-
-	.month-fallback-btn {
-		padding: 12px 19px;
-		font-size: 1.38rem;
-	}
-}
-/* === Shared Wide Mode: End === */
 
 /* === Shared Motion: Start === */
 @keyframes slideOutLeft {

@@ -75,13 +75,6 @@
   body:not(.dashboard-page) .wrapper {
     padding: 20px 14px 16px;
   }
-  .fullscreen-btn {
-    top: 14px;
-    right: 14px;
-    width: 40px;
-    height: 40px;
-    font-size: 1.4rem;
-  }
   .menu-btn {
     width: 100%;
     justify-content: center;
@@ -197,9 +190,6 @@
   html {
     font-size: 66%;
   }
-  .wrapper {
-    width: min(1500px, 100% - 72px);
-  }
   body:not(.dashboard-page) .wrapper {
     padding: 40px 36px 30px;
   }
@@ -226,13 +216,6 @@
 @media (min-width: 2200px) {
   html {
     font-size: 70%;
-  }
-  .wrapper {
-    width: min(1760px, 100% - 96px);
-  }
-  body.wide-mode .wrapper {
-    max-width: min(94%, 1900px);
-    width: min(94%, 1900px);
   }
   body.dashboard-page .wrapper {
     width: min(1800px, 100% - 96px);
@@ -342,6 +325,11 @@
           mask-image: url("../../img/icons/headset-solid-full.svg");
 }
 
+.fa-house::before {
+  -webkit-mask-image: url("../../img/icons/house-solid-full.svg");
+          mask-image: url("../../img/icons/house-solid-full.svg");
+}
+
 .fa-keyboard::before {
   -webkit-mask-image: url("../../img/icons/keyboard-solid-full.svg");
           mask-image: url("../../img/icons/keyboard-solid-full.svg");
@@ -397,9 +385,8 @@ body {
 }
 
 .wrapper {
-  width: min(1280px, 100% - 48px);
+  width: calc(100% - 48px);
   margin-inline: auto;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body:not(.dashboard-page) {
@@ -1062,107 +1049,6 @@ table tr:last-child td {
 }
 
 /* === Shared Footer: End === */
-/* === Shared Fullscreen Button: Start === */
-.fullscreen-btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--bg-panel);
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.6rem;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-}
-.fullscreen-btn:hover {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
-  color: white;
-  transform: scale(1.1);
-}
-
-/* === Shared Fullscreen Button: End === */
-/* === Shared Wide Mode: Start === */
-body.wide-mode .wrapper {
-  max-width: 96%;
-  width: 96%;
-}
-body.wide-mode .main-content {
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
-  gap: 40px;
-}
-body.wide-mode table td {
-  font-size: 1.4rem;
-  padding: 22px 15px;
-}
-body.wide-mode .logo-section h1 {
-  font-size: 3rem;
-}
-body.wide-mode .hires-table th:nth-child(4) {
-  width: 18%;
-}
-body.wide-mode .hires-table th:nth-child(5) {
-  width: 15%;
-}
-body.wide-mode .inline-accessories,
-body.wide-mode .acc-wrapper,
-body.wide-mode .accessories-table {
-  gap: 8px;
-}
-body.wide-mode .inline-accessories .acc-inline-icon,
-body.wide-mode .acc-wrapper .acc-inline-icon,
-body.wide-mode .acc-wrapper .acc-icon,
-body.wide-mode .acc-more-badge {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-}
-body.wide-mode .inline-accessories .acc-inline-icon,
-body.wide-mode .acc-wrapper .acc-inline-icon,
-body.wide-mode .acc-wrapper .acc-icon {
-  font-size: 1.45rem;
-}
-body.wide-mode .acc-more-badge {
-  padding: 0 10px;
-  font-size: 0.95rem;
-}
-body.wide-mode .table-header .month-picker-container {
-  padding: 13px 32px;
-  min-width: 280px;
-}
-body.wide-mode .table-header .month-picker-container h2 {
-  font-size: 2.1rem;
-}
-body.wide-mode .month-fallback-popover {
-  width: 420px;
-  padding: 26px;
-}
-body.wide-mode .month-fallback-title {
-  font-size: 1.95rem;
-}
-body.wide-mode .month-fallback-grid {
-  gap: 17px;
-}
-body.wide-mode .month-fallback-field span {
-  font-size: 1.28rem;
-}
-body.wide-mode .month-fallback-field select {
-  padding: 14px 16px;
-  font-size: 1.48rem;
-}
-body.wide-mode .month-fallback-btn {
-  padding: 12px 19px;
-  font-size: 1.38rem;
-}
-
-/* === Shared Wide Mode: End === */
 /* === Shared Motion: Start === */
 @keyframes slideOutLeft {
   0% {

@@ -407,42 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.querySelectorAll('#current-year').forEach(element => {
 		element.textContent = new Date().getFullYear()
 	})
-
-	const returnMenuLinks = document.querySelectorAll('.menu-btn[href="index.html"]')
-	returnMenuLinks.forEach(link => {
-		link.addEventListener('click', event => {
-			if (window.opener && !window.opener.closed) {
-				event.preventDefault()
-
-				try {
-					window.opener.focus()
-				} catch (error) {
-					// Browser may block focusing the opener tab.
-				}
-
-				window.close()
-				return
-			}
-
-			window.location.href = link.href
-		})
-	})
-
-	const fullscreenBtn = document.getElementById('fullscreen-btn')
-	if (fullscreenBtn) {
-		const updateWideMode = isWide => {
-			document.body.classList.toggle('wide-mode', isWide)
-			fullscreenBtn.innerHTML = isWide ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>'
-		}
-
-		fullscreenBtn.addEventListener('click', () => {
-			const isWide = !document.body.classList.contains('wide-mode')
-			updateWideMode(isWide)
-			localStorage.setItem('dashboard-wide-mode', String(isWide))
-		})
-
-		updateWideMode(localStorage.getItem('dashboard-wide-mode') === 'true')
-	}
 })
 /* === Shared Global UI: End === */
 
