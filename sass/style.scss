@@ -21,8 +21,8 @@ body {
 	display: block;
 	min-height: 100vh;
 	font-family: 'Poppins', 'Segoe UI', sans-serif;
-	background-color: var(--bg-color);
-	color: var(--text-main);
+	background-color: $bg-color;
+	color: $text-main;
 	transition: background-color 0.3s ease;
 	overflow-x: hidden;
 	padding: 40px 0;
@@ -35,7 +35,7 @@ body {
 
 body:not(.dashboard-page) {
 	position: relative;
-	background: var(--page-gradient);
+	background: $page-gradient;
 	background-attachment: fixed;
 
 	&::before {
@@ -59,10 +59,10 @@ body:not(.dashboard-page) {
 		position: relative;
 		padding: 32px 28px 24px;
 		border-radius: 30px;
-		background: var(--bg-surface);
+		background: $bg-surface;
 		border: 1px solid rgba(255, 255, 255, 0.46);
 		box-shadow:
-			var(--shadow-lg),
+			$shadow-lg,
 			0 42px 96px rgba(15, 23, 42, 0.16);
 		backdrop-filter: blur(18px);
 		-webkit-backdrop-filter: blur(18px);
@@ -82,90 +82,97 @@ body:not(.dashboard-page) {
 /* === Base Reset: End === */
 
 /* === Shared Header: Start === */
-.menu-btn {
-	display: inline-flex;
+
+.header {
+	display: flex;
 	align-items: center;
-	gap: 10px;
-	padding: 10px 14px 10px 10px;
-	margin-bottom: 12px;
-	border: 1px solid var(--border);
-	border-radius: 999px;
-	background: var(--bg-panel);
-	backdrop-filter: blur(10px);
-	box-shadow: var(--shadow-sm);
+	justify-content: space-between;
+	gap: 20px;
+	flex-wrap: wrap;
+	margin-bottom: 24px;
+}
+
+.module-nav {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px;
+	border: 1px solid $border;
+	border-radius: 22px;
+	background: $bg-panel;
+	box-shadow: $shadow-sm;
+}
+
+.module-nav-link {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	border-radius: 16px;
+	color: $text-muted;
+	font-size: 2rem;
 	text-decoration: none;
-	color: inherit;
-	font-size: 1.2rem;
-	font-weight: 600;
 	transition:
-		transform 0.2s ease,
-		box-shadow 0.2s ease,
-		border-color 0.2s ease,
+		background-color 0.2s ease,
 		color 0.2s ease;
 
-	i {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border-radius: 50%;
-		background: rgba(148, 163, 184, 0.18);
-		color: var(--text-main);
-		font-size: 1.1rem;
-		transition:
-			transform 0.2s ease,
-			background-color 0.2s ease,
-			color 0.2s ease;
-	}
-
 	&:hover {
-		color: var(--primary);
-		border-color: var(--border-strong);
-		box-shadow: 0 14px 28px rgba(99, 102, 241, 0.12);
-		transform: translateY(-1px);
-
-		i {
-			background: var(--primary);
-			color: #ffffff;
-			transform: translateX(-2px);
-		}
+		color: $primary;
+		background: $bg-surface;
 	}
+
+	&:focus-visible {
+		outline: 2px solid $primary;
+		outline-offset: 2px;
+	}
+
+	&.is-active {
+		color: #ffffff;
+		background: linear-gradient(135deg, $primary 0%, $primary-strong 100%);
+		box-shadow: $shadow-sm;
+	}
+}
+
+.module-nav-divider {
+	width: 1px;
+	height: 32px;
+	margin: 0 4px;
+	background: $border;
 }
 
 .logo-section {
 	display: flex;
 	align-items: center;
 	gap: 15px;
-	padding: 10px 0 20px;
-	transition: gap 0.35s ease;
+	padding: 0;
 
 	h1 {
 		font-size: 2.4rem;
-		font-family: 'Audiowide', sans-serif;
+		font-weight: 700;
 		text-transform: uppercase;
-		transition: font-size 0.35s ease;
+		color: $primary;
 	}
 
 	p {
 		font-size: 1.2rem;
-		color: var(--text-muted);
+		color: $text-muted;
 		margin-top: 0.3rem;
 	}
 
 	span {
-		color: var(--text-main);
+		color: $text-main;
 		font-weight: bold;
 	}
 }
 
 .icon-box {
-	background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+	background: linear-gradient(135deg, $primary 0%, $primary-strong 100%);
 	color: white;
 	padding: 12px;
 	border-radius: 10px;
 	font-size: 2rem;
-	box-shadow: 0 12px 24px rgba(99, 102, 241, 0.2);
+	box-shadow: 0 12px 24px rgba($primary, 0.2);
 }
 /* === Shared Header: End === */
 
@@ -182,11 +189,11 @@ body:not(.dashboard-page) {
 
 	section,
 	aside {
-		background: var(--card-bg);
+		background: $card-bg;
 		padding: 25px;
 		border-radius: 22px;
-		border: 1px solid var(--border);
-		box-shadow: var(--shadow-md);
+		border: 1px solid $border;
+		box-shadow: $shadow-md;
 		backdrop-filter: blur(12px);
 		-webkit-backdrop-filter: blur(12px);
 		transition: padding 0.35s ease;
@@ -201,7 +208,7 @@ body:not(.dashboard-page) {
 h2 {
 	font-size: 1.8rem;
 	margin-bottom: 25px;
-	color: var(--text-main);
+	color: $text-main;
 	transition: font-size 0.35s ease;
 }
 
@@ -214,11 +221,11 @@ table {
 	th {
 		text-align: left;
 		padding: 15px;
-		color: var(--text-soft);
+		color: $text-soft;
 		font-size: 1.1rem;
 		text-transform: uppercase;
 		letter-spacing: 1px;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid $border;
 		transition:
 			width 0.35s ease,
 			padding 0.35s ease,
@@ -251,7 +258,7 @@ table {
 
 .empty-state-cell {
 	padding: 40px 15px;
-	color: var(--text-soft);
+	color: $text-soft;
 	text-align: center;
 }
 
@@ -271,21 +278,21 @@ table {
 
 /* === Shared Interactive Elements: Start === */
 .extend-btn {
-	background: var(--bg-panel);
-	border: 1px solid var(--border);
+	background: $bg-panel;
+	border: 1px solid $border;
 	padding: 8px 15px;
 	border-radius: 8px;
 	font-weight: 600;
-	color: var(--text-main);
+	color: $text-main;
 	cursor: pointer;
 	transition: all 0.2s;
 	&:hover {
-		background: var(--bg-panel-hover);
+		background: $bg-panel-hover;
 	}
 }
 
 .delete-btn {
-	color: var(--text-soft);
+	color: $text-soft;
 	font-size: 1.8rem;
 	cursor: pointer;
 	padding: 5px;
@@ -293,7 +300,7 @@ table {
 	border: none;
 	transition: color 0.2s;
 	&:hover {
-		color: var(--danger);
+		color: $danger;
 	}
 }
 
@@ -305,15 +312,15 @@ table {
 	font-weight: 600;
 	&.ok {
 		background: #eefdf3;
-		color: var(--success);
+		color: $success;
 	}
 	&.near {
 		background: #fff9eb;
-		color: var(--warning);
+		color: $warning;
 	}
 	&.expired {
 		background: #fef2f2;
-		color: var(--danger);
+		color: $danger;
 	}
 }
 
@@ -341,9 +348,9 @@ table {
 	width: 28px;
 	height: 28px;
 	border-radius: 999px;
-	border: 1px solid var(--border);
-	background: var(--bg-panel);
-	color: var(--text-muted);
+	border: 1px solid $border;
+	background: $bg-panel;
+	color: $text-muted;
 	cursor: default;
 	transition:
 		width 0.35s ease,
@@ -376,9 +383,9 @@ table {
 	height: 28px;
 	padding: 0 8px;
 	border-radius: 999px;
-	border: 1px solid var(--border);
-	background: var(--bg-surface-strong);
-	color: var(--text-muted);
+	border: 1px solid $border;
+	background: $bg-surface-strong;
+	color: $text-muted;
 	font-size: 0.85rem;
 	font-weight: 700;
 	transition:
@@ -390,7 +397,7 @@ table {
 }
 
 .acc-empty {
-	color: var(--text-soft);
+	color: $text-soft;
 	font-size: 1.1rem;
 }
 
@@ -425,12 +432,12 @@ table {
 	input:not([type='radio']):not([type='checkbox']) {
 		width: 100%;
 		padding: 12px;
-		border: 1px solid var(--border);
+		border: 1px solid $border;
 		border-radius: 12px;
-		background: var(--bg-panel);
-		color: var(--text-main);
+		background: $bg-panel;
+		color: $text-main;
 		&:focus {
-			outline: 2px solid var(--primary);
+			outline: 2px solid $primary;
 		}
 	}
 }
@@ -438,7 +445,7 @@ table {
 .btn-submit {
 	width: 100%;
 	padding: 15px;
-	background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+	background: linear-gradient(135deg, $danger 0%, #dc2626 100%);
 	color: white;
 	border: none;
 	border-radius: 10px;
@@ -461,15 +468,15 @@ table {
 	padding: 20px;
 	border-radius: 12px;
 	margin-top: 35px;
-	border: 1px solid var(--border);
+	border: 1px solid $border;
 	border-top: 10px solid rgba(112, 112, 112, 0.322);
 	border-bottom: 7px solid rgba(112, 112, 112, 0.233);
-	background-color: var(--bg-panel);
+	background-color: $bg-panel;
 
 	h3 {
 		font-size: 1.6rem;
 		margin-bottom: 20px;
-		color: var(--text-main);
+		color: $text-main;
 	}
 	.backup-container {
 		display: flex;
@@ -487,16 +494,16 @@ table {
 			justify-content: center;
 			gap: 8px;
 			padding: 15px;
-			background-color: var(--bg-panel);
-			border: 1px solid var(--border);
+			background-color: $bg-panel;
+			border: 1px solid $border;
 			border-radius: 8px;
 			font-weight: 600;
-			color: var(--text-main);
+			color: $text-main;
 			font-size: 1.3rem;
 			cursor: pointer;
 			transition: all 0.2s ease-in-out;
 			&:hover {
-				background: var(--bg-panel-hover);
+				background: $bg-panel-hover;
 				font-size: 1.4rem;
 			}
 			i {
@@ -517,7 +524,7 @@ table {
 	.backup-hint {
 		margin-top: 10px;
 		font-size: 0.8rem;
-		color: var(--text-muted);
+		color: $text-muted;
 	}
 }
 /* === Shared Backup Panel: End === */
@@ -528,10 +535,10 @@ table {
 	gap: 10px;
 	flex-wrap: nowrap;
 	overflow-x: auto;
-	background: var(--bg-panel);
+	background: $bg-panel;
 	padding: 10px;
 	border-radius: 8px;
-	border: 1px solid var(--border);
+	border: 1px solid $border;
 	justify-content: flex-start;
 
 	.accessory-item {
@@ -542,24 +549,24 @@ table {
 		align-items: center;
 		justify-content: center;
 		font-size: 1.55rem;
-		color: var(--text-soft);
+		color: $text-soft;
 		cursor: pointer;
 		transition: all 0.2s ease;
 		border-radius: 10px;
-		border: 1px solid var(--border);
-		background: var(--bg-surface-strong);
+		border: 1px solid $border;
+		background: $bg-surface-strong;
 
 		&:hover {
-			background: var(--bg-panel-hover);
-			border-color: var(--border-strong);
-			color: var(--text-main);
+			background: $bg-panel-hover;
+			border-color: $border-strong;
+			color: $text-main;
 			transform: translateY(-1px);
 		}
 		&.active {
-			background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+			background: linear-gradient(135deg, $primary 0%, $primary-strong 100%);
 			color: white;
 			border-color: transparent;
-			box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+			box-shadow: 0 6px 16px rgba($primary, 0.35);
 		}
 	}
 }
@@ -580,7 +587,7 @@ table {
 		align-items: center;
 		justify-content: center;
 		padding: 11px 28px;
-		background: var(--bg-panel);
+		background: $bg-panel;
 		border-radius: 12px;
 		min-width: 240px;
 		overflow: visible;
@@ -610,8 +617,8 @@ table {
 		position: absolute;
 		top: 50%;
 		transform: translateY(-50%);
-		background: var(--bg-surface-strong);
-		border: 1px solid var(--border);
+		background: $bg-surface-strong;
+		border: 1px solid $border;
 		width: 45px;
 		height: 45px;
 		border-radius: 50%;
@@ -620,12 +627,12 @@ table {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--primary);
+		color: $primary;
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 		z-index: 15;
 
 		&:hover {
-			background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+			background: linear-gradient(135deg, $primary 0%, $primary-strong 100%);
 			color: white;
 			transform: translateY(-50%) scale(1.1);
 		}
@@ -645,8 +652,8 @@ table {
 	z-index: 2000;
 	width: 375px;
 	padding: 23px;
-	background: var(--bg-surface-strong);
-	border: 1px solid var(--border);
+	background: $bg-surface-strong;
+	border: 1px solid $border;
 	border-radius: 12px;
 	box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
 	transform: translateX(-50%);
@@ -656,7 +663,7 @@ table {
 	margin-bottom: 17px;
 	font-weight: 700;
 	font-size: 1.7rem;
-	color: var(--text-main);
+	color: $text-main;
 	text-transform: uppercase;
 }
 
@@ -674,16 +681,16 @@ table {
 	span {
 		font-size: 1.15rem;
 		font-weight: 600;
-		color: var(--text-muted);
+		color: $text-muted;
 	}
 
 	select {
-		border: 1px solid var(--border);
+		border: 1px solid $border;
 		border-radius: 8px;
 		padding: 12px 15px;
 		font-size: 1.35rem;
-		background: var(--bg-panel);
-		color: var(--text-main);
+		background: $bg-panel;
+		color: $text-main;
 		transition:
 			border-color 0.2s ease,
 			box-shadow 0.2s ease,
@@ -691,18 +698,18 @@ table {
 
 		&:focus {
 			outline: none;
-			border-color: var(--border-strong);
-			box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
-			background: var(--bg-panel-hover);
+			border-color: $border-strong;
+			box-shadow: 0 0 0 4px rgba($primary, 0.12);
+			background: $bg-panel-hover;
 		}
 
 		option {
-			background: var(--bg-surface-strong);
-			color: var(--text-main);
+			background: $bg-surface-strong;
+			color: $text-main;
 		}
 
 		option:checked {
-			background: #eef2ff;
+			background: $primary-soft;
 			color: #312e81;
 			font-weight: 600;
 		}
@@ -718,8 +725,8 @@ table {
 
 .month-fallback-btn {
 	border: 1px solid #cbd5e1;
-	background: var(--bg-surface-strong);
-	color: var(--text-main);
+	background: $bg-surface-strong;
+	color: $text-main;
 	border-radius: 8px;
 	padding: 10px 17px;
 	font-size: 1.25rem;
@@ -727,7 +734,7 @@ table {
 	cursor: pointer;
 
 	&.is-primary {
-		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+		background: linear-gradient(135deg, $primary 0%, $primary-strong 100%);
 		border-color: transparent;
 		color: #fff;
 	}
@@ -754,7 +761,7 @@ table {
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		font-weight: 600;
-		color: var(--text-soft);
+		color: $text-soft;
 		.status-dot {
 			width: 6px;
 			height: 6px;

@@ -2,7 +2,7 @@
 body.dashboard-page {
   position: relative;
   min-height: 100vh;
-  background: radial-gradient(circle at 18% 16%, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0) 24%), radial-gradient(circle at 84% 14%, rgba(37, 99, 235, 0.16) 0%, rgba(37, 99, 235, 0) 30%), radial-gradient(circle at 50% 100%, rgba(71, 85, 105, 0.08) 0%, rgba(71, 85, 105, 0) 26%), linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
+  background: radial-gradient(circle at 18% 16%, rgba(200, 16, 46, 0.18) 0%, rgba(200, 16, 46, 0) 24%), radial-gradient(circle at 84% 14%, rgba(143, 11, 34, 0.16) 0%, rgba(143, 11, 34, 0) 30%), radial-gradient(circle at 50% 100%, rgba(71, 85, 105, 0.08) 0%, rgba(71, 85, 105, 0) 26%), linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
@@ -83,7 +83,7 @@ body.dashboard-page .wrapper {
   font-weight: 700;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: #6366f1;
+  color: #c8102e;
 }
 
 .dashboard-subtitle {
@@ -143,7 +143,7 @@ body.dashboard-page .wrapper {
 
 .menu-item {
   text-decoration: none;
-  color: var(--text-main);
+  color: #1e293b;
 }
 
 .dashboard-card {
@@ -256,7 +256,7 @@ body.dashboard-page .wrapper {
 .menu-item:hover .card-meta i,
 .menu-item:focus-visible .card-meta i {
   transform: translate(2px, -2px);
-  color: #4f46e5;
+  color: #8f0b22;
   background: rgba(238, 242, 255, 0.9);
 }
 

@@ -27,10 +27,12 @@
 - [x] Ikony SVG pobrane lokalnie do `img/icons/`.
 - [x] Utworzony branch `cleanup`.
 - [x] Omówiony `index.html`.
-- [x] Kolory w jednym miejscu: blok `:root` (zmienne CSS) przeniesiony do `sass/_colors.scss`;
-      `@use 'colors'` tylko w `style.scss`; w pozostałych plikach kolory przez `var(--nazwa)`. Sprawdzone: `:root` jest tylko w `style.css`.
-  - Zasada: zmienne `$` (SASS) istnieją tylko przy kompilacji; zmienne `--` (CSS) żyją w przeglądarce i można je zmieniać (np. dark mode).
-  - Do sprzątnięcia: zakomentowana linia `// color: $text-main;` w `sass/dashboard.scss:173`.
+- [x] Kolory w jednym miejscu: `sass/_colors.scss`. **Od 2026-11-09 tylko zmienne SASS (`$primary` itd.)** —
+      blok `:root` i wszystkie `var(--...)` usunięte (decyzja: „definicja koloru w `_colors.scss` i koniec”).
+  - `_colors.scss` nie tworzy żadnego CSS (same `$`), więc `@use 'colors' as *;` może być w każdym pliku, który go potrzebuje
+    (`style.scss`, `monitor.scss`, `dashboard.scss`).
+  - Przezroczystość: `rgba($primary, 0.2)` — SASS sam przelicza kolor.
+  - Konsekwencja: ewentualny dark mode w przyszłości wymagałby powrotu do zmiennych CSS.
 - [x] Decyzja: ikony przez maskę CSS (a nie `<img>`), żeby zachować kolory, hover i możliwość dark mode.
 
 ## 🔧 W toku: naprawa ikon
@@ -106,19 +108,20 @@ Decyzje (2026-11-09):
 
 ### Plan etapów (każdy etap = osobny commit)
 
-- [ ] **Etap 1 — wspólne elementy modułów:** nagłówek modułu (ikona + tytuł + podtytuł) i pasek nawigacji
+- [x] **Etap 1 — wspólne elementy modułów:** nagłówek modułu (ikona + tytuł + podtytuł) i pasek nawigacji
   (🏠 menu, 👤 zatrudnienia, 💻 urządzenia; 🍴 obiady dopiero w Etapie 8). Aktywny moduł podświetlony.
   - Decyzje: moduły otwierają się **w tej samej karcie**; kolor przewodni **czerwony** (jak we wzorze);
     **tryb pełnoekranowy usunięty** — aplikacja zawsze na pełną szerokość.
   - [x] 1a: podpięte `monitor.css` i `zatrudnienia.css` zamiast `dashboard.css` (audyt B7 — style statystyk i tabeli działają).
   - [x] 1b: ikona `fa-house` (SVG + reguła w `_icons.scss`).
-  - [ ] 1c: usunąć tryb pełnoekranowy (przycisk w HTML, kod w `script.js`, style `.fullscreen-btn` i `body.wide-mode`),
+  - [x] 1c: usunięty tryb pełnoekranowy (przycisk, kod w `script.js`, style `.fullscreen-btn` i `body.wide-mode`),
     `.wrapper` na pełną szerokość.
-  - [ ] 1d: przejście w tej samej karcie (`target="_blank"` w `index.html`, `window.open` w `dashboard.js`,
-    blok `returnMenuLinks` w `script.js`).
-  - [ ] 1e: HTML nagłówka z paskiem nawigacji (zamiast „Powrót do menu”) w obu modułach.
-  - [ ] 1f: style paska nawigacji i nagłówka.
-  - [ ] 1g: kolor przewodni na czerwony w `_colors.scss` (+ ręcznie wpisane kolory fioletowe w SCSS, ok. 12 miejsc).
+  - [x] 1d: przejście w tej samej karcie; przy okazji usunięty martwy `js/dashboard.js` (klasa `is-ready` bez żadnego stylu).
+    Commit `fe213b7`.
+  - [x] 1e: HTML nagłówka z paskiem nawigacji (`<nav class="module-nav">`, `is-active` + `aria-current="page"`) w obu modułach.
+  - [x] 1f: style `.header`, `.module-nav`, `.module-nav-link`, `.module-nav-divider`; tytuł bez Audiowide, w kolorze `--primary`.
+  - [x] 1g: kolor przewodni czerwony (`$primary: #c8102e`, `$primary-strong: #8f0b22`, `$primary-soft: #fdecef`);
+    wszystkie `var(--x)` → `$x` (regex `var\(--([a-z-]+)\)` → `$$$1`), ręczny fiolet → `rgba($primary, …)`.
 - [ ] **Etap 2 — menu główne:** nowy nagłówek („SEKCJA WSPARCIA UŻYTKOWNIKÓW / DASHBOARD IT”), kafelki modułów,
   sekcja **Zakładki** (dodawanie nazwa + adres, zapis w `localStorage`).
 - [ ] **Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),

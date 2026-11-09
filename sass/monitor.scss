@@ -1,3 +1,5 @@
+@use 'colors' as *;
+
 /* === Monitor Statistics: Start === */
 .stats-grid {
 	display: flex;
@@ -10,19 +12,19 @@
 	flex: 1;
 	min-width: 200px;
 	padding: 20px;
-	border: 1px solid var(--border);
+	border: 1px solid $border;
 	border-radius: 18px;
-	background: var(--card-bg-soft);
+	background: $card-bg-soft;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	box-shadow: var(--shadow-md);
+	box-shadow: $shadow-md;
 	backdrop-filter: blur(12px);
 	-webkit-backdrop-filter: blur(12px);
 
 	p {
 		font-size: 1.1rem;
-		color: var(--text-muted);
+		color: $text-muted;
 		font-weight: bold;
 		margin-bottom: 5px;
 	}
@@ -32,18 +34,18 @@
 	}
 	i {
 		font-size: 3rem;
-		color: var(--primary);
+		color: $primary;
 		opacity: 0.3;
 	}
 
 	&.active {
-		border-bottom: 4px solid var(--success);
+		border-bottom: 4px solid $success;
 	}
 	&.warning {
-		border-bottom: 4px solid var(--warning);
+		border-bottom: 4px solid $warning;
 	}
 	&.danger {
-		border-bottom: 4px solid var(--danger);
+		border-bottom: 4px solid $danger;
 	}
 }
 /* === Monitor Statistics: End === */
@@ -60,14 +62,14 @@
 		gap: 8px;
 		font-size: 1.3rem;
 		font-weight: 600;
-		color: var(--text-main);
+		color: $text-main;
 		cursor: pointer;
 		padding: 6px 10px;
 		border-radius: 8px;
 		transition: background-color 0.2s ease;
 
 		&:hover {
-			background-color: var(--bg-panel);
+			background-color: $bg-panel;
 		}
 
 		input[type='radio'] {
@@ -76,9 +78,9 @@
 			width: 18px;
 			height: 18px;
 			margin: 0;
-			border: 2px solid var(--text-soft);
+			border: 2px solid $text-soft;
 			border-radius: 50%;
-			background: var(--bg-surface-strong);
+			background: $bg-surface-strong;
 			display: grid;
 			place-content: center;
 			cursor: pointer;
@@ -98,8 +100,8 @@
 			}
 
 			&:checked {
-				border-color: var(--primary);
-				background: var(--primary);
+				border-color: $primary;
+				background: $primary;
 			}
 
 			&:checked::before {
@@ -108,7 +110,7 @@
 
 			&:focus-visible {
 				outline: none;
-				box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+				box-shadow: 0 0 0 3px rgba($primary, 0.25);
 			}
 		}
 	}
