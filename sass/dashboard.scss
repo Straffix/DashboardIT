@@ -4,30 +4,9 @@
 body.dashboard-page {
 	position: relative;
 	min-height: 100vh;
-	background:
-		radial-gradient(circle at 18% 16%, rgba($primary, 0.18) 0%, rgba($primary, 0) 24%),
-		radial-gradient(circle at 84% 14%, rgba($primary-strong, 0.16) 0%, rgba($primary-strong, 0) 30%),
-		radial-gradient(circle at 50% 100%, rgba(71, 85, 105, 0.08) 0%, rgba(71, 85, 105, 0) 26%),
-		linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
+	background: $page-gradient;
 	background-attachment: fixed;
 	overflow-x: hidden;
-
-	&::before {
-		content: '';
-		position: fixed;
-		inset: 0;
-		background:
-			repeating-linear-gradient(
-				135deg,
-				rgba(255, 255, 255, 0.035) 0,
-				rgba(255, 255, 255, 0.035) 1px,
-				transparent 1px,
-				transparent 22px
-			),
-			linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 35%);
-		opacity: 0.24;
-		pointer-events: none;
-	}
 }
 /* === Dashboard Page Background: End === */
 
@@ -45,7 +24,6 @@ body.dashboard-page .wrapper {
 	text-align: center;
 	width: 100%;
 	min-height: calc(100vh - 80px);
-	max-width: 1260px;
 	padding: 24px 32px 28px;
 	border-radius: 30px;
 	background: rgba(255, 255, 255, 0.9);
@@ -110,54 +88,7 @@ body.dashboard-page .wrapper {
 	color: $primary;
 }
 
-.dashboard-subtitle {
-	margin-top: 18px;
-	font-size: 1.65rem;
-	line-height: 1.65;
-	color: #64748b;
-}
 /* === Dashboard Layout: End === */
-
-/* === Dashboard Atmosphere: Start === */
-.dashboard-orb,
-.dashboard-grid-glow {
-	position: absolute;
-	pointer-events: none;
-	filter: blur(32px);
-}
-
-.dashboard-orb {
-	width: 320px;
-	height: 320px;
-	border-radius: 50%;
-	opacity: 0.55;
-}
-
-.dashboard-orb-left {
-	top: -50px;
-	left: -120px;
-	background: radial-gradient(circle, rgba(148, 163, 184, 0.14) 0%, rgba(148, 163, 184, 0) 74%);
-}
-
-.dashboard-orb-right {
-	right: -120px;
-	top: -30px;
-	background: radial-gradient(circle, rgba(96, 165, 250, 0.16) 0%, rgba(96, 165, 250, 0) 74%);
-}
-
-.dashboard-grid-glow {
-	inset: auto 10% -30px 10%;
-	height: 260px;
-	border-radius: 999px;
-	background: linear-gradient(
-		90deg,
-		rgba(148, 163, 184, 0) 0%,
-		rgba(148, 163, 184, 0.12) 50%,
-		rgba(148, 163, 184, 0) 100%
-	);
-	opacity: 0.55;
-}
-/* === Dashboard Atmosphere: End === */
 
 /* === Dashboard Navigation Tiles: Start === */
 .menu-grid {
@@ -377,10 +308,6 @@ body.dashboard-page .wrapper {
 		letter-spacing: 0.22em;
 	}
 
-	.dashboard-subtitle {
-		font-size: 1.5rem;
-	}
-
 	.menu-grid {
 		grid-template-columns: 1fr;
 		margin-top: 24px;
@@ -430,11 +357,6 @@ body.dashboard-page .wrapper {
 		}
 	}
 
-	.dashboard-orb,
-	.dashboard-grid-glow {
-		display: none;
-	}
-
 	.dashboard-header h1 {
 		max-width: 220px;
 		margin-inline: auto;
@@ -457,13 +379,6 @@ body.dashboard-page .wrapper {
 	.dashboard-kicker {
 		font-size: 0.84rem;
 		letter-spacing: 0.18em;
-	}
-
-	.dashboard-subtitle {
-		max-width: 290px;
-		margin-inline: auto;
-		font-size: 1.04rem;
-		line-height: 1.38;
 	}
 
 	.menu-grid {

@@ -29,9 +29,8 @@ $shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.15);
 $shadow-md: 0 12px 30px rgba(15, 23, 42, 0.1);
 $shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.08);
 
-// Tło strony (na razie ciemne — zmienimy w Etapie 2)
+// Tło strony
 $page-gradient:
-	radial-gradient(circle at 18% 16%, rgba($primary, 0.18) 0%, rgba($primary, 0) 24%),
-	radial-gradient(circle at 84% 14%, rgba($primary-strong, 0.16) 0%, rgba($primary-strong, 0) 30%),
-	radial-gradient(circle at 50% 100%, rgba(71, 85, 105, 0.08) 0%, rgba(71, 85, 105, 0) 26%),
-	linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
+	radial-gradient(circle at 15% 10%, rgba($primary, 0.06) 0%, rgba($primary, 0) 35%),
+	radial-gradient(circle at 85% 90%, rgba($primary-strong, 0.05) 0%, rgba($primary-strong, 0) 35%),
+	linear-gradient(180deg, #f6f4f7 0%, #eef0f4 100%);

@@ -1,0 +1,30 @@
+/* === Lokalne czcionki === */
+// Ścieżki liczą się od styles/css/style.css, dlatego ../../
+
+@font-face {
+	font-family: 'Audiowide';
+	src: url('../../fonts/Audiowide/Audiowide-Regular.ttf') format('truetype');
+	font-weight: 400;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Poppins';
+	src: url('../../fonts/Poppins/Poppins-Regular.ttf') format('truetype');
+	font-weight: 400;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Poppins';
+	src: url('../../fonts/Poppins/Poppins-SemiBold.ttf') format('truetype');
+	font-weight: 600;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Poppins';
+	src: url('../../fonts/Poppins/Poppins-Bold.ttf') format('truetype');
+	font-weight: 700;
+	font-display: swap;
+}

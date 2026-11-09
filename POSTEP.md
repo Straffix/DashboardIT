@@ -124,6 +124,21 @@ Decyzje (2026-11-09):
     wszystkie `var(--x)` → `$x` (regex `var\(--([a-z-]+)\)` → `$$$1`), ręczny fiolet → `rgba($primary, …)`.
 - [ ] **Etap 2 — menu główne:** nowy nagłówek („SEKCJA WSPARCIA UŻYTKOWNIKÓW / DASHBOARD IT”), kafelki modułów,
   sekcja **Zakładki** (dodawanie nazwa + adres, zapis w `localStorage`).
+  - [x] 2a: jasne tło (`$page-gradient` w `_colors.scss`, jedno dla wszystkich stron), usunięte ukośne paski `::before`
+    i ozdobne „kule” (`dashboard-orb`, `dashboard-grid-glow`).
+    - [ ] resztka: reguła `.dashboard-orb, .dashboard-grid-glow { display: none }` w `dashboard.scss:362-365`.
+  - [x] 2b: nagłówek „Sekcja wsparcia użytkowników / Dashboard IT” (wielkie litery robi CSS), `<title>Dashboard IT</title>`,
+    usunięty podtytuł.
+  - [ ] 2a+: karta menu na pełną szerokość (usunąć `max-width` w `dashboard.scss:27` i `_responsive-large.scss:16,45`).
+  - [ ] 2a+: lokalne czcionki: `sass/_fonts.scss` z `@font-face` (Audiowide 400, Poppins 400/600/700) + `@use 'fonts'`
+    w `style.scss` (audyt B8).
+  - [ ] 2c: kafelki jak na zrzucie. 2d: stopka.
+  - [ ] 2e: Zakładki — **decyzja (2026-11-09): A, osobiste.** Każdy przypina swoje linki (np. instrukcje na SharePoincie,
+    pliki Word/Excel), widoczne tylko dla niego. Zapis w `localStorage` (bez logowania to jedyny sposób na „tylko moje”).
+    - Ograniczenia: zakładki są przypisane do przeglądarki na danym komputerze; wyczyszczenie danych przeglądarki je usuwa.
+    - Bezpieczeństwo (obowiązkowo): dopuszczać tylko adresy `https://` / `http://` (blokada `javascript:...` w `href`),
+      nazwę wstawiać przez `textContent`, nie `innerHTML`.
+    - Linki są w przeglądarce użytkownika, nie w kodzie → nie trafiają do publicznego repo.
 - [ ] **Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),
   formularz w okienku pod ➕ (`<dialog>`), druga linia pod nazwą, akcje ↻ / ✎ edycja / 🗑.
 - [ ] **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN).
