@@ -39,7 +39,9 @@ function renderTable() {
 
 	const filteredHires = hires.filter(hire => {
 		const hireDate = new Date(hire.date)
-		return hireDate.getMonth() === currentViewDate.getMonth() && hireDate.getFullYear() === currentViewDate.getFullYear()
+		return (
+			hireDate.getMonth() === currentViewDate.getMonth() && hireDate.getFullYear() === currentViewDate.getFullYear()
+		)
 	})
 
 	if (filteredHires.length === 0) {
@@ -79,7 +81,7 @@ function renderTable() {
 			<td class="cell-center">${accessoriesHTML}</td>
 			<td class="cell-right">
 				<button class="icon-button delete-btn" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usuń wpis">
-					<i class="fas fa-trash"></i>
+					<i class="fa-solid fa-trash"></i>
 				</button>
 			</td>
 		`
@@ -104,14 +106,11 @@ function exportExcel() {
 	const dataToExport = hires.map(hire => ({
 		'Imię i Nazwisko': hire.name,
 		'Dział / Stanowisko': hire.ru,
-		'SN Sprzętu': hire.sn,
+		'SN Sprzętu': AppUtils.asExcelText(hire.sn),
 		'Data rozpoczęcia': hire.date,
 		Akcesoria: hire.accessories ? hire.accessories.join(', ') : '',
 	}))
-	const worksheet = XLSX.utils.json_to_sheet(dataToExport)
-	const workbook = XLSX.utils.book_new()
-	XLSX.utils.book_append_sheet(workbook, worksheet, 'Zatrudnienia')
-	XLSX.writeFile(workbook, `zatrudnienia_${AppUtils.formatDate(new Date())}.xlsx`)
+	AppUtils.downloadCSV(dataToExport, `zatrudnienia_${AppUtils.formatDate(new Date())}.csv`)
 }
 
 function importExcel(event) {
@@ -120,27 +119,31 @@ function importExcel(event) {
 
 	const reader = new FileReader()
 	reader.onload = loadEvent => {
-		const data = new Uint8Array(loadEvent.target.result)
-		const workbook = XLSX.read(data, { type: 'array' })
-		const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
+		const rows = AppUtils.parseCSV(loadEvent.target.result)
 
-		const importedHires = jsonData.map(row => ({
+		const importedHires = rows.map(row => ({
 			name: (row['Imię i Nazwisko'] || '').toString().toUpperCase(),
 			ru: row['Dział / Stanowisko'] || '',
 			sn: AppUtils.normalizeSN(row['SN Sprzętu']),
-			date: row['Data rozpoczęcia'] || '',
-			accessories: row.Akcesoria ? row.Akcesoria.split(', ').filter(Boolean) : [],
+			date: AppUtils.normalizeDate(row['Data rozpoczęcia']),
+			accessories: row.Akcesoria
+				? row.Akcesoria.split(',')
+						.map(item => item.trim())
+						.filter(Boolean)
+				: [],
 		}))
 
-		if (confirm(`Zaimportować ${importedHires.length} wpisów?`)) {
-			hires = [...hires, ...importedHires]
+		if (importedHires.length === 0) {
+			alert('Plik jest pusty albo ma zły format.')
+		} else if (confirm(`Zastąpić obecne dane (${hires.length}) danymi z pliku (${importedHires.length})?`)) {
+			hires = importedHires
 			saveData()
 		}
 
 		event.target.value = ''
 	}
 
-	reader.readAsArrayBuffer(file)
+	reader.readAsText(file, 'UTF-8')
 }
 /* === Hires Excel Backup: End === */
 
@@ -176,7 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		hiresForm.addEventListener('submit', event => {
 			event.preventDefault()
 
-			const selectedAccessories = Array.from(document.querySelectorAll('.accessory-item.active')).map(item => item.dataset.item)
+			const selectedAccessories = Array.from(document.querySelectorAll('.accessory-item.active')).map(
+				item => item.dataset.item,
+			)
 			const newHireDate = document.getElementById('date').value
 
 			hires.push({

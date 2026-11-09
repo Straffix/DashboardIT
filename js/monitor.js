@@ -33,14 +33,11 @@ function exportExcel() {
 
 	const dataToExport = devices.map(device => ({
 		'Nazwa użytkownika': device.name,
-		'Dział / RU': device.ru,
-		'Numer Seryjny': device.sn,
+		'Dział / RU': AppUtils.asExcelText(device.ru),
+		'Numer Seryjny': AppUtils.asExcelText(device.sn),
 		'Data ważności domeny': device.date,
 	}))
-	const worksheet = XLSX.utils.json_to_sheet(dataToExport)
-	const workbook = XLSX.utils.book_new()
-	XLSX.utils.book_append_sheet(workbook, worksheet, 'Urządzenia')
-	XLSX.writeFile(workbook, `monitor_laptopow_${new Date().toISOString().slice(0, 10)}.xlsx`)
+	AppUtils.downloadCSV(dataToExport, `monitor_laptopow_${new Date().toISOString().slice(0, 10)}.csv`)
 }
 
 function importExcel(event) {
@@ -49,27 +46,26 @@ function importExcel(event) {
 
 	const reader = new FileReader()
 	reader.onload = loadEvent => {
-		const data = new Uint8Array(loadEvent.target.result)
-		const workbook = XLSX.read(data, { type: 'array' })
-		const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-		const jsonData = XLSX.utils.sheet_to_json(worksheet)
+		const rows = AppUtils.parseCSV(loadEvent.target.result)
 
-		const imported = jsonData.map(row => ({
+		const imported = rows.map(row => ({
 			name: (row['Nazwa użytkownika'] || '').toString().toUpperCase(),
 			ru: row['Dział / RU'] || '',
 			sn: AppUtils.normalizeSN(row['Numer Seryjny']),
-			date: row['Data ważności domeny'] || '',
+			date: AppUtils.normalizeDate(row['Data ważności domeny']),
 		}))
 
-		if (confirm(`Zaimportować ${imported.length} urządzeń z Excela?`)) {
-			devices = [...devices, ...imported]
+		if (imported.length === 0) {
+			alert('Plik jest pusty albo ma zły format.')
+		} else if (confirm(`Zastąpić obecne dane (${devices.length}) danymi z pliku (${imported.length})?`)) {
+			devices = imported
 			saveData()
 		}
 
 		event.target.value = ''
 	}
 
-	reader.readAsArrayBuffer(file)
+	reader.readAsText(file, 'UTF-8')
 }
 /* === Monitor Excel Backup: End === */
 

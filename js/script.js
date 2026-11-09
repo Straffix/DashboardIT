@@ -15,7 +15,7 @@ const APP_CONFIG = {
 		'Grudzie\u0144',
 	],
 	ICON_MAP: {
-		mouse: 'fa-mouse',
+		mouse: 'fa-computer-mouse',
 		keyboard: 'fa-keyboard',
 		headset: 'fa-headset',
 		monitor: 'fa-desktop',
@@ -96,7 +96,7 @@ const renderAccessoryIcons = (accessories, options = {}) => {
 		.map(acc => {
 			const icon = APP_CONFIG.ICON_MAP[acc] || 'fa-box'
 			const label = APP_CONFIG.ACCESSORY_LABELS[acc] || acc
-			return `<i class="fas ${icon} acc-inline-icon" title="${label}"></i>`
+			return `<i class="fa-solid ${icon} acc-inline-icon" title="${label}"></i>`
 		})
 		.join('')
 
@@ -447,6 +447,136 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 /* === Shared Global UI: End === */
 
+/* === Shared CSV: Start === */
+const CSV_SEPARATOR = ';'
+
+// Przygotowuje jedną komórkę tabeli.
+// Jeśli tekst zawiera średnik, cudzysłów albo nową linię,
+// trzeba go ująć w cudzysłowy, a cudzysłowy w środku podwoić.
+const escapeCSVValue = value => {
+	const text = value === undefined || value === null ? '' : String(value)
+
+	if (text.includes(CSV_SEPARATOR) || text.includes('"') || text.includes('\n')) {
+		return '"' + text.replaceAll('"', '""') + '"'
+	}
+
+	return text
+}
+
+// Zamienia tablicę obiektów na plik CSV i pobiera go.
+const downloadCSV = (rows, fileName) => {
+	const headers = Object.keys(rows[0])
+	const lines = [headers.map(escapeCSVValue).join(CSV_SEPARATOR)]
+
+	for (const row of rows) {
+		const cells = headers.map(header => escapeCSVValue(row[header]))
+		lines.push(cells.join(CSV_SEPARATOR))
+	}
+
+	const content = '\uFEFF' + lines.join('\r\n')
+	const blob = new Blob([content], { type: 'text/csv;charset=utf-8' })
+
+	const link = document.createElement('a')
+	link.href = URL.createObjectURL(blob)
+	link.download = fileName
+	link.click()
+	URL.revokeObjectURL(link.href)
+}
+
+// Dzieli tekst CSV na wiersze i komórki.
+// Idzie znak po znaku, bo średnik albo nowa linia wewnątrz cudzysłowów
+// są częścią tekstu, a nie podziałem.
+const splitCSV = text => {
+	const rows = []
+	let row = []
+	let cell = ''
+	let insideQuotes = false
+
+	for (let i = 0; i < text.length; i++) {
+		const char = text[i]
+		const nextChar = text[i + 1]
+
+		if (insideQuotes) {
+			if (char === '"' && nextChar === '"') {
+				cell += '"'
+				i++
+			} else if (char === '"') {
+				insideQuotes = false
+			} else {
+				cell += char
+			}
+		} else if (char === '"') {
+			insideQuotes = true
+		} else if (char === CSV_SEPARATOR) {
+			row.push(cell)
+			cell = ''
+		} else if (char === '\n') {
+			row.push(cell)
+			rows.push(row)
+			row = []
+			cell = ''
+		} else if (char !== '\r') {
+			cell += char
+		}
+	}
+
+	if (cell !== '' || row.length > 0) {
+		row.push(cell)
+		rows.push(row)
+	}
+
+	return rows
+}
+
+// Zamienia tekst CSV na tablicę obiektów (klucze = nagłówki z 1. wiersza).
+const parseCSV = text => {
+	const cleanText = text.replace('\uFEFF', '')
+	const [headers, ...dataRows] = splitCSV(cleanText)
+	if (!headers) return []
+
+	const result = []
+
+	for (const cells of dataRows) {
+		const isEmptyRow = cells.every(cell => cell.trim() === '')
+		if (isEmptyRow) continue
+
+		const row = {}
+		headers.forEach((header, index) => {
+			let value = (cells[index] || '').trim()
+
+			if (value.startsWith('="') && value.endsWith('"')) {
+				value = value.slice(2, -1)
+			}
+
+			row[header.trim()] = value
+		})
+		result.push(row)
+	}
+
+	return result
+}
+
+// Zamienia datę z Excela (05-01-2027, 05.01.2027, 5/1/2027) na format aplikacji (2027-01-05).
+const normalizeDate = value => {
+	const text = String(value || '').trim()
+
+	if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text
+
+	const match = text.match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/)
+	if (!match) return ''
+
+	const day = match[1].padStart(2, '0')
+	const month = match[2].padStart(2, '0')
+	const year = match[3]
+
+	return `${year}-${month}-${day}`
+}
+
+// Każe Excelowi traktować wartość jako tekst (zachowuje zera na początku).
+const asExcelText = value => (value ? `="${value}"` : '')
+
+/* === Shared CSV: End === */
+
 /* === Shared Public API: Start === */
 window.AppUtils = {
 	config: APP_CONFIG,
@@ -454,5 +584,9 @@ window.AppUtils = {
 	normalizeSN,
 	renderAccessoryIcons,
 	createMonthPicker,
+	downloadCSV,
+	parseCSV,
+	normalizeDate,
+	asExcelText,
 }
 /* === Shared Public API: End === */

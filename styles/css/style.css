@@ -1,3 +1,31 @@
+:root {
+  --bg-color: #f1f5f9;
+  --bg-surface: rgba(255, 255, 255, 0.9);
+  --bg-surface-strong: rgba(255, 255, 255, 0.96);
+  --bg-panel: rgba(255, 255, 255, 0.78);
+  --bg-panel-hover: rgba(255, 255, 255, 0.94);
+  --card-bg: #ffffff;
+  --card-bg-soft: rgba(255, 255, 255, 0.7);
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --text-soft: #94a3b8;
+  --primary: #6366f1;
+  --primary-strong: #2563eb;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --border: #e2e8f0;
+  --border-strong: rgba(99, 102, 241, 0.25);
+  --shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.15);
+  --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.1);
+  --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.08);
+  --page-gradient:
+  	radial-gradient(circle at 18% 16%, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0) 24%),
+  	radial-gradient(circle at 84% 14%, rgba(37, 99, 235, 0.16) 0%, rgba(37, 99, 235, 0) 30%),
+  	radial-gradient(circle at 50% 100%, rgba(71, 85, 105, 0.08) 0%, rgba(71, 85, 105, 0) 26%),
+  	linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
+}
+
 @media (max-width: 900px) {
   .main-content {
     gap: 22px;
@@ -223,32 +251,160 @@
     font-size: 1.8rem;
   }
 }
-:root {
-  --bg-color: #f1f5f9;
-  --bg-surface: rgba(255, 255, 255, 0.9);
-  --bg-surface-strong: rgba(255, 255, 255, 0.96);
-  --bg-panel: rgba(255, 255, 255, 0.78);
-  --bg-panel-hover: rgba(255, 255, 255, 0.94);
-  --card-bg: #ffffff;
-  --card-bg-soft: rgba(255, 255, 255, 0.7);
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --text-soft: #94a3b8;
-  --primary: #6366f1;
-  --primary-strong: #2563eb;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --border: #e2e8f0;
-  --border-strong: rgba(99, 102, 241, 0.25);
-  --shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.15);
-  --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.1);
-  --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.08);
-  --page-gradient:
-  	radial-gradient(circle at 18% 16%, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0) 24%),
-  	radial-gradient(circle at 84% 14%, rgba(37, 99, 235, 0.16) 0%, rgba(37, 99, 235, 0) 30%),
-  	radial-gradient(circle at 50% 100%, rgba(71, 85, 105, 0.08) 0%, rgba(71, 85, 105, 0) 26%),
-  	linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
+/* === Ikony (lokalne SVG z Font Awesome Free) === */
+.fa-solid::before {
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+  -webkit-mask-size: contain;
+          mask-size: contain;
+}
+
+.fa-arrow-left::before {
+  -webkit-mask-image: url("../../img/icons/arrow-left-solid-full.svg");
+          mask-image: url("../../img/icons/arrow-left-solid-full.svg");
+}
+
+.fa-arrow-up-right-from-square::before {
+  -webkit-mask-image: url("../../img/icons/arrow-up-right-from-square-solid-full.svg");
+          mask-image: url("../../img/icons/arrow-up-right-from-square-solid-full.svg");
+}
+
+.fa-box::before {
+  -webkit-mask-image: url("../../img/icons/box-solid-full.svg");
+          mask-image: url("../../img/icons/box-solid-full.svg");
+}
+
+.fa-briefcase::before {
+  -webkit-mask-image: url("../../img/icons/briefcase-solid-full.svg");
+          mask-image: url("../../img/icons/briefcase-solid-full.svg");
+}
+
+.fa-calendar-check::before {
+  -webkit-mask-image: url("../../img/icons/calendar-check-solid-full.svg");
+          mask-image: url("../../img/icons/calendar-check-solid-full.svg");
+}
+
+.fa-calendar-days::before {
+  -webkit-mask-image: url("../../img/icons/calendar-days-solid-full.svg");
+          mask-image: url("../../img/icons/calendar-days-solid-full.svg");
+}
+
+.fa-check::before {
+  -webkit-mask-image: url("../../img/icons/check-solid-full.svg");
+          mask-image: url("../../img/icons/check-solid-full.svg");
+}
+
+.fa-chevron-left::before {
+  -webkit-mask-image: url("../../img/icons/chevron-left-solid-full.svg");
+          mask-image: url("../../img/icons/chevron-left-solid-full.svg");
+}
+
+.fa-chevron-right::before {
+  -webkit-mask-image: url("../../img/icons/chevron-right-solid-full.svg");
+          mask-image: url("../../img/icons/chevron-right-solid-full.svg");
+}
+
+.fa-circle-info::before {
+  -webkit-mask-image: url("../../img/icons/circle-info-solid-full.svg");
+          mask-image: url("../../img/icons/circle-info-solid-full.svg");
+}
+
+.fa-circle-xmark::before {
+  -webkit-mask-image: url("../../img/icons/circle-xmark-solid-full.svg");
+          mask-image: url("../../img/icons/circle-xmark-solid-full.svg");
+}
+
+.fa-clock::before {
+  -webkit-mask-image: url("../../img/icons/clock-solid-full.svg");
+          mask-image: url("../../img/icons/clock-solid-full.svg");
+}
+
+.fa-compress::before {
+  -webkit-mask-image: url("../../img/icons/compress-solid-full.svg");
+          mask-image: url("../../img/icons/compress-solid-full.svg");
+}
+
+.fa-computer-mouse::before {
+  -webkit-mask-image: url("../../img/icons/computer-mouse-solid-full.svg");
+          mask-image: url("../../img/icons/computer-mouse-solid-full.svg");
+}
+
+.fa-desktop::before {
+  -webkit-mask-image: url("../../img/icons/desktop-solid-full.svg");
+          mask-image: url("../../img/icons/desktop-solid-full.svg");
+}
+
+.fa-expand::before {
+  -webkit-mask-image: url("../../img/icons/expand-solid-full.svg");
+          mask-image: url("../../img/icons/expand-solid-full.svg");
+}
+
+.fa-floppy-disk::before {
+  -webkit-mask-image: url("../../img/icons/floppy-disk-solid-full.svg");
+          mask-image: url("../../img/icons/floppy-disk-solid-full.svg");
+}
+
+.fa-headset::before {
+  -webkit-mask-image: url("../../img/icons/headset-solid-full.svg");
+          mask-image: url("../../img/icons/headset-solid-full.svg");
+}
+
+.fa-keyboard::before {
+  -webkit-mask-image: url("../../img/icons/keyboard-solid-full.svg");
+          mask-image: url("../../img/icons/keyboard-solid-full.svg");
+}
+
+.fa-laptop::before {
+  -webkit-mask-image: url("../../img/icons/laptop-solid-full.svg");
+          mask-image: url("../../img/icons/laptop-solid-full.svg");
+}
+
+.fa-pen-to-square::before {
+  -webkit-mask-image: url("../../img/icons/pen-to-square-solid-full.svg");
+          mask-image: url("../../img/icons/pen-to-square-solid-full.svg");
+}
+
+.fa-plus::before {
+  -webkit-mask-image: url("../../img/icons/plus-solid-full.svg");
+          mask-image: url("../../img/icons/plus-solid-full.svg");
+}
+
+.fa-right-left::before {
+  -webkit-mask-image: url("../../img/icons/right-left-solid-full.svg");
+          mask-image: url("../../img/icons/right-left-solid-full.svg");
+}
+
+.fa-shield-halved::before {
+  -webkit-mask-image: url("../../img/icons/shield-halved-solid-full.svg");
+          mask-image: url("../../img/icons/shield-halved-solid-full.svg");
+}
+
+.fa-trash::before {
+  -webkit-mask-image: url("../../img/icons/trash-solid-full.svg");
+          mask-image: url("../../img/icons/trash-solid-full.svg");
+}
+
+.fa-user::before {
+  -webkit-mask-image: url("../../img/icons/user-solid-full.svg");
+          mask-image: url("../../img/icons/user-solid-full.svg");
+}
+
+.fa-user-plus::before {
+  -webkit-mask-image: url("../../img/icons/user-plus-solid-full.svg");
+          mask-image: url("../../img/icons/user-plus-solid-full.svg");
+}
+
+.fa-xmark::before {
+  -webkit-mask-image: url("../../img/icons/xmark-solid-full.svg");
+          mask-image: url("../../img/icons/xmark-solid-full.svg");
 }
 
 /* === Base Reset: Start === */

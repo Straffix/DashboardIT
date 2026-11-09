@@ -79,7 +79,8 @@ function renderTable() {
 	})
 
 	if (filteredExchanges.length === 0) {
-		tableBody.innerHTML = '<tr><td colspan="7" class="empty-state-cell">Brak planowanych wymian w tym miesiącu.</td></tr>'
+		tableBody.innerHTML =
+			'<tr><td colspan="7" class="empty-state-cell">Brak planowanych wymian w tym miesiącu.</td></tr>'
 		return
 	}
 
@@ -95,7 +96,7 @@ function renderTable() {
 		const infoHtml =
 			exchange.notes && exchange.notes.trim() !== ''
 				? `<div class="notes-tooltip-container">
-						<i class="fas fa-info-circle notes-icon"></i>
+						<i class="fa-solid fa-circle-info notes-icon"></i>
 						<span class="notes-tooltip-text">${exchange.notes}</span>
 					</div>`
 				: ''
@@ -128,11 +129,11 @@ function renderTable() {
 				<div class="action-wrapper">
 					${
 						!isDone
-							? `<button class="btn-table btn-ok" type="button" data-action="complete" data-index="${originalIndex}" title="Finalizuj"><i class="fas fa-check"></i></button>`
+							? `<button class="btn-table btn-ok" type="button" data-action="complete" data-index="${originalIndex}" title="Finalizuj"><i class="fa-solid fa-check"></i></button>`
 							: ''
 					}
-					<button class="btn-table btn-edit" type="button" data-action="edit" data-index="${originalIndex}" title="Edytuj"><i class="fas fa-edit"></i></button>
-					<button class="btn-table btn-delete" type="button" data-action="delete" data-index="${originalIndex}" title="Usuń"><i class="fas fa-trash"></i></button>
+					<button class="btn-table btn-edit" type="button" data-action="edit" data-index="${originalIndex}" title="Edytuj"><i class="fa-solid fa-pen-to-square"></i></button>
+					<button class="btn-table btn-delete" type="button" data-action="delete" data-index="${originalIndex}" title="Usuń"><i class="fa-solid fa-trash"></i></button>
 				</div>
 			</td>
 		`
@@ -163,7 +164,7 @@ function editExchange(index) {
 	if (submitBtn) {
 		submitBtn.classList.remove('btn-submit-warning')
 		submitBtn.classList.add('btn-submit-primary')
-		submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Zapisz zmiany'
+		submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Zapisz zmiany'
 	}
 
 	if (cancelEditBtn) {
@@ -261,7 +262,11 @@ function importExcel(event) {
 				plannedDate: row.Data || row['Data planowanej wymiany'] || new Date().toISOString().split('T')[0],
 				oldSn: row['Stary SN'] || row['SN do zwrotu'] || '',
 				newSn: row['Nowy SN'] || row['SN do wydania'] || '',
-				accessories: row.Akcesoria ? row.Akcesoria.split(',').map(item => item.trim()).filter(Boolean) : [],
+				accessories: row.Akcesoria
+					? row.Akcesoria.split(',')
+							.map(item => item.trim())
+							.filter(Boolean)
+					: [],
 				notes: row.Uwagi || '',
 				status: row.Status === 'Zakończono' ? 'done' : 'pending',
 				createdAt: new Date(),

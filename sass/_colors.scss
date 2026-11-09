@@ -7,3 +7,31 @@ $success: #22c55e;
 $warning: #f59e0b;
 $danger: #ef4444;
 $border: #e2e8f0;
+
+:root {
+	--bg-color: #{$bg-color};
+	--bg-surface: rgba(255, 255, 255, 0.9);
+	--bg-surface-strong: rgba(255, 255, 255, 0.96);
+	--bg-panel: rgba(255, 255, 255, 0.78);
+	--bg-panel-hover: rgba(255, 255, 255, 0.94);
+	--card-bg: #{$card-bg};
+	--card-bg-soft: rgba(255, 255, 255, 0.7);
+	--text-main: #{$text-main};
+	--text-muted: #{$text-muted};
+	--text-soft: #94a3b8;
+	--primary: #{$primary};
+	--primary-strong: #2563eb;
+	--success: #{$success};
+	--warning: #{$warning};
+	--danger: #{$danger};
+	--border: #{$border};
+	--border-strong: rgba(99, 102, 241, 0.25);
+	--shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.15);
+	--shadow-md: 0 12px 30px rgba(15, 23, 42, 0.1);
+	--shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.08);
+	--page-gradient:
+		radial-gradient(circle at 18% 16%, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0) 24%),
+		radial-gradient(circle at 84% 14%, rgba(37, 99, 235, 0.16) 0%, rgba(37, 99, 235, 0) 30%),
+		radial-gradient(circle at 50% 100%, rgba(71, 85, 105, 0.08) 0%, rgba(71, 85, 105, 0) 26%),
+		linear-gradient(120deg, #2a093f 0%, #39104d 24%, #1b2f5e 68%, #163b68 100%);
+}

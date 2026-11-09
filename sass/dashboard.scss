@@ -1,5 +1,3 @@
-@use 'colors' as *;
-
 /* === Dashboard Page Background: Start === */
 body.dashboard-page {
 	position: relative;
@@ -172,7 +170,8 @@ body.dashboard-page .wrapper {
 
 .menu-item {
 	text-decoration: none;
-	color: $text-main;
+	// color: $text-main;
+	color: var(--text-main);
 }
 
 .dashboard-card {

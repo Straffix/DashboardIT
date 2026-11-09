@@ -1,0 +1,103 @@
+/* === Ikony (lokalne SVG z Font Awesome Free) === */
+
+// Wspólny wygląd każdej ikony:
+// kwadrat o wielkości tekstu (1em), w kolorze tekstu (currentColor),
+// przycięty do kształtu pliku SVG (mask-image ustawia każda ikona niżej)
+.fa-solid::before {
+	content: '';
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	vertical-align: -0.125em;
+	background-color: currentColor;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	mask-size: contain;
+}
+
+// Ścieżki liczą się od styles/css/style.css, dlatego ../../
+
+.fa-arrow-left::before {
+	mask-image: url('../../img/icons/arrow-left-solid-full.svg');
+}
+.fa-arrow-up-right-from-square::before {
+	mask-image: url('../../img/icons/arrow-up-right-from-square-solid-full.svg');
+}
+.fa-box::before {
+	mask-image: url('../../img/icons/box-solid-full.svg');
+}
+.fa-briefcase::before {
+	mask-image: url('../../img/icons/briefcase-solid-full.svg');
+}
+.fa-calendar-check::before {
+	mask-image: url('../../img/icons/calendar-check-solid-full.svg');
+}
+.fa-calendar-days::before {
+	mask-image: url('../../img/icons/calendar-days-solid-full.svg');
+}
+.fa-check::before {
+	mask-image: url('../../img/icons/check-solid-full.svg');
+}
+.fa-chevron-left::before {
+	mask-image: url('../../img/icons/chevron-left-solid-full.svg');
+}
+.fa-chevron-right::before {
+	mask-image: url('../../img/icons/chevron-right-solid-full.svg');
+}
+.fa-circle-info::before {
+	mask-image: url('../../img/icons/circle-info-solid-full.svg');
+}
+.fa-circle-xmark::before {
+	mask-image: url('../../img/icons/circle-xmark-solid-full.svg');
+}
+.fa-clock::before {
+	mask-image: url('../../img/icons/clock-solid-full.svg');
+}
+.fa-compress::before {
+	mask-image: url('../../img/icons/compress-solid-full.svg');
+}
+.fa-computer-mouse::before {
+	mask-image: url('../../img/icons/computer-mouse-solid-full.svg');
+}
+.fa-desktop::before {
+	mask-image: url('../../img/icons/desktop-solid-full.svg');
+}
+.fa-expand::before {
+	mask-image: url('../../img/icons/expand-solid-full.svg');
+}
+.fa-floppy-disk::before {
+	mask-image: url('../../img/icons/floppy-disk-solid-full.svg');
+}
+.fa-headset::before {
+	mask-image: url('../../img/icons/headset-solid-full.svg');
+}
+.fa-keyboard::before {
+	mask-image: url('../../img/icons/keyboard-solid-full.svg');
+}
+.fa-laptop::before {
+	mask-image: url('../../img/icons/laptop-solid-full.svg');
+}
+.fa-pen-to-square::before {
+	mask-image: url('../../img/icons/pen-to-square-solid-full.svg');
+}
+.fa-plus::before {
+	mask-image: url('../../img/icons/plus-solid-full.svg');
+}
+.fa-right-left::before {
+	mask-image: url('../../img/icons/right-left-solid-full.svg');
+}
+.fa-shield-halved::before {
+	mask-image: url('../../img/icons/shield-halved-solid-full.svg');
+}
+.fa-trash::before {
+	mask-image: url('../../img/icons/trash-solid-full.svg');
+}
+.fa-user::before {
+	mask-image: url('../../img/icons/user-solid-full.svg');
+}
+.fa-user-plus::before {
+	mask-image: url('../../img/icons/user-plus-solid-full.svg');
+}
+.fa-xmark::before {
+	mask-image: url('../../img/icons/xmark-solid-full.svg');
+}
