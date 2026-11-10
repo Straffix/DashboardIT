@@ -246,6 +246,48 @@ body.dashboard-page .wrapper {
 		outline-offset: 2px;
 	}
 }
+
+.bookmark-link {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	max-width: 260px;
+	height: 56px;
+	padding: 0 18px;
+	border: 1px solid $border;
+	border-radius: 14px;
+	background: $bg-panel;
+	color: $text-main;
+	font-size: 1.3rem;
+	font-weight: 600;
+	text-decoration: none;
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease;
+
+	i {
+		flex-shrink: 0;
+		color: $primary;
+		font-size: 1.2rem;
+	}
+
+	span {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	&:hover {
+		border-color: $border-strong;
+		background: $primary-soft;
+	}
+
+	&:focus-visible {
+		outline: 2px solid $primary;
+		outline-offset: 2px;
+	}
+}
+
 /* === Dashboard Bookmarks: End === */
 
 /* === Dashboard Footer: Start === */

@@ -219,6 +219,41 @@ body.dashboard-page .wrapper {
   outline-offset: 2px;
 }
 
+.bookmark-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 260px;
+  height: 56px;
+  padding: 0 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #1e293b;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.bookmark-link i {
+  flex-shrink: 0;
+  color: #c8102e;
+  font-size: 1.2rem;
+}
+.bookmark-link span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bookmark-link:hover {
+  border-color: rgba(200, 16, 46, 0.25);
+  background: #fdecef;
+}
+.bookmark-link:focus-visible {
+  outline: 2px solid #c8102e;
+  outline-offset: 2px;
+}
+
 /* === Dashboard Bookmarks: End === */
 /* === Dashboard Footer: Start === */
 .dashboard-container .main-footer {

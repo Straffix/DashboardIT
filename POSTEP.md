@@ -148,9 +148,11 @@ Decyzje (2026-11-09):
     usunięte: domena z zieloną kropką, `footer-content/-status/-separator`, `@keyframes pulseStatus`.
     Rok przez `getElementById` (audyt C1), bez `DOMContentLoaded` — działa, bo `<script>` jest na końcu `<body>`.
   - [ ] 2e: Zakładki — plan:
-    - [ ] 2e-1: HTML + CSS sekcji „Zakładki” z przyciskiem „+” (bez JS).
-    - [ ] 2e-2: okienko `<dialog>` z formularzem (Nazwa, Adres), otwierane „+”, zamykane „Anuluj” / Esc.
-    - [ ] 2e-3: zapis/odczyt w `localStorage` (nowy klucz w `APP_CONFIG.STORAGE_KEYS`, `try/catch` przy `JSON.parse`).
+    - [x] 2e-1: HTML + CSS sekcji „Zakładki” z przyciskiem „+” (bez JS). Commit `6af5aa2` (razem z 2d).
+    - [x] 2e-2: okienko `<dialog>` (styl `.modal` we wspólnym `style.scss` — do użycia też w modułach), pole adresu
+      jako `type="text"` + `inputmode="url"` (bo `type="url"` odrzuca `www.…` bez `https://`). Commit `71d8498`.
+    - [x] 2e-3: zapis/odczyt w `localStorage` (klucz `BOOKMARKS: 'dashboard_zakladki'`, `try/catch` + `Array.isArray`).
+      Wyjaśnienia w pliku jako blok `/* Jak to działa */` pod kodem.
     - [ ] 2e-4: wyświetlanie zakładek (`createElement` + `textContent`, link w nowej karcie).
     - [ ] 2e-5: dodawanie z walidacją adresu (tylko `http://` / `https://`).
     - [ ] 2e-6: usuwanie zakładki (× z potwierdzeniem).

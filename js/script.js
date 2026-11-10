@@ -31,6 +31,7 @@ const APP_CONFIG = {
 	STORAGE_KEYS: {
 		MONITOR: 'monitor_laptopow_dane',
 		HIRES: 'nowe_zatrudnienia_dane',
+		BOOKMARKS: 'dashboard_zakladki',
 	},
 }
 /* === Shared Config: End === */
