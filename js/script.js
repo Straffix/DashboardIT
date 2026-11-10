@@ -403,11 +403,11 @@ const createMonthPicker = ({
 }
 /* === Shared Month Picker Factory: End === */
 
-document.addEventListener('DOMContentLoaded', () => {
-	document.querySelectorAll('#current-year').forEach(element => {
-		element.textContent = new Date().getFullYear()
-	})
-})
+/* === Shared Global UI: Start === */
+const currentYear = document.getElementById('current-year')
+if (currentYear) {
+	currentYear.textContent = new Date().getFullYear()
+}
 /* === Shared Global UI: End === */
 
 /* === Shared CSV: Start === */

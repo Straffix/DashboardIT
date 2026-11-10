@@ -189,20 +189,70 @@ body.dashboard-page .wrapper {
 }
 /* === Dashboard Navigation Tiles: End === */
 
+/* === Dashboard Bookmarks: Start === */
+.bookmarks {
+	position: relative;
+	z-index: 2;
+	margin-top: 40px;
+	text-align: left;
+}
+
+.bookmarks-title {
+	margin-bottom: 10px;
+	font-size: 1.1rem;
+	font-weight: 700;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: $text-muted;
+}
+
+.bookmarks-bar {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 14px;
+	border-radius: 20px;
+	background: $card-bg;
+	border: 1px solid $border;
+	box-shadow: $shadow-sm;
+}
+
+.bookmarks-list {
+	display: contents;
+	list-style: none;
+}
+
+.bookmark-add-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	border: 1px dashed rgba($primary, 0.4);
+	border-radius: 14px;
+	background: transparent;
+	color: $primary;
+	font-size: 1.6rem;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+
+	&:hover {
+		background: $primary-soft;
+	}
+
+	&:focus-visible {
+		outline: 2px solid $primary;
+		outline-offset: 2px;
+	}
+}
+/* === Dashboard Bookmarks: End === */
+
 /* === Dashboard Footer: Start === */
 .dashboard-container .main-footer {
 	position: relative;
 	z-index: 2;
 	margin-top: auto;
-	padding-top: 56px;
-}
-
-.dashboard-container .footer-content {
-	color: rgba(100, 116, 139, 0.7);
-}
-
-.dashboard-container .footer-status {
-	color: rgba(100, 116, 139, 0.9);
 }
 /* === Dashboard Footer: End === */
 

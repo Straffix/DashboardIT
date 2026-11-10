@@ -144,7 +144,17 @@ Decyzje (2026-11-09):
       - `sass/_responsive-small.scss` (ok. linie 98-125): `body.dashboard-page .dashboard-card`, `.card-icon-shell`,
         `.card-copy`, `.card-copy span`, `.card-copy small`, `.card-meta strong`.
       - Sprawdzenie: kompilacja; `card-meta` w `sass/` i `index.html` → 0 wyników; zwęzić okno (3 → 2 → 1 kolumna). Commit.
-  - [ ] 2d: stopka.
+  - [x] 2d: stopka jak we wzorze (linia + „© rok IT Support Dashboard by **Arkadiusz Lisiecki**” po prawej) w 3 plikach;
+    usunięte: domena z zieloną kropką, `footer-content/-status/-separator`, `@keyframes pulseStatus`.
+    Rok przez `getElementById` (audyt C1), bez `DOMContentLoaded` — działa, bo `<script>` jest na końcu `<body>`.
+  - [ ] 2e: Zakładki — plan:
+    - [ ] 2e-1: HTML + CSS sekcji „Zakładki” z przyciskiem „+” (bez JS).
+    - [ ] 2e-2: okienko `<dialog>` z formularzem (Nazwa, Adres), otwierane „+”, zamykane „Anuluj” / Esc.
+    - [ ] 2e-3: zapis/odczyt w `localStorage` (nowy klucz w `APP_CONFIG.STORAGE_KEYS`, `try/catch` przy `JSON.parse`).
+    - [ ] 2e-4: wyświetlanie zakładek (`createElement` + `textContent`, link w nowej karcie).
+    - [ ] 2e-5: dodawanie z walidacją adresu (tylko `http://` / `https://`).
+    - [ ] 2e-6: usuwanie zakładki (× z potwierdzeniem).
+    - Kod w nowym pliku `js/bookmarks.js`, ładowanym tylko w `index.html`.
   - [ ] 2e: Zakładki — **decyzja (2026-11-09): A, osobiste.** Każdy przypina swoje linki (np. instrukcje na SharePoincie,
     pliki Word/Excel), widoczne tylko dla niego. Zapis w `localStorage` (bez logowania to jedyny sposób na „tylko moje”).
     - Ograniczenia: zakładki są przypisane do przeglądarki na danym komputerze; wyczyszczenie danych przeglądarki je usuwa.
