@@ -77,7 +77,33 @@
 
     </div>
 
+    <dialog class="modal" id="bookmark-dialog" aria-labelledby="bookmark-dialog-title">
+        <form class="modal-form" id="bookmark-form">
+            <h2 class="modal-title" id="bookmark-dialog-title">Nowa zakładka</h2>
+
+            <div class="input-group">
+                <label for="bookmark-name">Nazwa</label>
+                <input type="text" id="bookmark-name" required maxlength="40" placeholder="np. Instrukcja VPN">
+            </div>
+
+            <div class="input-group">
+                <label for="bookmark-url">Adres</label>
+                <input type="text" id="bookmark-url" required inputmode="url" autocomplete="url"
+                    placeholder="np. firma.sharepoint.com/...">
+
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="modal-btn" id="bookmark-cancel-btn">Anuluj</button>
+                <button type="submit" class="modal-btn is-primary">Dodaj</button>
+            </div>
+        </form>
+    </dialog>
+
+
     <script src="./js/script.js"></script>
+    <script src="./js/bookmarks.js"></script>
+
 </body>
 
 </html>
