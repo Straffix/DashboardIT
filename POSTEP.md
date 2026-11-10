@@ -129,10 +129,22 @@ Decyzje (2026-11-09):
     - [ ] resztka: reguła `.dashboard-orb, .dashboard-grid-glow { display: none }` w `dashboard.scss:362-365`.
   - [x] 2b: nagłówek „Sekcja wsparcia użytkowników / Dashboard IT” (wielkie litery robi CSS), `<title>Dashboard IT</title>`,
     usunięty podtytuł.
-  - [ ] 2a+: karta menu na pełną szerokość (usunąć `max-width` w `dashboard.scss:27` i `_responsive-large.scss:16,45`).
-  - [ ] 2a+: lokalne czcionki: `sass/_fonts.scss` z `@font-face` (Audiowide 400, Poppins 400/600/700) + `@use 'fonts'`
-    w `style.scss` (audyt B8).
-  - [ ] 2c: kafelki jak na zrzucie. 2d: stopka.
+  - [x] 2a+: karta menu na pełną szerokość (usunięty `max-width`).
+  - [x] 2a+: lokalne czcionki: `sass/_fonts.scss` z `@font-face` (Audiowide 400, Poppins 400/600/700) + `@use 'fonts'`
+    w `style.scss` (audyt B8). Commit `09f0e20`.
+  - [x] 2c: kafelki jak na zrzucie (niskie, poziome: ikona po lewej, tytuł + opis, biała karta, kolorowa kreska u góry).
+    - Lekcja: usuwając regułę CSS, usuwa się **cały blok** (selektor + `{ … }`). Usunięcie samej nazwy klasy zostawia
+      np. `body.dashboard-page { width: 58px }`, które działa na całą stronę.
+    - [x] HTML w `index.html`: usunięte `card-meta`, nowe teksty („Urządzenia w domenie”, krótsze opisy).
+    - [x] Nowa sekcja `Dashboard Navigation Tiles` w `dashboard.scss` (3 kolumny, `display: flex` w kafelku).
+    - [x] Usunięte stare nadpisania kafelków w `dashboard.scss` (sekcja `Dashboard Responsive`; `.menu-grid` zostaje).
+    - [x] Dokończone usuwanie starych nadpisań kafelków (2026-11-10):
+      - `sass/_responsive-large.scss`: `body.dashboard-page .menu-grid { ... }` (2 razy: z 3 i z 4 kolumnami, ok. linie 24 i 47)
+        oraz `body.dashboard-page .dashboard-card { min-height: 320px; }` (ok. linia 29);
+      - `sass/_responsive-small.scss` (ok. linie 98-125): `body.dashboard-page .dashboard-card`, `.card-icon-shell`,
+        `.card-copy`, `.card-copy span`, `.card-copy small`, `.card-meta strong`.
+      - Sprawdzenie: kompilacja; `card-meta` w `sass/` i `index.html` → 0 wyników; zwęzić okno (3 → 2 → 1 kolumna). Commit.
+  - [ ] 2d: stopka.
   - [ ] 2e: Zakładki — **decyzja (2026-11-09): A, osobiste.** Każdy przypina swoje linki (np. instrukcje na SharePoincie,
     pliki Word/Excel), widoczne tylko dla niego. Zapis w `localStorage` (bez logowania to jedyny sposób na „tylko moje”).
     - Ograniczenia: zakładki są przypisane do przeglądarki na danym komputerze; wyczyszczenie danych przeglądarki je usuwa.

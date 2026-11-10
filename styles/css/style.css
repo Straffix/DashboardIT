@@ -110,32 +110,6 @@
   body.dashboard-page .dashboard-kicker {
     font-size: 0.95rem;
   }
-  body.dashboard-page {
-    font-size: 1.28rem;
-  }
-  body.dashboard-page .dashboard-card {
-    min-height: 230px;
-    padding: 20px 18px;
-  }
-  body.dashboard-page .card-icon-shell {
-    width: 58px;
-    height: 58px;
-    font-size: 2rem;
-  }
-  body.dashboard-page .card-copy {
-    margin-top: 28px;
-  }
-  body.dashboard-page .card-copy span {
-    font-size: 1.7rem;
-  }
-  body.dashboard-page .card-copy small {
-    font-size: 1.2rem;
-    line-height: 1.5;
-  }
-  body.dashboard-page .card-meta strong {
-    padding: 8px 12px;
-    font-size: 1rem;
-  }
 }
 @media (max-width: 480px) {
   html {
@@ -176,13 +150,6 @@
     max-width: 860px;
     margin-bottom: 56px;
   }
-  body.dashboard-page .menu-grid {
-    grid-template-columns: repeat(3, minmax(280px, 1fr));
-    gap: 28px;
-  }
-  body.dashboard-page .dashboard-card {
-    min-height: 320px;
-  }
 }
 @media (min-width: 2200px) {
   html {
@@ -194,14 +161,8 @@
   body.dashboard-page .dashboard-container {
     min-height: calc(100vh - 120px);
   }
-  body.dashboard-page .menu-grid {
-    grid-template-columns: repeat(4, minmax(260px, 1fr));
-  }
   body.dashboard-page .dashboard-header h1 {
     font-size: clamp(4rem, 4.2vw, 6rem);
-  }
-  body.dashboard-page {
-    font-size: 1.8rem;
   }
 }
 /* === Ikony (lokalne SVG z Font Awesome Free) === */
