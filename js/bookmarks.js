@@ -31,6 +31,48 @@ bookmarkAddBtn.addEventListener('click', () => {
 bookmarkCancelBtn.addEventListener('click', () => {
 	bookmarkDialog.close()
 })
+
+const bookmarkNameInput = document.getElementById('bookmark-name')
+const bookmarkUrlInput = document.getElementById('bookmark-url')
+
+bookmarkUrlInput.addEventListener('input', () => {
+	bookmarkUrlInput.setCustomValidity('')
+})
+
+bookmarkForm.addEventListener('submit', event => {
+	event.preventDefault()
+
+	const name = bookmarkNameInput.value.trim()
+	let url = bookmarkUrlInput.value.trim()
+
+	if (!name) {
+		bookmarkNameInput.value = ''
+		bookmarkNameInput.reportValidity()
+		return
+	}
+
+	if (!/^https?:\/\//i.test(url)) {
+		url = 'https://' + url
+	}
+
+	if (!isSafeUrl(url)) {
+		bookmarkUrlInput.setCustomValidity('Podaj poprawny adres, np. firma.sharepoint.com/dokument')
+		bookmarkUrlInput.reportValidity()
+		return
+	}
+
+	bookmarks.push({
+		id: String(Date.now()),
+		name,
+		url,
+		createdAt: AppUtils.formatDate(new Date()),
+	})
+
+	saveBookmarks()
+	renderBookmarks()
+	bookmarkDialog.close()
+})
+
 /* === Bookmarks Dialog: End === */
 
 /* === Bookmarks Rendering: Start === */

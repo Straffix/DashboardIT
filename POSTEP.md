@@ -155,7 +155,7 @@ Decyzje (2026-11-09):
     - [x] 2e-4: wyświetlanie zakładek (`isSafeUrl` + `createElement` + `textContent`, link w nowej karcie,
       wywołania w sekcji `Bookmarks Init` na końcu pliku). Testy w Konsoli OK: nazwa `<img …>` wyświetla się jako tekst,
       adres `javascript:` nie jest pokazywany. Styl `.bookmark-link` w sekcji `Dashboard Bookmarks`. Commit `b72019e`.
-    - [ ] **▶ START 2026-11-12 — 2e-5: dodawanie zakładki z formularza** (kod podany na czacie 2026-11-10):
+    - [x] 2e-5 (2026-11-12): dodawanie zakładki z formularza — testy OK (www…, spacje, `javascript:`, odświeżenie):
       w `js/bookmarks.js`, sekcja `Bookmarks Dialog`: `bookmarkNameInput`, `bookmarkUrlInput`, czyszczenie
       `setCustomValidity('')` na `input`, obsługa `submit` z `event.preventDefault()`, `.trim()`, pusta nazwa →
       `reportValidity()`, dopisanie `https://` gdy brak protokołu (`/^https?:\/\//i`), `isSafeUrl` → własny komunikat,
@@ -189,8 +189,8 @@ Decyzje (2026-11-09):
   commitach `cleanup` (3 już na GitHubie) oraz we **wszystkich innych branchach** (`main`, `react`, …, razem z prywatnym
   gmailem i nazwą MacBooka). Repo jest publiczne.
 - Na GitHubie włączone „Keep my email addresses private” → adres zastępczy `111990326+Straffix@users.noreply.github.com`.
-- [ ] Minimum (polecane): `git config --global user.name "Arkadiusz Lisiecki"` i
-  `git config --global user.email "111990326+Straffix@users.noreply.github.com"` — jeszcze NIE ustawione.
+- [x] Minimum: `git config --global user.email "111990326+Straffix@users.noreply.github.com"` — ustawione 2026-11-12
+  (pierwszy commit z nowym adresem: `f738428`).
 - [ ] Opcjonalnie: przepisać 8 niewysłanych commitów (`git branch kopia-przed-zmiana-emaila`, potem
   `git rebase origin/cleanup --exec "git commit --amend --no-edit --author='Arkadiusz Lisiecki <111990326+Straffix@users.noreply.github.com>'"`).
   Mały zysk — adres i tak jest w innych branchach; całkowite usunięcie wymagałoby `push --force` na wszystkie branche.
@@ -257,7 +257,9 @@ Decyzja (2026-11-09): moduł zastępuje inne, osobne narzędzie. Przy okazji zni
   (+ `renderAccessoryIcons` w `script.js:99,104`).
   Komórka z CSV typu `<img src=x onerror=...>` wykonałaby kod. Poprawka: funkcja `escapeHTML` albo `textContent`.
 - [ ] `js/script.js:408`: zamienić `querySelectorAll('#current-year')` na `getElementById('current-year')` (id jest unikalne).
-- [ ] Omówić `js/script.js` (kod wspólny), a potem pozostałe pliki JS. Przy okazji: sprawdzić, czy nie ma starego `var` (zamienić na `let`/`const`).
+- [ ] **Na koniec projektu (decyzja 2026-11-12):** omówić linijka po linijce wszystkie pliki JS (`script.js`, `bookmarks.js`,
+  `monitor.js`, `zatrudnienia.js`) — w trakcie prac JS podawany bez szczegółowych tłumaczeń. Przy okazji: sprawdzić,
+  czy nie ma starego `var` (zamienić na `let`/`const`).
 - [ ] Odpowiedzieć na pytania kontrolne z `index.html`:
   - Po co jest `<meta name="viewport">`?
   - Czemu `<script>` jest na końcu `<body>`?
