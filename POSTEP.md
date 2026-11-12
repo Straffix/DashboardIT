@@ -172,12 +172,26 @@ Decyzje (2026-11-09):
     - Bezpieczeństwo (obowiązkowo): dopuszczać tylko adresy `https://` / `http://` (blokada `javascript:...` w `href`),
       nazwę wstawiać przez `textContent`, nie `innerHTML`.
     - Linki są w przeglądarce użytkownika, nie w kodzie → nie trafiają do publicznego repo.
-- [ ] **▶ NASTĘPNY — Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),
+- [ ] **▶ W TOKU — Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),
   formularz w okienku pod ➕ (`<dialog>`), druga linia pod nazwą, akcje ↻ / ✎ edycja / 🗑.
+  - [ ] 3a: układ: `<section class="panel">` na całą szerokość zamiast `main-content` + `aside`; pasek narzędzi
+    (Eksport CSV, Import CSV, ➕) — style `.panel`, `.panel-toolbar`, `.toolbar-btn` we wspólnym `style.scss`;
+    formularz w `<dialog id="device-dialog">` (te same `id` pól), `for` w etykietach; JS: otwieranie ➕, „Anuluj”,
+    `deviceDialog.close()` po dodaniu i po odświeżeniu duplikatu.
+  - [ ] 3b: karty statystyk jak we wzorze.
+  - [ ] 3c: wiersz tabeli: „Aktualizacja: RRRR-MM-DD” pod nazwą, SN jako plakietka, akcje ikonami (↻ / ✎ / 🗑).
+  - [ ] 3d: dane z `id`, `createdAt`, `updatedAt` (zamiast `data-index`) + przeniesienie starych wpisów.
+  - [ ] 3e: edycja urządzenia (✎) w tym samym okienku.
 - [ ] **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN).
 - [ ] **Etap 5 — Nowe zatrudnienia, dane i tabela:** nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,
   nowe akcesoria), kolorowe statusy, formularz w `<dialog>` pod ➕, eksport/import CSV nad tabelą z nowymi kolumnami,
   przeniesienie starych wpisów do nowego formatu.
+- [ ] **Etap 5b — płynne przejścia między stronami (View Transitions):** kafelek w menu „rozszerza się” w nagłówek
+  modułu, bez białego mignięcia. Bez SPA — zostają osobne pliki HTML. Technika: `@view-transition { navigation: auto; }`
+  + wspólne `view-transition-name` dla kafelka i nagłówka modułu. Działa przez `http(s)` (Live Server, serwer kolegi),
+  nie przy `file:///`. Robić po Etapie 5, gdy moduły mają docelowy wygląd.
+  - Rozważone i odrzucone (2026-11-12): przerobienie na SPA (routing `#` / History API) — zbyt złożone do obrony,
+    to ta sama złożoność, co w wersji z brancha `react`.
 - [ ] **Etap 6 — Zatrudnienia: wyszukiwarka** we wszystkich miesiącach (pomysł z notatek).
 - [ ] **Etap 7 — wybór roku i miesiąca z liczbą wpisów** (prostsza wersja `createMonthPicker`, bez martwego kodu — audyt C4).
 - [ ] **Etap 8 — Rezerwacja obiadów** (na końcu; zapis danych w osobnym module, gotowym do podmiany na serwer).
