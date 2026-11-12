@@ -78,101 +78,97 @@
             </div>
         </div>
 
-        <div class="main-content">
-            <section>
-                <h2>Lista urządzeń</h2>
-                <table class="monitor-table">
-                    <thead>
-                        <tr>
-                            <th>NAZWA</th>
-                            <th>RU</th>
-                            <th>SN</th>
-                            <th>W DOMENIE DO</th>
-                            <th class="table-head-cell-center">AKCJA</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-            </section>
+        <section class="panel">
+            <div class="panel-toolbar">
+                <h2 class="panel-title">Lista urządzeń</h2>
 
-            <aside>
-                <h2>Dodaj urządzenie</h2>
-
-                <form id="device-form">
-
-                    <div class="input-group">
-                        <label>Nazwa komputera</label>
-                        <input type="text" id="name" required placeholder="np. REKRUTACJA746">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Numer RU</label>
-                        <input type="text" id="ru" required placeholder="Tylko cyfry">
-                    </div>
-
-                    <div class="input-group">
-                        <label>SN</label>
-                        <input type="text" id="sn" required placeholder="np. PF928402">
-                    </div>
-
-                    <div class="input-group">
-
-                        <label>Typ dodawanego urządzenia</label>
-
-                        <div class="radio-group">
-
-                            <label class="radio-item">
-                                <input type="radio" name="device-type" id="new-device" value="new" checked>
-                                <span>Nowe</span>
-                            </label>
-
-                            <label class="radio-item">
-                                <input type="radio" name="device-type" id="old-device" value="old">
-                                <span>Stare</span>
-                            </label>
-                        </div>
-
-                    </div>
-
-                    <div class="input-group" id="date-group">
-                        <label>W domenie do</label>
-                        <input type="date" id="date">
-                    </div>
-
-                    <button type="submit" class="btn-submit">
-                        Dodaj urządzenie
+                <div class="toolbar-actions">
+                    <button type="button" class="toolbar-btn" id="export-excel-btn">
+                        <i class="fa-solid fa-file-csv"></i> Eksport CSV
                     </button>
 
-                </form>
-                <section class="backup_section">
+                    <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".csv">
 
-                    <h3>Kopia zapasowa</h3>
+                    <button type="button" class="toolbar-btn" id="import-excel-trigger">
+                        Import CSV
+                    </button>
 
-                    <div class="backup-container">
+                    <button type="button" class="toolbar-btn is-primary" id="add-device-btn" title="Dodaj urządzenie"
+                        aria-label="Dodaj urządzenie">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
 
-                        <div class="backup-row">
+            <table class="monitor-table">
+                <thead>
+                    <tr>
+                        <th>NAZWA</th>
+                        <th>RU</th>
+                        <th>SN</th>
+                        <th>W DOMENIE DO</th>
+                        <th class="table-head-cell-center">AKCJA</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
 
-                            <button id="export-excel-btn" class="btn-backup-item btn-excel-green" type="button">
-                                <i class="fa-solid fa-file-csv"></i> Eksport CSV
-                            </button>
+            <p class="backup-hint">
+                W Excelu zapisz plik jako <b>CSV UTF-8</b>. Numery zaczynające się od 0 wpisuj z apostrofem, np.
+                <b>'00456</b>.
+            </p>
+        </section>
 
-                            <input type="file" id="importExcelFile" class="visually-hidden-file-input" accept=".csv">
+        <dialog class="modal" id="device-dialog" aria-labelledby="device-dialog-title">
+            <form class="modal-form" id="device-form">
+                <h2 class="modal-title" id="device-dialog-title">Dodaj urządzenie</h2>
 
-                            <button id="import-excel-trigger" class="btn-backup-item" type="button">
-                                Import CSV
-                            </button>
+                <div class="input-group">
+                    <label for="name">Nazwa komputera</label>
+                    <input type="text" id="name" required placeholder="np. REKRUTACJA746">
+                </div>
 
-                        </div>
+                <div class="input-group">
+                    <label for="ru">Numer RU</label>
+                    <input type="text" id="ru" required placeholder="Tylko cyfry">
+                </div>
+
+                <div class="input-group">
+                    <label for="sn">SN</label>
+                    <input type="text" id="sn" required placeholder="np. PF928402">
+                </div>
+
+                <div class="input-group">
+                    <label>Typ dodawanego urządzenia</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="device-type" id="new-device" value="new" checked>
+                            <span>Nowe</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="device-type" id="old-device" value="old">
+                            <span>Stare</span>
+                        </label>
                     </div>
-                </section>
+                </div>
 
-            </aside>
-        </div>
+                <div class="input-group" id="date-group">
+                    <label for="date">W domenie do</label>
+                    <input type="date" id="date">
+                </div>
 
-<footer class="main-footer">
-    <p>&copy; <span id="current-year"></span> IT Support Dashboard by <strong>Arkadiusz Lisiecki</strong></p>
-</footer>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn" id="device-cancel-btn">Anuluj</button>
+                    <button type="submit" class="modal-btn is-primary">Dodaj urządzenie</button>
+                </div>
+            </form>
+        </dialog>
+
+
+        <footer class="main-footer">
+            <p>&copy; <span id="current-year"></span> IT Support Dashboard by <strong>Arkadiusz Lisiecki</strong></p>
+        </footer>
 
     </div>
 

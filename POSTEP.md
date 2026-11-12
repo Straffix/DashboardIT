@@ -174,7 +174,7 @@ Decyzje (2026-11-09):
     - Linki są w przeglądarce użytkownika, nie w kodzie → nie trafiają do publicznego repo.
 - [ ] **▶ W TOKU — Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),
   formularz w okienku pod ➕ (`<dialog>`), druga linia pod nazwą, akcje ↻ / ✎ edycja / 🗑.
-  - [ ] 3a: układ: `<section class="panel">` na całą szerokość zamiast `main-content` + `aside`; pasek narzędzi
+  - [x] 3a (2026-11-12, testy OK): układ: `<section class="panel">` na całą szerokość zamiast `main-content` + `aside`; pasek narzędzi
     (Eksport CSV, Import CSV, ➕) — style `.panel`, `.panel-toolbar`, `.toolbar-btn` we wspólnym `style.scss`;
     formularz w `<dialog id="device-dialog">` (te same `id` pól), `for` w etykietach; JS: otwieranie ➕, „Anuluj”,
     `deviceDialog.close()` po dodaniu i po odświeżeniu duplikatu.

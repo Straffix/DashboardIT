@@ -12,6 +12,10 @@ const ruInput = document.getElementById('ru')
 const exportExcelBtn = document.getElementById('export-excel-btn')
 const importExcelInput = document.getElementById('importExcelFile')
 const importExcelTrigger = document.getElementById('import-excel-trigger')
+const deviceDialog = document.getElementById('device-dialog')
+const addDeviceBtn = document.getElementById('add-device-btn')
+const deviceCancelBtn = document.getElementById('device-cancel-btn')
+
 /* === Monitor State And References: End === */
 
 /* === Monitor Storage: Start === */
@@ -211,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					extendDomain(duplicateIndex)
 					deviceForm.reset()
 					toggleDateInput()
+					deviceDialog.close()
 				}
 				return
 			}
@@ -219,8 +224,19 @@ document.addEventListener('DOMContentLoaded', () => {
 			deviceForm.reset()
 			toggleDateInput()
 			saveData()
+			deviceDialog.close()
 		})
 	}
+
+	addDeviceBtn.addEventListener('click', () => {
+		deviceForm.reset()
+		toggleDateInput()
+		deviceDialog.showModal()
+	})
+
+	deviceCancelBtn.addEventListener('click', () => {
+		deviceDialog.close()
+	})
 
 	if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)
 	if (importExcelTrigger && importExcelInput) {
