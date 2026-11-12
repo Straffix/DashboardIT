@@ -1,7 +1,7 @@
 # Postęp porządkowania DashboardIT
 
 > Plik prowadzony wspólnie z Claude. Claude tylko podpowiada i aktualizuje ten plik, a kod w projekcie piszę ja.
-> Ostatnia aktualizacja: 2026-11-06
+> Ostatnia aktualizacja: 2026-11-10
 
 ## Cel
 
@@ -152,9 +152,17 @@ Decyzje (2026-11-09):
     - [x] 2e-2: okienko `<dialog>` (styl `.modal` we wspólnym `style.scss` — do użycia też w modułach), pole adresu
       jako `type="text"` + `inputmode="url"` (bo `type="url"` odrzuca `www.…` bez `https://`). Commit `71d8498`.
     - [x] 2e-3: zapis/odczyt w `localStorage` (klucz `BOOKMARKS: 'dashboard_zakladki'`, `try/catch` + `Array.isArray`).
-      Wyjaśnienia w pliku jako blok `/* Jak to działa */` pod kodem.
-    - [ ] 2e-4: wyświetlanie zakładek (`createElement` + `textContent`, link w nowej karcie).
-    - [ ] 2e-5: dodawanie z walidacją adresu (tylko `http://` / `https://`).
+    - [x] 2e-4: wyświetlanie zakładek (`isSafeUrl` + `createElement` + `textContent`, link w nowej karcie,
+      wywołania w sekcji `Bookmarks Init` na końcu pliku). Testy w Konsoli OK: nazwa `<img …>` wyświetla się jako tekst,
+      adres `javascript:` nie jest pokazywany. Styl `.bookmark-link` w sekcji `Dashboard Bookmarks`. Commit `b72019e`.
+    - [ ] **▶ START 2026-11-12 — 2e-5: dodawanie zakładki z formularza** (kod podany na czacie 2026-11-10):
+      w `js/bookmarks.js`, sekcja `Bookmarks Dialog`: `bookmarkNameInput`, `bookmarkUrlInput`, czyszczenie
+      `setCustomValidity('')` na `input`, obsługa `submit` z `event.preventDefault()`, `.trim()`, pusta nazwa →
+      `reportValidity()`, dopisanie `https://` gdy brak protokołu (`/^https?:\/\//i`), `isSafeUrl` → własny komunikat,
+      `bookmarks.push({ id: String(Date.now()), name, url, createdAt: AppUtils.formatDate(new Date()) })`,
+      `saveBookmarks()`, `renderBookmarks()`, `close()`.
+      Test: `www.google.com` działa; sama spacja w nazwie → dymek; `javascript:alert(1)` → dymek; po odświeżeniu zostaje.
+      Przed startem: posprzątać dane testowe (`localStorage.removeItem('dashboard_zakladki')`).
     - [ ] 2e-6: usuwanie zakładki (× z potwierdzeniem).
     - Kod w nowym pliku `js/bookmarks.js`, ładowanym tylko w `index.html`.
   - [ ] 2e: Zakładki — **decyzja (2026-11-09): A, osobiste.** Każdy przypina swoje linki (np. instrukcje na SharePoincie,
@@ -174,6 +182,19 @@ Decyzje (2026-11-09):
 - [ ] **Etap 8 — Rezerwacja obiadów** (na końcu; zapis danych w osobnym module, gotowym do podmiany na serwer).
 - [ ] **Etap 9 — poprawki z audytu** (bezpieczeństwo A1/A4, B1–B4, B6, B8, porządki C, dostępność).
 - Audyt (sekcja „Bezpieczeństwo” i lista priorytetów) — **na samym końcu**.
+
+## 🔐 Git: tożsamość autora (do decyzji, stan na 2026-11-10)
+
+- Git sam ustawił autora `Arkadiusz Lisiecki <Arkadiusz.Lisiecki@rossmann.com.pl>` — firmowy e-mail jest we wszystkich
+  commitach `cleanup` (3 już na GitHubie) oraz we **wszystkich innych branchach** (`main`, `react`, …, razem z prywatnym
+  gmailem i nazwą MacBooka). Repo jest publiczne.
+- Na GitHubie włączone „Keep my email addresses private” → adres zastępczy `111990326+Straffix@users.noreply.github.com`.
+- [ ] Minimum (polecane): `git config --global user.name "Arkadiusz Lisiecki"` i
+  `git config --global user.email "111990326+Straffix@users.noreply.github.com"` — jeszcze NIE ustawione.
+- [ ] Opcjonalnie: przepisać 8 niewysłanych commitów (`git branch kopia-przed-zmiana-emaila`, potem
+  `git rebase origin/cleanup --exec "git commit --amend --no-edit --author='Arkadiusz Lisiecki <111990326+Straffix@users.noreply.github.com>'"`).
+  Mały zysk — adres i tak jest w innych branchach; całkowite usunięcie wymagałoby `push --force` na wszystkie branche.
+- Stan: 8 commitów lokalnie, niewysłanych (`ahead 8`), drzewo robocze czyste.
 
 ## 🗑️ Usunięcie modułu „Wymiana sprzętu” (zrobione)
 
