@@ -288,6 +288,11 @@
           mask-image: url("../../img/icons/user-plus-solid-full.svg");
 }
 
+.fa-xmark::before {
+  -webkit-mask-image: url("../../img/icons/xmark-solid-full.svg");
+          mask-image: url("../../img/icons/xmark-solid-full.svg");
+}
+
 /* === Lokalne czcionki === */
 @font-face {
   font-family: "Audiowide";

@@ -122,7 +122,7 @@ Decyzje (2026-11-09):
   - [x] 1f: style `.header`, `.module-nav`, `.module-nav-link`, `.module-nav-divider`; tytuł bez Audiowide, w kolorze `--primary`.
   - [x] 1g: kolor przewodni czerwony (`$primary: #c8102e`, `$primary-strong: #8f0b22`, `$primary-soft: #fdecef`);
     wszystkie `var(--x)` → `$x` (regex `var\(--([a-z-]+)\)` → `$$$1`), ręczny fiolet → `rgba($primary, …)`.
-- [ ] **Etap 2 — menu główne:** nowy nagłówek („SEKCJA WSPARCIA UŻYTKOWNIKÓW / DASHBOARD IT”), kafelki modułów,
+- [x] **Etap 2 — menu główne** (zakończony 2026-11-12): nowy nagłówek („SEKCJA WSPARCIA UŻYTKOWNIKÓW / DASHBOARD IT”), kafelki modułów,
   sekcja **Zakładki** (dodawanie nazwa + adres, zapis w `localStorage`).
   - [x] 2a: jasne tło (`$page-gradient` w `_colors.scss`, jedno dla wszystkich stron), usunięte ukośne paski `::before`
     i ozdobne „kule” (`dashboard-orb`, `dashboard-grid-glow`).
@@ -163,7 +163,8 @@ Decyzje (2026-11-09):
       `saveBookmarks()`, `renderBookmarks()`, `close()`.
       Test: `www.google.com` działa; sama spacja w nazwie → dymek; `javascript:alert(1)` → dymek; po odświeżeniu zostaje.
       Przed startem: posprzątać dane testowe (`localStorage.removeItem('dashboard_zakladki')`).
-    - [ ] 2e-6: usuwanie zakładki (× z potwierdzeniem).
+    - [x] 2e-6 (2026-11-12): usuwanie zakładki (× w rogu, widoczne po najechaniu / Tab / zawsze na ekranach dotykowych,
+      `confirm`, `filter` po `id`). Przywrócona reguła `fa-xmark` w `_icons.scss`. Testy OK.
     - Kod w nowym pliku `js/bookmarks.js`, ładowanym tylko w `index.html`.
   - [ ] 2e: Zakładki — **decyzja (2026-11-09): A, osobiste.** Każdy przypina swoje linki (np. instrukcje na SharePoincie,
     pliki Word/Excel), widoczne tylko dla niego. Zapis w `localStorage` (bez logowania to jedyny sposób na „tylko moje”).
@@ -171,7 +172,7 @@ Decyzje (2026-11-09):
     - Bezpieczeństwo (obowiązkowo): dopuszczać tylko adresy `https://` / `http://` (blokada `javascript:...` w `href`),
       nazwę wstawiać przez `textContent`, nie `innerHTML`.
     - Linki są w przeglądarce użytkownika, nie w kodzie → nie trafiają do publicznego repo.
-- [ ] **Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),
+- [ ] **▶ NASTĘPNY — Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),
   formularz w okienku pod ➕ (`<dialog>`), druga linia pod nazwą, akcje ↻ / ✎ edycja / 🗑.
 - [ ] **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN).
 - [ ] **Etap 5 — Nowe zatrudnienia, dane i tabela:** nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,

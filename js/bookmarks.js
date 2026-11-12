@@ -108,12 +108,36 @@ function renderBookmarks() {
 		label.textContent = bookmark.name
 
 		link.append(icon, label)
-		item.append(link)
+		const removeBtn = document.createElement('button')
+		const removeIcon = document.createElement('i')
+
+		removeBtn.type = 'button'
+		removeBtn.className = 'bookmark-remove-btn'
+		removeBtn.dataset.id = bookmark.id
+		removeBtn.title = 'Usuń zakładkę'
+		removeBtn.setAttribute('aria-label', 'Usuń zakładkę: ' + bookmark.name)
+		removeIcon.className = 'fa-solid fa-xmark'
+
+		removeBtn.append(removeIcon)
+		item.append(link, removeBtn)
+
 		bookmarksList.append(item)
 	}
 }
 
 /* === Bookmarks Rendering: End === */
+
+/* === Bookmarks Removal: Start === */
+bookmarksList.addEventListener('click', event => {
+	const removeBtn = event.target.closest('.bookmark-remove-btn')
+	if (!removeBtn) return
+	if (!confirm('Usunąć tę zakładkę?')) return
+
+	bookmarks = bookmarks.filter(bookmark => bookmark.id !== removeBtn.dataset.id)
+	saveBookmarks()
+	renderBookmarks()
+})
+/* === Bookmarks Removal: End === */
 
 /* === Bookmarks Init: Start === */
 loadBookmarks()
