@@ -178,9 +178,12 @@ Decyzje (2026-11-09):
     (Eksport CSV, Import CSV, ➕) — style `.panel`, `.panel-toolbar`, `.toolbar-btn` we wspólnym `style.scss`;
     formularz w `<dialog id="device-dialog">` (te same `id` pól), `for` w etykietach; JS: otwieranie ➕, „Anuluj”,
     `deviceDialog.close()` po dodaniu i po odświeżeniu duplikatu.
-  - [ ] 3b: karty statystyk jak we wzorze.
-  - [ ] 3c: wiersz tabeli: „Aktualizacja: RRRR-MM-DD” pod nazwą, SN jako plakietka, akcje ikonami (↻ / ✎ / 🗑).
-  - [ ] 3d: dane z `id`, `createdAt`, `updatedAt` (zamiast `data-index`) + przeniesienie starych wpisów.
+  - [x] 3b (2026-11-13): karty statystyk jak we wzorze (biała karta, etykieta, duża liczba w `<p class="stat-value">`
+    zamiast `<h2>`, kolorowy pasek `::after`, siatka 4 → 2 → 1 kolumna).
+  - [ ] 3d (robione PRZED 3c): dane z `id`, `createdAt`, `updatedAt` (`AppUtils.createId`, `addMeta` uzupełnia stare wpisy),
+    akcje po `data-id` zamiast `data-index`, `try/catch` w `loadData` (audyt B4).
+  - [ ] 3c: wiersz tabeli: „Aktualizacja: RRRR-MM-DD” pod nazwą, SN jako plakietka, akcje ikonami (↻ / ✎ / 🗑),
+    rysowanie przez `createElement` + `textContent` zamiast `innerHTML` (audyt A1).
   - [ ] 3e: edycja urządzenia (✎) w tym samym okienku.
 - [ ] **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN).
 - [ ] **Etap 5 — Nowe zatrudnienia, dane i tabela:** nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,
