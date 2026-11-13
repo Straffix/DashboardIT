@@ -19,9 +19,25 @@ const deviceCancelBtn = document.getElementById('device-cancel-btn')
 /* === Monitor State And References: End === */
 
 /* === Monitor Storage: Start === */
+function addMeta(device) {
+	const today = AppUtils.formatDate(new Date())
+	return {
+		...device,
+		id: device.id || AppUtils.createId(),
+		createdAt: device.createdAt || today,
+		updatedAt: device.updatedAt || today,
+	}
+}
+
 function loadData() {
-	const saved = localStorage.getItem(STORAGE_KEY)
-	devices = saved ? JSON.parse(saved) : []
+	try {
+		const saved = localStorage.getItem(STORAGE_KEY)
+		const parsed = saved ? JSON.parse(saved) : []
+		devices = Array.isArray(parsed) ? parsed.map(addMeta) : []
+	} catch (error) {
+		devices = []
+	}
+	localStorage.setItem(STORAGE_KEY, JSON.stringify(devices))
 	renderTable()
 }
 
@@ -52,12 +68,14 @@ function importExcel(event) {
 	reader.onload = loadEvent => {
 		const rows = AppUtils.parseCSV(loadEvent.target.result)
 
-		const imported = rows.map(row => ({
-			name: (row['Nazwa użytkownika'] || '').toString().toUpperCase(),
-			ru: row['Dział / RU'] || '',
-			sn: AppUtils.normalizeSN(row['Numer Seryjny']),
-			date: AppUtils.normalizeDate(row['Data ważności domeny']),
-		}))
+		const imported = rows.map(row =>
+			addMeta({
+				name: (row['Nazwa użytkownika'] || '').toString().toUpperCase(),
+				ru: row['Dział / RU'] || '',
+				sn: AppUtils.normalizeSN(row['Numer Seryjny']),
+				date: AppUtils.normalizeDate(row['Data ważności domeny']),
+			}),
+		)
 
 		if (imported.length === 0) {
 			alert('Plik jest pusty albo ma zły format.')
@@ -76,25 +94,29 @@ function importExcel(event) {
 /* === Monitor Device Actions: Start === */
 function findDuplicate(ru, sn) {
 	const normalizedSn = AppUtils.normalizeSN(sn)
-	return devices.findIndex(device => device.ru === ru && AppUtils.normalizeSN(device.sn) === normalizedSn)
+	return devices.find(device => device.ru === ru && AppUtils.normalizeSN(device.sn) === normalizedSn)
 }
 
-function extendDomain(index) {
-	const today = new Date()
-	today.setHours(0, 0, 0, 0)
+function extendDomain(id) {
+	const device = devices.find(item => item.id === id)
+	if (!device) return
 
-	const currentExpiry = new Date(devices[index].date)
-	const baseDate = Number.isNaN(currentExpiry.getTime()) || currentExpiry < today ? today : currentExpiry
-	baseDate.setDate(baseDate.getDate() + 60)
+	const newDate = new Date()
+	newDate.setDate(newDate.getDate() + 60)
+	const newDateText = AppUtils.formatDate(newDate)
 
-	devices[index].date = AppUtils.formatDate(baseDate)
+	if (device.date === newDateText) return alert(`${device.name} jest już odświeżony do ${newDateText}.`)
+	if (!confirm(`Czy laptop ${device.name} został odbity w domenie?\n\nNowa data ważności: ${newDateText}`)) return
+
+	device.date = newDateText
+	device.updatedAt = AppUtils.formatDate(new Date())
 	saveData()
 }
 
-function removeItem(index) {
+function removeItem(id) {
 	if (!confirm('Usunąć urządzenie z listy?')) return
 
-	devices.splice(index, 1)
+	devices = devices.filter(device => device.id !== id)
 	saveData()
 }
 /* === Monitor Device Actions: End === */
@@ -108,7 +130,7 @@ function renderTable() {
 	const today = new Date()
 	today.setHours(0, 0, 0, 0)
 
-	devices.forEach((device, index) => {
+	devices.forEach(device => {
 		const expiryDate = new Date(device.date)
 		expiryDate.setHours(0, 0, 0, 0)
 		const diff = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24))
@@ -134,12 +156,12 @@ function renderTable() {
 			<td>${device.sn.toUpperCase()}</td>
 			<td><span class="status-pill ${statusClass}">${statusText}</span></td>
 			<td class="cell-center">
-				<button class="extend-btn" type="button" data-action="extend" data-index="${index}">
+				<button class="extend-btn" type="button" data-action="extend" data-id="${device.id}">
 					<i class="fa-solid fa-plus"></i> 60 dni
 				</button>
 			</td>
 			<td class="cell-right">
-				<button class="icon-button delete-btn" type="button" data-action="delete" data-index="${index}" aria-label="Usuń urządzenie">
+				<button class="icon-button delete-btn" type="button" data-action="delete" data-id="${device.id}" aria-label="Usuń urządzenie">
 					<i class="fa-solid fa-trash"></i>
 				</button>
 			</td>
@@ -185,9 +207,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			const actionButton = event.target.closest('[data-action]')
 			if (!actionButton) return
 
-			const index = Number(actionButton.dataset.index)
-			if (actionButton.dataset.action === 'extend') extendDomain(index)
-			if (actionButton.dataset.action === 'delete') removeItem(index)
+			const id = actionButton.dataset.id
+			if (actionButton.dataset.action === 'extend') extendDomain(id)
+			if (actionButton.dataset.action === 'delete') removeItem(id)
 		})
 	}
 
@@ -209,18 +231,19 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (!date) return alert('Wybierz datę dla starego urządzenia.')
 			}
 
-			const duplicateIndex = findDuplicate(ru, sn)
-			if (duplicateIndex !== -1) {
-				if (confirm('Urządzenie już istnieje. Odświeżyć o 60 dni od dziś?')) {
-					extendDomain(duplicateIndex)
-					deviceForm.reset()
-					toggleDateInput()
-					deviceDialog.close()
-				}
+			const duplicate = findDuplicate(ru, sn)
+			if (duplicate) {
+				alert(`To urządzenie jest już na liście (${duplicate.name}).`)
+				extendDomain(duplicate.id)
+				deviceForm.reset()
+				toggleDateInput()
+				deviceDialog.close()
 				return
 			}
 
-			devices.push({ name, ru, sn, date })
+			const today = AppUtils.formatDate(new Date())
+			devices.push({ id: AppUtils.createId(), name, ru, sn, date, createdAt: today, updatedAt: today })
+
 			deviceForm.reset()
 			toggleDateInput()
 			saveData()

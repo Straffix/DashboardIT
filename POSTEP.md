@@ -180,8 +180,11 @@ Decyzje (2026-11-09):
     `deviceDialog.close()` po dodaniu i po odświeżeniu duplikatu.
   - [x] 3b (2026-11-13): karty statystyk jak we wzorze (biała karta, etykieta, duża liczba w `<p class="stat-value">`
     zamiast `<h2>`, kolorowy pasek `::after`, siatka 4 → 2 → 1 kolumna).
-  - [ ] 3d (robione PRZED 3c): dane z `id`, `createdAt`, `updatedAt` (`AppUtils.createId`, `addMeta` uzupełnia stare wpisy),
+  - [x] 3d (2026-11-13, robione PRZED 3c): dane z `id`, `createdAt`, `updatedAt` (`AppUtils.createId`, `addMeta` uzupełnia stare wpisy),
     akcje po `data-id` zamiast `data-index`, `try/catch` w `loadData` (audyt B4).
+    Odświeżenie (+60 dni) zawsze liczone **od dziś** (nie od starej daty), z pytaniem „Czy laptop został odbity
+    w domenie?”. Jeśli urządzenie jest już odświeżone do tej samej daty, pojawia się komunikat i nic się nie zmienia,
+    więc drugie przypadkowe kliknięcie niczego nie psuje.
   - [ ] 3c: wiersz tabeli: „Aktualizacja: RRRR-MM-DD” pod nazwą, SN jako plakietka, akcje ikonami (↻ / ✎ / 🗑),
     rysowanie przez `createElement` + `textContent` zamiast `innerHTML` (audyt A1).
   - [ ] 3e: edycja urządzenia (✎) w tym samym okienku.

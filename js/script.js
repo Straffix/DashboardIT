@@ -49,6 +49,8 @@ const formatDate = date => {
 }
 
 const normalizeSN = sn => (sn ? sn.toString().trim().replace(/-/g, '').toUpperCase() : '')
+const createId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+
 /* === Shared Formatters: End === */
 
 /* === Shared Accessory Rendering: Start === */
@@ -552,5 +554,6 @@ window.AppUtils = {
 	parseCSV,
 	normalizeDate,
 	asExcelText,
+	createId,
 }
 /* === Shared Public API: End === */
