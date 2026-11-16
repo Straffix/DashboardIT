@@ -1,7 +1,7 @@
 # Postęp porządkowania DashboardIT
 
 > Plik prowadzony wspólnie z Claude. Claude tylko podpowiada i aktualizuje ten plik, a kod w projekcie piszę ja.
-> Ostatnia aktualizacja: 2026-11-10
+> Ostatnia aktualizacja: 2026-11-16
 
 ## Cel
 
@@ -185,8 +185,12 @@ Decyzje (2026-11-09):
     Odświeżenie (+60 dni) zawsze liczone **od dziś** (nie od starej daty), z pytaniem „Czy laptop został odbity
     w domenie?”. Jeśli urządzenie jest już odświeżone do tej samej daty, pojawia się komunikat i nic się nie zmienia,
     więc drugie przypadkowe kliknięcie niczego nie psuje.
-  - [ ] 3c: wiersz tabeli: „Aktualizacja: RRRR-MM-DD” pod nazwą, SN jako plakietka, akcje ikonami (↻ / ✎ / 🗑),
-    rysowanie przez `createElement` + `textContent` zamiast `innerHTML` (audyt A1).
+  - [x] 3c (2026-11-13): wiersz tabeli: „Aktualizacja: RRRR-MM-DD” pod nazwą, SN jako plakietka, akcje ikonami
+    (`fa-calendar-check` = odbity w domenie / `fa-pen-to-square` / `fa-trash`), jedna kolumna „AKCJE”,
+    rysowanie przez `createEl` + `textContent` zamiast `innerHTML` (audyt A1 dla Monitora), wiersz „Brak urządzeń…”.
+  - [x] 3c-porządki (2026-11-16): pusty wiersz przez `emptyRow` (zamiast `tableBody.lastChild`), wcięcia i puste linie
+    w `renderTable`.
+  - [ ] ▶️ Commit: `Etap 3c: nowy wiersz tabeli Monitora, createElement zamiast innerHTML`, potem krok 3e.
   - [ ] 3e: edycja urządzenia (✎) w tym samym okienku.
 - [ ] **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN).
 - [ ] **Etap 5 — Nowe zatrudnienia, dane i tabela:** nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,

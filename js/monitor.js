@@ -122,9 +122,35 @@ function removeItem(id) {
 /* === Monitor Device Actions: End === */
 
 /* === Monitor Table Rendering: Start === */
+function createEl(tag, className, text) {
+	const element = document.createElement(tag)
+	if (className) element.className = className
+	if (text !== undefined) element.textContent = text
+	return element
+}
+
+function createActionButton(action, icon, label, id) {
+	const button = createEl('button', `row-action-btn is-${action}`)
+	button.type = 'button'
+	button.dataset.action = action
+	button.dataset.id = id
+	button.title = label
+	button.setAttribute('aria-label', label)
+	button.append(createEl('i', `fa-solid ${icon}`))
+	return button
+}
+
 function renderTable() {
 	if (!tableBody) return
-	tableBody.innerHTML = ''
+	tableBody.replaceChildren()
+
+	if (devices.length === 0) {
+		const emptyRow = createEl('tr')
+		const emptyCell = createEl('td', 'empty-state-cell', 'Brak urządzeń. Dodaj pierwsze przyciskiem +.')
+		emptyCell.colSpan = 5
+		emptyRow.append(emptyCell)
+		tableBody.append(emptyRow)
+	}
 
 	const stats = { all: devices.length, ok: 0, warn: 0, dead: 0 }
 	const today = new Date()
@@ -149,24 +175,31 @@ function renderTable() {
 			stats.ok += 1
 		}
 
-		const row = document.createElement('tr')
-		row.innerHTML = `
-			<td><b>${device.name.toUpperCase()}</b></td>
-			<td>${device.ru}</td>
-			<td>${device.sn.toUpperCase()}</td>
-			<td><span class="status-pill ${statusClass}">${statusText}</span></td>
-			<td class="cell-center">
-				<button class="extend-btn" type="button" data-action="extend" data-id="${device.id}">
-					<i class="fa-solid fa-plus"></i> 60 dni
-				</button>
-			</td>
-			<td class="cell-right">
-				<button class="icon-button delete-btn" type="button" data-action="delete" data-id="${device.id}" aria-label="Usuń urządzenie">
-					<i class="fa-solid fa-trash"></i>
-				</button>
-			</td>
-		`
-		tableBody.appendChild(row)
+		const row = createEl('tr')
+
+		const nameCell = createEl('td')
+		nameCell.append(
+			createEl('p', 'device-name', device.name.toUpperCase()),
+			createEl('p', 'device-meta', `Aktualizacja: ${device.updatedAt}`),
+		)
+
+		const snCell = createEl('td')
+		snCell.append(createEl('span', 'sn-pill', device.sn.toUpperCase()))
+
+		const statusCell = createEl('td')
+		statusCell.append(createEl('span', `status-pill ${statusClass}`, statusText))
+
+		const actions = createEl('div', 'row-actions')
+		actions.append(
+			createActionButton('extend', 'fa-calendar-check', 'Odbity w domenie (+60 dni)', device.id),
+			createActionButton('edit', 'fa-pen-to-square', 'Edytuj', device.id),
+			createActionButton('delete', 'fa-trash', 'Usuń', device.id),
+		)
+		const actionsCell = createEl('td', 'cell-right')
+		actionsCell.append(actions)
+
+		row.append(nameCell, createEl('td', '', device.ru), snCell, statusCell, actionsCell)
+		tableBody.append(row)
 	})
 
 	const updateStat = (id, value) => {

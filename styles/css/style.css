@@ -198,6 +198,11 @@
           mask-image: url("../../img/icons/briefcase-solid-full.svg");
 }
 
+.fa-calendar-check::before {
+  -webkit-mask-image: url("../../img/icons/calendar-check-solid-full.svg");
+          mask-image: url("../../img/icons/calendar-check-solid-full.svg");
+}
+
 .fa-check::before {
   -webkit-mask-image: url("../../img/icons/check-solid-full.svg");
           mask-image: url("../../img/icons/check-solid-full.svg");
@@ -266,6 +271,11 @@
 .fa-laptop::before {
   -webkit-mask-image: url("../../img/icons/laptop-solid-full.svg");
           mask-image: url("../../img/icons/laptop-solid-full.svg");
+}
+
+.fa-pen-to-square::before {
+  -webkit-mask-image: url("../../img/icons/pen-to-square-solid-full.svg");
+          mask-image: url("../../img/icons/pen-to-square-solid-full.svg");
 }
 
 .fa-plus::before {
