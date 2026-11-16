@@ -55,6 +55,23 @@ const FORM_FIELDS = [
 	'notes',
 ]
 
+const CSV_COLUMNS = [
+	{ field: 'serviceDesk', header: 'Service Desk' },
+	{ field: 'user', header: 'Użytkownik' },
+	{ field: 'startDate', header: 'Data startu' },
+	{ field: 'preparedBy', header: 'Przygotował/a' },
+	{ field: 'location', header: 'Lokalizacja' },
+	{ field: 'laptopSn', header: 'Laptop SN', asText: true },
+	{ field: 'laptopRu', header: 'Laptop RU', asText: true },
+	{ field: 'laptopStatus', header: 'Laptop status' },
+	{ field: 'laptopEmag', header: 'Laptop eMag' },
+	{ field: 'monitorRu', header: 'Monitor RU', asText: true },
+	{ field: 'monitorStatus', header: 'Monitor status' },
+	{ field: 'monitorEmag', header: 'Monitor eMag' },
+	{ field: 'notes', header: 'Uwagi' },
+	{ field: 'serviceDesk', header: 'Service Desk', asText: true },
+]
+
 const tableBody = document.getElementById('table-body')
 const exportExcelBtn = document.getElementById('export-excel-btn')
 const importExcelInput = document.getElementById('importExcelFile')
@@ -286,16 +303,31 @@ function saveHire(event) {
 
 /* === Hires Excel Backup: Start === */
 function exportExcel() {
-	if (hires.length === 0) return alert('Brak danych!')
+	if (hires.length === 0) return alert('Brak danych do eksportu!')
 
-	const dataToExport = hires.map(hire => ({
-		'Imię i Nazwisko': hire.name,
-		'Dział / Stanowisko': hire.ru,
-		'SN Sprzętu': AppUtils.asExcelText(hire.sn),
-		'Data rozpoczęcia': hire.date,
-		Akcesoria: hire.accessories ? hire.accessories.join(', ') : '',
-	}))
+	const dataToExport = hires.map(hire => {
+		const row = {}
+		CSV_COLUMNS.forEach(column => {
+			const value = hire[column.field] || ''
+			row[column.header] = column.asText ? AppUtils.asExcelText(value) : value
+		})
+		row.Akcesoria = hire.accessories.map(getAccessoryLabel).join(', ')
+		row.Przygotowane = hire.preparedAccessories.map(getAccessoryLabel).join(', ')
+		return row
+	})
+
 	AppUtils.downloadCSV(dataToExport, `zatrudnienia_${AppUtils.formatDate(new Date())}.csv`)
+}
+
+function labelsToIds(text) {
+	return (text || '')
+		.split(',')
+		.map(label => label.trim())
+		.filter(Boolean)
+		.map(label => {
+			const accessory = ACCESSORIES.find(item => item.label === label)
+			return accessory ? accessory.id : label
+		})
 }
 
 function importExcel(event) {
@@ -306,22 +338,24 @@ function importExcel(event) {
 	reader.onload = loadEvent => {
 		const rows = AppUtils.parseCSV(loadEvent.target.result)
 
-		const importedHires = rows.map(row => ({
-			name: (row['Imię i Nazwisko'] || '').toString().toUpperCase(),
-			ru: row['Dział / Stanowisko'] || '',
-			sn: AppUtils.normalizeSN(row['SN Sprzętu']),
-			date: AppUtils.normalizeDate(row['Data rozpoczęcia']),
-			accessories: row.Akcesoria
-				? row.Akcesoria.split(',')
-						.map(item => item.trim())
-						.filter(Boolean)
-				: [],
-		}))
+		const imported = rows
+			.map(row => {
+				const hire = {}
+				CSV_COLUMNS.forEach(column => {
+					hire[column.field] = row[column.header] || ''
+				})
+				hire.startDate = AppUtils.normalizeDate(hire.startDate)
+				hire.laptopSn = AppUtils.normalizeSN(hire.laptopSn)
+				hire.accessories = labelsToIds(row.Akcesoria)
+				hire.preparedAccessories = labelsToIds(row.Przygotowane).filter(id => hire.accessories.includes(id))
+				return addMeta(hire)
+			})
+			.filter(hire => hire.user && hire.startDate)
 
-		if (importedHires.length === 0) {
+		if (imported.length === 0) {
 			alert('Plik jest pusty albo ma zły format.')
-		} else if (confirm(`Zastąpić obecne dane (${hires.length}) danymi z pliku (${importedHires.length})?`)) {
-			hires = importedHires
+		} else if (confirm(`Zastąpić obecne dane (${hires.length}) danymi z pliku (${imported.length})?`)) {
+			hires = imported
 			saveData()
 		}
 

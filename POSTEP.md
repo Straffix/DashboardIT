@@ -243,9 +243,19 @@ Decyzje (2026-11-09):
       (okienko + tabela), kolor przez klasę `is-<tone>`, nowy kolor `$info` w `_colors.scss`.
     - [x] 5f: odhaczanie przygotowanych akcesoriów + postęp. W tabeli „plakietki” akcesoriów (`.acc-chip`),
       klik = przygotowane / nieprzygotowane (`toggleAccessory`), nad nimi „Przygotowane: 2/4”.
-    - [ ] 5g: CSV z nowymi kolumnami. **Pamiętać:** import musi zawsze tworzyć `accessories: []`
+    - [x] 5g: CSV z nowymi kolumnami (`CSV_COLUMNS` = jedna lista dla eksportu i importu; akcesoria w pliku jako nazwy,
+      `labelsToIds` przy imporcie; wiersze bez użytkownika/daty pomijane). **Pamiętać:** import musi zawsze tworzyć `accessories: []`
       i `preparedAccessories: []` (tablice), bo `renderTable` i `toggleAccessory` wywołują na nich `.includes`/`.filter`.
-    - [ ] 5h: sprzątanie (`renderAccessoryIcons` w `script.js`, stare style formularza/`aside`/kopii zapasowej).
+    - [ ] 5h: sprzątanie martwego kodu (sprawdzone 2026-11-16: nieużywane w żadnym HTML/JS):
+      - JS `script.js`: `ACCESSORY_LABELS` w `APP_CONFIG`, cała sekcja `Shared Accessory Rendering`
+        (`getAccessorySizeClass`, `getAccessoryColumnsClass`, `renderAccessoryIcons`) + wpis w `AppUtils`.
+      - `style.scss`: `.main-content` (z `section, aside`), `.table-head-cell-center, .cell-center`, `.icon-button`,
+        `.extend-btn`, `.delete-btn`, wszystkie `.inline-accessories`/`.acc-*`/`.accessories-table`, `.btn-submit`,
+        `.btn-submit-soft-danger`, cała sekcja `Shared Backup Panel`, `.accessory-picker`, w `Shared Responsive Rules`
+        blok `@media (max-width: 1024px)` z `.main-content`.
+      - `_responsive-large/medium/small.scss`: bloki `.main-content`, `.backup_section …`, `.accessory-picker`.
+      - **Zostają:** `.input-group`, `.status-pill` (Monitor), `.table-header` i style kalendarza, `.cell-right`,
+        `.empty-state-cell`, `.is-hidden`, `.visually-hidden-file-input`.
 - [ ] **Etap 5b — płynne przejścia między stronami (View Transitions):** kafelek w menu „rozszerza się” w nagłówek
   modułu, bez białego mignięcia. Bez SPA — zostają osobne pliki HTML. Technika: `@view-transition { navigation: auto; }`
   + wspólne `view-transition-name` dla kafelka i nagłówka modułu. Działa przez `http(s)` (Live Server, serwer kolegi),
