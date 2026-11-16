@@ -357,7 +357,75 @@ table {
 		}
 	}
 }
+
+.table-scroll {
+	overflow-x: auto;
+}
 /* === Shared Panel: End === */
+
+/* === Shared Table Rows: Start === */
+
+.device-name {
+	font-weight: 700;
+	color: $text-main;
+}
+
+.device-meta {
+	margin-top: 4px;
+	font-size: 1.1rem;
+	color: $text-muted;
+}
+
+.sn-pill {
+	display: inline-block;
+	padding: 4px 10px;
+	border: 1px solid $border;
+	border-radius: 8px;
+	background: $bg-panel;
+	font-family: monospace;
+	font-size: 1.2rem;
+	letter-spacing: 0.05em;
+}
+
+.row-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 6px;
+}
+
+.row-action-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border: 1px solid $border;
+	border-radius: 10px;
+	background: $bg-panel;
+	color: $text-soft;
+	font-size: 1.5rem;
+	cursor: pointer;
+	transition:
+		color 0.2s ease,
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+
+	&:hover {
+		color: $primary;
+		border-color: $border-strong;
+		background: $primary-soft;
+	}
+
+	&.is-delete:hover {
+		color: $danger;
+	}
+
+	&:focus-visible {
+		outline: 2px solid $primary;
+		outline-offset: 2px;
+	}
+}
+/* === Shared Table Rows: End === */
 
 /* === Shared Interactive Elements: Start === */
 .extend-btn {
@@ -512,13 +580,16 @@ table {
 		margin-bottom: 8px;
 		font-weight: 600;
 	}
-	input:not([type='radio']):not([type='checkbox']) {
+	input:not([type='radio']):not([type='checkbox']),
+	select,
+	textarea {
 		width: 100%;
 		padding: 12px;
 		border: 1px solid $border;
 		border-radius: 12px;
 		background: $bg-panel;
 		color: $text-main;
+		font: inherit;
 		&:focus {
 			outline: 2px solid $primary;
 		}
@@ -854,6 +925,56 @@ table {
 	&::backdrop {
 		background: rgba(15, 23, 42, 0.45);
 		backdrop-filter: blur(4px);
+	}
+}
+
+.modal.is-wide {
+	width: min(860px, 100% - 32px);
+}
+
+.modal-section-title {
+	margin: 8px 0 12px;
+	color: $text-soft;
+	font-size: 1.2rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.modal-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	column-gap: 16px;
+
+	.is-full {
+		grid-column: 1 / -1;
+	}
+
+	@media (max-width: 600px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.check-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 8px;
+	margin-bottom: 15px;
+}
+
+.check-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 12px;
+	border: 1px solid $border;
+	border-radius: 12px;
+	font-size: 1.3rem;
+	cursor: pointer;
+
+	&:has(input:checked) {
+		border-color: $primary;
+		background: $primary-soft;
 	}
 }
 

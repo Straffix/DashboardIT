@@ -19,20 +19,9 @@ const deviceCancelBtn = document.getElementById('device-cancel-btn')
 const deviceDialogTitle = document.getElementById('device-dialog-title')
 const deviceSubmitBtn = document.getElementById('device-submit-btn')
 const searchInput = document.getElementById('device-search')
-
 /* === Monitor State And References: End === */
 
 /* === Monitor Storage: Start === */
-function addMeta(device) {
-	const today = AppUtils.formatDate(new Date())
-	return {
-		...device,
-		id: device.id || AppUtils.createId(),
-		createdAt: device.createdAt || today,
-		updatedAt: device.updatedAt || today,
-	}
-}
-
 function loadData() {
 	try {
 		const saved = localStorage.getItem(STORAGE_KEY)
@@ -128,37 +117,11 @@ function removeItem(id) {
 /* === Monitor Device Actions: End === */
 
 /* === Monitor Table Rendering: Start === */
-function createEl(tag, className, text) {
-	const element = document.createElement(tag)
-	if (className) element.className = className
-	if (text !== undefined) element.textContent = text
-	return element
-}
-
-function createActionButton(action, icon, label, id) {
-	const button = createEl('button', `row-action-btn is-${action}`)
-	button.type = 'button'
-	button.dataset.action = action
-	button.dataset.id = id
-	button.title = label
-	button.setAttribute('aria-label', label)
-	button.append(createEl('i', `fa-solid ${icon}`))
-	return button
-}
-
-function appendEmptyRow(text) {
-	const emptyRow = createEl('tr')
-	const emptyCell = createEl('td', 'empty-state-cell', text)
-	emptyCell.colSpan = 5
-	emptyRow.append(emptyCell)
-	tableBody.append(emptyRow)
-}
-
 function renderTable() {
 	if (!tableBody) return
 	tableBody.replaceChildren()
 
-	if (devices.length === 0) appendEmptyRow('Brak urządzeń. Dodaj pierwsze przyciskiem +.')
+	if (devices.length === 0) appendEmptyRow(tableBody, 'Brak urządzeń. Dodaj pierwsze przyciskiem +.', 5)
 
 	const query = searchInput.value.trim().toUpperCase()
 	let shownCount = 0
@@ -217,7 +180,7 @@ function renderTable() {
 		tableBody.append(row)
 	})
 
-	if (devices.length > 0 && shownCount === 0) appendEmptyRow('Brak wyników dla tego wyszukiwania.')
+	if (devices.length > 0 && shownCount === 0) appendEmptyRow(tableBody, 'Brak wyników dla tego wyszukiwania.', 5)
 
 	const updateStat = (id, value) => {
 		const element = document.getElementById(id)

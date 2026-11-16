@@ -653,7 +653,68 @@ table tr:last-child td {
   outline-offset: 2px;
 }
 
+.table-scroll {
+  overflow-x: auto;
+}
+
 /* === Shared Panel: End === */
+/* === Shared Table Rows: Start === */
+.device-name {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.device-meta {
+  margin-top: 4px;
+  font-size: 1.1rem;
+  color: #64748b;
+}
+
+.sn-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  font-family: monospace;
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.row-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #94a3b8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.row-action-btn:hover {
+  color: #c8102e;
+  border-color: rgba(200, 16, 46, 0.25);
+  background: #fdecef;
+}
+.row-action-btn.is-delete:hover {
+  color: #ef4444;
+}
+.row-action-btn:focus-visible {
+  outline: 2px solid #c8102e;
+  outline-offset: 2px;
+}
+
+/* === Shared Table Rows: End === */
 /* === Shared Interactive Elements: Start === */
 .extend-btn {
   background: rgba(255, 255, 255, 0.78);
@@ -792,15 +853,20 @@ table tr:last-child td {
   margin-bottom: 8px;
   font-weight: 600;
 }
-.input-group input:not([type=radio]):not([type=checkbox]) {
+.input-group input:not([type=radio]):not([type=checkbox]),
+.input-group select,
+.input-group textarea {
   width: 100%;
   padding: 12px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.78);
   color: #1e293b;
+  font: inherit;
 }
-.input-group input:not([type=radio]):not([type=checkbox]):focus {
+.input-group input:not([type=radio]):not([type=checkbox]):focus,
+.input-group select:focus,
+.input-group textarea:focus {
   outline: 2px solid #c8102e;
 }
 
@@ -1113,6 +1179,56 @@ table tr:last-child td {
 .modal::backdrop {
   background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(4px);
+}
+
+.modal.is-wide {
+  width: min(860px, 100% - 32px);
+}
+
+.modal-section-title {
+  margin: 8px 0 12px;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  -moz-column-gap: 16px;
+       column-gap: 16px;
+}
+.modal-grid .is-full {
+  grid-column: 1/-1;
+}
+@media (max-width: 600px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+.check-item:has(input:checked) {
+  border-color: #c8102e;
+  background: #fdecef;
 }
 
 .modal-form {

@@ -51,6 +51,41 @@ const formatDate = date => {
 const normalizeSN = sn => (sn ? sn.toString().trim().replace(/-/g, '').toUpperCase() : '')
 const createId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 
+const addMeta = item => {
+	const today = formatDate(new Date())
+	return {
+		...item,
+		id: item.id || createId(),
+		createdAt: item.createdAt || today,
+		updatedAt: item.updatedAt || today,
+	}
+}
+
+const createEl = (tag, className, text) => {
+	const element = document.createElement(tag)
+	if (className) element.className = className
+	if (text !== undefined) element.textContent = text
+	return element
+}
+
+const createActionButton = (action, icon, label, id) => {
+	const button = createEl('button', `row-action-btn is-${action}`)
+	button.type = 'button'
+	button.dataset.action = action
+	button.dataset.id = id
+	button.title = label
+	button.setAttribute('aria-label', label)
+	button.append(createEl('i', `fa-solid ${icon}`))
+	return button
+}
+
+const appendEmptyRow = (tbody, text, columns) => {
+	const emptyRow = createEl('tr')
+	const emptyCell = createEl('td', 'empty-state-cell', text)
+	emptyCell.colSpan = columns
+	emptyRow.append(emptyCell)
+	tbody.append(emptyRow)
+}
 /* === Shared Formatters: End === */
 
 /* === Shared Accessory Rendering: Start === */
@@ -555,5 +590,9 @@ window.AppUtils = {
 	normalizeDate,
 	asExcelText,
 	createId,
+	addMeta,
+	createEl,
+	createActionButton,
+	appendEmptyRow,
 }
 /* === Shared Public API: End === */

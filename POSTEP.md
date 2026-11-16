@@ -172,7 +172,7 @@ Decyzje (2026-11-09):
     - Bezpieczeństwo (obowiązkowo): dopuszczać tylko adresy `https://` / `http://` (blokada `javascript:...` w `href`),
       nazwę wstawiać przez `textContent`, nie `innerHTML`.
     - Linki są w przeglądarce użytkownika, nie w kodzie → nie trafiają do publicznego repo.
-- [ ] **▶ W TOKU — Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),
+- [x] **Etap 3 — Urządzenia w domenie, wygląd i akcje:** karty statystyk, tabela w karcie, pasek narzędzi (🔍 ➕ eksport/import),
   formularz w okienku pod ➕ (`<dialog>`), druga linia pod nazwą, akcje ↻ / ✎ edycja / 🗑.
   - [x] 3a (2026-11-12, testy OK): układ: `<section class="panel">` na całą szerokość zamiast `main-content` + `aside`; pasek narzędzi
     (Eksport CSV, Import CSV, ➕) — style `.panel`, `.panel-toolbar`, `.toolbar-btn` we wspólnym `style.scss`;
@@ -191,22 +191,59 @@ Decyzje (2026-11-09):
   - [x] 3c-porządki (2026-11-16): pusty wiersz przez `emptyRow` (zamiast `tableBody.lastChild`), wcięcia i puste linie
     w `renderTable`.
     Commit `504fa45`.
-  - [ ] ▶️ 3e: edycja urządzenia (✎) w tym samym okienku — plan:
+  - [x] 3e: edycja urządzenia (✎) w tym samym okienku — plan:
     - [x] 3e-1: `openDeviceDialog(device)` — jedno okienko do dodawania i edycji (zmienna `editingId`, tytuł i napis
       przycisku zależne od trybu, przy edycji pola wypełnione, zaznaczone „stare urządzenie” z datą).
     - [x] 3e-2: zapis przy edycji (podmiana pól w istniejącym wpisie + `updatedAt`, `findDuplicate` pomija edytowany wpis).
     - [x] Testy OK, commit `d183198`. **Etap 3 zakończony (2026-11-16).**
-- [ ] ▶️ **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN). Plan:
+- [x] **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN). Plan:
   - Decyzja: pole wyszukiwania zawsze widoczne w pasku narzędzi (bez osobnego przycisku 🔍), lupa w środku pola;
     styl `.toolbar-search` we wspólnym `style.scss` (przyda się w zatrudnieniach). Karty statystyk liczą **wszystkie**
     urządzenia, nie tylko znalezione.
   - [x] 4a: ikona `magnifying-glass-solid-full.svg` + reguła w `_icons.scss`, HTML pola `type="search"`, styl.
   - [x] 4b: JS: `appendEmptyRow(text)`, filtr w `renderTable` (nazwa + RU + SN, bez rozróżniania wielkości liter),
     komunikat „Brak wyników…”, `input` → `renderTable`.
-  - [ ] Testy w przeglądarce, potem commit `Etap 4: wyszukiwarka urządzeń` (z nowym plikiem SVG).
+  - [x] Testy OK, commit `00ced6c`. **Etap 4 zakończony (2026-11-16).**
 - [ ] **Etap 5 — Nowe zatrudnienia, dane i tabela:** nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,
   nowe akcesoria), kolorowe statusy, formularz w `<dialog>` pod ➕, eksport/import CSV nad tabelą z nowymi kolumnami,
   przeniesienie starych wpisów do nowego formatu.
+  - Decyzje (2026-11-16):
+    - Dodatkowe pola (jak w wersji react): **Przygotował/a**, **Lokalizacja**, **Uwagi**, **odhaczanie przygotowanych
+      akcesoriów** (postęp np. 2/4 w tabeli).
+    - „Przygotował/a”: **bez listy nazwisk w kodzie** (repo publiczne) → pole tekstowe z podpowiedziami `<datalist>`
+      z nazwisk wpisanych wcześniej.
+    - Akcesoria: lista z react (11): Monitor, Mysz, Klawiatura, Yealink, Logi Zone Vibe, Lenovo, Torba, Plecak,
+      Podstawka pod laptop, Prezenter, Drukarka.
+    - Statusy zmieniane **listą rozwijaną bezpośrednio w tabeli** (kolor zależny od wartości), także w okienku edycji.
+    - Stare wpisy tylko testowe → **bez przenoszenia** starego formatu; dane czyścimy
+      (`localStorage.removeItem('nowe_zatrudnienia_dane')` — sprawdzić nazwę klucza w `script.js`).
+    - Przygotował/a + Lokalizacja: druga linia pod Użytkownikiem; Uwagi: tylko w okienku.
+  - Plan:
+    - [x] 5a: HTML strony jak w Monitorze: `<section class="panel">` (bez `aside`), pasek narzędzi (Eksport, Import, ➕),
+      wybór miesiąca nad tabelą, nowe nagłówki kolumn, tabela w kontenerze z przewijaniem w poziomie;
+      naprawa zagnieżdżenia `</div>` na końcu strony.
+    - [x] 5b: dane: stałe (akcesoria, opcje statusów), `loadData` z `try/catch` + `addMeta`, nowy kształt wpisu.
+      `addMeta` i `createEl` przeniesione do `script.js` (wspólne dla Monitora i Zatrudnień).
+      Kształt wpisu: `id, createdAt, updatedAt, serviceDesk, user, startDate, preparedBy, location, laptopSn, laptopRu,
+      laptopStatus, laptopEmag, monitorRu, monitorStatus, monitorEmag, accessories[], preparedAccessories[], notes`.
+      - Lekcja: pliki `<script>` dzielą jedną przestrzeń nazw — w pliku strony **nie deklarować ponownie** (`const`/`let`)
+        nazwy, która jest już na najwyższym poziomie `script.js` → `SyntaxError` i cały plik nie działa.
+        `node --check` tego nie wykryje (sprawdza pliki osobno).
+    - [ ] 5c: okienko `<dialog>` dodawania/edycji (sekcje: Dane główne / Laptop i monitor / Akcesoria / Uwagi).
+      - [x] 5c-1: HTML okienka (`id` pól = nazwy pól we wpisie) + style `.modal.is-wide`, `.modal-grid`,
+        `.modal-section-title`, `.check-grid`, `.check-item`; `.input-group` obejmuje też `select` i `textarea`.
+      - [x] 5c-2: JS: wypełnienie list statusów i akcesoriów, `openHireDialog`, zapis (dodawanie + edycja),
+        podpowiedzi „Przygotował/a”; usunięcie starego formularza z JS.
+    - [x] 5d: wiersz tabeli przez `createEl` (koniec `innerHTML`, audyt A1 dla Zatrudnień), akcje ✎ / 🗑 po `id`.
+      - [x] 5d-1: wspólne: `createActionButton` i `appendEmptyRow(tbody, text, columns)` → `script.js`;
+        style `.device-name`, `.device-meta`, `.sn-pill`, `.row-actions`, `.row-action-btn` → `style.scss`.
+      - [x] 5d-2: nowy `renderTable` (12 kolumn, sortowanie po dacie startu, statusy na razie jako tekst),
+        `removeItem` po `id`, kliknięcia ✎ / 🗑.
+    - [ ] 5e: statusy jako kolorowe listy w tabeli (zmiana → zapis + `updatedAt`). Wspólna funkcja `fillSelect`
+      (okienko + tabela), kolor przez klasę `is-<tone>`, nowy kolor `$info` w `_colors.scss`.
+    - [ ] 5f: odhaczanie przygotowanych akcesoriów + postęp.
+    - [ ] 5g: CSV z nowymi kolumnami.
+    - [ ] 5h: sprzątanie (`renderAccessoryIcons` w `script.js`, stare style formularza/`aside`/kopii zapasowej).
 - [ ] **Etap 5b — płynne przejścia między stronami (View Transitions):** kafelek w menu „rozszerza się” w nagłówek
   modułu, bez białego mignięcia. Bez SPA — zostają osobne pliki HTML. Technika: `@view-transition { navigation: auto; }`
   + wspólne `view-transition-name` dla kafelka i nagłówka modułu. Działa przez `http(s)` (Live Server, serwer kolegi),

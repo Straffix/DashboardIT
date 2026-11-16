@@ -1,13 +1,72 @@
 /* === Hires State And References: Start === */
 let hires = []
+let editingId = null
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.HIRES
+const ACCESSORIES = [
+	{ id: 'monitor', label: 'Monitor' },
+	{ id: 'mouse', label: 'Mysz' },
+	{ id: 'keyboard', label: 'Klawiatura' },
+	{ id: 'yealink', label: 'Yealink' },
+	{ id: 'logiZone', label: 'Logi Zone Vibe' },
+	{ id: 'lenovo', label: 'Lenovo' },
+	{ id: 'bag', label: 'Torba' },
+	{ id: 'backpack', label: 'Plecak' },
+	{ id: 'laptopStand', label: 'Podstawka pod laptop' },
+	{ id: 'presenter', label: 'Prezenter' },
+	{ id: 'printer', label: 'Drukarka' },
+]
 
-const hiresForm = document.getElementById('device-form')
+const HANDOVER_STATUSES = [
+	{ value: 'W trakcie', tone: 'warn' },
+	{ value: 'Gotowy do wydania', tone: 'ready' },
+	{ value: 'Wydany', tone: 'ok' },
+	{ value: 'Nie odebrano', tone: 'danger' },
+	{ value: 'Ponowna dystrybucja', tone: 'danger' },
+]
+
+const STATUS_OPTIONS = {
+	laptopStatus: HANDOVER_STATUSES,
+	monitorStatus: [...HANDOVER_STATUSES, { value: 'Nie zamówiono', tone: 'muted' }],
+	laptopEmag: [
+		{ value: 'Brak konta', tone: 'danger' },
+		{ value: 'Do potwierdzenia', tone: 'warn' },
+		{ value: 'Potwierdzony', tone: 'ok' },
+	],
+	monitorEmag: [
+		{ value: 'Brak konta', tone: 'danger' },
+		{ value: 'Dokument wystawiony, do potwierdzenia', tone: 'warn' },
+		{ value: 'Dokument potwierdzony', tone: 'ok' },
+	],
+}
+
+const FORM_FIELDS = [
+	'serviceDesk',
+	'user',
+	'startDate',
+	'preparedBy',
+	'location',
+	'laptopSn',
+	'laptopRu',
+	'laptopStatus',
+	'laptopEmag',
+	'monitorRu',
+	'monitorStatus',
+	'monitorEmag',
+	'notes',
+]
+
 const tableBody = document.getElementById('table-body')
-const accessoryPicker = document.getElementById('accessory-picker')
 const exportExcelBtn = document.getElementById('export-excel-btn')
 const importExcelInput = document.getElementById('importExcelFile')
 const importExcelTrigger = document.getElementById('import-excel-trigger')
+const addHireBtn = document.getElementById('add-hire-btn')
+const hireDialog = document.getElementById('hire-dialog')
+const hireForm = document.getElementById('hire-form')
+const hireDialogTitle = document.getElementById('hire-dialog-title')
+const hireSubmitBtn = document.getElementById('hire-submit-btn')
+const hireCancelBtn = document.getElementById('hire-cancel-btn')
+const accessoriesBox = document.getElementById('hire-accessories')
+const preparedByList = document.getElementById('prepared-by-list')
 
 const monthPicker = AppUtils.createMonthPicker({
 	onChange: () => renderTable(),
@@ -16,8 +75,13 @@ const monthPicker = AppUtils.createMonthPicker({
 
 /* === Hires Storage: Start === */
 function loadData() {
-	const saved = localStorage.getItem(STORAGE_KEY)
-	hires = saved ? JSON.parse(saved) : []
+	try {
+		const saved = localStorage.getItem(STORAGE_KEY)
+		const parsed = saved ? JSON.parse(saved) : []
+		hires = Array.isArray(parsed) ? parsed.map(addMeta) : []
+	} catch (error) {
+		hires = []
+	}
 	renderTable()
 }
 
@@ -28,76 +92,143 @@ function saveData() {
 /* === Hires Storage: End === */
 
 /* === Hires Table Rendering: Start === */
+function getAccessoryLabel(id) {
+	const accessory = ACCESSORIES.find(item => item.id === id)
+	return accessory ? accessory.label : id
+}
+
 function renderTable() {
-	if (!tableBody) return
-	tableBody.innerHTML = ''
+	tableBody.replaceChildren()
 	monthPicker.refreshView()
 
-	const currentViewDate = monthPicker.getCurrentDate()
-	const today = new Date()
-	today.setHours(0, 0, 0, 0)
-
-	const filteredHires = hires.filter(hire => {
-		const hireDate = new Date(hire.date)
-		return (
-			hireDate.getMonth() === currentViewDate.getMonth() && hireDate.getFullYear() === currentViewDate.getFullYear()
-		)
-	})
-
-	if (filteredHires.length === 0) {
-		tableBody.innerHTML =
-			'<tr><td colspan="6" class="empty-state-cell">Brak planowanych zatrudnień w tym miesiącu.</td></tr>'
-		return
-	}
-
-	filteredHires.forEach(hire => {
-		const originalIndex = hires.findIndex(original => original === hire)
-		const startDate = new Date(hire.date)
-		const diff = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24))
-
-		let statusClass = 'ok'
-		let statusText = hire.date
-
-		if (diff < 0) {
-			statusClass = 'expired'
-			statusText = 'Zatrudniony'
-		} else if (diff <= 3) {
-			statusClass = 'near'
-		}
-
-		const accessoriesHTML = AppUtils.renderAccessoryIcons(hire.accessories, {
-			size: '1rem',
-			maxVisible: 9,
-			columns: 3,
-			wrapperClass: 'inline-accessories accessories-table',
+	const viewDate = monthPicker.getCurrentDate()
+	const monthHires = hires
+		.filter(hire => {
+			const startDate = new Date(hire.startDate)
+			return startDate.getMonth() === viewDate.getMonth() && startDate.getFullYear() === viewDate.getFullYear()
 		})
+		.sort((a, b) => a.startDate.localeCompare(b.startDate))
 
-		const row = document.createElement('tr')
-		row.innerHTML = `
-			<td><b>${hire.name}</b></td>
-			<td>${hire.ru}</td>
-			<td>${hire.sn}</td>
-			<td><span class="status-pill ${statusClass}">${statusText}</span></td>
-			<td class="cell-center">${accessoriesHTML}</td>
-			<td class="cell-right">
-				<button class="icon-button delete-btn" type="button" data-action="delete" data-index="${originalIndex}" aria-label="Usuń wpis">
-					<i class="fa-solid fa-trash"></i>
-				</button>
-			</td>
-		`
-		tableBody.appendChild(row)
+	if (monthHires.length === 0) appendEmptyRow(tableBody, 'Brak planowanych zatrudnień w tym miesiącu.', 12)
+
+	monthHires.forEach(hire => {
+		const userCell = createEl('td')
+		userCell.append(createEl('p', 'device-name', hire.user))
+		const meta = [hire.preparedBy, hire.location].filter(Boolean).join(' · ')
+		if (meta) userCell.append(createEl('p', 'device-meta', meta))
+
+		const snCell = createEl('td')
+		if (hire.laptopSn) snCell.append(createEl('span', 'sn-pill', hire.laptopSn))
+
+		const actions = createEl('div', 'row-actions')
+		actions.append(
+			createActionButton('edit', 'fa-pen-to-square', 'Edytuj', hire.id),
+			createActionButton('delete', 'fa-trash', 'Usuń', hire.id),
+		)
+		const actionsCell = createEl('td', 'cell-right')
+		actionsCell.append(actions)
+
+		const row = createEl('tr')
+		row.append(
+			createEl('td', '', hire.serviceDesk),
+			userCell,
+			createEl('td', '', hire.startDate),
+			snCell,
+			createEl('td', '', hire.laptopRu),
+			createEl('td', '', hire.laptopStatus),
+			createEl('td', '', hire.laptopEmag),
+			createEl('td', '', hire.monitorRu),
+			createEl('td', '', hire.monitorStatus),
+			createEl('td', '', hire.monitorEmag),
+			createEl('td', '', hire.accessories.map(getAccessoryLabel).join(', ')),
+			actionsCell,
+		)
+		tableBody.append(row)
 	})
 }
 /* === Hires Table Rendering: End === */
 
 /* === Hires Actions: Start === */
-function removeItem(index) {
+function removeItem(id) {
 	if (!confirm('Usunąć wpis?')) return
 
-	hires.splice(index, 1)
+	hires = hires.filter(hire => hire.id !== id)
 	saveData()
 }
+
 /* === Hires Actions: End === */
+
+/* === Hires Form: Start === */
+function fillFormOptions() {
+	Object.entries(STATUS_OPTIONS).forEach(([field, options]) => {
+		const select = document.getElementById(field)
+		const emptyOption = createEl('option', '', '— wybierz —')
+		emptyOption.value = ''
+		select.append(emptyOption)
+		options.forEach(option => select.append(createEl('option', '', option.value)))
+	})
+
+	ACCESSORIES.forEach(accessory => {
+		const item = createEl('label', 'check-item')
+		const checkbox = createEl('input')
+		checkbox.type = 'checkbox'
+		checkbox.value = accessory.id
+		item.append(checkbox, createEl('span', '', accessory.label))
+		accessoriesBox.append(item)
+	})
+}
+
+function updatePreparedByList() {
+	const names = [...new Set(hires.map(hire => hire.preparedBy).filter(Boolean))].sort()
+	preparedByList.replaceChildren(...names.map(name => createEl('option', '', name)))
+}
+
+function openHireDialog(hire) {
+	hireForm.reset()
+	editingId = hire ? hire.id : null
+	hireDialogTitle.textContent = hire ? 'Edytuj pracownika' : 'Dodaj pracownika'
+	hireSubmitBtn.textContent = hire ? 'Zapisz zmiany' : 'Dodaj pracownika'
+	updatePreparedByList()
+
+	if (hire) {
+		FORM_FIELDS.forEach(field => {
+			document.getElementById(field).value = hire[field] || ''
+		})
+		accessoriesBox.querySelectorAll('input').forEach(checkbox => {
+			checkbox.checked = hire.accessories.includes(checkbox.value)
+		})
+	}
+
+	hireDialog.showModal()
+}
+
+function saveHire(event) {
+	event.preventDefault()
+
+	const data = {}
+	FORM_FIELDS.forEach(field => {
+		data[field] = document.getElementById(field).value.trim()
+	})
+	data.laptopSn = AppUtils.normalizeSN(data.laptopSn)
+	data.accessories = Array.from(accessoriesBox.querySelectorAll('input:checked'), checkbox => checkbox.value)
+
+	if (!data.user) return alert('Wpisz użytkownika.')
+
+	const today = AppUtils.formatDate(new Date())
+
+	if (editingId) {
+		const hire = hires.find(item => item.id === editingId)
+		Object.assign(hire, data, { updatedAt: today })
+		hire.preparedAccessories = hire.preparedAccessories.filter(id => data.accessories.includes(id))
+	} else {
+		hires.push({ ...data, preparedAccessories: [], id: AppUtils.createId(), createdAt: today, updatedAt: today })
+	}
+
+	monthPicker.setCurrentDate(new Date(data.startDate), { render: false })
+	saveData()
+	hireDialog.close()
+}
+/* === Hires Form: End === */
 
 /* === Hires Excel Backup: Start === */
 function exportExcel() {
@@ -157,47 +288,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	})
 
-	if (accessoryPicker) {
-		accessoryPicker.addEventListener('click', event => {
-			const item = event.target.closest('.accessory-item')
-			if (!item) return
+	tableBody.addEventListener('click', event => {
+		const actionButton = event.target.closest('[data-action]')
+		if (!actionButton) return
 
-			item.classList.toggle('active')
-		})
-	}
+		const id = actionButton.dataset.id
+		if (actionButton.dataset.action === 'edit') openHireDialog(hires.find(hire => hire.id === id))
+		if (actionButton.dataset.action === 'delete') removeItem(id)
+	})
 
-	if (tableBody) {
-		tableBody.addEventListener('click', event => {
-			const actionButton = event.target.closest('[data-action="delete"]')
-			if (!actionButton) return
-
-			removeItem(Number(actionButton.dataset.index))
-		})
-	}
-
-	if (hiresForm) {
-		hiresForm.addEventListener('submit', event => {
-			event.preventDefault()
-
-			const selectedAccessories = Array.from(document.querySelectorAll('.accessory-item.active')).map(
-				item => item.dataset.item,
-			)
-			const newHireDate = document.getElementById('date').value
-
-			hires.push({
-				name: document.getElementById('name').value.toUpperCase(),
-				ru: document.getElementById('ru').value,
-				sn: AppUtils.normalizeSN(document.getElementById('sn').value),
-				date: newHireDate,
-				accessories: selectedAccessories,
-			})
-
-			monthPicker.setCurrentDate(new Date(newHireDate), { render: false })
-			event.target.reset()
-			document.querySelectorAll('.accessory-item').forEach(item => item.classList.remove('active'))
-			saveData()
-		})
-	}
+	fillFormOptions()
+	hireForm.addEventListener('submit', saveHire)
+	addHireBtn.addEventListener('click', () => openHireDialog())
+	hireCancelBtn.addEventListener('click', () => hireDialog.close())
 
 	if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)
 	if (importExcelTrigger && importExcelInput) {
