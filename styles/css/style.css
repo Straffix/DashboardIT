@@ -1,11 +1,4 @@
 @media (max-width: 900px) {
-  .main-content {
-    gap: 22px;
-  }
-  .main-content section,
-  .main-content aside {
-    padding: 20px;
-  }
   .logo-section h1 {
     font-size: 2rem;
   }
@@ -16,12 +9,6 @@
   table td {
     padding: 16px 10px;
     font-size: 1.18rem;
-  }
-  .backup_section .backup-row {
-    flex-wrap: wrap;
-  }
-  .backup_section .backup-row .btn-backup-item {
-    min-width: 0;
   }
   .table-header .month-picker-container {
     min-width: 220px;
@@ -58,13 +45,6 @@
   .logo-section h1 {
     font-size: 1.9rem;
   }
-  .main-content {
-    gap: 18px;
-  }
-  .main-content section,
-  .main-content aside {
-    padding: 18px;
-  }
   table th {
     padding: 10px 8px;
     font-size: 0.92rem;
@@ -85,16 +65,6 @@
   .table-header .month-nav-btn {
     width: 38px;
     height: 38px;
-  }
-  .backup_section .backup-row {
-    flex-direction: column;
-  }
-  .backup_section .backup-row .btn-backup-item {
-    width: 100%;
-  }
-  .accessory-picker {
-    gap: 8px;
-    padding: 8px;
   }
   body.dashboard-page .dashboard-container {
     min-height: auto;
@@ -135,10 +105,6 @@
   }
   body:not(.dashboard-page) .wrapper {
     padding: 40px 36px 30px;
-  }
-  .main-content {
-    grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
-    gap: 40px;
   }
   body.dashboard-page .dashboard-container {
     padding: 32px 40px 36px;
@@ -193,11 +159,6 @@
           mask-image: url("../../img/icons/box-solid-full.svg");
 }
 
-.fa-briefcase::before {
-  -webkit-mask-image: url("../../img/icons/briefcase-solid-full.svg");
-          mask-image: url("../../img/icons/briefcase-solid-full.svg");
-}
-
 .fa-calendar-check::before {
   -webkit-mask-image: url("../../img/icons/calendar-check-solid-full.svg");
           mask-image: url("../../img/icons/calendar-check-solid-full.svg");
@@ -233,11 +194,6 @@
           mask-image: url("../../img/icons/compress-solid-full.svg");
 }
 
-.fa-computer-mouse::before {
-  -webkit-mask-image: url("../../img/icons/computer-mouse-solid-full.svg");
-          mask-image: url("../../img/icons/computer-mouse-solid-full.svg");
-}
-
 .fa-desktop::before {
   -webkit-mask-image: url("../../img/icons/desktop-solid-full.svg");
           mask-image: url("../../img/icons/desktop-solid-full.svg");
@@ -253,19 +209,9 @@
           mask-image: url("../../img/icons/file-csv-solid-full.svg");
 }
 
-.fa-headset::before {
-  -webkit-mask-image: url("../../img/icons/headset-solid-full.svg");
-          mask-image: url("../../img/icons/headset-solid-full.svg");
-}
-
 .fa-house::before {
   -webkit-mask-image: url("../../img/icons/house-solid-full.svg");
           mask-image: url("../../img/icons/house-solid-full.svg");
-}
-
-.fa-keyboard::before {
-  -webkit-mask-image: url("../../img/icons/keyboard-solid-full.svg");
-          mask-image: url("../../img/icons/keyboard-solid-full.svg");
 }
 
 .fa-magnifying-glass::before {
@@ -476,30 +422,6 @@ body:not(.dashboard-page) .wrapper::before {
 
 /* === Shared Header: End === */
 /* === Shared Page Layout: Start === */
-.main-content {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
-  gap: 30px;
-  width: 100%;
-  align-items: start;
-  transition: grid-template-columns 0.35s ease, gap 0.35s ease;
-}
-.main-content section,
-.main-content aside {
-  background: #ffffff;
-  padding: 25px;
-  border-radius: 22px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: padding 0.35s ease;
-}
-.main-content aside {
-  width: min(100%, 380px);
-  max-width: 100%;
-}
-
 h2 {
   font-size: 1.8rem;
   margin-bottom: 25px;
@@ -534,11 +456,6 @@ table tr:last-child td {
   border-bottom: none;
 }
 
-.table-head-cell-center,
-.cell-center {
-  text-align: center;
-}
-
 .cell-right {
   text-align: right;
 }
@@ -547,14 +464,6 @@ table tr:last-child td {
   padding: 40px 15px;
   color: #94a3b8;
   text-align: center;
-}
-
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
 }
 
 .is-hidden,
@@ -716,33 +625,6 @@ table tr:last-child td {
 
 /* === Shared Table Rows: End === */
 /* === Shared Interactive Elements: Start === */
-.extend-btn {
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid #e2e8f0;
-  padding: 8px 15px;
-  border-radius: 8px;
-  font-weight: 600;
-  color: #1e293b;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.extend-btn:hover {
-  background: rgba(255, 255, 255, 0.94);
-}
-
-.delete-btn {
-  color: #94a3b8;
-  font-size: 1.8rem;
-  cursor: pointer;
-  padding: 5px;
-  background: transparent;
-  border: none;
-  transition: color 0.2s;
-}
-.delete-btn:hover {
-  color: #ef4444;
-}
-
 .status-pill {
   display: inline-block;
   white-space: nowrap;
@@ -761,87 +643,6 @@ table tr:last-child td {
 .status-pill.expired {
   background: #fef2f2;
   color: #ef4444;
-}
-
-.inline-accessories, .acc-wrapper {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  align-items: center;
-  max-width: 100%;
-  transition: gap 0.35s ease;
-}
-
-.inline-accessories .acc-inline-icon,
-.acc-wrapper .acc-inline-icon,
-.acc-wrapper .acc-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  border: 1px solid #e2e8f0;
-  background: rgba(255, 255, 255, 0.78);
-  color: #64748b;
-  cursor: default;
-  transition: width 0.35s ease, height 0.35s ease, min-width 0.35s ease, font-size 0.35s ease, transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.inline-accessories .acc-inline-icon, .acc-wrapper .acc-inline-icon {
-  font-size: 1.2rem;
-}
-
-.acc-size-sm .acc-inline-icon {
-  font-size: 1rem;
-}
-
-.acc-size-md .acc-inline-icon {
-  font-size: 1.2rem;
-}
-
-.acc-more-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: 999px;
-  border: 1px solid #e2e8f0;
-  background: rgba(255, 255, 255, 0.96);
-  color: #64748b;
-  font-size: 0.85rem;
-  font-weight: 700;
-  transition: width 0.35s ease, height 0.35s ease, min-width 0.35s ease, padding 0.35s ease, font-size 0.35s ease;
-}
-
-.acc-empty {
-  color: #94a3b8;
-  font-size: 1.1rem;
-}
-
-.accessories-table {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(28px, 1fr));
-  gap: 6px;
-  justify-items: center;
-  align-items: center;
-  width: -moz-max-content;
-  width: max-content;
-  margin: 0 auto;
-  white-space: normal;
-  transition: gap 0.35s ease;
-}
-
-.accessories-table .acc-more-badge {
-  min-width: 28px;
-}
-
-.acc-cols-3 {
-  grid-template-columns: repeat(3, minmax(28px, 1fr));
 }
 
 .input-group {
@@ -870,130 +671,8 @@ table tr:last-child td {
   outline: 2px solid #c8102e;
 }
 
-.btn-submit {
-  width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-}
-.btn-submit:hover {
-  filter: brightness(0.9);
-}
-
-.btn-submit-soft-danger {
-  background: linear-gradient(135deg, rgba(241, 99, 99, 0.8) 0%, rgba(220, 38, 38, 0.9) 100%);
-}
-
 /* === Shared Interactive Elements: End === */
-/* === Shared Backup Panel: Start === */
-.backup_section {
-  padding: 20px;
-  border-radius: 12px;
-  margin-top: 35px;
-  border: 1px solid #e2e8f0;
-  border-top: 10px solid rgba(112, 112, 112, 0.322);
-  border-bottom: 7px solid rgba(112, 112, 112, 0.233);
-  background-color: rgba(255, 255, 255, 0.78);
-}
-.backup_section h3 {
-  font-size: 1.6rem;
-  margin-bottom: 20px;
-  color: #1e293b;
-}
-.backup_section .backup-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.backup_section .backup-row {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-}
-.backup_section .backup-row .btn-backup-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 15px;
-  background-color: rgba(255, 255, 255, 0.78);
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 1.3rem;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-.backup_section .backup-row .btn-backup-item:hover {
-  background: rgba(255, 255, 255, 0.94);
-  font-size: 1.4rem;
-}
-.backup_section .backup-row .btn-backup-item i {
-  font-size: 2rem;
-}
-.backup_section .backup-row .btn-excel-green {
-  background-color: rgba(16, 124, 65, 0.6705882353);
-  color: white;
-  border: none;
-}
-.backup_section .backup-row .btn-excel-green:hover {
-  background-color: #0e6b38;
-  filter: brightness(1.1);
-}
-.backup_section .backup-hint {
-  margin-top: 10px;
-  font-size: 0.8rem;
-  color: #64748b;
-}
-
-/* === Shared Backup Panel: End === */
-/* === Shared Accessories And Calendar: Start === */
-.accessory-picker {
-  display: flex;
-  gap: 10px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  background: rgba(255, 255, 255, 0.78);
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  justify-content: flex-start;
-}
-.accessory-picker .accessory-item {
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.55rem;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: rgba(255, 255, 255, 0.96);
-}
-.accessory-picker .accessory-item:hover {
-  background: rgba(255, 255, 255, 0.94);
-  border-color: rgba(200, 16, 46, 0.25);
-  color: #1e293b;
-  transform: translateY(-1px);
-}
-.accessory-picker .accessory-item.active {
-  background: linear-gradient(135deg, #c8102e 0%, #8f0b22 100%);
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 6px 16px rgba(200, 16, 46, 0.35);
-}
-
+/* === Shared Calendar: Start === */
 .table-header {
   display: flex;
   align-items: center;
@@ -1149,7 +828,7 @@ table tr:last-child td {
   color: #fff;
 }
 
-/* === Shared Accessories And Calendar: End === */
+/* === Shared Calendar: End === */
 /* === Shared Footer: Start === */
 .main-footer {
   margin-top: 40px;
@@ -1319,14 +998,6 @@ table tr:last-child td {
 
 /* === Shared Motion: End === */
 /* === Shared Responsive Rules: Start === */
-@media (max-width: 1024px) {
-  .main-content {
-    grid-template-columns: 1fr;
-  }
-  .main-content aside {
-    width: 100%;
-  }
-}
 @media (max-width: 768px) {
   body {
     padding: 24px 0;

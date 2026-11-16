@@ -14,20 +14,6 @@ const APP_CONFIG = {
 		'Listopad',
 		'Grudzie\u0144',
 	],
-	ICON_MAP: {
-		mouse: 'fa-computer-mouse',
-		keyboard: 'fa-keyboard',
-		headset: 'fa-headset',
-		monitor: 'fa-desktop',
-		bag: 'fa-briefcase',
-	},
-	ACCESSORY_LABELS: {
-		mouse: 'Myszka',
-		keyboard: 'Klawiatura',
-		headset: 'S\u0142uchawki',
-		monitor: 'Monitor',
-		bag: 'Torba / Etui',
-	},
 	STORAGE_KEYS: {
 		MONITOR: 'monitor_laptopow_dane',
 		HIRES: 'nowe_zatrudnienia_dane',
@@ -87,63 +73,6 @@ const appendEmptyRow = (tbody, text, columns) => {
 	tbody.append(emptyRow)
 }
 /* === Shared Formatters: End === */
-
-/* === Shared Accessory Rendering: Start === */
-const getAccessorySizeClass = size => {
-	if (size === '1rem') return 'acc-size-sm'
-	return 'acc-size-md'
-}
-
-const getAccessoryColumnsClass = columns => {
-	if (columns === 3) return 'acc-cols-3'
-	return ''
-}
-
-const renderAccessoryIcons = (accessories, options = {}) => {
-	const legacyMode = typeof options === 'string'
-	const defaults = {
-		size: '1.2rem',
-		maxVisible: Number.POSITIVE_INFINITY,
-		wrapperClass: 'inline-accessories',
-		columns: null,
-	}
-	const config = legacyMode
-		? { ...defaults, size: options }
-		: {
-				size: options.size || defaults.size,
-				maxVisible: Number.isFinite(options.maxVisible) ? options.maxVisible : defaults.maxVisible,
-				wrapperClass: options.wrapperClass || defaults.wrapperClass,
-				columns: Number.isFinite(options.columns) ? options.columns : null,
-			}
-
-	if (!accessories || accessories.length === 0) {
-		return '<small class="acc-empty">brak</small>'
-	}
-
-	const normalized = accessories.filter(Boolean)
-	const visibleItems = normalized.slice(0, config.maxVisible)
-	const hiddenItems = normalized.slice(config.maxVisible)
-	const wrapperClasses = [
-		config.wrapperClass,
-		getAccessorySizeClass(config.size),
-		getAccessoryColumnsClass(config.columns),
-	].filter(Boolean)
-
-	const items = visibleItems
-		.map(acc => {
-			const icon = APP_CONFIG.ICON_MAP[acc] || 'fa-box'
-			const label = APP_CONFIG.ACCESSORY_LABELS[acc] || acc
-			return `<i class="fa-solid ${icon} acc-inline-icon" title="${label}"></i>`
-		})
-		.join('')
-
-	const hiddenBadge = hiddenItems.length
-		? `<span class="acc-more-badge" title="${hiddenItems.map(acc => APP_CONFIG.ACCESSORY_LABELS[acc] || acc).join(', ')}">+${hiddenItems.length}</span>`
-		: ''
-
-	return `<span class="${wrapperClasses.join(' ')}">${items}${hiddenBadge}</span>`
-}
-/* === Shared Accessory Rendering: End === */
 
 /* === Shared Month Picker Utilities: Start === */
 const supportsMonthInput = () => {
@@ -583,7 +512,6 @@ window.AppUtils = {
 	config: APP_CONFIG,
 	formatDate,
 	normalizeSN,
-	renderAccessoryIcons,
 	createMonthPicker,
 	downloadCSV,
 	parseCSV,

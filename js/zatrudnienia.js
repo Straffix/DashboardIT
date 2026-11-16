@@ -56,7 +56,7 @@ const FORM_FIELDS = [
 ]
 
 const CSV_COLUMNS = [
-	{ field: 'serviceDesk', header: 'Service Desk' },
+	{ field: 'serviceDesk', header: 'Service Desk', asText: true },
 	{ field: 'user', header: 'Użytkownik' },
 	{ field: 'startDate', header: 'Data startu' },
 	{ field: 'preparedBy', header: 'Przygotował/a' },
@@ -69,7 +69,6 @@ const CSV_COLUMNS = [
 	{ field: 'monitorStatus', header: 'Monitor status' },
 	{ field: 'monitorEmag', header: 'Monitor eMag' },
 	{ field: 'notes', header: 'Uwagi' },
-	{ field: 'serviceDesk', header: 'Service Desk', asText: true },
 ]
 
 const tableBody = document.getElementById('table-body')

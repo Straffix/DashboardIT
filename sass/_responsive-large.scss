@@ -7,11 +7,6 @@
 		padding: 40px 36px 30px;
 	}
 
-	.main-content {
-		grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
-		gap: 40px;
-	}
-
 	body.dashboard-page .dashboard-container {
 		padding: 32px 40px 36px;
 	}

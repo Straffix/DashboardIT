@@ -25,15 +25,6 @@
 		font-size: 1.9rem;
 	}
 
-	.main-content {
-		gap: 18px;
-
-		section,
-		aside {
-			padding: 18px;
-		}
-	}
-
 	table th {
 		padding: 10px 8px;
 		font-size: 0.92rem;
@@ -58,19 +49,6 @@
 	.table-header .month-nav-btn {
 		width: 38px;
 		height: 38px;
-	}
-
-	.backup_section .backup-row {
-		flex-direction: column;
-	}
-
-	.backup_section .backup-row .btn-backup-item {
-		width: 100%;
-	}
-
-	.accessory-picker {
-		gap: 8px;
-		padding: 8px;
 	}
 
 	body.dashboard-page .dashboard-container {

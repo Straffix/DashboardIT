@@ -1,13 +1,4 @@
 @media (max-width: 900px) {
-	.main-content {
-		gap: 22px;
-
-		section,
-		aside {
-			padding: 20px;
-		}
-	}
-
 	.logo-section h1 {
 		font-size: 2rem;
 	}
@@ -20,14 +11,6 @@
 	table td {
 		padding: 16px 10px;
 		font-size: 1.18rem;
-	}
-
-	.backup_section .backup-row {
-		flex-wrap: wrap;
-	}
-
-	.backup_section .backup-row .btn-backup-item {
-		min-width: 0;
 	}
 
 	.table-header .month-picker-container {
