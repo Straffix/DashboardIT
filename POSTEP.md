@@ -190,8 +190,13 @@ Decyzje (2026-11-09):
     rysowanie przez `createEl` + `textContent` zamiast `innerHTML` (audyt A1 dla Monitora), wiersz „Brak urządzeń…”.
   - [x] 3c-porządki (2026-11-16): pusty wiersz przez `emptyRow` (zamiast `tableBody.lastChild`), wcięcia i puste linie
     w `renderTable`.
-  - [ ] ▶️ Commit: `Etap 3c: nowy wiersz tabeli Monitora, createElement zamiast innerHTML`, potem krok 3e.
-  - [ ] 3e: edycja urządzenia (✎) w tym samym okienku.
+    Commit `504fa45`.
+  - [ ] ▶️ 3e: edycja urządzenia (✎) w tym samym okienku — plan:
+    - [x] 3e-1: `openDeviceDialog(device)` — jedno okienko do dodawania i edycji (zmienna `editingId`, tytuł i napis
+      przycisku zależne od trybu, przy edycji pola wypełnione, zaznaczone „stare urządzenie” z datą).
+    - [x] 3e-2: zapis przy edycji (podmiana pól w istniejącym wpisie + `updatedAt`, `findDuplicate` pomija edytowany wpis).
+    - [ ] Testy w przeglądarce (zmiana nazwy, data w przeszłości, duplikat innego urządzenia, zapis bez zmian,
+      dodawanie ➕, odświeżenie strony), potem commit `Etap 3e: edycja urządzenia w okienku`.
 - [ ] **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN).
 - [ ] **Etap 5 — Nowe zatrudnienia, dane i tabela:** nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,
   nowe akcesoria), kolorowe statusy, formularz w `<dialog>` pod ➕, eksport/import CSV nad tabelą z nowymi kolumnami,

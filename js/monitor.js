@@ -1,5 +1,6 @@
 /* === Monitor State And References: Start === */
 let devices = []
+let editingId = null
 const STORAGE_KEY = AppUtils.config.STORAGE_KEYS.MONITOR
 
 const deviceForm = document.getElementById('device-form')
@@ -15,6 +16,8 @@ const importExcelTrigger = document.getElementById('import-excel-trigger')
 const deviceDialog = document.getElementById('device-dialog')
 const addDeviceBtn = document.getElementById('add-device-btn')
 const deviceCancelBtn = document.getElementById('device-cancel-btn')
+const deviceDialogTitle = document.getElementById('device-dialog-title')
+const deviceSubmitBtn = document.getElementById('device-submit-btn')
 
 /* === Monitor State And References: End === */
 
@@ -92,9 +95,11 @@ function importExcel(event) {
 /* === Monitor Excel Backup: End === */
 
 /* === Monitor Device Actions: Start === */
-function findDuplicate(ru, sn) {
+function findDuplicate(ru, sn, ignoreId) {
 	const normalizedSn = AppUtils.normalizeSN(sn)
-	return devices.find(device => device.ru === ru && AppUtils.normalizeSN(device.sn) === normalizedSn)
+	return devices.find(
+		device => device.id !== ignoreId && device.ru === ru && AppUtils.normalizeSN(device.sn) === normalizedSn,
+	)
 }
 
 function extendDomain(id) {
@@ -222,6 +227,24 @@ function toggleDateInput() {
 	dateGroup.classList.toggle('is-hidden', isNew)
 	dateInput.required = !isNew
 }
+
+function openDeviceDialog(device) {
+	deviceForm.reset()
+	editingId = device ? device.id : null
+	deviceDialogTitle.textContent = device ? 'Edytuj urządzenie' : 'Dodaj urządzenie'
+	deviceSubmitBtn.textContent = device ? 'Zapisz zmiany' : 'Dodaj urządzenie'
+
+	if (device) {
+		document.getElementById('name').value = device.name
+		ruInput.value = device.ru
+		document.getElementById('sn').value = device.sn
+		oldRadio.checked = true
+		dateInput.value = device.date
+	}
+
+	toggleDateInput()
+	deviceDialog.showModal()
+}
 /* === Monitor Form State: End === */
 
 /* === Monitor Init: Start === */
@@ -243,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const id = actionButton.dataset.id
 			if (actionButton.dataset.action === 'extend') extendDomain(id)
 			if (actionButton.dataset.action === 'delete') removeItem(id)
+			if (actionButton.dataset.action === 'edit') openDeviceDialog(devices.find(device => device.id === id))
 		})
 	}
 
@@ -262,6 +286,20 @@ document.addEventListener('DOMContentLoaded', () => {
 			} else {
 				date = dateInput.value
 				if (!date) return alert('Wybierz datę dla starego urządzenia.')
+			}
+
+			if (editingId) {
+				if (findDuplicate(ru, sn, editingId)) return alert('Inne urządzenie na liście ma już ten RU i SN.')
+
+				const device = devices.find(item => item.id === editingId)
+				device.name = name
+				device.ru = ru
+				device.sn = sn
+				device.date = date
+				device.updatedAt = AppUtils.formatDate(new Date())
+				saveData()
+				deviceDialog.close()
+				return
 			}
 
 			const duplicate = findDuplicate(ru, sn)
@@ -284,11 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	}
 
-	addDeviceBtn.addEventListener('click', () => {
-		deviceForm.reset()
-		toggleDateInput()
-		deviceDialog.showModal()
-	})
+	addDeviceBtn.addEventListener('click', () => openDeviceDialog())
 
 	deviceCancelBtn.addEventListener('click', () => {
 		deviceDialog.close()
