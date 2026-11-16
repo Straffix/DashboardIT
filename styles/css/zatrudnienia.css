@@ -1,9 +1,90 @@
+@charset "UTF-8";
 /* === Hires Table Layout: Start === */
 .hires-table {
   min-width: 1500px;
 }
 .hires-table th {
   white-space: nowrap;
+}
+
+.status-select {
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.status-select.is-empty {
+  border-color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.78);
+  color: #64748b;
+}
+.status-select.is-warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+.status-select.is-ready {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+.status-select.is-ok {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+.status-select.is-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.status-select.is-muted {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+.status-select:focus-visible {
+  outline: 2px solid #c8102e;
+  outline-offset: 2px;
+}
+
+.acc-progress {
+  margin-bottom: 6px;
+  font-size: 1.1rem;
+  color: #64748b;
+}
+
+.acc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 260px;
+}
+
+.acc-chip {
+  padding: 4px 10px;
+  border: 1px dashed #e2e8f0;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #64748b;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.acc-chip:hover {
+  border-color: #c8102e;
+}
+.acc-chip.is-prepared {
+  border-style: solid;
+  border-color: transparent;
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+.acc-chip.is-prepared::before {
+  content: "✓ ";
+}
+.acc-chip:focus-visible {
+  outline: 2px solid #c8102e;
+  outline-offset: 2px;
 }
 
 /* === Hires Table Layout: End === *//*# sourceMappingURL=zatrudnienia.css.map */

@@ -1,3 +1,5 @@
+@use 'colors' as *;
+
 /* === Hires Table Layout: Start === */
 .hires-table {
 	min-width: 1500px;
@@ -6,4 +8,96 @@
 		white-space: nowrap;
 	}
 }
+
+.status-select {
+	padding: 6px 10px;
+	border: 1px solid transparent;
+	border-radius: 20px;
+	font: inherit;
+	font-size: 1.2rem;
+	font-weight: 600;
+	cursor: pointer;
+
+	&.is-empty {
+		border-color: $border;
+		background: $bg-panel;
+		color: $text-muted;
+	}
+
+	&.is-warn {
+		background: rgba($warning, 0.12);
+		color: $warning;
+	}
+
+	&.is-ready {
+		background: rgba($info, 0.1);
+		color: $info;
+	}
+
+	&.is-ok {
+		background: rgba($success, 0.12);
+		color: $success;
+	}
+
+	&.is-danger {
+		background: rgba($danger, 0.1);
+		color: $danger;
+	}
+
+	&.is-muted {
+		background: rgba($text-muted, 0.1);
+		color: $text-muted;
+	}
+
+	&:focus-visible {
+		outline: 2px solid $primary;
+		outline-offset: 2px;
+	}
+}
+
+.acc-progress {
+	margin-bottom: 6px;
+	font-size: 1.1rem;
+	color: $text-muted;
+}
+
+.acc-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	max-width: 260px;
+}
+
+.acc-chip {
+	padding: 4px 10px;
+	border: 1px dashed $border;
+	border-radius: 20px;
+	background: $bg-panel;
+	color: $text-muted;
+	font: inherit;
+	font-size: 1.1rem;
+	font-weight: 600;
+	cursor: pointer;
+
+	&:hover {
+		border-color: $primary;
+	}
+
+	&.is-prepared {
+		border-style: solid;
+		border-color: transparent;
+		background: rgba($success, 0.12);
+		color: $success;
+
+		&::before {
+			content: '✓ ';
+		}
+	}
+
+	&:focus-visible {
+		outline: 2px solid $primary;
+		outline-offset: 2px;
+	}
+}
+
 /* === Hires Table Layout: End === */

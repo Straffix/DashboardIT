@@ -97,6 +97,47 @@ function getAccessoryLabel(id) {
 	return accessory ? accessory.label : id
 }
 
+function getTone(field, value) {
+	const option = STATUS_OPTIONS[field].find(item => item.value === value)
+	return option ? option.tone : 'empty'
+}
+
+function createStatusCell(hire, field) {
+	const select = createEl('select', `status-select is-${getTone(field, hire[field])}`)
+	select.dataset.id = hire.id
+	select.dataset.field = field
+	fillSelect(select, field, '—')
+	select.value = hire[field] || ''
+
+	const cell = createEl('td')
+	cell.append(select)
+	return cell
+}
+
+function createAccessoriesCell(hire) {
+	const cell = createEl('td')
+	if (hire.accessories.length === 0) return cell
+
+	const preparedCount = hire.accessories.filter(id => hire.preparedAccessories.includes(id)).length
+	cell.append(createEl('p', 'acc-progress', `Przygotowane: ${preparedCount}/${hire.accessories.length}`))
+
+	const chips = createEl('div', 'acc-chips')
+	hire.accessories.forEach(accessoryId => {
+		const isPrepared = hire.preparedAccessories.includes(accessoryId)
+		const chip = createEl('button', 'acc-chip', getAccessoryLabel(accessoryId))
+		chip.type = 'button'
+		chip.classList.toggle('is-prepared', isPrepared)
+		chip.setAttribute('aria-pressed', isPrepared)
+		chip.dataset.action = 'toggle-accessory'
+		chip.dataset.id = hire.id
+		chip.dataset.accessory = accessoryId
+		chips.append(chip)
+	})
+
+	cell.append(chips)
+	return cell
+}
+
 function renderTable() {
 	tableBody.replaceChildren()
 	monthPicker.refreshView()
@@ -135,12 +176,12 @@ function renderTable() {
 			createEl('td', '', hire.startDate),
 			snCell,
 			createEl('td', '', hire.laptopRu),
-			createEl('td', '', hire.laptopStatus),
-			createEl('td', '', hire.laptopEmag),
+			createStatusCell(hire, 'laptopStatus'),
+			createStatusCell(hire, 'laptopEmag'),
 			createEl('td', '', hire.monitorRu),
-			createEl('td', '', hire.monitorStatus),
-			createEl('td', '', hire.monitorEmag),
-			createEl('td', '', hire.accessories.map(getAccessoryLabel).join(', ')),
+			createStatusCell(hire, 'monitorStatus'),
+			createStatusCell(hire, 'monitorEmag'),
+			createAccessoriesCell(hire),
 			actionsCell,
 		)
 		tableBody.append(row)
@@ -156,17 +197,30 @@ function removeItem(id) {
 	saveData()
 }
 
+function toggleAccessory(id, accessoryId) {
+	const hire = hires.find(item => item.id === id)
+
+	if (hire.preparedAccessories.includes(accessoryId)) {
+		hire.preparedAccessories = hire.preparedAccessories.filter(item => item !== accessoryId)
+	} else {
+		hire.preparedAccessories.push(accessoryId)
+	}
+
+	hire.updatedAt = AppUtils.formatDate(new Date())
+	saveData()
+}
 /* === Hires Actions: End === */
 
 /* === Hires Form: Start === */
+function fillSelect(select, field, emptyText) {
+	const emptyOption = createEl('option', '', emptyText)
+	emptyOption.value = ''
+	select.append(emptyOption)
+	STATUS_OPTIONS[field].forEach(option => select.append(createEl('option', '', option.value)))
+}
+
 function fillFormOptions() {
-	Object.entries(STATUS_OPTIONS).forEach(([field, options]) => {
-		const select = document.getElementById(field)
-		const emptyOption = createEl('option', '', '— wybierz —')
-		emptyOption.value = ''
-		select.append(emptyOption)
-		options.forEach(option => select.append(createEl('option', '', option.value)))
-	})
+	Object.keys(STATUS_OPTIONS).forEach(field => fillSelect(document.getElementById(field), field, '— wybierz —'))
 
 	ACCESSORIES.forEach(accessory => {
 		const item = createEl('label', 'check-item')
@@ -295,6 +349,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		const id = actionButton.dataset.id
 		if (actionButton.dataset.action === 'edit') openHireDialog(hires.find(hire => hire.id === id))
 		if (actionButton.dataset.action === 'delete') removeItem(id)
+		if (actionButton.dataset.action === 'toggle-accessory') toggleAccessory(id, actionButton.dataset.accessory)
+	})
+
+	tableBody.addEventListener('change', event => {
+		const select = event.target.closest('.status-select')
+		if (!select) return
+
+		const hire = hires.find(item => item.id === select.dataset.id)
+		hire[select.dataset.field] = select.value
+		hire.updatedAt = AppUtils.formatDate(new Date())
+		saveData()
 	})
 
 	fillFormOptions()

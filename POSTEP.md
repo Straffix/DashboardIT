@@ -239,10 +239,12 @@ Decyzje (2026-11-09):
         style `.device-name`, `.device-meta`, `.sn-pill`, `.row-actions`, `.row-action-btn` → `style.scss`.
       - [x] 5d-2: nowy `renderTable` (12 kolumn, sortowanie po dacie startu, statusy na razie jako tekst),
         `removeItem` po `id`, kliknięcia ✎ / 🗑.
-    - [ ] 5e: statusy jako kolorowe listy w tabeli (zmiana → zapis + `updatedAt`). Wspólna funkcja `fillSelect`
+    - [x] 5e: statusy jako kolorowe listy w tabeli (zmiana → zapis + `updatedAt`). Wspólna funkcja `fillSelect`
       (okienko + tabela), kolor przez klasę `is-<tone>`, nowy kolor `$info` w `_colors.scss`.
-    - [ ] 5f: odhaczanie przygotowanych akcesoriów + postęp.
-    - [ ] 5g: CSV z nowymi kolumnami.
+    - [x] 5f: odhaczanie przygotowanych akcesoriów + postęp. W tabeli „plakietki” akcesoriów (`.acc-chip`),
+      klik = przygotowane / nieprzygotowane (`toggleAccessory`), nad nimi „Przygotowane: 2/4”.
+    - [ ] 5g: CSV z nowymi kolumnami. **Pamiętać:** import musi zawsze tworzyć `accessories: []`
+      i `preparedAccessories: []` (tablice), bo `renderTable` i `toggleAccessory` wywołują na nich `.includes`/`.filter`.
     - [ ] 5h: sprzątanie (`renderAccessoryIcons` w `script.js`, stare style formularza/`aside`/kopii zapasowej).
 - [ ] **Etap 5b — płynne przejścia między stronami (View Transitions):** kafelek w menu „rozszerza się” w nagłówek
   modułu, bez białego mignięcia. Bez SPA — zostają osobne pliki HTML. Technika: `@view-transition { navigation: auto; }`
