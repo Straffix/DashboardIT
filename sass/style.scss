@@ -327,6 +327,36 @@ table {
 		box-shadow: 0 10px 20px rgba($primary, 0.25);
 	}
 }
+
+.toolbar-search {
+	position: relative;
+	display: flex;
+	align-items: center;
+
+	.fa-solid {
+		position: absolute;
+		left: 16px;
+		color: $text-soft;
+		pointer-events: none;
+	}
+
+	input {
+		width: 260px;
+		height: 52px;
+		padding: 0 16px 0 44px;
+		border: 1px solid $border;
+		border-radius: 14px;
+		background: $bg-panel;
+		color: $text-main;
+		font: inherit;
+		font-size: 1.4rem;
+
+		&:focus-visible {
+			outline: 2px solid $primary;
+			outline-offset: 2px;
+		}
+	}
+}
 /* === Shared Panel: End === */
 
 /* === Shared Interactive Elements: Start === */

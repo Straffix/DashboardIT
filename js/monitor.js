@@ -18,6 +18,7 @@ const addDeviceBtn = document.getElementById('add-device-btn')
 const deviceCancelBtn = document.getElementById('device-cancel-btn')
 const deviceDialogTitle = document.getElementById('device-dialog-title')
 const deviceSubmitBtn = document.getElementById('device-submit-btn')
+const searchInput = document.getElementById('device-search')
 
 /* === Monitor State And References: End === */
 
@@ -145,17 +146,22 @@ function createActionButton(action, icon, label, id) {
 	return button
 }
 
+function appendEmptyRow(text) {
+	const emptyRow = createEl('tr')
+	const emptyCell = createEl('td', 'empty-state-cell', text)
+	emptyCell.colSpan = 5
+	emptyRow.append(emptyCell)
+	tableBody.append(emptyRow)
+}
+
 function renderTable() {
 	if (!tableBody) return
 	tableBody.replaceChildren()
 
-	if (devices.length === 0) {
-		const emptyRow = createEl('tr')
-		const emptyCell = createEl('td', 'empty-state-cell', 'Brak urządzeń. Dodaj pierwsze przyciskiem +.')
-		emptyCell.colSpan = 5
-		emptyRow.append(emptyCell)
-		tableBody.append(emptyRow)
-	}
+	if (devices.length === 0) appendEmptyRow('Brak urządzeń. Dodaj pierwsze przyciskiem +.')
+
+	const query = searchInput.value.trim().toUpperCase()
+	let shownCount = 0
 
 	const stats = { all: devices.length, ok: 0, warn: 0, dead: 0 }
 	const today = new Date()
@@ -179,6 +185,10 @@ function renderTable() {
 		} else {
 			stats.ok += 1
 		}
+
+		const searchText = `${device.name} ${device.ru} ${device.sn}`.toUpperCase()
+		if (!searchText.includes(query)) return
+		shownCount += 1
 
 		const row = createEl('tr')
 
@@ -206,6 +216,8 @@ function renderTable() {
 		row.append(nameCell, createEl('td', '', device.ru), snCell, statusCell, actionsCell)
 		tableBody.append(row)
 	})
+
+	if (devices.length > 0 && shownCount === 0) appendEmptyRow('Brak wyników dla tego wyszukiwania.')
 
 	const updateStat = (id, value) => {
 		const element = document.getElementById(id)
@@ -323,6 +335,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	addDeviceBtn.addEventListener('click', () => openDeviceDialog())
+
+	searchInput.addEventListener('input', renderTable)
 
 	deviceCancelBtn.addEventListener('click', () => {
 		deviceDialog.close()

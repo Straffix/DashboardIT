@@ -195,9 +195,15 @@ Decyzje (2026-11-09):
     - [x] 3e-1: `openDeviceDialog(device)` — jedno okienko do dodawania i edycji (zmienna `editingId`, tytuł i napis
       przycisku zależne od trybu, przy edycji pola wypełnione, zaznaczone „stare urządzenie” z datą).
     - [x] 3e-2: zapis przy edycji (podmiana pól w istniejącym wpisie + `updatedAt`, `findDuplicate` pomija edytowany wpis).
-    - [ ] Testy w przeglądarce (zmiana nazwy, data w przeszłości, duplikat innego urządzenia, zapis bez zmian,
-      dodawanie ➕, odświeżenie strony), potem commit `Etap 3e: edycja urządzenia w okienku`.
-- [ ] **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN).
+    - [x] Testy OK, commit `d183198`. **Etap 3 zakończony (2026-11-16).**
+- [ ] ▶️ **Etap 4 — Urządzenia: wyszukiwarka** (🔍 filtruje po nazwie, RU, SN). Plan:
+  - Decyzja: pole wyszukiwania zawsze widoczne w pasku narzędzi (bez osobnego przycisku 🔍), lupa w środku pola;
+    styl `.toolbar-search` we wspólnym `style.scss` (przyda się w zatrudnieniach). Karty statystyk liczą **wszystkie**
+    urządzenia, nie tylko znalezione.
+  - [x] 4a: ikona `magnifying-glass-solid-full.svg` + reguła w `_icons.scss`, HTML pola `type="search"`, styl.
+  - [x] 4b: JS: `appendEmptyRow(text)`, filtr w `renderTable` (nazwa + RU + SN, bez rozróżniania wielkości liter),
+    komunikat „Brak wyników…”, `input` → `renderTable`.
+  - [ ] Testy w przeglądarce, potem commit `Etap 4: wyszukiwarka urządzeń` (z nowym plikiem SVG).
 - [ ] **Etap 5 — Nowe zatrudnienia, dane i tabela:** nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,
   nowe akcesoria), kolorowe statusy, formularz w `<dialog>` pod ➕, eksport/import CSV nad tabelą z nowymi kolumnami,
   przeniesienie starych wpisów do nowego formatu.
