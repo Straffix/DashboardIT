@@ -40,10 +40,10 @@
 		margin-bottom: 22px;
 	}
 
-	.table-header .month-picker-container {
+	.table-header .month-trigger {
 		width: 100%;
 		min-width: 0;
-		padding: 10px 46px;
+		padding: 10px 16px;
 	}
 
 	.table-header .month-nav-btn {
@@ -73,22 +73,5 @@
 @media (max-width: 480px) {
 	html {
 		font-size: 58%;
-	}
-
-	.month-fallback-popover {
-		padding: 18px;
-	}
-
-	.month-fallback-grid {
-		grid-template-columns: 1fr;
-	}
-
-	.month-fallback-actions {
-		justify-content: stretch;
-	}
-
-	.month-fallback-btn {
-		flex: 1;
-		text-align: center;
 	}
 }

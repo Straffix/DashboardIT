@@ -1,7 +1,7 @@
 # Postęp porządkowania DashboardIT
 
 > Plik prowadzony wspólnie z Claude. Claude tylko podpowiada i aktualizuje ten plik, a kod w projekcie piszę ja.
-> Ostatnia aktualizacja: 2026-11-16
+> Ostatnia aktualizacja: 2026-11-26
 
 ## Cel
 
@@ -59,7 +59,8 @@ Rozwiązanie: własny plik `sass/_icons.scss` (pseudo-element `::before` + `mask
 
 - [x] Krok 5: poprawiona nazwa `.fa-calendar-days` w `sass/_icons.scss:35` (wcześniej przez „Replace All” było podwójne „s”).
 - [x] Krok 6: sprawdzone 4 strony; jedyny kwadrat to `fa-file-excel` — zniknie przy zamianie Excela na CSV.
-- [ ] Wyjaśnić 4 „pudełka” w akcesoriach (ikona zastępcza `fa-box` z `js/script.js:97`): najechać myszką i odczytać nazwy.
+- [x] ~~Wyjaśnić 4 „pudełka” w akcesoriach~~ — nieaktualne: kod rysujący ikony akcesoriów (`renderAccessoryIcons`,
+  `ICON_MAP`) usunięty w Etapie 5h (2026-11-16).
 
 Wnioski:
 
@@ -126,7 +127,7 @@ Decyzje (2026-11-09):
   sekcja **Zakładki** (dodawanie nazwa + adres, zapis w `localStorage`).
   - [x] 2a: jasne tło (`$page-gradient` w `_colors.scss`, jedno dla wszystkich stron), usunięte ukośne paski `::before`
     i ozdobne „kule” (`dashboard-orb`, `dashboard-grid-glow`).
-    - [ ] resztka: reguła `.dashboard-orb, .dashboard-grid-glow { display: none }` w `dashboard.scss:362-365`.
+    - [x] resztka (usunięta, sprawdzone 2026-11-18): reguła `.dashboard-orb, .dashboard-grid-glow { display: none }` w `dashboard.scss:362-365`.
   - [x] 2b: nagłówek „Sekcja wsparcia użytkowników / Dashboard IT” (wielkie litery robi CSS), `<title>Dashboard IT</title>`,
     usunięty podtytuł.
   - [x] 2a+: karta menu na pełną szerokość (usunięty `max-width`).
@@ -147,7 +148,7 @@ Decyzje (2026-11-09):
   - [x] 2d: stopka jak we wzorze (linia + „© rok IT Support Dashboard by **Arkadiusz Lisiecki**” po prawej) w 3 plikach;
     usunięte: domena z zieloną kropką, `footer-content/-status/-separator`, `@keyframes pulseStatus`.
     Rok przez `getElementById` (audyt C1), bez `DOMContentLoaded` — działa, bo `<script>` jest na końcu `<body>`.
-  - [ ] 2e: Zakładki — plan:
+  - [x] 2e: Zakładki — plan:
     - [x] 2e-1: HTML + CSS sekcji „Zakładki” z przyciskiem „+” (bez JS). Commit `6af5aa2` (razem z 2d).
     - [x] 2e-2: okienko `<dialog>` (styl `.modal` we wspólnym `style.scss` — do użycia też w modułach), pole adresu
       jako `type="text"` + `inputmode="url"` (bo `type="url"` odrzuca `www.…` bez `https://`). Commit `71d8498`.
@@ -166,7 +167,7 @@ Decyzje (2026-11-09):
     - [x] 2e-6 (2026-11-12): usuwanie zakładki (× w rogu, widoczne po najechaniu / Tab / zawsze na ekranach dotykowych,
       `confirm`, `filter` po `id`). Przywrócona reguła `fa-xmark` w `_icons.scss`. Testy OK.
     - Kod w nowym pliku `js/bookmarks.js`, ładowanym tylko w `index.html`.
-  - [ ] 2e: Zakładki — **decyzja (2026-11-09): A, osobiste.** Każdy przypina swoje linki (np. instrukcje na SharePoincie,
+  - [x] 2e: Zakładki — **decyzja (2026-11-09): A, osobiste.** Każdy przypina swoje linki (np. instrukcje na SharePoincie,
     pliki Word/Excel), widoczne tylko dla niego. Zapis w `localStorage` (bez logowania to jedyny sposób na „tylko moje”).
     - Ograniczenia: zakładki są przypisane do przeglądarki na danym komputerze; wyczyszczenie danych przeglądarki je usuwa.
     - Bezpieczeństwo (obowiązkowo): dopuszczać tylko adresy `https://` / `http://` (blokada `javascript:...` w `href`),
@@ -204,7 +205,7 @@ Decyzje (2026-11-09):
   - [x] 4b: JS: `appendEmptyRow(text)`, filtr w `renderTable` (nazwa + RU + SN, bez rozróżniania wielkości liter),
     komunikat „Brak wyników…”, `input` → `renderTable`.
   - [x] Testy OK, commit `00ced6c`. **Etap 4 zakończony (2026-11-16).**
-- [ ] **Etap 5 — Nowe zatrudnienia, dane i tabela:** nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,
+- [x] **Etap 5 — Nowe zatrudnienia, dane i tabela** (zakończony 2026-11-16, commity `ef35944`, `481747c`, `5f938f9`, `37e614f`): nowe pola (Service Desk, Laptop SN/RU/status/eMag, Monitor RU/status/eMag,
   nowe akcesoria), kolorowe statusy, formularz w `<dialog>` pod ➕, eksport/import CSV nad tabelą z nowymi kolumnami,
   przeniesienie starych wpisów do nowego formatu.
   - Decyzje (2026-11-16):
@@ -229,7 +230,7 @@ Decyzje (2026-11-09):
       - Lekcja: pliki `<script>` dzielą jedną przestrzeń nazw — w pliku strony **nie deklarować ponownie** (`const`/`let`)
         nazwy, która jest już na najwyższym poziomie `script.js` → `SyntaxError` i cały plik nie działa.
         `node --check` tego nie wykryje (sprawdza pliki osobno).
-    - [ ] 5c: okienko `<dialog>` dodawania/edycji (sekcje: Dane główne / Laptop i monitor / Akcesoria / Uwagi).
+    - [x] 5c: okienko `<dialog>` dodawania/edycji (sekcje: Dane główne / Laptop i monitor / Akcesoria / Uwagi).
       - [x] 5c-1: HTML okienka (`id` pól = nazwy pól we wpisie) + style `.modal.is-wide`, `.modal-grid`,
         `.modal-section-title`, `.check-grid`, `.check-item`; `.input-group` obejmuje też `select` i `textarea`.
       - [x] 5c-2: JS: wypełnienie list statusów i akcesoriów, `openHireDialog`, zapis (dodawanie + edycja),
@@ -246,7 +247,9 @@ Decyzje (2026-11-09):
     - [x] 5g: CSV z nowymi kolumnami (`CSV_COLUMNS` = jedna lista dla eksportu i importu; akcesoria w pliku jako nazwy,
       `labelsToIds` przy imporcie; wiersze bez użytkownika/daty pomijane). **Pamiętać:** import musi zawsze tworzyć `accessories: []`
       i `preparedAccessories: []` (tablice), bo `renderTable` i `toggleAccessory` wywołują na nich `.includes`/`.filter`.
-    - [ ] 5h: sprzątanie martwego kodu (sprawdzone 2026-11-16: nieużywane w żadnym HTML/JS):
+    - [x] 5h: sprzątanie martwego kodu (sprawdzone 2026-11-16: nieużywane w żadnym HTML/JS). Dodatkowo usunięte:
+      `ICON_MAP`, reguły ikon mouse/keyboard/headset/briefcase w `_icons.scss`; sekcja → `Shared Calendar`.
+      (Pliki SVG tych 4 ikon w `img/icons/` mogą zostać albo do usunięcia — nic się do nich nie odwołuje.)
       - JS `script.js`: `ACCESSORY_LABELS` w `APP_CONFIG`, cała sekcja `Shared Accessory Rendering`
         (`getAccessorySizeClass`, `getAccessoryColumnsClass`, `renderAccessoryIcons`) + wpis w `AppUtils`.
       - `style.scss`: `.main-content` (z `section, aside`), `.table-head-cell-center, .cell-center`, `.icon-button`,
@@ -256,14 +259,40 @@ Decyzje (2026-11-09):
       - `_responsive-large/medium/small.scss`: bloki `.main-content`, `.backup_section …`, `.accessory-picker`.
       - **Zostają:** `.input-group`, `.status-pill` (Monitor), `.table-header` i style kalendarza, `.cell-right`,
         `.empty-state-cell`, `.is-hidden`, `.visually-hidden-file-input`.
-- [ ] **Etap 5b — płynne przejścia między stronami (View Transitions):** kafelek w menu „rozszerza się” w nagłówek
+- [x] **Etap 5b — płynne przejścia między stronami (View Transitions):** kafelek w menu „rozszerza się” w nagłówek
   modułu, bez białego mignięcia. Bez SPA — zostają osobne pliki HTML. Technika: `@view-transition { navigation: auto; }`
   + wspólne `view-transition-name` dla kafelka i nagłówka modułu. Działa przez `http(s)` (Live Server, serwer kolegi),
   nie przy `file:///`. Robić po Etapie 5, gdy moduły mają docelowy wygląd.
+  - Plan (2026-11-16):
+    - [x] 5b-1: `@view-transition { navigation: auto; }` we wspólnym `style.scss` (+ wyłączenie przy
+      `prefers-reduced-motion`), pasek `.module-nav` z własną nazwą (stoi w miejscu przy przejściu między modułami).
+    - [x] ~~5b-2: pary nazw kafelek ↔ nagłówek (`hires`, `devices`)~~ — **odrzucone (2026-11-26):** „rozszerzanie”
+      kafelka w nagłówek wyglądało tandetnie. Reguły i klasy `hires-header`/`devices-header` usunięte.
+      Zostaje samo przenikanie stron (5b-1). **Etap 5b zakończony.**
+    - Test tylko przez Live Server (`http://127.0.0.1:5500/…`), w Edge/Chrome 126+.
   - Rozważone i odrzucone (2026-11-12): przerobienie na SPA (routing `#` / History API) — zbyt złożone do obrony,
     to ta sama złożoność, co w wersji z brancha `react`.
-- [ ] **Etap 6 — Zatrudnienia: wyszukiwarka** we wszystkich miesiącach (pomysł z notatek).
-- [ ] **Etap 7 — wybór roku i miesiąca z liczbą wpisów** (prostsza wersja `createMonthPicker`, bez martwego kodu — audyt C4).
+- [x] **Etap 6 — Zatrudnienia: wyszukiwarka** we wszystkich miesiącach (zakończony 2026-11-26).
+  - Pole `hire-search` (osoba, SD, laptop SN/RU, monitor RU, lokalizacja). Przy szukaniu nagłówek miesiąca schowany,
+    a wyniki pogrupowane wierszami z nazwą miesiąca (`.month-group-cell`, `toLocaleDateString('pl-PL')`).
+  - Poprawki przy okazji: `.is-hidden` z `!important` (przegrywało z `.table-header { display: flex }`),
+    `.toolbar-actions { margin-left: auto }` (przyciski zawsze po prawej), strzałki miesiąca w zwykłym rzędzie flex
+    (zamiast `position: absolute` — zasłaniały „PAŹDZIERNIK”), `.status-select { max-width: 170px }` (długi status eMag).
+  - Usunięta podpowiedź `.backup-hint` (CSV UTF-8 / apostrof) w Zatrudnieniach i w Monitorze.
+- [x] **Etap 7 — wybór roku i miesiąca z liczbą wpisów** (zakończony 2026-11-26; audyt C4 załatwiony).
+  - Wzór: okienko „Wybierz rok i miesiąc” — lista Rok + siatka 12 miesięcy (STY…GRU), wybrany na czerwono,
+    przy każdym miesiącu liczba osób na liście.
+  - Technika: natywny `popover` + `popovertarget` (przeglądarka sama zamyka po Esc i kliknięciu obok) — zamiast
+    ~270 linii `createMonthPicker` w `script.js` (używa go tylko `zatrudnienia.js`).
+  - [x] 7a: HTML + CSS okienka: `<h2>` z przyciskiem `.month-trigger` (`popovertarget`), `<div popover>`,
+    12 przycisków `.month-cell` wpisanych w HTML, kółko `.month-count` chowane przez `:empty`,
+    położenie pod przyciskiem przez `anchor-name` / `position-anchor` (Edge/Chrome 125+).
+  - [x] 7b: JS w `zatrudnienia.js` (sekcja `Hires Month Picker`): `viewYear`/`viewMonth`, `isInMonth`, `showMonth`
+    (`new Date` sam przelicza miesiąc -1 / 12), `fillYearSelect` (rok ±1 + lata z danych), `renderMonthGrid`
+    (zdarzenie `toggle` popovera). Lekcja: nasłuchiwanie dodane wewnątrz `forEach` dodaje się tyle razy, ile elementów.
+  - [x] 7c: usunięte ~295 linii z `script.js` (`createMonthPicker`, `supportsMonthInput`, `parseYearMonth`),
+    style `.month-fallback-*` (też w responsive), cała sekcja `Shared Motion` (animacje `slide-*`, nieużywane `.fade-in`).
+    Zniknęła animacja przesuwania tabeli przy strzałkach.
 - [ ] **Etap 8 — Rezerwacja obiadów** (na końcu; zapis danych w osobnym module, gotowym do podmiany na serwer).
 - [ ] **Etap 9 — poprawki z audytu** (bezpieczeństwo A1/A4, B1–B4, B6, B8, porządki C, dostępność).
 - Audyt (sekcja „Bezpieczeństwo” i lista priorytetów) — **na samym końcu**.
@@ -305,7 +334,7 @@ Decyzja (2026-11-09): moduł zastępuje inne, osobne narzędzie. Przy okazji zni
 
 ## 📋 Do zrobienia
 
-- [ ] **Następne: Excel (SheetJS z CDN) → własny CSV.** Cel: kopia zapasowa + edycja pliku w Excelu poza aplikacją.
+- [x] **Zrobione: Excel (SheetJS z CDN) → własny CSV.** Cel: kopia zapasowa + edycja pliku w Excelu poza aplikacją.
   - Decyzja: CSV bez biblioteki (nie SheetJS lokalnie: ~900 KB cudzego kodu, wersja 0.20.1 ma podatność CVE-2024-22363).
   - Plan: 2 wspólne funkcje w `AppUtils` (`js/script.js:451`): `downloadCSV(rows, fileName)` i `parseCSV(text)`;
     w `monitor.js`, `zatrudnienia.js`, `wymiany.js` podmienić tylko linie z `XLSX.*` (+ `readAsText` zamiast `readAsArrayBuffer`).
@@ -337,11 +366,11 @@ Decyzja (2026-11-09): moduł zastępuje inne, osobne narzędzie. Przy okazji zni
     `accept=".csv"`, podpowiedź `.backup-hint` (CSV UTF-8 + apostrof dla zer) w obu modułach. **CSV zakończone.**
     - Wyjaśnione: zera giną w Excelu w chwili wpisania, kod tego nie odzyska → apostrof albo kolumna w formacie „Tekst”.
   - Sprawdzone: w JS nie ma `fetch`/`XMLHttpRequest`/`WebSocket`/adresów http; Blob + `blob:` URL działa tylko lokalnie.
-- [ ] **Bezpieczeństwo: XSS przy wyświetlaniu danych (zaraz po CSV, przed importem prawdziwych danych).**
-  Dane trafiają do `innerHTML` bez zabezpieczenia: `js/monitor.js:128-130`, `js/zatrudnienia.js:77-79`
-  (+ `renderAccessoryIcons` w `script.js:99,104`).
-  Komórka z CSV typu `<img src=x onerror=...>` wykonałaby kod. Poprawka: funkcja `escapeHTML` albo `textContent`.
-- [ ] `js/script.js:408`: zamienić `querySelectorAll('#current-year')` na `getElementById('current-year')` (id jest unikalne).
+- [x] **Bezpieczeństwo: XSS przy wyświetlaniu danych** — załatwione (sprawdzone 2026-11-16): Monitor (3c), Zatrudnienia (5d)
+  i Zakładki rysują dane przez `createEl`/`textContent`; `renderAccessoryIcons` usunięte (5h).
+  Pozostałe `innerHTML` w JS: `bookmarks.js` (`= ''`, czyszczenie) i okienko wyboru miesiąca w `script.js`
+  (stały tekst, bez danych użytkownika) — bezpieczne; okienko miesiąca i tak do przepisania w Etapie 7.
+- [x] `current-year` przez `getElementById` — zrobione w 2d.
 - [ ] **Na koniec projektu (decyzja 2026-11-12):** omówić linijka po linijce wszystkie pliki JS (`script.js`, `bookmarks.js`,
   `monitor.js`, `zatrudnienia.js`) — w trakcie prac JS podawany bez szczegółowych tłumaczeń. Przy okazji: sprawdzić,
   czy nie ma starego `var` (zamienić na `let`/`const`).

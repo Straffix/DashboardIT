@@ -13,13 +13,8 @@
 		font-size: 1.18rem;
 	}
 
-	.table-header .month-picker-container {
-		min-width: 220px;
+	.table-header .month-trigger {
 		padding: 10px 22px;
-	}
-
-	.month-fallback-popover {
-		width: min(360px, calc(100vw - 40px));
 	}
 
 	body.dashboard-page .dashboard-container {

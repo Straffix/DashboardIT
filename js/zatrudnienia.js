@@ -83,10 +83,16 @@ const hireSubmitBtn = document.getElementById('hire-submit-btn')
 const hireCancelBtn = document.getElementById('hire-cancel-btn')
 const accessoriesBox = document.getElementById('hire-accessories')
 const preparedByList = document.getElementById('prepared-by-list')
+const searchInput = document.getElementById('hire-search')
+const monthHeader = document.querySelector('.table-header')
 
-const monthPicker = AppUtils.createMonthPicker({
-	onChange: () => renderTable(),
-})
+const monthDisplay = document.getElementById('current-month-display')
+const monthPopover = document.getElementById('month-popover')
+const yearSelect = document.getElementById('year-select')
+const monthCells = document.querySelectorAll('.month-cell')
+
+let viewYear = new Date().getFullYear()
+let viewMonth = new Date().getMonth()
 /* === Hires State And References: End === */
 
 /* === Hires Storage: Start === */
@@ -106,6 +112,43 @@ function saveData() {
 	renderTable()
 }
 /* === Hires Storage: End === */
+
+/* === Hires Month Picker: Start === */
+function isInMonth(hire, year, month) {
+	const startDate = new Date(hire.startDate)
+	return startDate.getFullYear() === year && startDate.getMonth() === month
+}
+
+function showMonth(year, month) {
+	const date = new Date(year, month, 1)
+	viewYear = date.getFullYear()
+	viewMonth = date.getMonth()
+	renderTable()
+}
+
+function fillYearSelect() {
+	const years = hires.map(hire => new Date(hire.startDate).getFullYear()).filter(Boolean)
+	const firstYear = Math.min(viewYear - 1, ...years)
+	const lastYear = Math.max(viewYear + 1, ...years)
+
+	yearSelect.replaceChildren()
+	for (let year = firstYear; year <= lastYear; year++) {
+		yearSelect.append(new Option(year, year))
+	}
+	yearSelect.value = viewYear
+}
+
+function renderMonthGrid() {
+	const year = Number(yearSelect.value)
+
+	monthCells.forEach(cell => {
+		const month = Number(cell.dataset.month)
+		const count = hires.filter(hire => isInMonth(hire, year, month)).length
+		cell.classList.toggle('is-active', year === viewYear && month === viewMonth)
+		cell.querySelector('.month-count').textContent = count || ''
+	})
+}
+/* === Hires Month Picker: End === */
 
 /* === Hires Table Rendering: Start === */
 function getAccessoryLabel(id) {
@@ -156,19 +199,43 @@ function createAccessoriesCell(hire) {
 
 function renderTable() {
 	tableBody.replaceChildren()
-	monthPicker.refreshView()
+	monthDisplay.textContent = `${APP_CONFIG.MONTH_NAMES[viewMonth].toUpperCase()} ${viewYear}`
 
-	const viewDate = monthPicker.getCurrentDate()
-	const monthHires = hires
+	const query = searchInput.value.trim().toUpperCase()
+	monthHeader.classList.toggle('is-hidden', Boolean(query))
+
+	const shownHires = hires
 		.filter(hire => {
-			const startDate = new Date(hire.startDate)
-			return startDate.getMonth() === viewDate.getMonth() && startDate.getFullYear() === viewDate.getFullYear()
+			if (query) {
+				const searchText = [hire.user, hire.serviceDesk, hire.laptopSn, hire.laptopRu, hire.monitorRu, hire.location]
+					.join(' ')
+					.toUpperCase()
+				return searchText.includes(query)
+			}
+			return isInMonth(hire, viewYear, viewMonth)
 		})
 		.sort((a, b) => a.startDate.localeCompare(b.startDate))
 
-	if (monthHires.length === 0) appendEmptyRow(tableBody, 'Brak planowanych zatrudnień w tym miesiącu.', 12)
+	if (shownHires.length === 0) {
+		const message = query ? 'Brak wyników we wszystkich miesiącach.' : 'Brak planowanych zatrudnień w tym miesiącu.'
+		appendEmptyRow(tableBody, message, 12)
+	}
 
-	monthHires.forEach(hire => {
+	let lastMonth = ''
+
+	shownHires.forEach(hire => {
+		if (query) {
+			const monthName = new Date(hire.startDate).toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })
+			if (monthName !== lastMonth) {
+				const monthRow = createEl('tr')
+				const monthCell = createEl('td', 'month-group-cell', monthName)
+				monthCell.colSpan = 12
+				monthRow.append(monthCell)
+				tableBody.append(monthRow)
+				lastMonth = monthName
+			}
+		}
+
 		const userCell = createEl('td')
 		userCell.append(createEl('p', 'device-name', hire.user))
 		const meta = [hire.preparedBy, hire.location].filter(Boolean).join(' · ')
@@ -294,7 +361,9 @@ function saveHire(event) {
 		hires.push({ ...data, preparedAccessories: [], id: AppUtils.createId(), createdAt: today, updatedAt: today })
 	}
 
-	monthPicker.setCurrentDate(new Date(data.startDate), { render: false })
+	const savedDate = new Date(data.startDate)
+	viewYear = savedDate.getFullYear()
+	viewMonth = savedDate.getMonth()
 	saveData()
 	hireDialog.close()
 }
@@ -367,11 +436,25 @@ function importExcel(event) {
 
 /* === Hires Init: Start === */
 document.addEventListener('DOMContentLoaded', () => {
-	monthPicker.init()
-
 	document.querySelectorAll('[data-month-delta]').forEach(button => {
 		button.addEventListener('click', () => {
-			monthPicker.changeMonth(Number(button.dataset.monthDelta))
+			showMonth(viewYear, viewMonth + Number(button.dataset.monthDelta))
+		})
+	})
+
+	monthPopover.addEventListener('toggle', event => {
+		if (event.newState === 'open') {
+			fillYearSelect()
+			renderMonthGrid()
+		}
+	})
+
+	yearSelect.addEventListener('change', renderMonthGrid)
+
+	monthCells.forEach(cell => {
+		cell.addEventListener('click', () => {
+			showMonth(Number(yearSelect.value), Number(cell.dataset.month))
+			monthPopover.hidePopover()
 		})
 	})
 
@@ -398,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	fillFormOptions()
 	hireForm.addEventListener('submit', saveHire)
 	addHireBtn.addEventListener('click', () => openHireDialog())
+	searchInput.addEventListener('input', renderTable)
 	hireCancelBtn.addEventListener('click', () => hireDialog.close())
 
 	if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportExcel)

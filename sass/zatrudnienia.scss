@@ -10,6 +10,8 @@
 }
 
 .status-select {
+	max-width: 170px;
+	text-overflow: ellipsis;
 	padding: 6px 10px;
 	border: 1px solid transparent;
 	border-radius: 20px;
@@ -98,6 +100,15 @@
 		outline: 2px solid $primary;
 		outline-offset: 2px;
 	}
+}
+
+.month-group-cell {
+	padding: 14px 15px 8px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: $primary;
+	background: $bg-panel;
 }
 
 /* === Hires Table Layout: End === */

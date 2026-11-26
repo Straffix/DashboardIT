@@ -10,12 +10,8 @@
     padding: 16px 10px;
     font-size: 1.18rem;
   }
-  .table-header .month-picker-container {
-    min-width: 220px;
+  .table-header .month-trigger {
     padding: 10px 22px;
-  }
-  .month-fallback-popover {
-    width: min(360px, 100vw - 40px);
   }
   body.dashboard-page .dashboard-container {
     padding: 20px 20px 24px;
@@ -57,10 +53,10 @@
     min-height: 52px;
     margin-bottom: 22px;
   }
-  .table-header .month-picker-container {
+  .table-header .month-trigger {
     width: 100%;
     min-width: 0;
-    padding: 10px 46px;
+    padding: 10px 16px;
   }
   .table-header .month-nav-btn {
     width: 38px;
@@ -84,19 +80,6 @@
 @media (max-width: 480px) {
   html {
     font-size: 58%;
-  }
-  .month-fallback-popover {
-    padding: 18px;
-  }
-  .month-fallback-grid {
-    grid-template-columns: 1fr;
-  }
-  .month-fallback-actions {
-    justify-content: stretch;
-  }
-  .month-fallback-btn {
-    flex: 1;
-    text-align: center;
   }
 }
 @media (min-width: 1600px) {
@@ -468,7 +451,7 @@ table tr:last-child td {
 
 .is-hidden,
 .visually-hidden-file-input {
-  display: none;
+  display: none !important;
 }
 
 /* === Shared Page Layout: End === */
@@ -500,6 +483,7 @@ table tr:last-child td {
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+  margin-left: auto;
 }
 
 .toolbar-btn {
@@ -676,46 +660,15 @@ table tr:last-child td {
 .table-header {
   display: flex;
   align-items: center;
-  justify-content: center;
   margin-bottom: 30px;
-  position: relative;
   min-height: 60px;
-  overflow: visible;
 }
 .table-header .month-picker-container {
-  position: relative;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 11px 28px;
-  background: rgba(255, 255, 255, 0.78);
-  border-radius: 12px;
-  min-width: 240px;
-  overflow: visible;
-}
-.table-header .month-picker-container h2 {
   margin: 0;
   font-size: 1.9rem;
-  pointer-events: none;
-  z-index: 1;
-}
-.table-header .month-picker-container .hidden-month-input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-  border: 0;
-  padding: 0;
-  margin: 0;
 }
 .table-header .month-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid #e2e8f0;
   width: 45px;
@@ -728,104 +681,87 @@ table tr:last-child td {
   justify-content: center;
   color: #c8102e;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  z-index: 15;
 }
 .table-header .month-nav-btn:hover {
   background: linear-gradient(135deg, #c8102e 0%, #8f0b22 100%);
   color: white;
-  transform: translateY(-50%) scale(1.1);
-}
-.table-header .month-nav-btn:first-of-type {
-  left: 0;
-}
-.table-header .month-nav-btn:last-of-type {
-  right: 0;
+  transform: scale(1.1);
 }
 
-.month-fallback-popover {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  z-index: 2000;
-  width: 375px;
-  padding: 23px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid #e2e8f0;
+.month-trigger {
+  anchor-name: --month-trigger;
+  padding: 11px 28px;
+  border: 0;
   border-radius: 12px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
-  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.78);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
-.month-fallback-title {
-  margin-bottom: 17px;
+.month-popover {
+  position-anchor: --month-trigger;
+  inset: auto;
+  top: anchor(bottom);
+  left: anchor(center);
+  translate: -50% 10px;
+  margin: 0;
+  width: 340px;
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.month-popover-title {
+  margin: 0 0 16px;
   font-weight: 700;
-  font-size: 1.7rem;
-  color: #1e293b;
   text-transform: uppercase;
 }
 
-.month-fallback-grid {
+.month-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
 
-.month-fallback-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.month-fallback-field span {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: #64748b;
-}
-.month-fallback-field select {
+.month-cell {
+  position: relative;
+  padding: 14px 0;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 12px 15px;
-  font-size: 1.35rem;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.78);
-  color: #1e293b;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-}
-.month-fallback-field select:focus {
-  outline: none;
-  border-color: rgba(200, 16, 46, 0.25);
-  box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.12);
-  background: rgba(255, 255, 255, 0.94);
-}
-.month-fallback-field select option {
-  background: rgba(255, 255, 255, 0.96);
-  color: #1e293b;
-}
-.month-fallback-field select option:checked {
-  background: #fdecef;
-  color: #312e81;
-  font-weight: 600;
-}
-
-.month-fallback-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 11px;
-  margin-top: 19px;
-}
-
-.month-fallback-btn {
-  border: 1px solid #cbd5e1;
-  background: rgba(255, 255, 255, 0.96);
-  color: #1e293b;
-  border-radius: 8px;
-  padding: 10px 17px;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font: inherit;
+  font-weight: 700;
   cursor: pointer;
 }
-.month-fallback-btn.is-primary {
+.month-cell:hover {
+  border-color: #c8102e;
+}
+.month-cell.is-active {
   background: linear-gradient(135deg, #c8102e 0%, #8f0b22 100%);
   border-color: transparent;
-  color: #fff;
+  color: white;
+}
+.month-cell.is-active .month-count {
+  background: white;
+  color: #c8102e;
+}
+
+.month-count {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 20px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #c8102e;
+  color: white;
+  font-size: 1rem;
+}
+.month-count:empty {
+  display: none;
 }
 
 /* === Shared Calendar: End === */
@@ -948,55 +884,24 @@ table tr:last-child td {
 }
 
 /* === Shared Modal: End === */
-/* === Shared Motion: Start === */
-@keyframes slideOutLeft {
-  0% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-100px);
-    opacity: 0;
-  }
+/* === Shared Page Transitions: Start === */
+@view-transition {
+  navigation: auto;
 }
-@keyframes slideInRight {
-  0% {
-    transform: translateX(100px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-@keyframes fadeSlide {
-  0% {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-.fade-in {
-  animation: fadeSlide 0.3s ease-out;
+::view-transition-group(*) {
+  animation-duration: 0.35s;
 }
 
-#table-body {
-  will-change: transform, opacity;
-}
-#table-body.table-body-hidden {
-  visibility: hidden;
-}
-#table-body.slide-out {
-  animation: slideOutLeft 0.25s forwards ease-in;
-}
-#table-body.slide-in {
-  animation: slideInRight 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.module-nav {
+  view-transition-name: module-nav;
 }
 
-/* === Shared Motion: End === */
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+/* === Shared Page Transitions: End === */
 /* === Shared Responsive Rules: Start === */
 @media (max-width: 768px) {
   body {

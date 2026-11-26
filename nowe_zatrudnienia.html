@@ -52,18 +52,58 @@
                         <i class="fa-solid fa-chevron-left"></i>
                     </button>
 
-                    <div class="month-picker-container" id="month-trigger" role="button" tabindex="0"
-                        aria-label="Wybierz miesiąc">
-                        <h2 id="current-month-display">MARZEC 2026</h2>
-                        <input type="month" id="hidden-month-input" class="hidden-month-input" aria-hidden="true">
-                    </div>
+                    <h2 class="month-picker-container">
+                        <button type="button" class="month-trigger" id="current-month-display"
+                            popovertarget="month-popover" title="Wybierz miesiąc"></button>
+                    </h2>
 
                     <button class="month-nav-btn" type="button" data-month-delta="1" aria-label="Następny miesiąc">
                         <i class="fa-solid fa-chevron-right"></i>
                     </button>
+
+                    <div class="month-popover" id="month-popover" popover>
+                        <p class="month-popover-title">Wybierz rok i miesiąc</p>
+                        <div class="input-group">
+                            <label for="year-select">Rok</label>
+                            <select id="year-select"></select>
+                        </div>
+                        <div class="month-grid" id="month-grid">
+                            <button type="button" class="month-cell" data-month="0">STY<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="1">LUT<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="2">MAR<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="3">KWI<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="4">MAJ<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="5">CZE<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="6">LIP<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="7">SIE<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="8">WRZ<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="9">PAŹ<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="10">LIS<span
+                                    class="month-count"></span></button>
+                            <button type="button" class="month-cell" data-month="11">GRU<span
+                                    class="month-count"></span></button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="toolbar-actions">
+
+                    <label class="toolbar-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="search" id="hire-search" placeholder="Szukaj: osoba, SD, SN, RU"
+                            aria-label="Szukaj pracownika">
+                    </label>
+
                     <button type="button" class="toolbar-btn" id="export-excel-btn">
                         <i class="fa-solid fa-file-csv"></i> Eksport CSV
                     </button>
@@ -102,11 +142,6 @@
                     <tbody id="table-body"></tbody>
                 </table>
             </div>
-
-            <p class="backup-hint">
-                W Excelu zapisz plik jako <b>CSV UTF-8</b>. Numery zaczynające się od 0 wpisuj z apostrofem, np.
-                <b>'00456</b>.
-            </p>
         </section>
 
         <dialog class="modal is-wide" id="hire-dialog" aria-labelledby="hire-dialog-title">

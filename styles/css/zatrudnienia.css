@@ -8,6 +8,8 @@
 }
 
 .status-select {
+  max-width: 170px;
+  text-overflow: ellipsis;
   padding: 6px 10px;
   border: 1px solid transparent;
   border-radius: 20px;
@@ -85,6 +87,15 @@
 .acc-chip:focus-visible {
   outline: 2px solid #c8102e;
   outline-offset: 2px;
+}
+
+.month-group-cell {
+  padding: 14px 15px 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #c8102e;
+  background: rgba(255, 255, 255, 0.78);
 }
 
 /* === Hires Table Layout: End === *//*# sourceMappingURL=zatrudnienia.css.map */
